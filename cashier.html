@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Moon POS • Касса СБП & Карта</title>
+  <title>Moon POS • Касса СБП QR</title>
   
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com">
@@ -35,7 +35,7 @@
     * { -webkit-tap-highlight-color: transparent; user-select: none; }
     .ambient-bg {
       background: radial-gradient(circle at 10% 10%, rgba(255, 241, 136, 0.05) 0%, transparent 40%),
-                  radial-gradient(circle at 90% 90%, rgba(244, 63, 94, 0.04) 0%, transparent 50%),
+                  radial-gradient(circle at 90% 90%, rgba(59, 130, 246, 0.04) 0%, transparent 50%),
                   #0d0d10;
     }
     .sticker-badge { box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5); }
@@ -83,6 +83,30 @@
       const matches = document.cookie.match(new RegExp('(?:^|; )' + name.replace(/([\.$?*|{}\(\)\[\]\\\/\+^])/g, '\\$1') + '=([^;]*)'));
       return matches ? decodeURIComponent(matches[1]) : undefined;
     }
+
+    // ================= ПОДТЯГИВАНИЕ КЛЮЧЕЙ ЮKASSA ИЗ БАЗЫ =================
+    const terminalId = localStorage.getItem('yk_term_id') || 'term_01';
+    window.yooKassaConfig = { shopId: '', secretKey: '' };
+
+    const ykSettingsRef = ref(db, 'admin_settings/yookassa');
+    onValue(ykSettingsRef, (snapshot) => {
+      const data = snapshot.val();
+      if (data && data.shopId && data.secretKey) {
+        window.yooKassaConfig.shopId = data.shopId;
+        window.yooKassaConfig.secretKey = data.secretKey;
+        console.log("✓ Ключи ЮKassa успешно подгружены из базы данных!");
+      }
+    });
+
+    // Резервная подгрузка из настроек терминала
+    const termSettingsRef = ref(db, `terminals/${terminalId}/settings`);
+    onValue(termSettingsRef, (snapshot) => {
+      const data = snapshot.val();
+      if (data && data.shopId && data.secretKey && !window.yooKassaConfig.shopId) {
+        window.yooKassaConfig.shopId = data.shopId;
+        window.yooKassaConfig.secretKey = data.secretKey;
+      }
+    });
 
     // ================= ПРОВЕРКА ТОКЕНА И АВТОРИЗАЦИИ =================
     async function verifyTokenAccess() {
@@ -148,10 +172,9 @@
 
     verifyTokenAccess();
 
-    // ================= ФУНКЦИЯ ДВОЙНОЙ ЗАПИСИ (АДМИН + ПАРТНЕР) =================
+    // ================= ДВОЙНАЯ ЗАПИСЬ (АДМИН + ПАРТНЕР) =================
     window.processSuccessfulPayment = async function(amount, method, details = {}) {
       const token = window.currentAuthToken || localStorage.getItem('moon_auth_token') || 'unknown_partner';
-      const terminalId = localStorage.getItem('yk_term_id') || 'term_01';
       const txId = 'tx_' + Date.now();
       const timestamp = Date.now();
       const cashierName = window.currentAuthUser ? (window.currentAuthUser.name || 'Сотрудник') : 'Сотрудник';
@@ -204,7 +227,7 @@
         cashierId: token,
         cashierName: cashierName,
         status: 'PAID',
-        description: details.title || `Продажа на кассе (${amount} ₽)`,
+        description: details.title || `Оплата по СБП QR (${amount} ₽)`,
         timestamp: timestamp
       };
 
@@ -222,47 +245,37 @@
       });
     };
 
-    const terminalId = localStorage.getItem('yk_term_id') || 'term_01';
     const orderStatusRef = ref(db, `terminals/${terminalId}/current_order`);
     
     onValue(orderStatusRef, (snapshot) => {
       const data = snapshot.val();
       const statusBadge = document.getElementById('live-terminal-status');
       const orderSub = document.getElementById('live-terminal-sub');
-      const cardPaidBtn = document.getElementById('btn-confirm-card-paid');
       
-      if (data && (data.status === 'WAITING_FOR_PAYMENT' || data.status === 'WAITING_FOR_CARD')) {
-        const isCard = data.method === 'card' || data.status === 'WAITING_FOR_CARD';
+      if (data && data.status === 'WAITING_FOR_PAYMENT') {
         if (statusBadge) {
-          statusBadge.innerHTML = `<span class="w-2 h-2 rounded-full bg-yellow-400 animate-ping mr-1.5"></span> ${data.amount} ₽ (${isCard ? 'Карта' : 'СБП'})`;
+          statusBadge.innerHTML = `<span class="w-2 h-2 rounded-full bg-yellow-400 animate-ping mr-1.5"></span> ${data.amount} ₽ (СБП QR)`;
           statusBadge.className = 'flex items-center text-[11px] font-bold px-2.5 py-1 rounded-full bg-yellow-500/20 text-yellow-300 border border-yellow-500/30';
         }
-        if (orderSub) orderSub.innerText = isCard ? `Ожидание прикладывания карты (${data.amount} ₽)` : `Ожидание оплаты СБП: ${data.amount} ₽`;
-        if (cardPaidBtn) {
-          if (isCard) cardPaidBtn.classList.remove('hidden');
-          else cardPaidBtn.classList.add('hidden');
-        }
+        if (orderSub) orderSub.innerText = `Ожидание сканирования СБП QR: ${data.amount} ₽`;
       } else if (data && data.status === 'TRIGGER_MAGIC_TIPS') {
         if (statusBadge) {
           statusBadge.innerHTML = `<span class="w-2 h-2 rounded-full bg-purple-400 animate-pulse mr-1.5"></span> 🪄 Чаевые`;
           statusBadge.className = 'flex items-center text-[11px] font-bold px-2.5 py-1 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/30';
         }
         if (orderSub) orderSub.innerText = 'Экран чаевых активен (3 мин)';
-        if (cardPaidBtn) cardPaidBtn.classList.add('hidden');
       } else if (data && (data.status === 'PAID' || data.status === 'succeeded' || data.status === 'cash_succeeded')) {
         if (statusBadge) {
           statusBadge.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-400 mr-1.5"></span> Оплачено`;
           statusBadge.className = 'flex items-center text-[11px] font-bold px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30';
         }
         if (orderSub) orderSub.innerText = 'Оплата успешно зафиксирована';
-        if (cardPaidBtn) cardPaidBtn.classList.add('hidden');
       } else {
         if (statusBadge) {
           statusBadge.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-neutral-500 mr-1.5"></span> Свободен`;
           statusBadge.className = 'flex items-center text-[11px] font-semibold px-2.5 py-1 rounded-full bg-white/5 text-neutral-400 border border-white/10';
         }
         if (orderSub) orderSub.innerText = 'Крутится приветствие и реклама';
-        if (cardPaidBtn) cardPaidBtn.classList.add('hidden');
       }
     });
 
@@ -278,7 +291,7 @@
 </head>
 <body class="ambient-bg text-white min-h-screen flex flex-col font-sans selection:bg-yellow-300 selection:text-black">
 
-  <!-- ================= ЗАЩИТНЫЙ ЭКРАН: ВХОД ТОЛЬКО ПО ТОКЕНУ ================= -->
+  <!-- ================= ЗАЩИТНЫЙ ЭКРАН ================= -->
   <div id="auth-guard-screen" class="fixed inset-0 z-50 bg-[#0d0d10] flex items-center justify-center p-4">
     <div id="auth-loading" class="flex flex-col items-center gap-4 text-center">
       <div class="w-12 h-12 border-4 border-yellow-300/20 border-t-yellow-300 rounded-full animate-spin"></div>
@@ -292,13 +305,12 @@
       <div>
         <h2 class="font-display text-base md:text-lg font-black uppercase text-white leading-snug">Вход только через Личный кабинет</h2>
         <p class="text-xs text-neutral-400 mt-2 leading-relaxed">
-          Для доступа к кассе войдите в свой личный кабинет и нажмите кнопку <b>«Открыть кассу»</b>. Прямой вход без токена закрыт.
+          Для доступа к кассе войдите в свой личный кабинет и нажмите кнопку <b>«Открыть кассу»</b>.
         </p>
       </div>
       <a href="dashboard.html" class="w-full bg-sticker text-black font-display font-black text-xs uppercase py-3.5 rounded-xl shadow-lg hover:brightness-110 active:scale-95 transition-all">
         Перейти в Личный кабинет →
       </a>
-      <p class="text-[10px] text-neutral-500">После первого перехода система сохранит токен быстрого входа в cookie.</p>
     </div>
   </div>
 
@@ -314,7 +326,7 @@
         <div>
           <h1 class="font-display text-xs md:text-sm font-black tracking-wide text-white uppercase flex items-center gap-1.5">
             Касса #1
-            <span class="hidden sm:inline-block text-[9px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2 py-0.5 rounded-full font-sans font-semibold">СБП & Карта</span>
+            <span class="hidden sm:inline-block text-[9px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2 py-0.5 rounded-full font-sans font-semibold">СБП QR</span>
           </h1>
           <p id="live-terminal-sub" class="text-[10px] md:text-xs text-neutral-400 hidden sm:block">Крутится приветствие и реклама</p>
         </div>
@@ -361,24 +373,6 @@
       
       <div class="col-span-12 lg:col-span-5 flex flex-col gap-3 md:gap-5 order-2 lg:order-1">
         
-        <!-- Выбор стороны NFC -->
-        <div class="bg-surface border border-white/10 rounded-2xl md:rounded-3xl p-3.5 md:p-4 flex flex-col gap-2 shadow-xl">
-          <div class="flex justify-between items-center">
-            <span class="font-display font-bold text-xs uppercase text-neutral-300 flex items-center gap-1.5">
-              <span>💡</span> Сторона для карты (NFC):
-            </span>
-            <span id="current-side-display" class="text-[10px] bg-sticker text-black font-display font-black px-2 py-0.5 rounded-md uppercase">ПРАВЫЙ КРАЙ</span>
-          </div>
-          <div class="grid grid-cols-2 gap-2 mt-1">
-            <button id="btn-side-left" onclick="setNfcSide('left')" class="py-2.5 px-3 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 font-display text-xs font-bold transition-all flex items-center justify-center gap-1.5">
-              <span>◀ Левый край</span>
-            </button>
-            <button id="btn-side-right" onclick="setNfcSide('right')" class="py-2.5 px-3 rounded-xl border border-yellow-300/40 bg-sticker text-black font-display text-xs font-bold transition-all flex items-center justify-center gap-1.5 shadow-md">
-              <span>Правый край ▶</span>
-            </button>
-          </div>
-        </div>
-
         <!-- Чаевые -->
         <div class="bg-purple-900/20 border border-purple-500/30 rounded-2xl md:rounded-3xl p-3.5 md:p-4 flex flex-col gap-2.5 shadow-xl">
           <div class="flex justify-between items-center">
@@ -434,22 +428,17 @@
         </div>
       </div>
 
-      <!-- Ввод суммы и выставление счета -->
+      <!-- Ввод суммы и выставление счета СБП -->
       <div class="col-span-12 lg:col-span-7 bg-surface border border-white/10 rounded-2xl md:rounded-3xl p-4 md:p-8 flex flex-col gap-4 md:gap-6 shadow-2xl order-1 lg:order-2">
         
         <div class="bg-black/50 border border-white/10 rounded-2xl md:rounded-3xl p-4 md:p-6 text-center relative overflow-hidden">
-          <span class="text-[10px] md:text-xs text-neutral-400 uppercase font-bold tracking-widest block mb-1">Сумма к оплате</span>
+          <span class="text-[10px] md:text-xs text-neutral-400 uppercase font-bold tracking-widest block mb-1">Сумма к оплате (СБП)</span>
           <div class="flex items-center justify-center gap-1.5">
             <span id="amount-display" class="font-display text-5xl md:text-7xl font-black text-white tracking-tight">0</span>
             <span class="font-display text-3xl md:text-4xl font-bold text-sticker">₽</span>
           </div>
-          <p id="pos-status-text" class="text-xs text-neutral-400 mt-1.5 font-medium">Готов к выбору способа оплаты</p>
+          <p id="pos-status-text" class="text-xs text-neutral-400 mt-1.5 font-medium">Готов к выставлению СБП QR</p>
         </div>
-
-        <!-- Подтверждение оплаты картой -->
-        <button id="btn-confirm-card-paid" onclick="confirmCardPaymentSuccess()" class="hidden w-full bg-emerald-400 hover:bg-emerald-300 active:scale-95 text-black font-display font-black text-xs md:text-sm uppercase py-3.5 rounded-2xl shadow-xl transition-all flex items-center justify-center gap-2">
-          <span>✅ Оплата картой прошла (Записать и поблагодарить)</span>
-        </button>
 
         <!-- Numpad -->
         <div class="grid grid-cols-3 gap-2 md:gap-3 max-w-md mx-auto w-full">
@@ -470,17 +459,11 @@
           <button onclick="backspace()" class="h-13 md:h-16 py-3 rounded-2xl bg-rose-500/20 hover:bg-rose-500/30 active:scale-95 border border-rose-500/30 flex items-center justify-center text-rose-300 font-bold text-xl">⌫</button>
         </div>
 
-        <!-- Кнопки выбора оплаты -->
+        <!-- Кнопка выставления СБП QR и сброс -->
         <div class="flex flex-col gap-2.5 max-w-md mx-auto w-full pt-1">
-          <div class="grid grid-cols-2 gap-2.5">
-            <button id="send-bill-btn" onclick="createDirectSbpPayment()" class="bg-sticker text-black font-display font-black text-xs md:text-sm uppercase py-4 rounded-2xl active:scale-[0.98] transition-all sticker-badge flex items-center justify-center gap-1.5">
-              <span>⚡ СБП QR</span>
-            </button>
-            
-            <button onclick="triggerCardPaymentOnScreen()" class="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-display font-black text-xs md:text-sm uppercase py-4 rounded-2xl active:scale-[0.98] transition-all shadow-lg flex items-center justify-center gap-1.5 border border-blue-400/30">
-              <span>💳 Оплата картой</span>
-            </button>
-          </div>
+          <button id="send-bill-btn" onclick="createDirectSbpPayment()" class="w-full bg-sticker text-black font-display font-black text-sm md:text-base uppercase py-4 rounded-2xl active:scale-[0.98] transition-all sticker-badge flex items-center justify-center gap-2">
+            <span>⚡ Выставить СБП QR</span>
+          </button>
 
           <button onclick="sendCancelToFirebase()" class="w-full bg-white/10 hover:bg-white/15 active:scale-95 text-neutral-300 font-display font-bold text-xs uppercase py-3.5 rounded-2xl border border-white/10 transition-all flex items-center justify-center gap-1.5">
             <span>🛑 Сброс экрана</span>
@@ -678,50 +661,30 @@
 
     </main>
 
-    <!-- ================= СЕКЦИЯ 3: НАСТРОЙКИ ЮKASSA & ТЕРМИНАЛА ================= -->
+    <!-- ================= СЕКЦИЯ 3: НАСТРОЙКИ ТЕРМИНАЛА ================= -->
     <main id="view-settings" class="hidden flex-1 p-3 md:p-8 max-w-4xl mx-auto w-full flex-col gap-4 md:gap-6">
       <div class="bg-surface border border-white/10 rounded-2xl md:rounded-3xl p-4 md:p-8 shadow-2xl flex flex-col gap-4 md:gap-6 text-left">
         <div class="border-b border-white/10 pb-3">
-          <h2 class="font-display text-base md:text-xl font-black uppercase text-white">⚙️ Настройки кассы и терминала</h2>
-          <p class="text-xs text-neutral-400">Параметры интеграций, выбор стороны NFC и облако баннеров</p>
+          <h2 class="font-display text-base md:text-xl font-black uppercase text-white">⚙️ Настройки терминала</h2>
+          <p class="text-xs text-neutral-400">Параметры интеграций и облако изображений</p>
         </div>
 
-        <div class="flex flex-col gap-2">
-          <h3 class="font-display text-xs font-bold uppercase text-sticker">1. Сторона подсветки для карт (NFC)</h3>
-          <p class="text-[11px] text-neutral-400">Укажи, с какой стороны планшета покупателю прикладывать карту:</p>
-          <div class="grid grid-cols-2 gap-3 max-w-md">
-            <button id="settings-side-left" onclick="setNfcSide('left')" class="py-3 px-4 rounded-xl border border-white/10 bg-white/5 font-display text-xs font-bold">
-              ◀ Левый край
-            </button>
-            <button id="settings-side-right" onclick="setNfcSide('right')" class="py-3 px-4 rounded-xl border border-yellow-300/40 bg-sticker text-black font-display text-xs font-bold">
-              Правый край ▶
-            </button>
-          </div>
+        <div class="bg-emerald-500/10 border border-emerald-500/30 p-3.5 rounded-2xl flex items-center gap-2 text-xs text-emerald-300">
+          <span>✓</span>
+          <span>Ключи ЮKassa подгружаются автоматически из базы данных админа.</span>
         </div>
 
         <div class="flex flex-col gap-3 pt-3 border-t border-white/10">
-          <h3 class="font-display text-xs font-bold uppercase text-sticker">2. Ключи ЮKassa</h3>
-          
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div>
-              <label class="text-xs text-neutral-300 font-bold block mb-1">Shop ID</label>
-              <input type="text" id="desk-shop-id" placeholder="1350725" class="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-xs text-white font-mono focus:outline-none focus:border-yellow-300" />
-            </div>
-            <div>
-              <label class="text-xs text-neutral-300 font-bold block mb-1">Terminal ID</label>
-              <input type="text" id="desk-terminal-id" value="term_01" class="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-xs text-white font-mono focus:outline-none focus:border-yellow-300" />
-            </div>
-          </div>
-
+          <h3 class="font-display text-xs font-bold uppercase text-sticker">Идентификатор терминала</h3>
           <div>
-            <label class="text-xs text-neutral-300 font-bold block mb-1">Секретный ключ (Secret Key: live_...)</label>
-            <input type="password" id="desk-secret-key" placeholder="live_... или test_..." class="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-xs text-white font-mono focus:outline-none focus:border-yellow-300" />
+            <label class="text-xs text-neutral-300 font-bold block mb-1">Terminal ID</label>
+            <input type="text" id="desk-terminal-id" value="term_01" class="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-xs text-white font-mono focus:outline-none focus:border-yellow-300" />
           </div>
         </div>
 
         <div class="flex flex-col gap-3 pt-3 border-t border-white/10">
           <div class="flex justify-between items-center">
-            <h3 class="font-display text-xs font-bold uppercase text-sticker">3. Облако изображений Cloudinary</h3>
+            <h3 class="font-display text-xs font-bold uppercase text-sticker">Облако изображений Cloudinary</h3>
             <span class="text-[9px] text-neutral-400 font-mono">my_shop_unsigned</span>
           </div>
           <div>
@@ -758,7 +721,6 @@
   <script>
     let currentInput = "0";
     let activePollInterval = null;
-    let selectedNfcSide = localStorage.getItem('moon_nfc_side') || 'right';
     let currentItemTitle = "Заказ на кассе";
     const CLOUDINARY_PRESET = "my_shop_unsigned";
 
@@ -806,65 +768,19 @@
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
-    window.setNfcSide = function(side) {
-      selectedNfcSide = side;
-      localStorage.setItem('moon_nfc_side', side);
-      updateNfcSideUI();
-
-      const terminalId = localStorage.getItem('yk_term_id') || 'term_01';
-      if (window.firebaseDB && window.dbRef && window.dbUpdate) {
-        const settingsRef = window.dbRef(window.firebaseDB, `terminals/${terminalId}/settings`);
-        window.dbUpdate(settingsRef, { nfcSide: side });
-      }
-    };
-
-    function updateNfcSideUI() {
-      const isLeft = (selectedNfcSide === 'left');
-      const sideDisplay = document.getElementById('current-side-display');
-      if (sideDisplay) sideDisplay.innerText = isLeft ? 'ЛЕВЫЙ КРАЙ' : 'ПРАВЫЙ КРАЙ';
-
-      const btnLeft = document.getElementById('btn-side-left');
-      const btnRight = document.getElementById('btn-side-right');
-      const setLeft = document.getElementById('settings-side-left');
-      const setRight = document.getElementById('settings-side-right');
-
-      const activeClass = 'py-2.5 px-3 rounded-xl border border-yellow-300/40 bg-sticker text-black font-display text-xs font-bold transition-all flex items-center justify-center gap-1.5 shadow-md';
-      const inactiveClass = 'py-2.5 px-3 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 font-display text-xs font-bold transition-all flex items-center justify-center gap-1.5 text-neutral-300';
-
-      if (btnLeft) btnLeft.className = isLeft ? activeClass : inactiveClass;
-      if (btnRight) btnRight.className = isLeft ? inactiveClass : activeClass;
-      if (setLeft) setLeft.className = isLeft ? activeClass : inactiveClass;
-      if (setRight) setRight.className = isLeft ? inactiveClass : activeClass;
-    }
-
     window.addEventListener('DOMContentLoaded', () => {
-      document.getElementById('desk-shop-id').value = localStorage.getItem('yk_shop_id') || '1350725';
-      document.getElementById('desk-secret-key').value = localStorage.getItem('yk_secret_key') || '';
       document.getElementById('desk-terminal-id').value = localStorage.getItem('yk_term_id') || 'term_01';
       document.getElementById('desk-cloud-name').value = localStorage.getItem('cld_cloud_name') || '';
-      updateNfcSideUI();
     });
 
     function saveDesktopSettings() {
-      const shopId = document.getElementById('desk-shop-id').value.trim();
-      const secretKey = document.getElementById('desk-secret-key').value.trim();
       const termId = document.getElementById('desk-terminal-id').value.trim() || 'term_01';
       const cloudName = document.getElementById('desk-cloud-name').value.trim();
 
-      localStorage.setItem('yk_shop_id', shopId);
-      localStorage.setItem('yk_secret_key', secretKey);
       localStorage.setItem('yk_term_id', termId);
       localStorage.setItem('cld_cloud_name', cloudName);
 
-      if (window.firebaseDB && window.dbRef && window.dbUpdate) {
-        const settingsRef = window.dbRef(window.firebaseDB, `terminals/${termId}/settings`);
-        window.dbUpdate(settingsRef, {
-          nfcSide: selectedNfcSide,
-          updatedAt: Date.now()
-        });
-      }
-
-      alert('Все настройки сохранены!');
+      alert('Настройки сохранены!');
       openView('pos');
     }
 
@@ -875,57 +791,7 @@
       });
     }
 
-    // ================= 1. РЕЖИМ ОПЛАТЫ КАРТОЙ =================
-    window.triggerCardPaymentOnScreen = async function() {
-      const amount = parseInt(currentInput);
-      if (!amount || amount <= 0) {
-        alert('Введите сумму больше 0');
-        return;
-      }
-
-      const terminalId = localStorage.getItem('yk_term_id') || 'term_01';
-      if (activePollInterval) clearInterval(activePollInterval);
-
-      if (window.firebaseDB && window.dbRef && window.dbSet) {
-        const orderRef = window.dbRef(window.firebaseDB, `terminals/${terminalId}/current_order`);
-        await window.dbSet(orderRef, {
-          status: 'WAITING_FOR_CARD',
-          method: 'card',
-          amount: amount,
-          nfcSide: selectedNfcSide,
-          description: currentItemTitle || `Оплата картой (${amount} ₽)`,
-          timestamp: Date.now()
-        });
-
-        document.getElementById('pos-status-text').innerHTML = `<span class="text-blue-400 font-bold">💳 Режим карты запущен! Мигает ${selectedNfcSide === 'left' ? 'левый' : 'правый'} край.</span>`;
-      }
-    };
-
-    window.confirmCardPaymentSuccess = async function() {
-      const terminalId = localStorage.getItem('yk_term_id') || 'term_01';
-      const amount = parseInt(currentInput) || 0;
-
-      if (amount <= 0) return;
-
-      if (window.firebaseDB && window.dbRef && window.dbSet) {
-        const orderRef = window.dbRef(window.firebaseDB, `terminals/${terminalId}/current_order`);
-        await window.dbSet(orderRef, {
-          status: 'PAID',
-          amount: amount,
-          timestamp: Date.now()
-        });
-      }
-
-      if (typeof window.processSuccessfulPayment === 'function') {
-        await window.processSuccessfulPayment(amount, 'card', { title: currentItemTitle });
-      }
-
-      clearAmount();
-      currentItemTitle = "Заказ на кассе";
-      document.getElementById('pos-status-text').innerHTML = '<span class="text-emerald-400 font-bold">✅ Оплата картой зафиксирована в Админке и в ЛК!</span>';
-    };
-
-    // ================= 2. РЕЖИМ ОПЛАТЫ СБП QR =================
+    // ================= ВЫСТАВЛЕНИЕ СБП QR ЧЕРЕЗ АВТО-КЛЮЧИ БАЗЫ =================
     async function createDirectSbpPayment() {
       const amount = parseInt(currentInput);
       if (!amount || amount <= 0) {
@@ -933,13 +799,12 @@
         return;
       }
 
-      const shopId = localStorage.getItem('yk_shop_id') || '1350725';
-      const secretKey = localStorage.getItem('yk_secret_key');
-      const terminalId = localStorage.getItem('yk_term_id') || 'term_01';
+      const shopId = window.yooKassaConfig.shopId || localStorage.getItem('yk_shop_id') || '1350725';
+      const secretKey = window.yooKassaConfig.secretKey || localStorage.getItem('yk_secret_key');
+      const termId = localStorage.getItem('yk_term_id') || 'term_01';
 
       if (!shopId || !secretKey) {
-        alert('Сначала введите Secret Key во вкладке «Настройки»');
-        openView('settings');
+        alert('Ключи ЮKassa ещё не загружены из базы админа. Пожалуйста, укажите их в админ-панели.');
         return;
       }
 
@@ -947,7 +812,7 @@
       const statusText = document.getElementById('pos-status-text');
       
       sendBtn.disabled = true;
-      sendBtn.innerHTML = '<span>⏳ Создаем СБП счет...</span>';
+      sendBtn.innerHTML = '<span>⏳ Создаем СБП QR...</span>';
       statusText.innerText = 'Связываемся с ЮKassa...';
 
       if (activePollInterval) clearInterval(activePollInterval);
@@ -976,7 +841,7 @@
               type: 'qr'
             },
             capture: true,
-            description: currentItemTitle || `Оплата по QR (${amount} ₽)`
+            description: currentItemTitle || `Оплата по СБП QR (${amount} ₽)`
           })
         });
 
@@ -994,7 +859,7 @@
         }
 
         if (window.firebaseDB && window.dbRef && window.dbSet) {
-          const orderRef = window.dbRef(window.firebaseDB, `terminals/${terminalId}/current_order`);
+          const orderRef = window.dbRef(window.firebaseDB, `terminals/${termId}/current_order`);
           await window.dbSet(orderRef, {
             status: 'WAITING_FOR_PAYMENT',
             method: 'sbp',
@@ -1009,18 +874,18 @@
         }
 
         statusText.innerHTML = `<span class="text-sticker font-bold">СБП QR на ${amount} ₽ на экране! Ждем оплату...</span>`;
-        startDirectPaymentPolling(shopId, secretKey, payment.id, terminalId, amount);
+        startDirectPaymentPolling(shopId, secretKey, payment.id, termId, amount);
 
       } catch (err) {
         alert('Ошибка ЮKassa: ' + err.message);
         statusText.innerText = 'Ошибка: ' + err.message;
       } finally {
         sendBtn.disabled = false;
-        sendBtn.innerHTML = '<span>⚡ СБП QR</span>';
+        sendBtn.innerHTML = '<span>⚡ Выставить СБП QR</span>';
       }
     }
 
-    function startDirectPaymentPolling(shopId, secretKey, paymentId, terminalId, amount) {
+    function startDirectPaymentPolling(shopId, secretKey, paymentId, termId, amount) {
       const authHeader = 'Basic ' + btoa(`${shopId}:${secretKey}`);
       const proxyUrl = `https://corsproxy.io/?url=${encodeURIComponent(`https://api.yookassa.ru/v3/payments/${paymentId}`)}`;
 
@@ -1042,7 +907,7 @@
             const finalAmount = data.amount ? parseFloat(data.amount.value) : amount;
 
             if (window.firebaseDB && window.dbRef && window.dbSet) {
-              const orderRef = window.dbRef(window.firebaseDB, `terminals/${terminalId}/current_order`);
+              const orderRef = window.dbRef(window.firebaseDB, `terminals/${termId}/current_order`);
               await window.dbSet(orderRef, {
                 status: 'PAID',
                 amount: finalAmount,
@@ -1065,9 +930,9 @@
     }
 
     window.castMagicTips = async function() {
-      const terminalId = localStorage.getItem('yk_term_id') || 'term_01';
+      const termId = localStorage.getItem('yk_term_id') || 'term_01';
       if (window.firebaseDB && window.dbRef && window.dbSet) {
-        const orderRef = window.dbRef(window.firebaseDB, `terminals/${terminalId}/current_order`);
+        const orderRef = window.dbRef(window.firebaseDB, `terminals/${termId}/current_order`);
         await window.dbSet(orderRef, {
           status: 'TRIGGER_MAGIC_TIPS',
           timestamp: Date.now()
@@ -1077,9 +942,9 @@
     };
 
     window.closeMagicTips = async function() {
-      const terminalId = localStorage.getItem('yk_term_id') || 'term_01';
+      const termId = localStorage.getItem('yk_term_id') || 'term_01';
       if (window.firebaseDB && window.dbRef && window.dbSet) {
-        const orderRef = window.dbRef(window.firebaseDB, `terminals/${terminalId}/current_order`);
+        const orderRef = window.dbRef(window.firebaseDB, `terminals/${termId}/current_order`);
         await window.dbSet(orderRef, { status: 'IDLE' });
         document.getElementById('pos-status-text').innerText = 'Экран покупателя свободен';
       }
@@ -1133,9 +998,9 @@
 
     async function sendCancelToFirebase() {
       if (activePollInterval) clearInterval(activePollInterval);
-      const terminalId = localStorage.getItem('yk_term_id') || 'term_01';
+      const termId = localStorage.getItem('yk_term_id') || 'term_01';
       if (window.firebaseDB && window.dbRef && window.dbSet) {
-        const orderRef = window.dbRef(window.firebaseDB, `terminals/${terminalId}/current_order`);
+        const orderRef = window.dbRef(window.firebaseDB, `terminals/${termId}/current_order`);
         await window.dbSet(orderRef, { status: 'IDLE' });
       }
       document.getElementById('pos-status-text').innerText = 'Экран покупателя свободен';
