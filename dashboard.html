@@ -1,0 +1,960 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Moon • Кабинет партнёра</title>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Unbounded:wght@600;800;900&display=swap" rel="stylesheet">
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            display: ['Unbounded', 'sans-serif'],
+            sans: ['Plus Jakarta Sans', 'sans-serif'],
+          },
+          colors: {
+            brand: {
+              yellow: '#FDE047',
+              accent: '#38BDF8',
+              emerald: '#34D399',
+              dark: '#0A0B10',
+              card: 'rgba(18, 20, 29, 0.7)',
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    * { -webkit-tap-highlight-color: transparent; outline: none; }
+    
+    body {
+      background-color: #08090D;
+      background-image: 
+        radial-gradient(at 0% 0%, rgba(253, 224, 71, 0.08) 0px, transparent 50%),
+        radial-gradient(at 100% 100%, rgba(56, 189, 248, 0.07) 0px, transparent 50%),
+        radial-gradient(at 50% 50%, rgba(52, 211, 153, 0.04) 0px, transparent 65%);
+      background-attachment: fixed;
+    }
+
+    .glass-card {
+      background: rgba(18, 21, 31, 0.65);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    }
+
+    .glow-yellow {
+      box-shadow: 0 0 25px -5px rgba(253, 224, 71, 0.3);
+    }
+    
+    .glow-emerald {
+      box-shadow: 0 0 25px -5px rgba(52, 211, 153, 0.3);
+    }
+
+    /* ================= СТИЛИ АНИМИРОВАННЫХ ТУМБЛЕРОВ ================= */
+    .switch-wrapper {
+      position: relative;
+      display: inline-block;
+      width: 44px;
+      height: 24px;
+      flex-shrink: 0;
+    }
+
+    .switch-wrapper input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .switch-slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: rgba(255, 255, 255, 0.12);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      border-radius: 99px;
+    }
+
+    .switch-slider:before {
+      position: absolute;
+      content: "";
+      height: 18px;
+      width: 18px;
+      left: 2px;
+      bottom: 2px;
+      background-color: #9CA3AF;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      border-radius: 50%;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.4);
+    }
+
+    .switch-wrapper input:checked + .switch-slider {
+      background-color: rgba(253, 224, 71, 0.25);
+      border-color: rgba(253, 224, 71, 0.6);
+      box-shadow: 0 0 12px rgba(253, 224, 71, 0.2);
+    }
+
+    .switch-wrapper input:checked + .switch-slider:before {
+      transform: translateX(20px);
+      background-color: #FDE047;
+      box-shadow: 0 0 8px #FDE047;
+    }
+
+    .switch-wrapper:active .switch-slider:before {
+      width: 22px;
+    }
+
+    /* Анимации кнопок */
+    .btn-press {
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .btn-press:hover {
+      transform: translateY(-2px);
+      filter: brightness(1.08);
+    }
+    .btn-press:active {
+      transform: scale(0.96) translateY(0);
+    }
+
+    .card-hover {
+      transition: transform 0.25s ease, border-color 0.25s ease;
+    }
+    .card-hover:hover {
+      border-color: rgba(255, 255, 255, 0.16);
+      transform: translateY(-2px);
+    }
+
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 99px; }
+  </style>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getDatabase, ref, set, get, update, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyB8CBeK8m25rox6BYO8ep6JeBJ7ipmYViQ",
+      authDomain: "moon-60c5a.firebaseapp.com",
+      databaseURL: "https://moon-60c5a-default-rtdb.firebaseio.com",
+      projectId: "moon-60c5a",
+      storageBucket: "moon-60c5a.firebasestorage.app",
+      messagingSenderId: "1010513396599",
+      appId: "1:1010513396599:web:86cbb8164de80b1dcc9772",
+      measurementId: "G-KKE1L09LHS"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    window.firebaseDB = db;
+    window.dbRef = ref;
+    window.dbSet = set;
+    window.dbGet = get;
+    window.dbUpdate = update;
+
+    function setCookie(name, value, days = 30) {
+      const d = new Date();
+      d.setTime(d.getTime() + (days * 24 * 60 * 60 * 1000));
+      document.cookie = `${name}=${encodeURIComponent(value)};expires=${d.toUTCString()};path=/;SameSite=Lax`;
+    }
+
+    function getCookie(name) {
+      const matches = document.cookie.match(new RegExp('(?:^|; )' + name.replace(/([\.$?*|{}\(\)\[\]\\\/\+^])/g, '\\$1') + '=([^;]*)'));
+      return matches ? decodeURIComponent(matches[1]) : undefined;
+    }
+
+    function removeCookie(name) {
+      document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 UTC;path=/;`;
+    }
+
+    function getHardwareFingerprint() {
+      const canvas = document.createElement('canvas');
+      const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+      let renderer = 'GENERIC';
+      if (gl) {
+        const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
+        if (debugInfo) renderer = gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL);
+      }
+      const raw = [navigator.userAgent, navigator.hardwareConcurrency || 'x', screen.width + 'x' + screen.height, renderer].join('||');
+      let hash = 0;
+      for (let i = 0; i < raw.length; i++) {
+        hash = ((hash << 5) - hash) + raw.charCodeAt(i);
+        hash |= 0;
+      }
+      return 'HWID-' + Math.abs(hash).toString(16).toUpperCase();
+    }
+
+    async function getUserIP() {
+      try {
+        const res = await fetch('https://api.ipify.org?format=json');
+        const data = await res.json();
+        return data.ip || '127.0.0.1';
+      } catch (e) {
+        return '127.0.0.1';
+      }
+    }
+
+    async function checkSecurityBlock(ip, hwid, userId = null) {
+      try {
+        const blacklistSnap = await get(ref(db, 'blacklist'));
+        if (blacklistSnap.exists()) {
+          const list = blacklistSnap.val();
+          for (const k in list) {
+            const item = list[k];
+            if ((userId && item.userId === userId) || (item.ip && item.ip === ip && ip !== '127.0.0.1') || (item.hardwareId && item.hardwareId === hwid)) {
+              return true;
+            }
+          }
+        }
+      } catch (e) { console.error(e); }
+      return false;
+    }
+
+    async function checkAuthSession() {
+      const hwid = getHardwareFingerprint();
+      const ip = await getUserIP();
+      window.clientHWID = hwid;
+      window.clientIP = ip;
+
+      const token = getCookie('moon_auth_token') || localStorage.getItem('moon_auth_token');
+
+      if (await checkSecurityBlock(ip, hwid, token)) {
+        showBannedScreen();
+        return;
+      }
+
+      if (!token) {
+        showAuthScreen();
+        return;
+      }
+
+      try {
+        const userSnap = await get(ref(db, `users/${token}`));
+        if (userSnap.exists()) {
+          const userData = userSnap.val();
+          if (userData.isBanned) {
+            showBannedScreen();
+            return;
+          }
+          await update(ref(db, `users/${token}`), {
+            lastIp: ip,
+            hardwareId: hwid,
+            lastSeen: Date.now()
+          });
+          loadDashboard(userData, token);
+        } else {
+          showAuthScreen();
+        }
+      } catch (err) {
+        showAuthScreen();
+      }
+    }
+
+    window.handleRegister = async function() {
+      const firstName = document.getElementById('reg-firstname').value.trim();
+      const lastName = document.getElementById('reg-lastname').value.trim();
+      const phone = document.getElementById('reg-phone').value.trim();
+      const login = document.getElementById('reg-login').value.trim().toLowerCase();
+      const pin = document.getElementById('reg-pin').value.trim();
+      
+      const payoutPhone = document.getElementById('reg-payout-phone').value.trim();
+      const bankName = document.getElementById('reg-bank-name').value.trim();
+      const hasTBank = document.getElementById('reg-has-tbank').checked;
+      const keepSecret = document.getElementById('reg-keep-secret').checked;
+      
+      const btn = document.getElementById('btn-submit-reg');
+      const errEl = document.getElementById('auth-error');
+
+      errEl.innerText = '';
+
+      if (!firstName || !lastName || !phone || !login || !pin || !payoutPhone) {
+        errEl.innerText = 'Заполните все обязательные поля';
+        return;
+      }
+
+      if (pin.length < 4) {
+        errEl.innerText = 'ПИН-код должен содержать от 4 символов';
+        return;
+      }
+
+      if (!keepSecret) {
+        errEl.innerText = 'Для работы необходимо согласие держать тайну перед начальством';
+        return;
+      }
+
+      btn.disabled = true;
+      btn.innerHTML = `<span class="inline-block animate-spin mr-2">⟳</span> Создаем профиль...`;
+
+      try {
+        const cleanLogin = login.replace(/[^a-z0-9_]/g, '');
+        const loginCheckSnap = await get(ref(db, `logins/${cleanLogin}`));
+
+        if (loginCheckSnap.exists()) {
+          errEl.innerText = 'Этот логин уже занят';
+          btn.disabled = false;
+          btn.innerText = 'Зарегистрироваться';
+          return;
+        }
+
+        const token = 'moon_' + Math.random().toString(36).substring(2, 10) + Date.now().toString(36);
+
+        const newUserData = {
+          userId: token,
+          name: firstName,
+          firstName: firstName,
+          lastName: lastName,
+          phone: phone,
+          login: cleanLogin,
+          pin: pin,
+          payoutPhone: payoutPhone,
+          bankName: bankName || (hasTBank ? 'Т-Банк' : 'СБП'),
+          hasTBank: hasTBank,
+          keepSecret: keepSecret,
+          balance: 0,
+          earnedToday: 0,
+          totalSales: 0,
+          currentRate: 20,
+          lastIp: window.clientIP || '127.0.0.1',
+          hardwareId: window.clientHWID || 'HWID-GENERIC',
+          createdAt: Date.now()
+        };
+
+        await set(ref(db, `users/${token}`), newUserData);
+        await set(ref(db, `logins/${cleanLogin}`), { userId: token });
+        await set(ref(db, `auth_tokens/${token}`), { userId: token, userName: firstName, createdAt: Date.now() });
+
+        setCookie('moon_auth_token', token, 30);
+        localStorage.setItem('moon_auth_token', token);
+
+        loadDashboard(newUserData, token);
+      } catch (e) {
+        errEl.innerText = 'Ошибка: ' + e.message;
+      } finally {
+        btn.disabled = false;
+        btn.innerText = 'Зарегистрироваться';
+      }
+    };
+
+    window.handleLogin = async function() {
+      const login = document.getElementById('login-username').value.trim().toLowerCase();
+      const pin = document.getElementById('login-pin').value.trim();
+      const btn = document.getElementById('btn-submit-login');
+      const errEl = document.getElementById('auth-error');
+
+      errEl.innerText = '';
+      if (!login || !pin) {
+        errEl.innerText = 'Введите логин и ПИН-код';
+        return;
+      }
+
+      btn.disabled = true;
+      btn.innerHTML = `<span class="inline-block animate-spin mr-2">⟳</span> Входим...`;
+
+      try {
+        const cleanLogin = login.replace(/[^a-z0-9_]/g, '');
+        const loginSnap = await get(ref(db, `logins/${cleanLogin}`));
+
+        if (!loginSnap.exists()) {
+          errEl.innerText = 'Партнер с таким логином не найден';
+          btn.disabled = false;
+          btn.innerText = 'Войти в кабинет';
+          return;
+        }
+
+        const userId = loginSnap.val().userId;
+        const userSnap = await get(ref(db, `users/${userId}`));
+
+        if (!userSnap.exists()) {
+          errEl.innerText = 'Профиль партнера отсутствует';
+          btn.disabled = false;
+          btn.innerText = 'Войти в кабинет';
+          return;
+        }
+
+        const userData = userSnap.val();
+
+        if (userData.isBanned || await checkSecurityBlock(window.clientIP, window.clientHWID, userId)) {
+          showBannedScreen();
+          return;
+        }
+
+        if (userData.pin !== pin) {
+          errEl.innerText = 'Неверный ПИН-код';
+          btn.disabled = false;
+          btn.innerText = 'Войти в кабинет';
+          return;
+        }
+
+        await update(ref(db, `users/${userId}`), {
+          lastIp: window.clientIP,
+          hardwareId: window.clientHWID,
+          lastSeen: Date.now()
+        });
+
+        setCookie('moon_auth_token', userId, 30);
+        localStorage.setItem('moon_auth_token', userId);
+
+        loadDashboard(userData, userId);
+      } catch (e) {
+        errEl.innerText = 'Ошибка: ' + e.message;
+      } finally {
+        btn.disabled = false;
+        btn.innerText = 'Войти в кабинет';
+      }
+    };
+
+    window.saveProfileRequisites = async function() {
+      const firstName = document.getElementById('prof-firstname').value.trim();
+      const lastName = document.getElementById('prof-lastname').value.trim();
+      const phone = document.getElementById('prof-phone').value.trim();
+      const payoutPhone = document.getElementById('prof-payout-phone').value.trim();
+      const bankName = document.getElementById('prof-bank-name').value.trim();
+      const hasTBank = document.getElementById('prof-has-tbank').checked;
+      const keepSecret = document.getElementById('prof-keep-secret').checked;
+      const btn = document.getElementById('btn-save-requisites');
+
+      if (!firstName || !lastName || !payoutPhone) {
+        showToast('⚠️ Заполните имя, фамилию и номер выплат');
+        return;
+      }
+
+      btn.disabled = true;
+      btn.innerHTML = `<span class="inline-block animate-spin mr-2">⟳</span> Сохраняем...`;
+
+      try {
+        const userId = window.currentToken;
+        await update(ref(db, `users/${userId}`), {
+          name: firstName,
+          firstName: firstName,
+          lastName: lastName,
+          phone: phone,
+          payoutPhone: payoutPhone,
+          bankName: bankName || (hasTBank ? 'Т-Банк' : 'СБП'),
+          hasTBank: hasTBank,
+          keepSecret: keepSecret
+        });
+        showToast('✓ Реквизиты сохранены!');
+      } catch (e) {
+        showToast('Ошибка сохранения');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '💾 Сохранить реквизиты';
+      }
+    };
+
+    window.handleLogout = function() {
+      removeCookie('moon_auth_token');
+      localStorage.removeItem('moon_auth_token');
+      showAuthScreen();
+    };
+
+    function showBannedScreen() {
+      document.getElementById('screen-auth').classList.add('hidden');
+      document.getElementById('screen-dashboard').classList.add('hidden');
+      document.getElementById('screen-banned').classList.remove('hidden');
+    }
+
+    function showAuthScreen() {
+      document.getElementById('screen-auth').classList.remove('hidden');
+      document.getElementById('screen-dashboard').classList.add('hidden');
+      document.getElementById('screen-banned').classList.add('hidden');
+    }
+
+    function loadDashboard(userData, token) {
+      window.currentUser = userData;
+      window.currentToken = token;
+
+      document.getElementById('screen-auth').classList.add('hidden');
+      document.getElementById('screen-dashboard').classList.remove('hidden');
+      document.getElementById('screen-banned').classList.add('hidden');
+
+      renderUserData(userData, token);
+
+      const userRef = ref(db, `users/${token}`);
+      onValue(userRef, (snapshot) => {
+        if (snapshot.exists()) {
+          const updated = snapshot.val();
+          if (updated.isBanned) {
+            showBannedScreen();
+            return;
+          }
+          window.currentUser = updated;
+          renderUserData(updated, token);
+        }
+      });
+    }
+
+    checkAuthSession();
+  </script>
+</head>
+<body class="text-white min-h-screen flex justify-center p-3 sm:p-6 pb-20 font-sans selection:bg-yellow-300 selection:text-black">
+
+  <!-- ================= 0. ЭКРАН БЛОКИРОВКИ ================= -->
+  <div id="screen-banned" class="hidden w-full max-w-sm flex flex-col gap-4 my-auto text-center p-8 glass-card rounded-3xl">
+    <div class="w-20 h-20 rounded-3xl bg-rose-500/10 border border-rose-500/30 flex items-center justify-center text-4xl mx-auto text-rose-400">
+      🚫
+    </div>
+    <div>
+      <h2 class="font-display text-lg font-black uppercase text-white tracking-wide">Доступ заблокирован</h2>
+      <p class="text-xs text-neutral-400 mt-2 leading-relaxed">Ваш аккаунт, IP-адрес и устройство занесены в черный список администратором точки.</p>
+    </div>
+    <div class="bg-black/50 border border-white/10 rounded-2xl p-3 text-[11px] font-mono text-rose-300">
+      Код: PERMANENT_HARDWARE_BAN
+    </div>
+  </div>
+
+  <!-- ================= 1. ЭКРАН ВХОДА И РЕГИСТРАЦИИ ================= -->
+  <div id="screen-auth" class="w-full max-w-sm flex flex-col gap-5 my-auto">
+    
+    <div class="text-center flex flex-col items-center gap-2">
+      <div class="w-14 h-14 rounded-3xl bg-brand-yellow text-black flex items-center justify-center font-display font-black text-2xl glow-yellow btn-press">
+        🌙
+      </div>
+      <h2 class="font-display text-xl font-black uppercase text-white tracking-tight">Moon Partner</h2>
+      <p class="text-xs text-neutral-400 font-medium">Кабинет начислений и управления кассой</p>
+    </div>
+
+    <div class="glass-card rounded-[28px] p-6 flex flex-col gap-5">
+      
+      <!-- Сегментированный переключатель -->
+      <div class="relative grid grid-cols-2 p-1.5 bg-black/50 border border-white/10 rounded-2xl">
+        <button id="tab-btn-login" onclick="switchAuthTab('login')" class="py-2.5 rounded-xl font-display text-[11px] font-bold uppercase transition-all duration-300 bg-brand-yellow text-black glow-yellow">
+          Вход
+        </button>
+        <button id="tab-btn-reg" onclick="switchAuthTab('reg')" class="py-2.5 rounded-xl font-display text-[11px] font-bold uppercase transition-all duration-300 text-neutral-400 hover:text-white">
+          Регистрация
+        </button>
+      </div>
+
+      <div id="auth-error" class="text-xs text-rose-400 font-semibold text-center empty:hidden"></div>
+
+      <!-- ВХОД -->
+      <div id="form-login" class="flex flex-col gap-3.5">
+        <div>
+          <label class="text-[10px] text-neutral-400 font-bold uppercase tracking-wider block mb-1.5">Логин</label>
+          <input type="text" id="login-username" placeholder="ivan_barista" class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-xs text-white placeholder-neutral-600 focus:border-brand-yellow transition-colors font-mono" />
+        </div>
+
+        <div>
+          <label class="text-[10px] text-neutral-400 font-bold uppercase tracking-wider block mb-1.5">ПИН-код / Пароль</label>
+          <input type="password" id="login-pin" placeholder="••••" class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-xs text-white placeholder-neutral-600 focus:border-brand-yellow transition-colors font-mono tracking-widest" />
+        </div>
+
+        <button id="btn-submit-login" onclick="handleLogin()" class="w-full bg-brand-yellow text-black font-display font-black text-xs uppercase py-4 rounded-xl glow-yellow btn-press mt-2">
+          Войти в кабинет
+        </button>
+      </div>
+
+      <!-- РЕГИСТРАЦИЯ -->
+      <div id="form-reg" class="hidden flex flex-col gap-3.5">
+        <div class="grid grid-cols-2 gap-2.5">
+          <div>
+            <label class="text-[10px] text-neutral-400 font-bold uppercase block mb-1">Имя *</label>
+            <input type="text" id="reg-firstname" placeholder="Иван" class="w-full bg-black/40 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-white focus:border-brand-yellow transition-colors" />
+          </div>
+          <div>
+            <label class="text-[10px] text-neutral-400 font-bold uppercase block mb-1">Фамилия *</label>
+            <input type="text" id="reg-lastname" placeholder="Иванов" class="w-full bg-black/40 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-white focus:border-brand-yellow transition-colors" />
+          </div>
+        </div>
+
+        <div>
+          <label class="text-[10px] text-neutral-400 font-bold uppercase block mb-1">Личный телефон *</label>
+          <input type="tel" id="reg-phone" placeholder="+7 999 000-00-00" class="w-full bg-black/40 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-white font-mono focus:border-brand-yellow transition-colors" />
+        </div>
+
+        <div class="grid grid-cols-2 gap-2.5">
+          <div>
+            <label class="text-[10px] text-neutral-400 font-bold uppercase block mb-1">Логин *</label>
+            <input type="text" id="reg-login" placeholder="barista01" class="w-full bg-black/40 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-white font-mono focus:border-brand-yellow transition-colors" />
+          </div>
+          <div>
+            <label class="text-[10px] text-neutral-400 font-bold uppercase block mb-1">ПИН-код *</label>
+            <input type="password" id="reg-pin" placeholder="1234" class="w-full bg-black/40 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-white font-mono focus:border-brand-yellow transition-colors" />
+          </div>
+        </div>
+
+        <div class="p-3.5 bg-black/50 border border-yellow-300/30 rounded-2xl flex flex-col gap-2.5">
+          <span class="text-[10px] text-brand-yellow font-bold uppercase tracking-wider">Реквизиты выплат</span>
+          
+          <div>
+            <label class="text-[9px] text-neutral-400 uppercase block mb-1">Номер для денег (СБП/Карта) *</label>
+            <input type="text" id="reg-payout-phone" placeholder="+7 999 000-00-00" class="w-full bg-black/50 border border-white/10 rounded-xl px-3 py-2 text-xs text-white font-mono focus:border-brand-yellow transition-colors" />
+          </div>
+
+          <div>
+            <label class="text-[9px] text-neutral-400 uppercase block mb-1">Банк</label>
+            <input type="text" id="reg-bank-name" placeholder="Т-Банк, Сбер..." class="w-full bg-black/50 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:border-brand-yellow transition-colors" />
+          </div>
+
+          <!-- Анимированный переключатель Т-Банка -->
+          <label class="flex items-center justify-between cursor-pointer pt-1">
+            <span class="text-[11px] text-neutral-300">Карта Т-Банка</span>
+            <div class="switch-wrapper">
+              <input type="checkbox" id="reg-has-tbank">
+              <span class="switch-slider"></span>
+            </div>
+          </label>
+        </div>
+
+        <!-- Анимированный переключатель Тайны -->
+        <div class="p-3.5 bg-black/50 border border-white/10 rounded-2xl flex items-center justify-between">
+          <div class="pr-2">
+            <div class="text-[11px] font-bold text-white leading-tight">Держать тайну перед боссом *</div>
+            <div class="text-[9px] text-neutral-400 mt-0.5">Конфиденциальность схемы</div>
+          </div>
+          <div class="switch-wrapper">
+            <input type="checkbox" id="reg-keep-secret" checked>
+            <span class="switch-slider"></span>
+          </div>
+        </div>
+
+        <button id="btn-submit-reg" onclick="handleRegister()" class="w-full bg-brand-yellow text-black font-display font-black text-xs uppercase py-4 rounded-xl glow-yellow btn-press mt-1">
+          Зарегистрироваться
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ================= 2. ЭКРАН ЛИЧНОГО КАБИНЕТА ================= -->
+  <div id="screen-dashboard" class="hidden w-full max-w-md flex flex-col gap-4">
+
+    <!-- Шапка -->
+    <header class="flex justify-between items-center glass-card p-4 rounded-[26px]">
+      <div class="flex items-center gap-3">
+        <div class="w-11 h-11 rounded-2xl bg-brand-yellow text-black flex items-center justify-center font-display font-black text-base glow-yellow btn-press">
+          🌙
+        </div>
+        <div>
+          <h1 id="ui-user-name" class="font-display font-black text-xs sm:text-sm uppercase text-white truncate max-w-[140px] sm:max-w-[180px]">Партнер</h1>
+          <p class="text-[10px] text-brand-emerald font-semibold flex items-center gap-1.5 mt-0.5">
+            <span class="relative flex h-2 w-2">
+              <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand-emerald opacity-75"></span>
+              <span class="relative inline-flex rounded-full h-2 w-2 bg-brand-emerald"></span>
+            </span>
+            В сети • Партнёр
+          </p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <a id="btn-open-cashier" href="cashier.html" class="bg-brand-yellow text-black font-display font-black text-[11px] uppercase px-4 py-2.5 rounded-xl glow-yellow btn-press flex items-center gap-1.5">
+          <span>⚡ В кассу</span>
+        </a>
+        <button onclick="handleLogout()" title="Выйти" class="bg-white/5 hover:bg-rose-500/20 hover:text-rose-300 text-neutral-400 p-2.5 rounded-xl border border-white/10 btn-press">
+          🚪
+        </button>
+      </div>
+    </header>
+
+    <!-- 1. ФИНАНСОВЫЙ ДАШБОРД -->
+    <section class="glass-card rounded-[28px] p-6 flex flex-col gap-5 relative overflow-hidden card-hover">
+      <div class="absolute top-0 right-0 w-32 h-32 bg-brand-yellow/10 rounded-full blur-3xl -z-10"></div>
+      
+      <div class="flex justify-between items-center text-xs text-neutral-400 font-bold uppercase tracking-wider">
+        <span>Твой баланс к выплате</span>
+        <span class="text-brand-emerald font-mono bg-brand-emerald/10 border border-brand-emerald/20 px-2.5 py-0.5 rounded-full text-[10px]">Мгновенно</span>
+      </div>
+
+      <div class="flex items-baseline gap-2">
+        <span id="ui-balance" class="font-display text-4xl sm:text-5xl font-black text-white tracking-tight">0</span>
+        <span class="font-display text-2xl font-bold text-brand-yellow">₽</span>
+      </div>
+
+      <div class="grid grid-cols-2 gap-3 pt-2">
+        <div class="bg-black/40 p-3.5 rounded-2xl border border-white/5 flex flex-col justify-between">
+          <span class="text-[10px] text-neutral-400 font-bold uppercase">Сегодня доход</span>
+          <span id="ui-earned-today" class="font-display text-lg font-black text-brand-emerald mt-1">+0 ₽</span>
+        </div>
+        <div class="bg-black/40 p-3.5 rounded-2xl border border-white/5 flex flex-col justify-between">
+          <span class="text-[10px] text-neutral-400 font-bold uppercase">Оборот по кассе</span>
+          <span id="ui-total-sales" class="font-display text-lg font-black text-white mt-1">0 ₽</span>
+        </div>
+      </div>
+
+      <button onclick="requestPayoutModal()" class="w-full bg-brand-emerald text-black font-display font-black text-xs uppercase py-4 rounded-2xl glow-emerald btn-press shadow-lg">
+        💳 Запросить выплату у точки
+      </button>
+    </section>
+
+    <!-- 2. УРОВЕНЬ ЛОЯЛЬНОСТИ -->
+    <section class="glass-card rounded-[28px] p-6 flex flex-col gap-4 text-left card-hover">
+      <div class="flex justify-between items-center">
+        <div>
+          <h3 class="font-display text-xs sm:text-sm font-black uppercase text-white flex items-center gap-1.5">
+            <span>🏆</span> Процент с чеков
+          </h3>
+          <p class="text-[10px] text-neutral-400 mt-0.5">Твой процент комиссии со всех оплат</p>
+        </div>
+        <div class="bg-brand-yellow text-black font-display font-black text-xs px-3 py-1.5 rounded-xl glow-yellow">
+          <span id="ui-rate-badge">20%</span> ставка
+        </div>
+      </div>
+
+      <div class="bg-black/40 border border-white/10 p-4 rounded-2xl flex flex-col gap-2.5">
+        <div class="flex justify-between items-center text-[11px] font-bold">
+          <span id="ui-tier-title" class="text-brand-yellow">Уровень 1: Старт</span>
+          <span id="ui-progress-percent" class="text-neutral-400 font-mono">0%</span>
+        </div>
+        <div class="w-full h-2.5 bg-white/5 rounded-full overflow-hidden p-0.5 border border-white/5">
+          <div id="ui-progress-bar" class="h-full bg-gradient-to-r from-brand-yellow via-amber-400 to-brand-emerald rounded-full transition-all duration-500" style="width: 0%;"></div>
+        </div>
+        <p id="ui-next-tier-desc" class="text-[10px] text-neutral-400 leading-relaxed">
+          Пробей еще <b>30 000 ₽</b> по кассе для перехода на ставку <b>30%</b>.
+        </p>
+      </div>
+
+      <div class="grid grid-cols-3 gap-2 text-center text-xs">
+        <div id="tier-box-1" class="bg-black/40 border border-white/5 p-3 rounded-2xl flex flex-col gap-1 transition-all">
+          <span class="text-[9px] text-neutral-400 font-bold uppercase">Старт</span>
+          <b class="font-display text-brand-yellow text-sm">20%</b>
+          <span class="text-[9px] text-neutral-500 font-mono">до 30k ₽</span>
+        </div>
+        <div id="tier-box-2" class="bg-black/40 border border-white/5 p-3 rounded-2xl flex flex-col gap-1 transition-all">
+          <span class="text-[9px] text-neutral-400 font-bold uppercase">Актив</span>
+          <b class="font-display text-brand-yellow text-sm">30%</b>
+          <span class="text-[9px] text-neutral-500 font-mono">до 100k ₽</span>
+        </div>
+        <div id="tier-box-3" class="bg-black/40 border border-white/5 p-3 rounded-2xl flex flex-col gap-1 transition-all">
+          <span class="text-[9px] text-neutral-400 font-bold uppercase">Профи 🔥</span>
+          <b class="font-display text-brand-yellow text-sm">40%</b>
+          <span class="text-[9px] text-neutral-500 font-mono">от 100k ₽</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3. МОИ РЕКВИЗИТЫ И КОНФИДЕНЦИАЛЬНОСТЬ -->
+    <section class="glass-card rounded-[28px] p-6 flex flex-col gap-4 text-left card-hover">
+      <div class="flex justify-between items-center border-b border-white/10 pb-3">
+        <h3 class="font-display text-xs font-black uppercase text-white flex items-center gap-2">
+          <span>⚙️</span> Мои реквизиты для выплат
+        </h3>
+      </div>
+
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="text-[9px] text-neutral-400 uppercase font-bold block mb-1">Имя</label>
+          <input type="text" id="prof-firstname" class="w-full bg-black/40 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-white focus:border-brand-yellow transition-colors" />
+        </div>
+        <div>
+          <label class="text-[9px] text-neutral-400 uppercase font-bold block mb-1">Фамилия</label>
+          <input type="text" id="prof-lastname" class="w-full bg-black/40 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-white focus:border-brand-yellow transition-colors" />
+        </div>
+      </div>
+
+      <div>
+        <label class="text-[9px] text-neutral-400 uppercase font-bold block mb-1">Личный телефон</label>
+        <input type="tel" id="prof-phone" class="w-full bg-black/40 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-white font-mono focus:border-brand-yellow transition-colors" />
+      </div>
+
+      <div class="p-4 bg-black/50 border border-yellow-300/30 rounded-2xl flex flex-col gap-3">
+        <div>
+          <label class="text-[9px] text-brand-yellow uppercase font-bold block mb-1">Номер для выплат (СБП/Карта)</label>
+          <input type="text" id="prof-payout-phone" class="w-full bg-black/50 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-white font-mono focus:border-brand-yellow transition-colors" />
+        </div>
+
+        <div>
+          <label class="text-[9px] text-neutral-400 uppercase font-bold block mb-1">Банк</label>
+          <input type="text" id="prof-bank-name" class="w-full bg-black/50 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-white focus:border-brand-yellow transition-colors" />
+        </div>
+
+        <!-- Анимированный переключатель Т-Банка -->
+        <label class="flex items-center justify-between cursor-pointer pt-1">
+          <span class="text-[11px] text-neutral-300">Карта Т-Банка</span>
+          <div class="switch-wrapper">
+            <input type="checkbox" id="prof-has-tbank">
+            <span class="switch-slider"></span>
+          </div>
+        </label>
+      </div>
+
+      <!-- Анимированный переключатель Тайны -->
+      <div class="p-4 bg-black/50 border border-white/10 rounded-2xl flex items-center justify-between">
+        <div class="pr-2">
+          <div class="text-[11px] font-bold text-white">Держать тайну перед боссом</div>
+          <div class="text-[9px] text-neutral-400 mt-0.5">Гарантия неразглашения условий</div>
+        </div>
+        <div class="switch-wrapper">
+          <input type="checkbox" id="prof-keep-secret">
+          <span class="switch-slider"></span>
+        </div>
+      </div>
+
+      <button id="btn-save-requisites" onclick="saveProfileRequisites()" class="w-full bg-white/10 hover:bg-white/20 text-white font-display font-bold text-xs uppercase py-3.5 rounded-xl border border-white/10 btn-press mt-1">
+        💾 Сохранить реквизиты
+      </button>
+    </section>
+
+    <!-- 4. ССЫЛКА ДЛЯ КАССЫ -->
+    <section class="glass-card rounded-[28px] p-5 flex flex-col gap-3 text-left card-hover">
+      <span class="font-display font-bold text-[11px] uppercase text-neutral-300 flex items-center gap-2">
+        <span>🔑</span> Твоя персональная ссылка в кассу:
+      </span>
+      <div class="flex gap-2">
+        <input type="text" id="ui-token-link" readonly class="flex-1 bg-black/50 border border-white/10 rounded-xl px-3.5 py-2.5 text-[11px] font-mono text-neutral-300 focus:outline-none truncate select-all" value="Загрузка..." />
+        <button onclick="copyCashierLink()" class="bg-white/10 hover:bg-white/20 text-xs font-bold px-4 py-2.5 rounded-xl border border-white/10 btn-press">
+          Копия
+        </button>
+      </div>
+      <p class="text-[10px] text-neutral-400 leading-tight">
+        При переходе на <b>cashier.html</b> по этой ссылке касса автоматически запустится под твоим логином.
+      </p>
+    </section>
+
+    <!-- 5. ИСТОРИЯ НАЧИСЛЕНИЙ -->
+    <section class="glass-card rounded-[28px] p-6 flex flex-col gap-4 text-left card-hover">
+      <div class="flex justify-between items-center">
+        <h3 class="font-display text-xs font-black uppercase text-white">История оплат и бонусов</h3>
+        <span class="text-[10px] text-neutral-400 font-mono bg-white/5 px-2.5 py-1 rounded-full border border-white/5">Live</span>
+      </div>
+
+      <div id="tx-history-list" class="flex flex-col divide-y divide-white/5 text-xs">
+        <div class="py-6 text-center text-neutral-500 text-[11px]">Начислений пока нет. Пробивай чеки в кассе!</div>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- Всплывающий тост уведомлений -->
+  <div id="toast-notify" class="fixed bottom-6 left-1/2 -translate-x-1/2 bg-white text-black font-display font-black text-xs uppercase px-5 py-3 rounded-full shadow-2xl transition-all duration-300 opacity-0 pointer-events-none translate-y-4 z-50">
+    Уведомление
+  </div>
+
+  <script>
+    function switchAuthTab(tab) {
+      const isLogin = (tab === 'login');
+      document.getElementById('form-login').classList.toggle('hidden', !isLogin);
+      document.getElementById('form-reg').classList.toggle('hidden', isLogin);
+
+      const activeCls = 'py-2.5 rounded-xl font-display text-[11px] font-bold uppercase transition-all duration-300 bg-brand-yellow text-black glow-yellow';
+      const inactiveCls = 'py-2.5 rounded-xl font-display text-[11px] font-bold uppercase transition-all duration-300 text-neutral-400 hover:text-white';
+
+      document.getElementById('tab-btn-login').className = isLogin ? activeCls : inactiveCls;
+      document.getElementById('tab-btn-reg').className = isLogin ? inactiveCls : activeCls;
+      document.getElementById('auth-error').innerText = '';
+    }
+
+    function showToast(text) {
+      const toast = document.getElementById('toast-notify');
+      toast.innerText = text;
+      toast.classList.remove('opacity-0', 'pointer-events-none', 'translate-y-4');
+      setTimeout(() => {
+        toast.classList.add('opacity-0', 'pointer-events-none', 'translate-y-4');
+      }, 2500);
+    }
+
+    function renderUserData(user, token) {
+      const fullName = ((user.firstName || user.name || '') + ' ' + (user.lastName || '')).trim();
+      document.getElementById('ui-user-name').innerText = fullName || "Партнер";
+      document.getElementById('ui-balance').innerText = (user.balance || 0).toLocaleString('ru-RU');
+      document.getElementById('ui-earned-today').innerText = '+' + (user.earnedToday || 0).toLocaleString('ru-RU') + ' ₽';
+      document.getElementById('ui-total-sales').innerText = (user.totalSales || 0).toLocaleString('ru-RU') + ' ₽';
+
+      document.getElementById('prof-firstname').value = user.firstName || user.name || '';
+      document.getElementById('prof-lastname').value = user.lastName || '';
+      document.getElementById('prof-phone').value = user.phone || '';
+      document.getElementById('prof-payout-phone').value = user.payoutPhone || user.phone || '';
+      document.getElementById('prof-bank-name').value = user.bankName || '';
+      document.getElementById('prof-has-tbank').checked = Boolean(user.hasTBank);
+      document.getElementById('prof-keep-secret').checked = (user.keepSecret !== false);
+
+      const sales = user.totalSales || 0;
+      let rate = user.currentRate || 20;
+      let tierName = "Уровень 1: Старт (20%)";
+      let progress = Math.min(100, Math.round((sales / 30000) * 100));
+      let nextDesc = `Пробей еще <b>${(30000 - sales).toLocaleString('ru-RU')} ₽</b> для перехода на 30%.`;
+
+      const t1 = document.getElementById('tier-box-1');
+      const t2 = document.getElementById('tier-box-2');
+      const t3 = document.getElementById('tier-box-3');
+      const boxActive = 'bg-brand-yellow/10 border border-brand-yellow/40 p-3 rounded-2xl flex flex-col gap-1 transition-all glow-yellow';
+      const boxInactive = 'bg-black/40 border border-white/5 p-3 rounded-2xl flex flex-col gap-1 transition-all opacity-60';
+
+      if (sales >= 100000) {
+        tierName = "Уровень 3: Профи 🔥 (40%)";
+        progress = 100;
+        nextDesc = "Максимальный уровень лояльности! Забираешь 40% с чеков.";
+        t1.className = boxInactive; t2.className = boxInactive; t3.className = boxActive;
+      } else if (sales >= 30000) {
+        tierName = "Уровень 2: Актив (30%)";
+        progress = Math.min(100, Math.round(((sales - 30000) / 70000) * 100));
+        nextDesc = `Пробей еще <b>${(100000 - sales).toLocaleString('ru-RU')} ₽</b> для перехода на 40%.`;
+        t1.className = boxInactive; t2.className = boxActive; t3.className = boxInactive;
+      } else {
+        t1.className = boxActive; t2.className = boxInactive; t3.className = boxInactive;
+      }
+
+      document.getElementById('ui-rate-badge').innerText = rate + '%';
+      document.getElementById('ui-tier-title').innerText = tierName;
+      document.getElementById('ui-progress-percent').innerText = progress + '%';
+      document.getElementById('ui-progress-bar').style.width = progress + '%';
+      document.getElementById('ui-next-tier-desc').innerHTML = nextDesc;
+
+      const currentHost = window.location.origin + window.location.pathname.replace(/[^/]*$/, '');
+      const cashierUrl = `${currentHost}cashier.html?token=${token}`;
+      
+      document.getElementById('btn-open-cashier').href = cashierUrl;
+      document.getElementById('ui-token-link').value = cashierUrl;
+
+      renderTransactions(user.transactions);
+    }
+
+    function renderTransactions(txObj) {
+      const container = document.getElementById('tx-history-list');
+      if (!txObj || Object.keys(txObj).length === 0) {
+        container.innerHTML = `<div class="py-6 text-center text-neutral-500 text-[11px]">Начислений пока нет. Пробивай чеки в кассе!</div>`;
+        return;
+      }
+
+      const txList = Object.values(txObj).sort((a, b) => b.timestamp - a.timestamp);
+      container.innerHTML = txList.slice(0, 15).map(tx => {
+        const date = new Date(tx.timestamp);
+        const timeStr = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        return `
+          <div class="py-3 flex justify-between items-center group hover:bg-white/[0.02] px-2 rounded-xl transition-colors">
+            <div>
+              <div class="font-bold text-neutral-200">${tx.description || 'Чек с кассы'} (${tx.amount} ₽)</div>
+              <div class="text-[10px] text-neutral-400 mt-0.5 font-mono">${timeStr} • ${tx.method === 'sbp' ? 'СБП QR' : 'Карта'} • ${tx.rate || 20}%</div>
+            </div>
+            <span class="font-display font-black text-brand-emerald text-sm">+${tx.partnerCut} ₽</span>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function copyCashierLink() {
+      const link = document.getElementById('ui-token-link').value;
+      navigator.clipboard.writeText(link).then(() => {
+        showToast('✓ Ссылка скопирована');
+      });
+    }
+
+    function requestPayoutModal() {
+      const user = window.currentUser || {};
+      const balance = user.balance || 0;
+      if (balance <= 0) {
+        showToast('⚠️ На балансе пока 0 ₽');
+        return;
+      }
+      const targetPhone = user.payoutPhone || user.phone || 'Не указан';
+      const bank = user.bankName || (user.hasTBank ? 'Т-Банк' : 'СБП');
+      alert(`Запрос на выплату ${balance} ₽ отправлен администратору точки!\n\nРеквизиты: ${targetPhone} (${bank})`);
+    }
+  </script>
+</body>
+</html>

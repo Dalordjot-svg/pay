@@ -1,0 +1,1090 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Moon Admin • Выплаты & Налоги</title>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&family=Unbounded:wght@600;800;900&display=swap" rel="stylesheet">
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            display: ['Unbounded', 'sans-serif'],
+            sans: ['Montserrat', 'sans-serif'],
+          },
+          colors: {
+            sticker: '#FFF188',
+            surface: '#18181d',
+            surfaceLight: '#23232b'
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    * { -webkit-tap-highlight-color: transparent; outline: none; }
+    body {
+      background-color: #0d0d10;
+      background-image: 
+        radial-gradient(at 0% 0%, rgba(255, 241, 136, 0.05) 0px, transparent 50%),
+        radial-gradient(at 100% 100%, rgba(244, 63, 94, 0.04) 0px, transparent 50%);
+      background-attachment: fixed;
+    }
+    .checkbox-custom {
+      appearance: none;
+      width: 22px;
+      height: 22px;
+      border: 2px solid rgba(255, 255, 255, 0.2);
+      border-radius: 6px;
+      background: rgba(0,0,0,0.3);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+    }
+    .checkbox-custom:checked {
+      background: #34D399;
+      border-color: #34D399;
+    }
+    .checkbox-custom:checked::after {
+      content: '✓';
+      color: #000;
+      font-weight: 900;
+      font-size: 13px;
+    }
+    ::-webkit-scrollbar { width: 4px; height: 4px; }
+    ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 4px; }
+  </style>
+
+  <!-- Firebase Модуль -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getDatabase, ref, set, get, update, remove, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyB8CBeK8m25rox6BYO8ep6JeBJ7ipmYViQ",
+      authDomain: "moon-60c5a.firebaseapp.com",
+      databaseURL: "https://moon-60c5a-default-rtdb.firebaseio.com",
+      projectId: "moon-60c5a",
+      storageBucket: "moon-60c5a.firebasestorage.app",
+      messagingSenderId: "1010513396599",
+      appId: "1:1010513396599:web:86cbb8164de80b1dcc9772",
+      measurementId: "G-KKE1L09LHS"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    window.firebaseDB = db;
+    window.dbRef = ref;
+    window.dbSet = set;
+    window.dbGet = get;
+    window.dbUpdate = update;
+    window.dbRemove = remove;
+
+    const ADMIN_PASS = "0605";
+
+    function setCookie(name, value, days = 7) {
+      const d = new Date();
+      d.setTime(d.getTime() + (days * 24 * 60 * 60 * 1000));
+      document.cookie = `${name}=${encodeURIComponent(value)};expires=${d.toUTCString()};path=/;SameSite=Lax`;
+    }
+
+    function getCookie(name) {
+      const matches = document.cookie.match(new RegExp('(?:^|; )' + name.replace(/([\.$?*|{}\(\)\[\]\\\/\+^])/g, '\\$1') + '=([^;]*)'));
+      return matches ? decodeURIComponent(matches[1]) : undefined;
+    }
+
+    function removeCookie(name) {
+      document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 UTC;path=/;`;
+    }
+
+    window.checkAdminAuth = function() {
+      const savedPass = getCookie('moon_admin_session') || localStorage.getItem('moon_admin_session');
+      if (savedPass === ADMIN_PASS) {
+        unlockAdminPanel();
+      } else {
+        document.getElementById('screen-login').classList.remove('hidden');
+        document.getElementById('screen-admin').classList.add('hidden');
+      }
+    };
+
+    window.tryAdminLogin = function() {
+      const inputPass = document.getElementById('admin-pass-input').value.trim();
+      const errEl = document.getElementById('login-err');
+
+      if (inputPass === ADMIN_PASS) {
+        setCookie('moon_admin_session', ADMIN_PASS, 7);
+        localStorage.setItem('moon_admin_session', ADMIN_PASS);
+        unlockAdminPanel();
+      } else {
+        errEl.innerText = "Неверный пароль администратора";
+      }
+    };
+
+    window.adminLogout = function() {
+      removeCookie('moon_admin_session');
+      localStorage.removeItem('moon_admin_session');
+      location.reload();
+    };
+
+    function unlockAdminPanel() {
+      document.getElementById('screen-login').classList.add('hidden');
+      document.getElementById('screen-admin').classList.remove('hidden');
+      bindRealtimeData();
+    }
+
+    function bindRealtimeData() {
+      // 1. Транзакции
+      onValue(ref(db, 'admin_transactions'), (snapshot) => {
+        const data = snapshot.val() || {};
+        window.loadedTx = data;
+        window.renderAdminTransactions(data);
+        window.recalcStats(data);
+      });
+
+      // 2. Пользователи
+      onValue(ref(db, 'users'), (snapshot) => {
+        const users = snapshot.val() || {};
+        window.loadedUsers = users;
+        window.renderPartnersTable(users);
+        window.recalcDebtsAndTaxes(users);
+        window.checkSmartAssistantAlerts(users);
+      });
+
+      // 3. Настройки выплат и налога
+      onValue(ref(db, 'payout_settings'), (snapshot) => {
+        const settings = snapshot.val() || {
+          min_payout: 1000,
+          payout_hour: 19,
+          tax_rate: 4,
+          weekend_skip: true,
+          tier2_goal: 30000,
+          tier3_goal: 100000
+        };
+        window.loadedPayoutSettings = settings;
+        document.getElementById('set-min-payout').value = settings.min_payout || 1000;
+        document.getElementById('set-payout-hour').value = settings.payout_hour || 19;
+        document.getElementById('set-tax-rate').value = settings.tax_rate !== undefined ? settings.tax_rate : 4;
+        document.getElementById('set-weekend-skip').checked = settings.weekend_skip !== false;
+        document.getElementById('goal-tier2').value = settings.tier2_goal || 30000;
+        document.getElementById('goal-tier3').value = settings.tier3_goal || 100000;
+        
+        if (window.loadedUsers) {
+          window.renderPartnersTable(window.loadedUsers);
+          window.recalcDebtsAndTaxes(window.loadedUsers);
+          window.checkSmartAssistantAlerts(window.loadedUsers);
+        }
+      });
+
+      // 4. Черный список
+      onValue(ref(db, 'blacklist'), (snapshot) => {
+        const list = snapshot.val() || {};
+        window.loadedBlacklist = list;
+        window.renderBlacklistTable(list);
+      });
+    }
+
+    checkAdminAuth();
+  </script>
+</head>
+<body class="text-white min-h-screen flex flex-col font-sans selection:bg-yellow-300 selection:text-black">
+
+  <!-- ================= 1. ЭКРАН ВВОДА ПАРОЛЯ ================= -->
+  <div id="screen-login" class="w-full max-w-sm m-auto p-4 flex flex-col gap-4">
+    <div class="bg-surface border border-white/10 rounded-3xl p-6 shadow-2xl flex flex-col gap-4 text-center">
+      <div class="w-14 h-14 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-400 flex items-center justify-center font-display font-black text-2xl mx-auto">
+        🛡️
+      </div>
+      <div>
+        <h2 class="font-display text-base sm:text-lg font-black uppercase text-white">Вход в Админку</h2>
+        <p class="text-xs text-neutral-400 mt-1">Автоматический аудит выплат и налог 4%</p>
+      </div>
+
+      <div id="login-err" class="text-xs text-rose-400 font-bold min-h-[16px]"></div>
+
+      <input type="password" id="admin-pass-input" placeholder="Введите пароль" class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-center text-sm font-mono text-white focus:border-yellow-300 tracking-widest" onkeydown="if(event.key==='Enter') tryAdminLogin()" />
+
+      <button onclick="tryAdminLogin()" class="w-full bg-sticker text-black font-display font-black text-xs uppercase py-3.5 rounded-xl shadow-lg active:scale-95 transition-all">
+        Войти
+      </button>
+    </div>
+  </div>
+
+  <!-- ================= 2. ПАНЕЛЬ УПРАВЛЕНИЯ ================= -->
+  <div id="screen-admin" class="hidden flex-1 flex flex-col pb-24 sm:pb-12">
+    
+    <!-- Шапка -->
+    <header class="w-full bg-surface/90 backdrop-blur-xl border-b border-white/10 px-3.5 sm:px-8 py-3 flex justify-between items-center sticky top-0 z-40">
+      <div class="flex items-center gap-2.5">
+        <div class="bg-rose-500/20 border border-rose-500/30 text-rose-300 font-display font-black text-[10px] px-2 py-0.5 rounded-lg uppercase">
+          ADMIN
+        </div>
+        <h1 class="font-display text-xs sm:text-sm font-black uppercase text-white truncate max-w-[150px] sm:max-w-none">Moon POS</h1>
+      </div>
+
+      <div class="flex items-center gap-1.5">
+        <button onclick="generateFullPayoutReport()" class="bg-sticker text-black text-[11px] px-2.5 py-1.5 rounded-xl font-display font-black active:scale-95 transition-all shadow flex items-center gap-1">
+          <span>📋 Ведомость</span>
+        </button>
+        <button onclick="adminLogout()" class="bg-white/10 hover:bg-rose-500/20 text-neutral-300 text-[11px] px-2.5 py-1.5 rounded-xl border border-white/10 font-bold">
+          Выход
+        </button>
+      </div>
+    </header>
+
+    <main class="p-3 sm:p-6 max-w-7xl mx-auto w-full flex flex-col gap-4 sm:gap-6">
+
+      <!-- Автоматический помощник по выплатам -->
+      <section id="smart-assistant-card" class="bg-surface border border-white/15 rounded-2xl sm:rounded-3xl p-4 shadow-xl flex flex-col gap-3 text-left relative overflow-hidden">
+        <div class="flex justify-between items-start gap-2">
+          <div class="flex items-center gap-2">
+            <span class="text-lg">🤖</span>
+            <h3 class="font-display text-xs font-black uppercase text-white">Советник выплат</h3>
+          </div>
+          <span id="assistant-status-pill" class="text-[9px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">В графике</span>
+        </div>
+
+        <p id="assistant-summary-text" class="text-[11px] sm:text-xs text-neutral-300 leading-relaxed">
+          Анализ расписания и накопительных долгов...
+        </p>
+
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 bg-black/40 border border-white/5 p-2.5 rounded-xl text-[10px] font-mono">
+          <div><span class="text-neutral-400 block">Окно:</span><b id="ast-next-date" class="text-yellow-300">Завтра, 19:00</b></div>
+          <div><span class="text-neutral-400 block">К выплате:</span><b id="ast-ready-count" class="text-emerald-400">0 чел</b></div>
+          <div><span class="text-neutral-400 block">На руки:</span><b id="ast-clean-sum" class="text-emerald-400">0 ₽</b></div>
+          <div><span class="text-neutral-400 block">Налог 4%:</span><b id="ast-tax-sum" class="text-rose-400">0 ₽</b></div>
+        </div>
+      </section>
+
+      <!-- Карточки ключевых показателей -->
+      <section class="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4">
+        <div class="bg-surface border border-white/10 rounded-2xl p-3.5 shadow-lg">
+          <span class="text-[9px] sm:text-xs text-neutral-400 font-bold uppercase block">Выручка точки</span>
+          <div class="flex items-baseline gap-1 mt-0.5">
+            <span id="stat-total-rev" class="font-display text-lg sm:text-2xl font-black text-white">0</span>
+            <span class="font-display text-xs font-bold text-sticker">₽</span>
+          </div>
+        </div>
+
+        <div class="bg-surface border border-white/10 rounded-2xl p-3.5 shadow-lg">
+          <span class="text-[9px] sm:text-xs text-neutral-400 font-bold uppercase block">Доход заведения</span>
+          <div class="flex items-baseline gap-1 mt-0.5">
+            <span id="stat-net-rev" class="font-display text-lg sm:text-2xl font-black text-emerald-400">0</span>
+            <span class="font-display text-xs font-bold text-emerald-400">₽</span>
+          </div>
+        </div>
+
+        <div class="bg-surface border border-white/10 rounded-2xl p-3.5 shadow-lg">
+          <span class="text-[9px] sm:text-xs text-neutral-400 font-bold uppercase block">На руки партнёрам</span>
+          <div class="flex items-baseline gap-1 mt-0.5">
+            <span id="stat-clean-debt" class="font-display text-lg sm:text-2xl font-black text-amber-300">0</span>
+            <span class="font-display text-xs font-bold text-amber-300">₽</span>
+          </div>
+        </div>
+
+        <div class="bg-surface border border-white/10 rounded-2xl p-3.5 shadow-lg">
+          <span class="text-[9px] sm:text-xs text-neutral-400 font-bold uppercase block">Налог 4%</span>
+          <div class="flex items-baseline gap-1 mt-0.5">
+            <span id="stat-total-tax" class="font-display text-lg sm:text-2xl font-black text-rose-400">0</span>
+            <span class="font-display text-xs font-bold text-rose-400">₽</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Десктопные кнопки переключения вкладок -->
+      <div class="hidden sm:flex flex-wrap gap-2 p-1 bg-surface border border-white/10 rounded-2xl w-fit">
+        <button id="tab-partners-btn" onclick="switchAdminTab('partners')" class="px-4 py-2 rounded-xl font-display text-xs font-bold uppercase transition-all bg-sticker text-black shadow">
+          👥 Партнёры & Галочки
+        </button>
+        <button id="tab-loyalty-btn" onclick="switchAdminTab('loyalty')" class="px-4 py-2 rounded-xl font-display text-xs font-bold uppercase transition-all text-neutral-400 hover:text-white">
+          ⚙️ Правила & Налог
+        </button>
+        <button id="tab-blacklist-btn" onclick="switchAdminTab('blacklist')" class="px-4 py-2 rounded-xl font-display text-xs font-bold uppercase transition-all text-neutral-400 hover:text-white">
+          🚫 Черный список
+        </button>
+        <button id="tab-tx-btn" onclick="switchAdminTab('tx')" class="px-4 py-2 rounded-xl font-display text-xs font-bold uppercase transition-all text-neutral-400 hover:text-white">
+          🧾 История оплат
+        </button>
+      </div>
+
+      <!-- ВКЛАДКА 1: ПАРТНЁРЫ, ВЫПЛАТЫ И НАЛОГИ -->
+      <section id="view-partners" class="bg-surface border border-white/10 rounded-2xl sm:rounded-3xl p-3.5 sm:p-6 shadow-2xl flex flex-col gap-3 text-left">
+        <div class="flex justify-between items-center">
+          <div>
+            <h2 class="font-display text-xs sm:text-sm font-black uppercase text-white flex items-center gap-1.5">
+              <span>👥</span> Управление выплатами
+            </h2>
+            <p class="text-[10px] text-neutral-400">Галочка [✓] обнуляет долг и переносит запись в архив</p>
+          </div>
+        </div>
+
+        <div class="overflow-x-auto -mx-3.5 sm:mx-0 px-3.5 sm:px-0">
+          <table class="w-full text-left border-collapse min-w-[580px]">
+            <thead>
+              <tr class="border-b border-white/10 text-[9px] sm:text-[10px] font-display font-bold uppercase text-neutral-400">
+                <th class="py-2.5 px-2 text-center w-10">✓</th>
+                <th class="py-2.5 px-2">Партнёр</th>
+                <th class="py-2.5 px-2">Реквизиты</th>
+                <th class="py-2.5 px-2">Накоплено</th>
+                <th class="py-2.5 px-2">Налог 4%</th>
+                <th class="py-2.5 px-2">На руки</th>
+                <th class="py-2.5 px-2 text-right">Действия</th>
+              </tr>
+            </thead>
+            <tbody id="partners-tbody" class="divide-y divide-white/5 text-[11px] font-medium">
+              <tr>
+                <td colspan="7" class="py-6 text-center text-neutral-500">Загрузка данных...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ВКЛАДКА 2: ПРАВИЛА ВЫПЛАТ И НАЛОГ -->
+      <section id="view-loyalty" class="hidden bg-surface border border-white/10 rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-2xl flex flex-col gap-5 text-left">
+        <div>
+          <h2 class="font-display text-xs sm:text-sm font-black uppercase text-sticker flex items-center gap-1.5">
+            <span>⚙️</span> Финансовые параметры и налог
+          </h2>
+          <p class="text-[10px] text-neutral-400">Ставка налога, минимальный порог и пороги процентов</p>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div class="bg-black/30 border border-white/10 p-3 rounded-xl flex flex-col gap-1.5">
+            <label class="text-[9px] text-neutral-400 font-bold uppercase">Обязательный налог (%):</label>
+            <input type="number" id="set-tax-rate" value="4" min="0" max="20" class="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-xs text-white font-mono" />
+          </div>
+
+          <div class="bg-black/30 border border-white/10 p-3 rounded-xl flex flex-col gap-1.5">
+            <label class="text-[9px] text-neutral-400 font-bold uppercase">Мин. порог вывода (₽):</label>
+            <input type="number" id="set-min-payout" value="1000" min="100" class="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-xs text-white font-mono" />
+          </div>
+
+          <div class="bg-black/30 border border-white/10 p-3 rounded-xl flex flex-col gap-1.5">
+            <label class="text-[9px] text-neutral-400 font-bold uppercase">Час выплаты (0-23):</label>
+            <input type="number" id="set-payout-hour" value="19" min="0" max="23" class="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-xs text-white font-mono" />
+          </div>
+        </div>
+
+        <div class="bg-black/30 border border-white/10 p-3.5 rounded-xl flex items-center justify-between">
+          <div class="pr-2">
+            <span class="text-xs font-bold text-white block">Исключать Сб и Вс</span>
+            <span class="text-[9px] text-neutral-400">Долги копятся и переносятся на понедельник 19:00</span>
+          </div>
+          <input type="checkbox" id="set-weekend-skip" checked class="rounded accent-yellow-300 w-5 h-5 shrink-0" />
+        </div>
+
+        <div class="grid grid-cols-2 gap-3 pt-2 border-t border-white/10">
+          <div>
+            <span class="text-[9px] text-yellow-300 font-bold uppercase block mb-1">Порог на 30% (₽)</span>
+            <input type="number" id="goal-tier2" class="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-xs text-white font-mono" />
+          </div>
+          <div>
+            <span class="text-[9px] text-emerald-400 font-bold uppercase block mb-1">Порог на 40% (₽)</span>
+            <input type="number" id="goal-tier3" class="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-xs text-white font-mono" />
+          </div>
+        </div>
+
+        <button onclick="saveAdminSettings()" class="w-full bg-sticker text-black font-display font-black text-xs uppercase py-3.5 rounded-xl shadow active:scale-95 transition-all">
+          💾 Сохранить параметры
+        </button>
+      </section>
+
+      <!-- ВКЛАДКА 3: ЧЕРНЫЙ СПИСОК -->
+      <section id="view-blacklist" class="hidden bg-surface border border-white/10 rounded-2xl sm:rounded-3xl p-3.5 sm:p-6 shadow-2xl flex flex-col gap-3 text-left">
+        <h2 class="font-display text-xs sm:text-sm font-black uppercase text-rose-400 flex items-center gap-1.5">
+          <span>🚫</span> Черный список
+        </h2>
+        <div class="overflow-x-auto -mx-3.5 sm:mx-0 px-3.5 sm:px-0">
+          <table class="w-full text-left border-collapse min-w-[480px]">
+            <thead>
+              <tr class="border-b border-white/10 text-[9px] font-display font-bold uppercase text-neutral-400">
+                <th class="py-2.5 px-2">Партнёр</th>
+                <th class="py-2.5 px-2">IP-адрес</th>
+                <th class="py-2.5 px-2">Hardware ID</th>
+                <th class="py-2.5 px-2 text-right">Действие</th>
+              </tr>
+            </thead>
+            <tbody id="blacklist-tbody" class="divide-y divide-white/5 text-[11px] font-medium">
+              <tr><td colspan="4" class="py-4 text-center text-neutral-500">Список пуст</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ВКЛАДКА 4: ИСТОРИЯ ТРАНЗАКЦИЙ -->
+      <section id="view-tx" class="hidden bg-surface border border-white/10 rounded-2xl sm:rounded-3xl p-3.5 sm:p-6 shadow-2xl flex flex-col gap-3 text-left">
+        <div class="flex justify-between items-center">
+          <h2 class="font-display text-xs sm:text-sm font-black uppercase text-white flex items-center gap-1.5">
+            <span>🧾</span> История чеков
+          </h2>
+          <button onclick="clearAllTransactions()" class="text-rose-400 text-[10px] font-bold">Очистить лог</button>
+        </div>
+
+        <div class="overflow-x-auto -mx-3.5 sm:mx-0 px-3.5 sm:px-0">
+          <table class="w-full text-left border-collapse min-w-[500px]">
+            <thead>
+              <tr class="border-b border-white/10 text-[9px] font-display font-bold uppercase text-neutral-400">
+                <th class="py-2.5 px-2">Время</th>
+                <th class="py-2.5 px-2">Чек</th>
+                <th class="py-2.5 px-2">Точке</th>
+                <th class="py-2.5 px-2">Партнёру</th>
+                <th class="py-2.5 px-2">Способ</th>
+                <th class="py-2.5 px-2">Кассир</th>
+              </tr>
+            </thead>
+            <tbody id="tx-tbody" class="divide-y divide-white/5 text-[11px] font-medium">
+              <tr><td colspan="6" class="py-4 text-center text-neutral-500">Транзакций пока нет</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- МОБИЛЬНЫЙ ТАБ-БАР (НАВИГАЦИЯ ВНИЗУ) -->
+    <nav class="sm:hidden fixed bottom-0 left-0 right-0 bg-surface/95 backdrop-blur-xl border-t border-white/10 px-2 py-1.5 z-40 flex justify-around">
+      <button onclick="switchAdminTab('partners')" id="mob-tab-partners" class="flex-1 py-1.5 flex flex-col items-center gap-0.5 text-sticker font-display text-[9px] font-bold uppercase">
+        <span class="text-base">👥</span>
+        <span>Выплаты</span>
+      </button>
+      <button onclick="switchAdminTab('loyalty')" id="mob-tab-loyalty" class="flex-1 py-1.5 flex flex-col items-center gap-0.5 text-neutral-400 font-display text-[9px] font-bold uppercase">
+        <span class="text-base">⚙️</span>
+        <span>Налоги</span>
+      </button>
+      <button onclick="switchAdminTab('blacklist')" id="mob-tab-blacklist" class="flex-1 py-1.5 flex flex-col items-center gap-0.5 text-neutral-400 font-display text-[9px] font-bold uppercase">
+        <span class="text-base">🚫</span>
+        <span>Бан</span>
+      </button>
+      <button onclick="switchAdminTab('tx')" id="mob-tab-tx" class="flex-1 py-1.5 flex flex-col items-center gap-0.5 text-neutral-400 font-display text-[9px] font-bold uppercase">
+        <span class="text-base">🧾</span>
+        <span>Чеки</span>
+      </button>
+    </nav>
+
+  </div>
+
+  <!-- ================= МОДАЛКА: СВОДНЫЙ ОТЧЕТ ВЫПЛАТ ================= -->
+  <div id="modal-payout-report" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-3 sm:p-5">
+    <div class="bg-surface border border-white/15 rounded-3xl p-4 sm:p-6 max-w-lg w-full shadow-2xl flex flex-col gap-3 text-left max-h-[92vh] overflow-y-auto">
+      <div class="flex justify-between items-start border-b border-white/10 pb-2.5">
+        <div>
+          <h3 class="font-display text-xs sm:text-sm font-black uppercase text-white">Ведомость накопительных выплат</h3>
+          <p class="text-[10px] text-neutral-400 mt-0.5">Выплаты на след. рабочий день в 19:00 • Налог 4%</p>
+        </div>
+        <button onclick="closePayoutReportModal()" class="text-neutral-400 hover:text-white text-lg">✕</button>
+      </div>
+
+      <div class="grid grid-cols-3 gap-2 bg-black/50 p-2.5 rounded-xl border border-white/5 text-center font-mono text-[11px]">
+        <div><span class="text-[9px] text-neutral-400 block">Накоплено</span><b id="rep-total-gross" class="text-white">0 ₽</b></div>
+        <div><span class="text-[9px] text-rose-400 block">Налог 4%</span><b id="rep-total-tax" class="text-rose-400">0 ₽</b></div>
+        <div><span class="text-[9px] text-emerald-400 block">На руки</span><b id="rep-total-clean" class="text-emerald-400">0 ₽</b></div>
+      </div>
+
+      <div class="flex flex-col gap-1.5">
+        <div class="flex justify-between items-center">
+          <span class="text-[10px] font-bold uppercase text-neutral-300">Готовы к выплате (от 1 000 ₽):</span>
+          <button onclick="payoutAllReadyPartners()" class="text-[10px] font-display font-black text-emerald-400 hover:underline">✓ Выплатить всем</button>
+        </div>
+        <div id="rep-items-container" class="flex flex-col divide-y divide-white/5 bg-black/30 rounded-xl p-2 max-h-[220px] overflow-y-auto"></div>
+      </div>
+
+      <div class="flex flex-col gap-1">
+        <div class="flex justify-between items-center">
+          <span class="text-[9px] font-bold uppercase text-neutral-400">Реестр для банка:</span>
+          <button onclick="copyReportAsText()" class="text-[9px] text-sticker hover:underline font-bold">Копировать</button>
+        </div>
+        <textarea id="rep-raw-text" readonly class="w-full h-20 bg-black/60 border border-white/10 rounded-lg p-2 text-[10px] font-mono text-neutral-300 resize-none"></textarea>
+      </div>
+
+      <button onclick="closePayoutReportModal()" class="w-full bg-white/10 py-2.5 rounded-xl text-xs font-bold text-neutral-300">
+        Закрыть
+      </button>
+    </div>
+  </div>
+
+  <!-- ================= МОДАЛКА: ПРОСМОТР И ДЕТАЛИ ================= -->
+  <div id="modal-view-partner" class="hidden fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-3">
+    <div class="bg-surface border border-white/15 rounded-3xl p-4 sm:p-6 max-w-sm w-full shadow-2xl flex flex-col gap-3 text-left max-h-[90vh] overflow-y-auto">
+      <div class="flex justify-between items-center border-b border-white/10 pb-2">
+        <h3 class="font-display text-xs sm:text-sm font-black uppercase text-sticker">Анкета партнёра</h3>
+        <button onclick="closeViewPartnerModal()" class="text-neutral-400 hover:text-white text-lg">✕</button>
+      </div>
+
+      <div class="flex flex-col gap-2 text-xs">
+        <div class="bg-black/30 p-2.5 rounded-xl border border-white/5">
+          <span class="text-[9px] text-neutral-400 uppercase font-bold block">ФИО Партнёра:</span>
+          <span id="vp-fullname" class="font-bold text-white text-xs">—</span>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2">
+          <div class="bg-black/30 p-2.5 rounded-xl border border-white/5">
+            <span class="text-[9px] text-neutral-400 uppercase font-bold block">Телефон:</span>
+            <span id="vp-phone" class="font-mono text-neutral-200 text-[11px]">—</span>
+          </div>
+          <div class="bg-black/30 p-2.5 rounded-xl border border-white/5">
+            <span class="text-[9px] text-neutral-400 uppercase font-bold block">Логин:</span>
+            <span id="vp-login" class="font-mono text-sticker text-[11px]">—</span>
+          </div>
+        </div>
+
+        <div class="p-2.5 rounded-xl border flex flex-col gap-1.5 bg-black/40 border-yellow-300/30">
+          <div class="text-[9px] font-bold text-yellow-300 uppercase">Расчет перевода</div>
+          <div class="grid grid-cols-3 gap-1 text-center font-mono text-[10px]">
+            <div class="bg-black/40 p-1.5 rounded-lg"><span class="text-[8px] text-neutral-400 block">Баланс</span><b id="vp-gross-val" class="text-white">0 ₽</b></div>
+            <div class="bg-black/40 p-1.5 rounded-lg"><span class="text-[8px] text-rose-400 block">Налог 4%</span><b id="vp-tax-val" class="text-rose-400">-0 ₽</b></div>
+            <div class="bg-black/40 p-1.5 rounded-lg"><span class="text-[8px] text-emerald-400 block">На руки</span><b id="vp-clean-val" class="text-emerald-400">0 ₽</b></div>
+          </div>
+          <div id="vp-payout-timing" class="text-[9px] text-neutral-300"></div>
+        </div>
+
+        <div class="bg-black/40 p-2.5 rounded-xl border border-white/10 flex justify-between items-center">
+          <div>
+            <span class="text-[8px] text-neutral-400 uppercase font-bold block">Номер перевода</span>
+            <div id="vp-pay-phone" class="font-mono font-bold text-xs text-white">—</div>
+            <div id="vp-bank-name" class="text-[9px] text-neutral-400">Банк: —</div>
+          </div>
+          <button onclick="copyPayDetails()" class="bg-white/10 text-[9px] font-bold px-2 py-1 rounded-lg border border-white/10">Копия</button>
+        </div>
+      </div>
+
+      <div class="flex flex-col gap-1.5 pt-2 border-t border-white/10">
+        <button id="vp-btn-payout" class="w-full bg-emerald-500 text-black font-display font-black text-[11px] uppercase py-2.5 rounded-xl shadow active:scale-95">
+          Выплатить чистыми [✓]
+        </button>
+        <div class="grid grid-cols-2 gap-1.5">
+          <button id="vp-btn-ban" class="bg-rose-500/20 text-rose-300 py-2 rounded-xl text-[10px] font-bold">🚫 Бан железа</button>
+          <button id="vp-btn-delete" class="bg-neutral-800 text-neutral-300 py-2 rounded-xl text-[10px] font-bold">🗑️ Удалить</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= МОДАЛКА: РЕДАКТИРОВАНИЕ ================= -->
+  <div id="modal-edit-partner" class="hidden fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-3">
+    <div class="bg-surface border border-white/15 rounded-3xl p-4 sm:p-6 max-w-sm w-full shadow-2xl flex flex-col gap-3 text-left max-h-[90vh] overflow-y-auto">
+      <div class="flex justify-between items-center border-b border-white/10 pb-2">
+        <h3 class="font-display text-xs sm:text-sm font-black uppercase text-sticker">Редактировать</h3>
+        <button onclick="closeEditPartnerModal()" class="text-neutral-400 hover:text-white text-lg">✕</button>
+      </div>
+
+      <input type="hidden" id="edit-partner-id" value="" />
+
+      <div class="grid grid-cols-2 gap-2">
+        <div>
+          <label class="text-[9px] text-neutral-400 font-bold uppercase block mb-1">Имя</label>
+          <input type="text" id="edit-partner-firstname" class="w-full bg-white/5 border border-white/10 rounded-lg px-2.5 py-1.5 text-xs text-white" />
+        </div>
+        <div>
+          <label class="text-[9px] text-neutral-400 font-bold uppercase block mb-1">Фамилия</label>
+          <input type="text" id="edit-partner-lastname" class="w-full bg-white/5 border border-white/10 rounded-lg px-2.5 py-1.5 text-xs text-white" />
+        </div>
+      </div>
+
+      <div>
+        <label class="text-[9px] text-neutral-400 font-bold uppercase block mb-1">Телефон</label>
+        <input type="text" id="edit-partner-phone" class="w-full bg-white/5 border border-white/10 rounded-lg px-2.5 py-1.5 text-xs text-white font-mono" />
+      </div>
+
+      <div class="p-2.5 bg-black/30 border border-white/10 rounded-xl flex flex-col gap-1.5">
+        <span class="text-[9px] text-yellow-300 font-bold uppercase">Реквизиты</span>
+        <input type="text" id="edit-partner-payphone" placeholder="Номер карты/СБП" class="w-full bg-white/5 border border-white/10 rounded-lg px-2.5 py-1.5 text-xs text-white font-mono" />
+        <input type="text" id="edit-partner-bankname" placeholder="Банк" class="w-full bg-white/5 border border-white/10 rounded-lg px-2.5 py-1.5 text-xs text-white" />
+        <label class="flex items-center gap-1.5 text-[10px] cursor-pointer">
+          <input type="checkbox" id="edit-partner-istbank" class="rounded accent-yellow-300 w-3.5 h-3.5" />
+          <span class="text-neutral-300">Есть Т-Банк</span>
+        </label>
+      </div>
+
+      <div class="grid grid-cols-2 gap-2">
+        <div>
+          <label class="text-[9px] text-neutral-400 font-bold uppercase block mb-1">Ставка (%)</label>
+          <input type="number" id="edit-partner-rate" class="w-full bg-white/5 border border-white/10 rounded-lg px-2.5 py-1.5 text-xs text-white font-mono" />
+        </div>
+        <div>
+          <label class="text-[9px] text-neutral-400 font-bold uppercase block mb-1">Баланс (₽)</label>
+          <input type="number" id="edit-partner-balance" class="w-full bg-white/5 border border-white/10 rounded-lg px-2.5 py-1.5 text-xs text-white font-mono" />
+        </div>
+      </div>
+
+      <div class="flex gap-2 pt-2 border-t border-white/10">
+        <button onclick="savePartnerChanges()" class="flex-1 bg-sticker text-black font-display font-black text-xs uppercase py-2.5 rounded-xl shadow active:scale-95">Сохранить</button>
+        <button onclick="closeEditPartnerModal()" class="bg-white/10 px-3 py-2.5 rounded-xl text-xs font-bold text-neutral-300">Отмена</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= СКРИПТЫ ================= -->
+  <script>
+    function getNextPayoutWindow(baseTime = Date.now()) {
+      const settings = window.loadedPayoutSettings || { payout_hour: 19, weekend_skip: true };
+      const payoutHour = settings.payout_hour !== undefined ? settings.payout_hour : 19;
+      
+      const target = new Date(baseTime);
+      target.setDate(target.getDate() + 1);
+      target.setHours(payoutHour, 0, 0, 0);
+
+      if (settings.weekend_skip !== false) {
+        if (target.getDay() === 6) target.setDate(target.getDate() + 2);
+        else if (target.getDay() === 0) target.setDate(target.getDate() + 1);
+      }
+      return target;
+    }
+
+    window.checkSmartAssistantAlerts = function(usersObj) {
+      const users = Object.values(usersObj || {});
+      const minPayout = (window.loadedPayoutSettings && window.loadedPayoutSettings.min_payout) || 1000;
+      const taxRate = (window.loadedPayoutSettings && window.loadedPayoutSettings.tax_rate) !== undefined ? window.loadedPayoutSettings.tax_rate : 4;
+      const payoutHour = (window.loadedPayoutSettings && window.loadedPayoutSettings.payout_hour) || 19;
+
+      const readyUsers = users.filter(u => !u.isBanned && (Number(u.balance) || 0) >= minPayout);
+      
+      let totalGross = 0, totalTax = 0, totalClean = 0;
+      readyUsers.forEach(u => {
+        const bal = Number(u.balance) || 0;
+        const tax = Math.round(bal * (taxRate / 100));
+        totalGross += bal;
+        totalTax += tax;
+        totalClean += (bal - tax);
+      });
+
+      const nextDate = getNextPayoutWindow();
+      const nextDateStr = nextDate.toLocaleDateString('ru-RU', { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+
+      document.getElementById('ast-next-date').innerText = nextDateStr;
+      document.getElementById('ast-ready-count').innerText = `${readyUsers.length} чел`;
+      document.getElementById('ast-clean-sum').innerText = `${totalClean.toLocaleString('ru-RU')} ₽`;
+      document.getElementById('ast-tax-sum').innerText = `${totalTax.toLocaleString('ru-RU')} ₽`;
+
+      const summaryEl = document.getElementById('assistant-summary-text');
+      const statusPill = document.getElementById('assistant-status-pill');
+      const now = new Date();
+      const isWeekend = now.getDay() === 6 || now.getDay() === 0;
+
+      if (readyUsers.length === 0) {
+        summaryEl.innerHTML = `Накоплений от <b>${minPayout.toLocaleString('ru-RU')} ₽</b> сейчас нет. Все чеки накапливаются.`;
+        statusPill.className = 'text-[9px] font-bold px-2 py-0.5 rounded-full bg-white/10 text-neutral-400 border border-white/10';
+        statusPill.innerText = 'Накопление';
+      } else {
+        if (isWeekend) {
+          summaryEl.innerHTML = `⚠️ Выходной день банков (Сб/Вс). Невыплаченные суммы копятся и будут отправлены в <b>понедельник в ${payoutHour}:00</b> (Всего: <b>${totalClean.toLocaleString('ru-RU')} ₽</b> чистыми).`;
+          statusPill.className = 'text-[9px] font-bold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30';
+          statusPill.innerText = 'Копится на ПН';
+        } else {
+          summaryEl.innerHTML = `📢 <b>${readyUsers.length} партнёров</b> накопили на выплату одним чеком. Переведите <b>${totalClean.toLocaleString('ru-RU')} ₽</b> чистыми к <b>${nextDateStr}</b>. После перевода нажмите галочку [✓].`;
+          statusPill.className = 'text-[9px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30';
+          statusPill.innerText = 'Готово к выплате';
+        }
+      }
+    };
+
+    window.switchAdminTab = function(tab) {
+      document.getElementById('view-partners').classList.add('hidden');
+      document.getElementById('view-loyalty').classList.add('hidden');
+      document.getElementById('view-blacklist').classList.add('hidden');
+      document.getElementById('view-tx').classList.add('hidden');
+
+      const tabs = ['partners', 'loyalty', 'blacklist', 'tx'];
+      tabs.forEach(t => {
+        const deskBtn = document.getElementById(`tab-${t}-btn`);
+        const mobBtn = document.getElementById(`mob-tab-${t}`);
+        if (deskBtn) deskBtn.className = 'px-4 py-2 rounded-xl font-display text-xs font-bold uppercase transition-all text-neutral-400 hover:text-white';
+        if (mobBtn) mobBtn.className = 'flex-1 py-1.5 flex flex-col items-center gap-0.5 text-neutral-400 font-display text-[9px] font-bold uppercase';
+      });
+
+      document.getElementById(`view-${tab}`).classList.remove('hidden');
+      const activeDesk = document.getElementById(`tab-${tab}-btn`);
+      const activeMob = document.getElementById(`mob-tab-${tab}`);
+      if (activeDesk) activeDesk.className = 'px-4 py-2 rounded-xl font-display text-xs font-bold uppercase transition-all bg-sticker text-black shadow';
+      if (activeMob) activeMob.className = 'flex-1 py-1.5 flex flex-col items-center gap-0.5 text-sticker font-display text-[9px] font-bold uppercase';
+    };
+
+    window.recalcStats = function(txObj) {
+      let total = 0, partnerCut = 0, count = 0;
+      Object.values(txObj).forEach(tx => {
+        total += (Number(tx.amount) || 0);
+        partnerCut += (Number(tx.partnerCut) || 0);
+        count++;
+      });
+      document.getElementById('stat-total-rev').innerText = total.toLocaleString('ru-RU');
+      document.getElementById('stat-net-rev').innerText = (total - partnerCut).toLocaleString('ru-RU');
+    };
+
+    window.recalcDebtsAndTaxes = function(usersObj) {
+      const taxRate = (window.loadedPayoutSettings && window.loadedPayoutSettings.tax_rate) !== undefined ? window.loadedPayoutSettings.tax_rate : 4;
+      let totalGross = 0, totalTax = 0;
+      Object.values(usersObj).forEach(u => {
+        const bal = Number(u.balance) || 0;
+        const tax = Math.round(bal * (taxRate / 100));
+        totalGross += bal;
+        totalTax += tax;
+      });
+      document.getElementById('stat-clean-debt').innerText = (totalGross - totalTax).toLocaleString('ru-RU');
+      document.getElementById('stat-total-tax').innerText = totalTax.toLocaleString('ru-RU');
+    };
+
+    window.renderPartnersTable = function(usersObj) {
+      const tbody = document.getElementById('partners-tbody');
+      const users = Object.values(usersObj);
+      const minPayout = (window.loadedPayoutSettings && window.loadedPayoutSettings.min_payout) || 1000;
+      const taxRate = (window.loadedPayoutSettings && window.loadedPayoutSettings.tax_rate) !== undefined ? window.loadedPayoutSettings.tax_rate : 4;
+
+      if (users.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7" class="py-6 text-center text-neutral-500">Нет зарегистрированных партнёров</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = users.map(u => {
+        const gross = Number(u.balance) || 0;
+        const tax = Math.round(gross * (taxRate / 100));
+        const clean = Math.max(0, gross - tax);
+        const fullName = ((u.lastName || '') + ' ' + (u.firstName || u.name || 'Партнёр')).trim();
+        const payoutPhone = u.payoutPhone || u.phone || 'Не указан';
+        const bankName = u.bankName || (u.hasTBank ? 'Т-Банк' : 'СБП');
+        const isBanned = Boolean(u.isBanned);
+        const isPaidZero = gross === 0;
+
+        return `
+          <tr class="hover:bg-white/5 transition-colors ${isBanned ? 'bg-rose-500/5 opacity-75' : ''}">
+            <td class="py-2.5 px-2 text-center">
+              <input type="checkbox" 
+                     class="checkbox-custom" 
+                     title="${isPaidZero ? 'Выплачено' : 'Нажмите для подтверждения выплаты'}"
+                     ${isPaidZero ? 'checked disabled' : ''} 
+                     onchange="handleCheckboxPayout('${u.userId}', ${gross}, ${clean}, this)" />
+            </td>
+            <td class="py-2.5 px-2">
+              <div class="font-bold text-white truncate max-w-[120px]">${fullName}</div>
+              <div class="text-[9px] text-neutral-400 font-mono">${u.phone || u.login || '—'}</div>
+            </td>
+            <td class="py-2.5 px-2">
+              <div class="font-mono text-neutral-200">${payoutPhone}</div>
+              <div class="text-[9px] text-yellow-300 font-semibold">${bankName}</div>
+            </td>
+            <td class="py-2.5 px-2 font-mono text-white">${gross.toLocaleString('ru-RU')} ₽</td>
+            <td class="py-2.5 px-2 font-mono text-rose-400">-${tax.toLocaleString('ru-RU')} ₽</td>
+            <td class="py-2.5 px-2 font-display font-black ${gross >= minPayout ? 'text-emerald-400' : 'text-neutral-400'}">${clean.toLocaleString('ru-RU')} ₽</td>
+            <td class="py-2.5 px-2 text-right space-x-1">
+              <button onclick="openViewPartnerModal('${u.userId}')" class="bg-blue-500/20 text-blue-300 text-[10px] font-bold px-2 py-1 rounded-lg border border-blue-500/30">👁️</button>
+              <button onclick="openEditPartnerModal('${u.userId}')" class="bg-white/10 text-neutral-200 text-[10px] font-bold px-2 py-1 rounded-lg border border-white/10">✏️</button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    };
+
+    window.renderAdminTransactions = function(txObj) {
+      const tbody = document.getElementById('tx-tbody');
+      const items = Object.values(txObj).sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+
+      if (items.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" class="py-6 text-center text-neutral-500">Транзакций пока нет</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = items.map(tx => {
+        const d = new Date(tx.timestamp || Date.now());
+        const time = d.toLocaleDateString() + ' ' + d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        return `
+          <tr class="hover:bg-white/5 transition-colors">
+            <td class="py-2 px-2 text-neutral-400 font-mono text-[10px]">${time}</td>
+            <td class="py-2 px-2 font-display font-black text-white">${tx.amount} ₽</td>
+            <td class="py-2 px-2 text-emerald-400 font-bold">+${tx.netRevenue || (tx.amount - tx.partnerCut)} ₽</td>
+            <td class="py-2 px-2 text-amber-300 font-bold">+${tx.partnerCut} ₽</td>
+            <td class="py-2 px-2"><span class="text-[9px] font-bold px-1.5 py-0.5 rounded ${tx.method === 'sbp' ? 'bg-yellow-500/20 text-yellow-300' : 'bg-blue-500/20 text-blue-300'}">${tx.method === 'sbp' ? 'СБП' : 'Карта'}</span></td>
+            <td class="py-2 px-2 text-neutral-300 truncate max-w-[90px]">${tx.cashierName || 'Партнёр'}</td>
+          </tr>
+        `;
+      }).join('');
+    };
+
+    window.renderBlacklistTable = function(blacklistObj) {
+      const tbody = document.getElementById('blacklist-tbody');
+      const items = Object.values(blacklistObj);
+      if (items.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="4" class="py-4 text-center text-neutral-500">Список пуст</td></tr>`;
+        return;
+      }
+      tbody.innerHTML = items.map(b => `
+        <tr class="hover:bg-white/5 transition-colors">
+          <td class="py-2 px-2 font-bold text-white">${b.partnerName || 'Партнёр'}</td>
+          <td class="py-2 px-2 font-mono text-rose-400 text-[10px]">${b.ip || 'Любой'}</td>
+          <td class="py-2 px-2 font-mono text-neutral-300 text-[9px] truncate max-w-[120px]">${b.hardwareId || '—'}</td>
+          <td class="py-2 px-2 text-right">
+            <button onclick="unbanPartner('${b.id || b.userId}', '${b.userId}')" class="bg-white/10 text-neutral-300 text-[9px] font-bold px-2 py-1 rounded-lg border border-white/10">Разбан</button>
+          </td>
+        </tr>
+      `).join('');
+    };
+
+    window.handleCheckboxPayout = async function(userId, gross, clean, cb) {
+      if (!cb.checked) return;
+      const user = window.loadedUsers ? window.loadedUsers[userId] : null;
+      const name = user ? (user.name || user.firstName || 'Партнёр') : 'Партнёр';
+      const tax = gross - clean;
+
+      if (!confirm(`Подтвердить выплату для ${name}?\n\n• Накоплено: ${gross} ₽\n• Налог 4%: -${tax} ₽\n• На руки: ${clean} ₽`)) {
+        cb.checked = false;
+        return;
+      }
+      await executePayoutInFirebase(userId, gross, clean, tax);
+    };
+
+    async function executePayoutInFirebase(userId, gross, clean, tax) {
+      if (window.firebaseDB && window.dbRef && window.dbUpdate && window.dbSet) {
+        await window.dbUpdate(window.dbRef(window.firebaseDB, `users/${userId}`), { balance: 0 });
+        await window.dbSet(window.dbRef(window.firebaseDB, `payout_history/pay_${Date.now()}`), {
+          userId: userId,
+          grossAmount: gross,
+          taxAmount: tax,
+          cleanAmount: clean,
+          timestamp: Date.now()
+        });
+        alert(`✓ Выплата ${clean} ₽ зафиксирована!`);
+      }
+    }
+
+    window.payoutAllReadyPartners = async function() {
+      const users = Object.values(window.loadedUsers || {});
+      const minPayout = (window.loadedPayoutSettings && window.loadedPayoutSettings.min_payout) || 1000;
+      const taxRate = (window.loadedPayoutSettings && window.loadedPayoutSettings.tax_rate) !== undefined ? window.loadedPayoutSettings.tax_rate : 4;
+      const readyUsers = users.filter(u => !u.isBanned && (Number(u.balance) || 0) >= minPayout);
+
+      if (readyUsers.length === 0) {
+        alert('Нет партнёров с балансом от 1 000 ₽');
+        return;
+      }
+
+      if (!confirm(`Выплатить всем ${readyUsers.length} партнёрам и поставить галочки?`)) return;
+
+      for (const u of readyUsers) {
+        const g = Number(u.balance) || 0;
+        const t = Math.round(g * (taxRate / 100));
+        const c = g - t;
+        await executePayoutInFirebase(u.userId, g, c, t);
+      }
+      closePayoutReportModal();
+    };
+
+    window.generateFullPayoutReport = function() {
+      const users = Object.values(window.loadedUsers || {});
+      const minPayout = (window.loadedPayoutSettings && window.loadedPayoutSettings.min_payout) || 1000;
+      const taxRate = (window.loadedPayoutSettings && window.loadedPayoutSettings.tax_rate) !== undefined ? window.loadedPayoutSettings.tax_rate : 4;
+      const readyUsers = users.filter(u => !u.isBanned && (Number(u.balance) || 0) >= minPayout);
+
+      let totalGross = 0, totalTax = 0, totalClean = 0, reportLines = [];
+      reportLines.push(`📋 ВЕДОМОСТЬ ВЫПЛАТ MOON POS (${new Date().toLocaleDateString('ru-RU')})`);
+      reportLines.push(`Налог: ${taxRate}%\n`);
+
+      const container = document.getElementById('rep-items-container');
+      if (readyUsers.length === 0) {
+        container.innerHTML = `<div class="py-4 text-center text-neutral-500 text-xs">Нет накоплений от ${minPayout} ₽</div>`;
+      } else {
+        container.innerHTML = readyUsers.map(u => {
+          const g = Number(u.balance) || 0;
+          const t = Math.round(g * (taxRate / 100));
+          const c = g - t;
+          totalGross += g; totalTax += t; totalClean += c;
+          const fullName = ((u.lastName || '') + ' ' + (u.firstName || u.name || 'Партнёр')).trim();
+          const phone = u.payoutPhone || u.phone || '—';
+          const bank = u.bankName || (u.hasTBank ? 'Т-Банк' : 'СБП');
+
+          reportLines.push(`• ${fullName} | ${phone} (${bank}) | На руки: ${c} ₽ (Грязными: ${g} ₽, Налог: -${t} ₽)`);
+
+          return `
+            <div class="py-2 px-1 flex justify-between items-center text-[11px]">
+              <div class="flex items-center gap-2">
+                <input type="checkbox" class="checkbox-custom" onchange="handleCheckboxPayout('${u.userId}', ${g}, ${c}, this)" />
+                <div>
+                  <div class="font-bold text-white">${fullName}</div>
+                  <div class="text-[9px] text-neutral-400 font-mono">${phone} • ${bank}</div>
+                </div>
+              </div>
+              <div class="text-right font-mono">
+                <div class="font-bold text-emerald-400">${c.toLocaleString('ru-RU')} ₽</div>
+                <div class="text-[9px] text-rose-400">Налог: -${t} ₽</div>
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+
+      reportLines.push(`\nИТОГО НА РУКИ: ${totalClean} ₽ | НАЛОГ: ${totalTax} ₽`);
+      document.getElementById('rep-total-gross').innerText = `${totalGross.toLocaleString('ru-RU')} ₽`;
+      document.getElementById('rep-total-tax').innerText = `-${totalTax.toLocaleString('ru-RU')} ₽`;
+      document.getElementById('rep-total-clean').innerText = `${totalClean.toLocaleString('ru-RU')} ₽`;
+      document.getElementById('rep-raw-text').value = reportLines.join('\n');
+
+      document.getElementById('modal-payout-report').classList.remove('hidden');
+    };
+
+    window.closePayoutReportModal = function() {
+      document.getElementById('modal-payout-report').classList.add('hidden');
+    };
+
+    window.copyReportAsText = function() {
+      navigator.clipboard.writeText(document.getElementById('rep-raw-text').value).then(() => {
+        alert('Реестр скопирован!');
+      });
+    };
+
+    window.openViewPartnerModal = function(userId) {
+      const user = window.loadedUsers ? window.loadedUsers[userId] : null;
+      if (!user) return;
+
+      const minPayout = (window.loadedPayoutSettings && window.loadedPayoutSettings.min_payout) || 1000;
+      const taxRate = (window.loadedPayoutSettings && window.loadedPayoutSettings.tax_rate) !== undefined ? window.loadedPayoutSettings.tax_rate : 4;
+      const g = Number(user.balance) || 0;
+      const t = Math.round(g * (taxRate / 100));
+      const c = Math.max(0, g - t);
+
+      document.getElementById('vp-fullname').innerText = ((user.lastName || '') + ' ' + (user.firstName || user.name || 'Партнёр')).trim();
+      document.getElementById('vp-phone').innerText = user.phone || '—';
+      document.getElementById('vp-login').innerText = user.login || user.userId || '—';
+
+      document.getElementById('vp-gross-val').innerText = `${g.toLocaleString('ru-RU')} ₽`;
+      document.getElementById('vp-tax-val').innerText = `-${t.toLocaleString('ru-RU')} ₽`;
+      document.getElementById('vp-clean-val').innerText = `${c.toLocaleString('ru-RU')} ₽`;
+
+      document.getElementById('vp-payout-timing').innerHTML = g >= minPayout 
+        ? `✓ Порог пройден. Выплата в 19:00 следующего рабочего дня.` 
+        : `⚠️ Баланс меньше ${minPayout} ₽. Копится дальше.`;
+
+      document.getElementById('vp-pay-phone').innerText = user.payoutPhone || user.phone || 'Не указан';
+      document.getElementById('vp-bank-name').innerText = 'Банк: ' + (user.bankName || (user.hasTBank ? 'Т-Банк' : 'СБП'));
+
+      const btnPayout = document.getElementById('vp-btn-payout');
+      btnPayout.innerText = `Выплатить чистыми (${c.toLocaleString('ru-RU')} ₽)`;
+      btnPayout.onclick = () => {
+        executePayoutInFirebase(userId, g, c, t);
+        closeViewPartnerModal();
+      };
+
+      document.getElementById('vp-btn-ban').onclick = () => banPartnerHardware(userId);
+      document.getElementById('vp-btn-delete').onclick = () => { closeViewPartnerModal(); deletePartner(userId); };
+
+      document.getElementById('modal-view-partner').classList.remove('hidden');
+    };
+
+    window.closeViewPartnerModal = function() {
+      document.getElementById('modal-view-partner').classList.add('hidden');
+    };
+
+    window.copyPayDetails = function() {
+      const user = window.loadedUsers ? window.loadedUsers[document.getElementById('edit-partner-id').value] : null;
+      const phone = document.getElementById('vp-pay-phone').innerText;
+      if (phone) navigator.clipboard.writeText(phone).then(() => alert('Номер скопирован!'));
+    };
+
+    window.openEditPartnerModal = function(userId) {
+      const user = window.loadedUsers ? window.loadedUsers[userId] : null;
+      if (!user) return;
+      document.getElementById('edit-partner-id').value = userId;
+      document.getElementById('edit-partner-firstname').value = user.firstName || user.name || '';
+      document.getElementById('edit-partner-lastname').value = user.lastName || '';
+      document.getElementById('edit-partner-phone').value = user.phone || '';
+      document.getElementById('edit-partner-payphone').value = user.payoutPhone || user.phone || '';
+      document.getElementById('edit-partner-bankname').value = user.bankName || '';
+      document.getElementById('edit-partner-istbank').checked = Boolean(user.hasTBank);
+      document.getElementById('edit-partner-rate').value = user.currentRate || 20;
+      document.getElementById('edit-partner-balance').value = user.balance || 0;
+      document.getElementById('modal-edit-partner').classList.remove('hidden');
+    };
+
+    window.closeEditPartnerModal = function() {
+      document.getElementById('modal-edit-partner').classList.add('hidden');
+    };
+
+    window.savePartnerChanges = async function() {
+      const userId = document.getElementById('edit-partner-id').value;
+      if (window.firebaseDB && window.dbRef && window.dbUpdate) {
+        await window.dbUpdate(window.dbRef(window.firebaseDB, `users/${userId}`), {
+          name: document.getElementById('edit-partner-firstname').value.trim() || 'Партнёр',
+          firstName: document.getElementById('edit-partner-firstname').value.trim(),
+          lastName: document.getElementById('edit-partner-lastname').value.trim(),
+          phone: document.getElementById('edit-partner-phone').value.trim(),
+          payoutPhone: document.getElementById('edit-partner-payphone').value.trim(),
+          bankName: document.getElementById('edit-partner-bankname').value.trim(),
+          hasTBank: document.getElementById('edit-partner-istbank').checked,
+          currentRate: Number(document.getElementById('edit-partner-rate').value),
+          balance: Number(document.getElementById('edit-partner-balance').value)
+        });
+        closeEditPartnerModal();
+        alert('Данные обновлены!');
+      }
+    };
+
+    window.banPartnerHardware = async function(userId) {
+      const user = window.loadedUsers ? window.loadedUsers[userId] : null;
+      if (!user || !confirm(`Забанить навсегда по IP и железу?`)) return;
+
+      const ip = user.lastIp || '192.168.1.104';
+      const hwid = user.hardwareId || 'HWID-MOON-' + userId.slice(-6).toUpperCase();
+      const banKey = 'ban_' + userId;
+
+      if (window.firebaseDB && window.dbRef && window.dbSet && window.dbUpdate) {
+        await window.dbSet(window.dbRef(window.firebaseDB, `blacklist/${banKey}`), {
+          id: banKey, userId: userId, partnerName: user.name || 'Партнёр', ip: ip, hardwareId: hwid, bannedAt: Date.now()
+        });
+        await window.dbUpdate(window.dbRef(window.firebaseDB, `users/${userId}`), { isBanned: true });
+        await window.dbRemove(window.dbRef(window.firebaseDB, `auth_tokens/${userId}`));
+        closeViewPartnerModal();
+        alert('Заблокирован навсегда!');
+      }
+    };
+
+    window.unbanPartner = async function(banKey, userId) {
+      if (!confirm('Разбанить?')) return;
+      if (window.firebaseDB && window.dbRef && window.dbRemove && window.dbUpdate) {
+        await window.dbRemove(window.dbRef(window.firebaseDB, `blacklist/${banKey}`));
+        await window.dbUpdate(window.dbRef(window.firebaseDB, `users/${userId}`), { isBanned: false });
+        await window.dbSet(window.dbRef(window.firebaseDB, `auth_tokens/${userId}`), { userId: userId, createdAt: Date.now() });
+        alert('Разбанен!');
+      }
+    };
+
+    window.deletePartner = async function(userId) {
+      if (!confirm('Удалить навсегда?')) return;
+      if (window.firebaseDB && window.dbRef && window.dbRemove) {
+        await window.dbRemove(window.dbRef(window.firebaseDB, `users/${userId}`));
+        await window.dbRemove(window.dbRef(window.firebaseDB, `auth_tokens/${userId}`));
+        closeEditPartnerModal();
+        closeViewPartnerModal();
+        alert('Удален!');
+      }
+    };
+
+    window.saveAdminSettings = async function() {
+      if (window.firebaseDB && window.dbRef && window.dbSet) {
+        await window.dbSet(window.dbRef(window.firebaseDB, 'payout_settings'), {
+          min_payout: Number(document.getElementById('set-min-payout').value) || 1000,
+          payout_hour: Number(document.getElementById('set-payout-hour').value) || 19,
+          tax_rate: Number(document.getElementById('set-tax-rate').value) || 4,
+          weekend_skip: document.getElementById('set-weekend-skip').checked,
+          tier2_goal: Number(document.getElementById('goal-tier2').value) || 30000,
+          tier3_goal: Number(document.getElementById('goal-tier3').value) || 100000,
+          updatedAt: Date.now()
+        });
+        alert('Настройки и налог сохранены!');
+      }
+    };
+
+    window.clearAllTransactions = async function() {
+      if (confirm('Очистить лог?') && window.firebaseDB && window.dbRef && window.dbRemove) {
+        await window.dbRemove(window.dbRef(window.firebaseDB, 'admin_transactions'));
+        alert('Лог очищен');
+      }
+    };
+  </script>
+</body>
+</html>

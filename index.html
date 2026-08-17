@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>QR Pay | Пассивный доход на смене</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background-color: #f5f7fb;
+      color: #1a2238;
+      display: flex;
+      justify-content: center;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    .wrapper {
+      width: 100%;
+      max-width: 420px;
+      background-color: #f5f7fb;
+      min-height: 100vh;
+      position: relative;
+    }
+
+    /* Шапка */
+    .header {
+      background: #ffffff;
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      box-shadow: 0 1px 0 rgba(0,0,0,0.05);
+    }
+
+    .burger-icon {
+      width: 24px;
+      height: 18px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      cursor: pointer;
+    }
+
+    .burger-icon span {
+      display: block;
+      height: 2.5px;
+      width: 100%;
+      background-color: #1a2238;
+      border-radius: 2px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      text-decoration: none;
+    }
+
+    .brand-logo-img {
+      width: 28px;
+      height: 28px;
+      background: #2563eb;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-weight: 900;
+      font-size: 14px;
+      transform: rotate(-15deg);
+    }
+
+    .brand-title {
+      font-size: 1.3rem;
+      font-weight: 800;
+      color: #1a2238;
+      letter-spacing: -0.5px;
+    }
+
+    /* Выезжающее боковое меню */
+    .sidebar-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.5);
+      z-index: 99;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.3s ease;
+    }
+
+    .sidebar-overlay.active {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .sidebar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 78%;
+      max-width: 320px;
+      height: 100%;
+      background: #ffffff;
+      z-index: 100;
+      padding: 24px 20px;
+      display: flex;
+      flex-direction: column;
+      transform: translateX(-100%);
+      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .sidebar.active {
+      transform: translateX(0);
+    }
+
+    .sidebar-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 36px;
+    }
+
+    .sidebar-close {
+      font-size: 26px;
+      line-height: 1;
+      color: #5d6778;
+      cursor: pointer;
+    }
+
+    .sidebar-nav {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      flex: 1;
+    }
+
+    .sidebar-nav a {
+      text-decoration: none;
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: #1a2238;
+    }
+
+    .sidebar-footer {
+      padding-top: 20px;
+      border-top: 1px solid #f0f2f7;
+    }
+
+    .sidebar-footer a {
+      text-decoration: none;
+      font-size: 1rem;
+      font-weight: 800;
+      color: #1a2238;
+    }
+
+    /* Основной контент */
+    .content {
+      padding: 24px 20px 50px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 32px;
+    }
+
+    /* Главный экран */
+    .hero-partner {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: #4b5563;
+      margin-bottom: 12px;
+    }
+
+    .bank-badge {
+      background: #fed100;
+      color: #000;
+      font-weight: 800;
+      font-size: 0.72rem;
+      padding: 3px 8px;
+      border-radius: 4px;
+    }
+
+    .hero-h1 {
+      font-size: 2.15rem;
+      font-weight: 850;
+      line-height: 1.12;
+      color: #162a56;
+      letter-spacing: -0.6px;
+      margin-bottom: 20px;
+    }
+
+    .hero-bullets {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-bottom: 28px;
+    }
+
+    .hero-bullets li {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: #243048;
+    }
+
+    .hero-bullets .dot {
+      width: 6px;
+      height: 6px;
+      background-color: #2563eb;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    /* Кнопки */
+    .btn-group {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .btn-white {
+      background: #ffffff;
+      color: #162a56;
+      border: 1.5px solid #d9e1ec;
+      padding: 16px;
+      border-radius: 12px;
+      font-size: 0.95rem;
+      font-weight: 700;
+      cursor: pointer;
+      text-align: center;
+    }
+
+    .btn-white:active {
+      background: #f8fafc;
+    }
+
+    .btn-yellow {
+      background: #fed100;
+      color: #162a56;
+      border: none;
+      padding: 16px;
+      border-radius: 12px;
+      font-size: 0.95rem;
+      font-weight: 700;
+      cursor: pointer;
+      text-align: center;
+      box-shadow: 0 4px 14px rgba(254, 209, 0, 0.35);
+    }
+
+    .btn-yellow:active {
+      background: #f0c300;
+    }
+
+    /* Секция «Как работает сервис» */
+    .section-h2 {
+      font-size: 1.85rem;
+      font-weight: 850;
+      text-align: center;
+      color: #162a56;
+      letter-spacing: -0.5px;
+      margin-bottom: 24px;
+    }
+
+    .step-block {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 24px;
+    }
+
+    .phone-mockup {
+      width: 220px;
+      background: #ffffff;
+      border-radius: 32px;
+      padding: 12px 10px;
+      border: 6px solid #eef1f6;
+      box-shadow: 0 12px 30px rgba(22, 42, 86, 0.08);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .phone-notch {
+      width: 60px;
+      height: 4px;
+      background: #d1d5db;
+      border-radius: 4px;
+      margin: 0 auto 4px auto;
+    }
+
+    .mockup-inner {
+      background: #f8fafc;
+      border-radius: 20px;
+      padding: 14px 10px;
+      border: 1px solid #eef2f6;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      gap: 8px;
+    }
+
+    .mockup-inner h5 {
+      font-size: 0.85rem;
+      color: #162a56;
+      font-weight: 800;
+    }
+
+    .mockup-inner p {
+      font-size: 0.72rem;
+      color: #64748b;
+    }
+
+    .mockup-btn {
+      background: #2563eb;
+      color: #fff;
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 8px;
+      border-radius: 8px;
+      width: 100%;
+      border: none;
+    }
+
+    .mockup-stat {
+      font-size: 1.2rem;
+      font-weight: 900;
+      color: #2563eb;
+    }
+
+    .phone-bottom-bar {
+      width: 70px;
+      height: 3px;
+      background: #111827;
+      border-radius: 3px;
+      margin: 4px auto 0 auto;
+    }
+
+    .step-desc {
+      font-size: 1rem;
+      font-weight: 700;
+      color: #162a56;
+      text-align: center;
+      max-width: 260px;
+      line-height: 1.35;
+    }
+
+    /* Карточки с тарифами и процентами (стиль CloudTips) */
+    .rate-card {
+      background: #edf3fc;
+      border-radius: 24px;
+      padding: 28px 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      gap: 16px;
+    }
+
+    .rate-card-title {
+      font-size: 1.1rem;
+      font-weight: 800;
+      color: #162a56;
+    }
+
+    .rate-badge {
+      background: #dbeafe;
+      width: 100%;
+      max-width: 240px;
+      padding: 16px 0;
+      border-radius: 50px;
+      font-size: 2.3rem;
+      font-weight: 900;
+      color: #2563eb;
+      letter-spacing: -1px;
+    }
+
+    .rate-note {
+      font-size: 0.82rem;
+      color: #64748b;
+      line-height: 1.45;
+      font-weight: 500;
+    }
+
+    /* Интерактивный калькулятор */
+    .calc-card {
+      background: #ffffff;
+      border-radius: 24px;
+      padding: 22px 18px;
+      border: 1px solid #eef1f6;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.03);
+    }
+
+    .calc-header {
+      font-size: 1rem;
+      font-weight: 800;
+      color: #162a56;
+      margin-bottom: 16px;
+    }
+
+    .slider-wrap {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+
+    .slider-info {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: #64748b;
+    }
+
+    .slider-info b {
+      color: #162a56;
+      font-weight: 800;
+    }
+
+    input[type=range] {
+      width: 100%;
+      accent-color: #2563eb;
+      height: 6px;
+      background: #e2e8f0;
+      border-radius: 4px;
+    }
+
+    .calc-screen {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 14px;
+      padding: 14px;
+      text-align: center;
+      margin-top: 8px;
+    }
+
+    .calc-screen span {
+      font-size: 0.75rem;
+      color: #64748b;
+      font-weight: 700;
+      text-transform: uppercase;
+      display: block;
+      margin-bottom: 2px;
+    }
+
+    .calc-screen b {
+      font-size: 1.7rem;
+      font-weight: 900;
+      color: #2563eb;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="wrapper">
+
+    <!-- Выезжающий Sidebar -->
+    <div class="sidebar-overlay" id="overlay" onclick="toggleMenu()"></div>
+    <div class="sidebar" id="sidebar">
+      <div class="sidebar-top">
+        <div class="brand">
+          <div class="brand-logo-img">QR</div>
+          <div class="brand-title">QRPay</div>
+        </div>
+        <div class="sidebar-close" onclick="toggleMenu()">✕</div>
+      </div>
+      <ul class="sidebar-nav">
+        <li><a href="#" onclick="toggleMenu()">Бизнесу</a></li>
+        <li><a href="#" onclick="toggleMenu()">Получателям</a></li>
+        <li><a href="#" onclick="toggleMenu()">Бариста и кассирам</a></li>
+        <li><a href="#" onclick="toggleMenu()">Тарифы</a></li>
+        <li><a href="#" onclick="toggleMenu()">Помощь</a></li>
+      </ul>
+      <div class="sidebar-footer">
+        <a href="#">Личный кабинет</a>
+      </div>
+    </div>
+
+    <!-- Шапка страницы -->
+    <header class="header">
+      <div class="burger-icon" onclick="toggleMenu()">
+        <span></span>
+        <span></span>
+        <span></span>
+      </div>
+
+      <a href="#" class="brand">
+        <div class="brand-logo-img">QR</div>
+        <div class="brand-title">QRPay</div>
+      </a>
+
+      <div style="width: 24px;"></div>
+    </header>
+
+    <!-- Тело лендинга -->
+    <main class="content">
+
+      <!-- 1. Главный экран -->
+      <section>
+        <div class="hero-partner">
+          <span>Сервис группы</span>
+          <span class="bank-badge">QR БАНК</span>
+        </div>
+
+        <h1 class="hero-h1">
+          Заработок на смене по QR моментально
+        </h1>
+
+        <ul class="hero-bullets">
+          <li>
+            <span class="dot"></span>
+            <span>От 20% до 40% тебе с каждого чека</span>
+          </li>
+          <li>
+            <span class="dot"></span>
+            <span>Мгновенное зачисление на карту</span>
+          </li>
+          <li>
+            <span class="dot"></span>
+            <span>Без сложного оборудования</span>
+          </li>
+        </ul>
+
+        <div class="btn-group">
+          <button class="btn-white" onclick="alert('Регистрация в системе...')">
+            Начать получать процент
+          </button>
+          <button class="btn-yellow" onclick="alert('Подключение точки...')">
+            Подключить заведение
+          </button>
+        </div>
+      </section>
+
+      <!-- 2. Интерактивный калькулятор -->
+      <section class="calc-card">
+        <div class="calc-header">Калькулятор твоей смены</div>
+        
+        <div class="slider-wrap">
+          <div class="slider-info">
+            <span>Пробито товаров по QR:</span>
+            <b id="s-val">6 000 ₽</b>
+          </div>
+          <input type="range" id="s-rng" min="1000" max="30000" step="500" value="6000" oninput="update()">
+        </div>
+
+        <div class="slider-wrap">
+          <div class="slider-info">
+            <span>Твой процент комиссии:</span>
+            <b id="r-val">30%</b>
+          </div>
+          <input type="range" id="r-rng" min="20" max="40" step="5" value="30" oninput="update()">
+        </div>
+
+        <div class="calc-screen">
+          <span>Твой чистый плюс к зарплате:</span>
+          <b id="p-val">+1 800 ₽</b>
+        </div>
+      </section>
+
+      <!-- 3. Блок «Как работает сервис» -->
+      <section>
+        <h2 class="section-h2">Как работает сервис</h2>
+
+        <!-- Шаг 1 -->
+        <div class="step-block">
+          <div class="phone-mockup">
+            <div class="phone-notch"></div>
+            <div class="mockup-inner">
+              <span style="font-size: 1.4rem;">📱</span>
+              <h5>Вход в систему</h5>
+              <p>Введи свой номер телефона для старта</p>
+              <button class="mockup-btn">Продолжить</button>
+            </div>
+            <div class="phone-bottom-bar"></div>
+          </div>
+          <div class="step-desc">Получатель регистрируется в сервисе за 1 минуту</div>
+        </div>
+
+        <!-- Шаг 2 -->
+        <div class="step-block">
+          <div class="phone-mockup">
+            <div class="phone-notch"></div>
+            <div class="mockup-inner">
+              <img src="https://api.qrserver.com/v1/create-qr-code/?size=80x80&data=pay" style="width: 75px; height: 75px;" alt="QR">
+              <h5>QR и товары</h5>
+              <p>Покажи код клиенту на кассе или витрине</p>
+            </div>
+            <div class="phone-bottom-bar"></div>
+          </div>
+          <div class="step-desc">Клиент сканирует QR и подтверждает платеж</div>
+        </div>
+
+        <!-- Шаг 3 -->
+        <div class="step-block">
+          <div class="phone-mockup">
+            <div class="phone-notch"></div>
+            <div class="mockup-inner">
+              <p style="font-size: 0.7rem; color: #10b981; font-weight: 700;">Поступление комиссии</p>
+              <div class="mockup-stat">+1 800 ₽</div>
+              <p>Баланс доступен к выводу</p>
+              <button class="mockup-btn" style="background: #10b981;">Вывести на карту</button>
+            </div>
+            <div class="phone-bottom-bar"></div>
+          </div>
+          <div class="step-desc">Деньги мгновенно зачисляются на карту</div>
+        </div>
+      </section>
+
+      <!-- 4. Карточка условий (стиль CloudTips) -->
+      <section class="rate-card">
+        <div class="rate-card-title">
+          Для сотрудников на смене<br>и заведений*
+        </div>
+
+        <div class="rate-badge">20%–40%</div>
+
+        <div class="rate-note">
+          *Размер бонуса начисляется с каждого успешно закрытого чека по QR. Для быстрого старта нажми кнопку «Начать получать процент».
+        </div>
+      </section>
+
+      <!-- 5. Нижние кнопки -->
+      <div class="btn-group">
+        <button class="btn-yellow" onclick="alert('Подключение заведения...')">
+          Подключить заведение
+        </button>
+        <button class="btn-white" onclick="alert('Регистрация...')">
+          Начать получать процент
+        </button>
+      </div>
+
+    </main>
+
+  </div>
+
+  <script>
+    function toggleMenu() {
+      document.getElementById('sidebar').classList.toggle('active');
+      document.getElementById('overlay').classList.toggle('active');
+    }
+
+    function update() {
+      const sales = parseInt(document.getElementById('s-rng').value);
+      const rate = parseInt(document.getElementById('r-rng').value);
+      
+      document.getElementById('s-val').innerText = sales.toLocaleString('ru-RU') + ' ₽';
+      document.getElementById('r-val').innerText = rate + '%';
+      
+      const profit = Math.round(sales * (rate / 100));
+      document.getElementById('p-val').innerText = '+' + profit.toLocaleString('ru-RU') + ' ₽';
+    }
+  </script>
+
+</body>
+</html>
