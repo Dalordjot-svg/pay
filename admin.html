@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Moon Admin • Выплаты & Налоги</title>
+  <title>Moon POS • Панель администратора</title>
   
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -161,7 +161,14 @@
         window.checkSmartAssistantAlerts(users);
       });
 
-      // 3. Настройки выплат и налога
+      // 3. Ключи ЮKassa из базы данных
+      onValue(ref(db, 'admin_settings/yookassa'), (snapshot) => {
+        const data = snapshot.val() || {};
+        document.getElementById('set-yk-shopid').value = data.shopId || '';
+        document.getElementById('set-yk-secret').value = data.secretKey || '';
+      });
+
+      // 4. Настройки выплат и налога
       onValue(ref(db, 'payout_settings'), (snapshot) => {
         const settings = snapshot.val() || {
           min_payout: 1000,
@@ -186,7 +193,7 @@
         }
       });
 
-      // 4. Черный список
+      // 5. Черный список
       onValue(ref(db, 'blacklist'), (snapshot) => {
         const list = snapshot.val() || {};
         window.loadedBlacklist = list;
@@ -307,7 +314,7 @@
           👥 Партнёры & Галочки
         </button>
         <button id="tab-loyalty-btn" onclick="switchAdminTab('loyalty')" class="px-4 py-2 rounded-xl font-display text-xs font-bold uppercase transition-all text-neutral-400 hover:text-white">
-          ⚙️ Правила & Налог
+          ⚙️ Настройки & ЮKassa
         </button>
         <button id="tab-blacklist-btn" onclick="switchAdminTab('blacklist')" class="px-4 py-2 rounded-xl font-display text-xs font-bold uppercase transition-all text-neutral-400 hover:text-white">
           🚫 Черный список
@@ -350,13 +357,37 @@
         </div>
       </section>
 
-      <!-- ВКЛАДКА 2: ПРАВИЛА ВЫПЛАТ И НАЛОГ -->
+      <!-- ВКЛАДКА 2: ПРАВИЛА ВЫПЛАТ, НАЛОГ И КЛЮЧИ ЮKASSA -->
       <section id="view-loyalty" class="hidden bg-surface border border-white/10 rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-2xl flex flex-col gap-5 text-left">
+        
+        <!-- БЛОК НАСТРОЙКИ КЛЮЧЕЙ ЮKASSA -->
+        <div class="bg-black/30 border border-yellow-300/30 p-4 rounded-2xl flex flex-col gap-3">
+          <div class="flex items-center gap-2">
+            <span class="text-base">💳</span>
+            <div>
+              <h3 class="font-display text-xs sm:text-sm font-black uppercase text-sticker">Ключи ЮKassa для СБП QR</h3>
+              <p class="text-[10px] text-neutral-400">Касса автоматически подтягивает эти ключи из базы данных</p>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label class="text-[9px] text-neutral-400 font-bold uppercase block mb-1">Shop ID (Идентификатор магазина)</label>
+              <input type="text" id="set-yk-shopid" placeholder="1350725" class="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-xs text-white font-mono focus:border-yellow-300" />
+            </div>
+
+            <div>
+              <label class="text-[9px] text-neutral-400 font-bold uppercase block mb-1">Секретный ключ (Secret Key)</label>
+              <input type="password" id="set-yk-secret" placeholder="live_... или test_..." class="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-xs text-white font-mono focus:border-yellow-300" />
+            </div>
+          </div>
+        </div>
+
         <div>
-          <h2 class="font-display text-xs sm:text-sm font-black uppercase text-sticker flex items-center gap-1.5">
+          <h2 class="font-display text-xs sm:text-sm font-black uppercase text-white flex items-center gap-1.5">
             <span>⚙️</span> Финансовые параметры и налог
           </h2>
-          <p class="text-[10px] text-neutral-400">Ставка налога, минимальный порог и пороги процентов</p>
+          <p class="text-[10px] text-neutral-400">Ставка налога, минимальный порог и время выплат</p>
         </div>
 
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -396,7 +427,7 @@
         </div>
 
         <button onclick="saveAdminSettings()" class="w-full bg-sticker text-black font-display font-black text-xs uppercase py-3.5 rounded-xl shadow active:scale-95 transition-all">
-          💾 Сохранить параметры
+          💾 Сохранить все настройки и ключи
         </button>
       </section>
 
@@ -452,7 +483,7 @@
 
     </main>
 
-    <!-- МОБИЛЬНЫЙ ТАБ-БАР (НАВИГАЦИЯ ВНИЗУ) -->
+    <!-- МОБИЛЬНЫЙ ТАБ-БАР -->
     <nav class="sm:hidden fixed bottom-0 left-0 right-0 bg-surface/95 backdrop-blur-xl border-t border-white/10 px-2 py-1.5 z-40 flex justify-around">
       <button onclick="switchAdminTab('partners')" id="mob-tab-partners" class="flex-1 py-1.5 flex flex-col items-center gap-0.5 text-sticker font-display text-[9px] font-bold uppercase">
         <span class="text-base">👥</span>
@@ -460,7 +491,7 @@
       </button>
       <button onclick="switchAdminTab('loyalty')" id="mob-tab-loyalty" class="flex-1 py-1.5 flex flex-col items-center gap-0.5 text-neutral-400 font-display text-[9px] font-bold uppercase">
         <span class="text-base">⚙️</span>
-        <span>Налоги</span>
+        <span>Настройки</span>
       </button>
       <button onclick="switchAdminTab('blacklist')" id="mob-tab-blacklist" class="flex-1 py-1.5 flex flex-col items-center gap-0.5 text-neutral-400 font-display text-[9px] font-bold uppercase">
         <span class="text-base">🚫</span>
@@ -981,7 +1012,6 @@
     };
 
     window.copyPayDetails = function() {
-      const user = window.loadedUsers ? window.loadedUsers[document.getElementById('edit-partner-id').value] : null;
       const phone = document.getElementById('vp-pay-phone').innerText;
       if (phone) navigator.clipboard.writeText(phone).then(() => alert('Номер скопирован!'));
     };
@@ -1064,18 +1094,39 @@
       }
     };
 
+    // Сохранение общих настроек и ключей ЮKassa в Firebase
     window.saveAdminSettings = async function() {
+      const ykShopId = document.getElementById('set-yk-shopid').value.trim();
+      const ykSecret = document.getElementById('set-yk-secret').value.trim();
+
+      const minPayout = Number(document.getElementById('set-min-payout').value) || 1000;
+      const payoutHour = Number(document.getElementById('set-payout-hour').value) || 19;
+      const taxRate = Number(document.getElementById('set-tax-rate').value) || 4;
+      const weekendSkip = document.getElementById('set-weekend-skip').checked;
+
+      const goal2 = Number(document.getElementById('goal-tier2').value) || 30000;
+      const goal3 = Number(document.getElementById('goal-tier3').value) || 100000;
+
       if (window.firebaseDB && window.dbRef && window.dbSet) {
-        await window.dbSet(window.dbRef(window.firebaseDB, 'payout_settings'), {
-          min_payout: Number(document.getElementById('set-min-payout').value) || 1000,
-          payout_hour: Number(document.getElementById('set-payout-hour').value) || 19,
-          tax_rate: Number(document.getElementById('set-tax-rate').value) || 4,
-          weekend_skip: document.getElementById('set-weekend-skip').checked,
-          tier2_goal: Number(document.getElementById('goal-tier2').value) || 30000,
-          tier3_goal: Number(document.getElementById('goal-tier3').value) || 100000,
+        // 1. Сохраняем ключи ЮKassa
+        await window.dbSet(window.dbRef(window.firebaseDB, 'admin_settings/yookassa'), {
+          shopId: ykShopId,
+          secretKey: ykSecret,
           updatedAt: Date.now()
         });
-        alert('Настройки и налог сохранены!');
+
+        // 2. Сохраняем правила выплат и лояльность
+        await window.dbSet(window.dbRef(window.firebaseDB, 'payout_settings'), {
+          min_payout: minPayout,
+          payout_hour: payoutHour,
+          tax_rate: taxRate,
+          weekend_skip: weekendSkip,
+          tier2_goal: goal2,
+          tier3_goal: goal3,
+          updatedAt: Date.now()
+        });
+
+        alert('✓ Все настройки и ключи ЮKassa успешно сохранены в базе данных!');
       }
     };
 
