@@ -156,28 +156,25 @@
       const timestamp = Date.now();
       const cashierName = window.currentAuthUser ? (window.currentAuthUser.name || 'Сотрудник') : 'Сотрудник';
 
-      // 1. Получаем актуальные данные партнера и рассчитываем его процент
-      let partnerRate = 25; // Дефолтный %
+      let partnerRate = 25;
       let userRef = ref(db, `users/${token}`);
       let userSnap = await get(userRef);
       let userData = userSnap.exists() ? userSnap.val() : (window.currentAuthUser || {});
 
       const currentTotalSales = (userData.totalSales || 0) + amount;
       
-      // Логика ставки лояльности (20% - 30% - 40%)
       if (currentTotalSales >= 100000) partnerRate = 40;
       else if (currentTotalSales >= 30000) partnerRate = 30;
       else partnerRate = 20;
 
       const partnerCut = Math.round(amount * (partnerRate / 100));
 
-      // 2. ЗАПИСЬ ДЛЯ ПАРТНЕРА (в его ЛК)
       const partnerTxData = {
         id: txId,
         amount: amount,
         partnerCut: partnerCut,
         rate: partnerRate,
-        method: method, // 'sbp' или 'card'
+        method: method,
         description: details.title || `Заказ #${txId.slice(-4)}`,
         terminalId: terminalId,
         timestamp: timestamp
@@ -197,7 +194,6 @@
       const partnerHistoryRef = ref(db, `users/${token}/transactions/${txId}`);
       await set(partnerHistoryRef, partnerTxData);
 
-      // 3. ЗАПИСЬ ДЛЯ АДМИНА (в общую систему)
       const adminTxData = {
         id: txId,
         amount: amount,
@@ -215,7 +211,6 @@
       const adminTxRef = ref(db, `admin_transactions/${txId}`);
       await set(adminTxRef, adminTxData);
 
-      // Обновляем общую кассу заведения
       const statsRef = ref(db, `admin_stats/daily`);
       const statsSnap = await get(statsRef);
       const prevStats = statsSnap.exists() ? statsSnap.val() : { totalRevenue: 0, totalOrders: 0 };
@@ -225,8 +220,6 @@
         totalOrders: (prevStats.totalOrders || 0) + 1,
         lastOrderTime: timestamp
       });
-
-      console.log(`✅ Платеж ${amount} ₽ успешно записан в Админку и Партнеру (+${partnerCut} ₽)!`);
     };
 
     const terminalId = localStorage.getItem('yk_term_id') || 'term_01';
@@ -313,13 +306,13 @@
   <div id="app-root" class="hidden flex-1 flex flex-col pb-20 md:pb-0">
 
     <!-- ================= TOP BAR ================= -->
-    <header class="w-full bg-surface/90 backdrop-blur-xl border-b border-white/10 px-4 md:px-8 py-3.5 flex justify-between items-center sticky top-0 z-40">
-      <div class="flex items-center gap-3">
-        <div class="stamp-badge bg-sticker text-black font-display font-black text-[10px] md:text-xs px-2.5 py-1 uppercase -rotate-3 shadow-md">
+    <header class="w-full bg-surface/90 backdrop-blur-xl border-b border-white/10 px-3 md:px-8 py-3 flex justify-between items-center sticky top-0 z-40">
+      <div class="flex items-center gap-2.5 md:gap-3">
+        <div class="stamp-badge bg-sticker text-black font-display font-black text-[10px] md:text-xs px-2 py-0.5 md:px-2.5 md:py-1 uppercase -rotate-3 shadow-md">
           MOON POS
         </div>
         <div>
-          <h1 class="font-display text-xs md:text-sm font-black tracking-wide text-white uppercase flex items-center gap-2">
+          <h1 class="font-display text-xs md:text-sm font-black tracking-wide text-white uppercase flex items-center gap-1.5">
             Касса #1
             <span class="hidden sm:inline-block text-[9px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2 py-0.5 rounded-full font-sans font-semibold">СБП & Карта</span>
           </h1>
@@ -339,17 +332,25 @@
         </button>
       </div>
 
-      <div class="flex items-center gap-2.5">
+      <div class="flex items-center gap-1.5 sm:gap-2.5">
+        <!-- КНОПКА ПЕРЕХОДА НА ЭКРАН ПОКУПАТЕЛЯ -->
+        <a href="https://dalordjot-svg.github.io/Do-go/" target="_blank" rel="noopener noreferrer" class="flex items-center gap-1 bg-yellow-400/10 hover:bg-yellow-400/20 active:scale-95 text-[11px] text-sticker border border-yellow-400/30 px-2.5 py-1.5 md:px-3.5 md:py-1.5 rounded-xl font-display font-bold transition-all shadow-sm">
+          <span>🖥️</span>
+          <span class="hidden sm:inline">Экран покупателя</span>
+          <span class="sm:hidden">Экран</span>
+          <span class="text-[9px] opacity-75">↗</span>
+        </a>
+
         <div class="hidden sm:flex flex-col text-right">
           <span id="user-display-name" class="text-xs font-display font-bold text-white leading-tight truncate max-w-[120px]">Сотрудник</span>
           <span class="text-[9px] text-emerald-400 font-semibold">Авторизован</span>
         </div>
 
-        <a href="dashboard.html" title="Вернуться в Личный Кабинет" class="flex items-center gap-1 bg-surfaceLight hover:bg-white/15 active:scale-95 text-xs text-sticker px-3 py-1.5 rounded-xl border border-white/10 font-display font-bold transition-all">
+        <a href="dashboard.html" title="Вернуться в Личный Кабинет" class="flex items-center gap-1 bg-surfaceLight hover:bg-white/15 active:scale-95 text-[11px] text-white px-2.5 py-1.5 md:px-3 rounded-xl border border-white/10 font-display font-bold transition-all">
           <span>← ЛК</span>
         </a>
 
-        <div id="live-terminal-status" class="flex items-center text-[11px] font-semibold px-2.5 py-1 rounded-full bg-white/5 text-neutral-400 border border-white/10">
+        <div id="live-terminal-status" class="hidden sm:flex items-center text-[11px] font-semibold px-2.5 py-1 rounded-full bg-white/5 text-neutral-400 border border-white/10">
           <span class="w-1.5 h-1.5 rounded-full bg-neutral-500 mr-1.5"></span> Свободен
         </div>
       </div>
@@ -900,14 +901,12 @@
       }
     };
 
-    // Подтверждение оплаты картой вручную
     window.confirmCardPaymentSuccess = async function() {
       const terminalId = localStorage.getItem('yk_term_id') || 'term_01';
       const amount = parseInt(currentInput) || 0;
 
       if (amount <= 0) return;
 
-      // 1. Отправляем в Firebase для экрана терминала
       if (window.firebaseDB && window.dbRef && window.dbSet) {
         const orderRef = window.dbRef(window.firebaseDB, `terminals/${terminalId}/current_order`);
         await window.dbSet(orderRef, {
@@ -917,7 +916,6 @@
         });
       }
 
-      // 2. Двойная запись: Админу + в ЛК Партнера
       if (typeof window.processSuccessfulPayment === 'function') {
         await window.processSuccessfulPayment(amount, 'card', { title: currentItemTitle });
       }
@@ -1043,7 +1041,6 @@
 
             const finalAmount = data.amount ? parseFloat(data.amount.value) : amount;
 
-            // 1. Обновляем статус на клиентском терминале
             if (window.firebaseDB && window.dbRef && window.dbSet) {
               const orderRef = window.dbRef(window.firebaseDB, `terminals/${terminalId}/current_order`);
               await window.dbSet(orderRef, {
@@ -1053,7 +1050,6 @@
               });
             }
 
-            // 2. Двойная запись: Админу + в ЛК Партнера
             if (typeof window.processSuccessfulPayment === 'function') {
               await window.processSuccessfulPayment(finalAmount, 'sbp', { title: currentItemTitle });
             }
