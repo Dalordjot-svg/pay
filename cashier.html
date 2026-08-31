@@ -819,7 +819,7 @@
 
       const authHeader = 'Basic ' + btoa(`${shopId}:${secretKey}`);
       const idempotenceKey = generateUUID();
-      const proxyUrl = `https://corsproxy.io/?url=${encodeURIComponent('https://api.yookassa.ru/v3/payments')}`;
+      const proxyUrl = `https://corsproxy.io/?url=${encodeURIComponent('https://corsproxy.io/?https://api.yookassa.ru/v3/payments')}`;
 
       try {
         const response = await fetch(proxyUrl, {
@@ -887,7 +887,7 @@
 
     function startDirectPaymentPolling(shopId, secretKey, paymentId, termId, amount) {
       const authHeader = 'Basic ' + btoa(`${shopId}:${secretKey}`);
-      const proxyUrl = `https://corsproxy.io/?url=${encodeURIComponent(`https://api.yookassa.ru/v3/payments/${paymentId}`)}`;
+      const proxyUrl = `https://corsproxy.io/?url=${encodeURIComponent(`https://corsproxy.io/?https://api.yookassa.ru/v3/payments/${paymentId}`)}`;
 
       activePollInterval = setInterval(async () => {
         try {
