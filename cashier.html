@@ -819,7 +819,9 @@
 
       const authHeader = 'Basic ' + btoa(`${shopId}:${secretKey}`);
       const idempotenceKey = generateUUID();
-      const proxyUrl = `https://corsproxy.io/?url=${encodeURIComponent('https://corsproxy.io/?https://api.yookassa.ru/v3/payments')}`;
+      
+      // ИСПРАВЛЕНО: Убран двойной corsproxy
+      const proxyUrl = 'https://corsproxy.io/?' + encodeURIComponent('https://api.yookassa.ru/v3/payments');
 
       try {
         const response = await fetch(proxyUrl, {
@@ -887,7 +889,9 @@
 
     function startDirectPaymentPolling(shopId, secretKey, paymentId, termId, amount) {
       const authHeader = 'Basic ' + btoa(`${shopId}:${secretKey}`);
-      const proxyUrl = `https://corsproxy.io/?url=${encodeURIComponent(`https://corsproxy.io/?https://api.yookassa.ru/v3/payments/${paymentId}`)}`;
+      
+      // ИСПРАВЛЕНО: Убран двойной corsproxy
+      const proxyUrl = 'https://corsproxy.io/?' + encodeURIComponent(`https://api.yookassa.ru/v3/payments/${paymentId}`);
 
       activePollInterval = setInterval(async () => {
         try {
@@ -928,6 +932,7 @@
         }
       }, 1500);
     }
+
 
     window.castMagicTips = async function() {
       const termId = localStorage.getItem('yk_term_id') || 'term_01';
