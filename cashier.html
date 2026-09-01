@@ -57,6 +57,7 @@
     window.dbGet = get;
     window.dbUpdate = update;
 
+    // Резервная подгрузка ключей из базы (если заданы глобально)
     window.yooKassaConfig = {
       shopId: localStorage.getItem('yk_shop_id') || '',
       secretKey: localStorage.getItem('yk_secret_key') || ''
@@ -64,7 +65,7 @@
 
     onValue(ref(db, 'admin_settings/yookassa'), (snapshot) => {
       const data = snapshot.val();
-      if (data && data.shopId && data.secretKey && !localStorage.getItem('yk_shop_id')) {
+      if (data && data.shopId && data.secretKey && !window.yooKassaConfig.shopId) {
         window.yooKassaConfig.shopId = data.shopId;
         window.yooKassaConfig.secretKey = data.secretKey;
         updateKeyStatusBadge();
@@ -83,18 +84,19 @@
       <h1 class="font-display text-xs md:text-sm font-black tracking-wide uppercase">Касса СБП</h1>
     </div>
 
-    <!-- Панель действий -->
+    <!-- Панель действий: Ключи + Выход на экран -->
     <div class="flex items-center gap-2">
+      <!-- Кнопка настройки ключей -->
       <button onclick="openKeysModal()" class="flex items-center gap-1.5 bg-surfaceLight hover:bg-white/15 active:scale-95 text-xs text-white border border-white/10 px-3 py-2 rounded-xl font-display font-bold transition-all">
         <span>⚙️</span>
         <span class="hidden sm:inline">Ключи ЮKassa</span>
         <span id="keys-status-indicator" class="w-2 h-2 rounded-full bg-rose-500 ml-0.5"></span>
       </button>
 
+      <!-- Выход на экран покупателя -->
       <a href="https://dalordjot-svg.github.io/Do-go/" target="_blank" rel="noopener noreferrer" class="flex items-center gap-1.5 bg-yellow-400/10 hover:bg-yellow-400/20 active:scale-95 text-xs text-sticker border border-yellow-400/30 px-3 py-2 rounded-xl font-display font-bold transition-all shadow-sm">
         <span>🖥️</span>
-        <span class="hidden sm:inline">Экран покупателя</span>
-        <span class="sm:hidden">Экран</span>
+        <span>Экран покупателя</span>
         <span class="text-[10px] opacity-75">↗</span>
       </a>
     </div>
@@ -106,19 +108,19 @@
       <div class="flex justify-between items-center border-b border-white/10 pb-3">
         <div>
           <h3 class="font-display font-black text-sm uppercase text-sticker">Ключи ЮKassa</h3>
-          <p class="text-[11px] text-neutral-400">Shop ID и Секретный ключ (live/test)</p>
+          <p class="text-[11px] text-neutral-400">Данные для выставления СБП QR</p>
         </div>
         <button onclick="closeKeysModal()" class="text-neutral-400 hover:text-white text-lg p-1">✕</button>
       </div>
 
       <div class="flex flex-col gap-3">
         <div>
-          <label class="text-[11px] text-neutral-300 font-bold uppercase block mb-1">Shop ID (Идентификатор магазина)</label>
+          <label class="text-[11px] text-neutral-300 font-bold uppercase block mb-1">Shop ID</label>
           <input type="text" id="modal-shop-id" placeholder="Например: 1350725" class="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-xs text-white font-mono focus:outline-none focus:border-yellow-300" />
         </div>
         <div>
           <label class="text-[11px] text-neutral-300 font-bold uppercase block mb-1">Секретный ключ API</label>
-          <input type="password" id="modal-secret-key" placeholder="live_... или test_..." class="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-xs text-white font-mono focus:outline-none focus:border-yellow-300" />
+          <input type="password" id="modal-secret-key" placeholder="test_... или live_..." class="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-xs text-white font-mono focus:outline-none focus:border-yellow-300" />
         </div>
       </div>
 
@@ -144,23 +146,23 @@
           <span id="amount-display" class="font-display text-6xl font-black tracking-tight">0</span>
           <span class="font-display text-4xl font-bold text-sticker">₽</span>
         </div>
-        <p id="pos-status-text" class="text-xs text-neutral-400 mt-2 break-words">Готов к выставлению СБП QR</p>
+        <p id="pos-status-text" class="text-xs text-neutral-400 mt-2">Готов к выставлению СБП QR</p>
       </div>
 
       <!-- Numpad -->
       <div class="grid grid-cols-3 gap-3">
-        <button onclick="pressKey('1')" class="h-16 rounded-2xl bg-surfaceLight hover:bg-white/15 active:scale-95 border border-white/10 font-display text-2xl font-black">1</button>
-        <button onclick="pressKey('2')" class="h-16 rounded-2xl bg-surfaceLight hover:bg-white/15 active:scale-95 border border-white/10 font-display text-2xl font-black">2</button>
-        <button onclick="pressKey('3')" class="h-16 rounded-2xl bg-surfaceLight hover:bg-white/15 active:scale-95 border border-white/10 font-display text-2xl font-black">3</button>
-        <button onclick="pressKey('4')" class="h-16 rounded-2xl bg-surfaceLight hover:bg-white/15 active:scale-95 border border-white/10 font-display text-2xl font-black">4</button>
-        <button onclick="pressKey('5')" class="h-16 rounded-2xl bg-surfaceLight hover:bg-white/15 active:scale-95 border border-white/10 font-display text-2xl font-black">5</button>
-        <button onclick="pressKey('6')" class="h-16 rounded-2xl bg-surfaceLight hover:bg-white/15 active:scale-95 border border-white/10 font-display text-2xl font-black">6</button>
-        <button onclick="pressKey('7')" class="h-16 rounded-2xl bg-surfaceLight hover:bg-white/15 active:scale-95 border border-white/10 font-display text-2xl font-black">7</button>
-        <button onclick="pressKey('8')" class="h-16 rounded-2xl bg-surfaceLight hover:bg-white/15 active:scale-95 border border-white/10 font-display text-2xl font-black">8</button>
-        <button onclick="pressKey('9')" class="h-16 rounded-2xl bg-surfaceLight hover:bg-white/15 active:scale-95 border border-white/10 font-display text-2xl font-black">9</button>
-        <button onclick="pressKey('00')" class="h-16 rounded-2xl bg-white/5 hover:bg-white/10 active:scale-95 border border-white/10 font-display text-xl font-black text-neutral-400">00</button>
-        <button onclick="pressKey('0')" class="h-16 rounded-2xl bg-surfaceLight hover:bg-white/15 active:scale-95 border border-white/10 font-display text-2xl font-black">0</button>
-        <button onclick="backspace()" class="h-16 rounded-2xl bg-rose-500/20 hover:bg-rose-500/30 active:scale-95 border border-rose-500/30 text-rose-300 font-bold text-xl">⌫</button>
+        <button onclick="pressKey('1')" class="h-16 rounded-2xl bg-surfaceLight hover:bg-white/15 border border-white/10 font-display text-2xl font-black">1</button>
+        <button onclick="pressKey('2')" class="h-16 rounded-2xl bg-surfaceLight hover:bg-white/15 border border-white/10 font-display text-2xl font-black">2</button>
+        <button onclick="pressKey('3')" class="h-16 rounded-2xl bg-surfaceLight hover:bg-white/15 border border-white/10 font-display text-2xl font-black">3</button>
+        <button onclick="pressKey('4')" class="h-16 rounded-2xl bg-surfaceLight hover:bg-white/15 border border-white/10 font-display text-2xl font-black">4</button>
+        <button onclick="pressKey('5')" class="h-16 rounded-2xl bg-surfaceLight hover:bg-white/15 border border-white/10 font-display text-2xl font-black">5</button>
+        <button onclick="pressKey('6')" class="h-16 rounded-2xl bg-surfaceLight hover:bg-white/15 border border-white/10 font-display text-2xl font-black">6</button>
+        <button onclick="pressKey('7')" class="h-16 rounded-2xl bg-surfaceLight hover:bg-white/15 border border-white/10 font-display text-2xl font-black">7</button>
+        <button onclick="pressKey('8')" class="h-16 rounded-2xl bg-surfaceLight hover:bg-white/15 border border-white/10 font-display text-2xl font-black">8</button>
+        <button onclick="pressKey('9')" class="h-16 rounded-2xl bg-surfaceLight hover:bg-white/15 border border-white/10 font-display text-2xl font-black">9</button>
+        <button onclick="pressKey('00')" class="h-16 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 font-display text-xl font-black text-neutral-400">00</button>
+        <button onclick="pressKey('0')" class="h-16 rounded-2xl bg-surfaceLight hover:bg-white/15 border border-white/10 font-display text-2xl font-black">0</button>
+        <button onclick="backspace()" class="h-16 rounded-2xl bg-rose-500/20 hover:bg-rose-500/30 border border-rose-500/30 text-rose-300 font-bold text-xl">⌫</button>
       </div>
 
       <!-- Действия -->
@@ -180,7 +182,9 @@
     let currentInput = "0";
     let activePollInterval = null;
     const terminalId = localStorage.getItem('yk_term_id') || 'term_01';
+    const CORS_PROXY_KEY = '82da55e0';
 
+    // Управление модалкой ключей
     function openKeysModal() {
       document.getElementById('modal-shop-id').value = localStorage.getItem('yk_shop_id') || (window.yooKassaConfig ? window.yooKassaConfig.shopId : '');
       document.getElementById('modal-secret-key').value = localStorage.getItem('yk_secret_key') || (window.yooKassaConfig ? window.yooKassaConfig.secretKey : '');
@@ -210,7 +214,6 @@
 
       updateKeyStatusBadge();
       closeKeysModal();
-      document.getElementById('pos-status-text').innerText = 'Ключи успешно сохранены!';
     }
 
     function updateKeyStatusBadge() {
@@ -254,34 +257,6 @@
       updateDisplay();
     }
 
-    // Запрос через надежный CORS-мост
-    async function requestYooKassa(endpoint, method, headers, body = null) {
-      const targetUrl = `https://api.yookassa.ru/v3/${endpoint}`;
-      const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(targetUrl)}`;
-
-      const options = {
-        method: method,
-        headers: headers
-      };
-      if (body) options.body = JSON.stringify(body);
-
-      // Пробуем прямой запрос через fallback-прокси
-      try {
-        let res = await fetch(`https://corsproxy.io/?${encodeURIComponent(targetUrl)}`, options);
-        let text = await res.text();
-        try {
-          return { ok: res.ok, status: res.status, data: JSON.parse(text) };
-        } catch {
-          // Если corsproxy вернул не JSON, пробуем запасной
-          throw new Error('Fallback to secondary proxy');
-        }
-      } catch (e) {
-        let res = await fetch(proxyUrl, options);
-        let text = await res.text();
-        return { ok: res.ok, status: res.status, data: JSON.parse(text) };
-      }
-    }
-
     async function createDirectSbpPayment() {
       const amount = parseInt(currentInput);
       if (!amount || amount <= 0) return alert('Введите сумму больше 0');
@@ -290,7 +265,6 @@
       const secretKey = localStorage.getItem('yk_secret_key') || (window.yooKassaConfig ? window.yooKassaConfig.secretKey : '');
 
       if (!shopId || !secretKey) {
-        alert('Сначала введите ключи ЮКассы в настройках!');
         openKeysModal();
         return;
       }
@@ -304,27 +278,28 @@
       if (activePollInterval) clearInterval(activePollInterval);
 
       const authHeader = 'Basic ' + btoa(`${shopId}:${secretKey}`);
-      const idempotenceKey = generateUUID();
+      const targetUrl = 'https://api.yookassa.ru/v3/payments';
+      const proxyUrl = `https://corsproxy.io/?key=${CORS_PROXY_KEY}&url=${encodeURIComponent(targetUrl)}`;
 
       try {
-        const result = await requestYooKassa('payments', 'POST', {
-          'Authorization': authHeader,
-          'Idempotence-Key': idempotenceKey,
-          'Content-Type': 'application/json'
-        }, {
-          amount: { value: amount.toFixed(2), currency: 'RUB' },
-          payment_method_data: { type: 'sbp' },
-          confirmation: { type: 'qr' },
-          capture: true,
-          description: `Заказ на кассе (${amount} ₽)`
+        const response = await fetch(proxyUrl, {
+          method: 'POST',
+          headers: {
+            'Authorization': authHeader,
+            'Idempotence-Key': generateUUID(),
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            amount: { value: amount.toFixed(2), currency: 'RUB' },
+            payment_method_data: { type: 'sbp' },
+            confirmation: { type: 'qr' },
+            capture: true,
+            description: `Заказ на кассе (${amount} ₽)`
+          })
         });
 
-        const payment = result.data;
-
-        if (!result.ok || !payment.id) {
-          const detail = payment.description || payment.code || JSON.stringify(payment);
-          throw new Error(detail);
-        }
+        const payment = await response.json();
+        if (!response.ok || !payment.id) throw new Error(payment.description || 'Ошибка API');
 
         const sbpQrData = payment.confirmation?.confirmation_data || payment.confirmation?.confirmation_url || '';
 
@@ -339,11 +314,11 @@
           });
         }
 
-        status.innerHTML = `<span class="text-sticker font-bold">СБП QR на ${amount} ₽ готов! Ждем оплату...</span>`;
+        status.innerHTML = `<span class="text-sticker font-bold">СБП QR на экране! Ждем оплату...</span>`;
         startDirectPaymentPolling(shopId, secretKey, payment.id, amount);
 
       } catch (err) {
-        status.innerHTML = `<span class="text-rose-400 font-bold">Ошибка: ${err.message}</span>`;
+        status.innerText = 'Ошибка: ' + err.message;
       } finally {
         btn.disabled = false;
         btn.innerText = '⚡ Выставить СБП QR';
@@ -352,15 +327,15 @@
 
     function startDirectPaymentPolling(shopId, secretKey, paymentId, amount) {
       const authHeader = 'Basic ' + btoa(`${shopId}:${secretKey}`);
+      const targetUrl = `https://api.yookassa.ru/v3/payments/${paymentId}`;
+      const proxyUrl = `https://corsproxy.io/?key=${CORS_PROXY_KEY}&url=${encodeURIComponent(targetUrl)}`;
 
       activePollInterval = setInterval(async () => {
         try {
-          const result = await requestYooKassa(`payments/${paymentId}`, 'GET', {
-            'Authorization': authHeader,
-            'Content-Type': 'application/json'
+          const res = await fetch(proxyUrl, {
+            headers: { 'Authorization': authHeader, 'Content-Type': 'application/json' }
           });
-
-          const data = result.data;
+          const data = await res.json();
 
           if (data && (data.status === 'succeeded' || data.paid === true)) {
             clearInterval(activePollInterval);
@@ -376,7 +351,7 @@
             document.getElementById('pos-status-text').innerHTML = '<span class="text-emerald-400 font-bold">✅ Оплата прошла!</span>';
           }
         } catch (e) { console.error("Polling error:", e); }
-      }, 2500);
+      }, 2000);
     }
 
     async function resetTerminal() {
