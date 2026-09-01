@@ -3,220 +3,141 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>СБП Терминал Оплаты</title>
-  <!-- Tailwind CSS -->
+  <title>СБП Касса — Терминал</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Lucide Icons -->
   <script src="https://unpkg.com/lucide@latest"></script>
-  <!-- QR Code Library -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-  <!-- Canvas Confetti -->
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
-  
-  <style>
-    @keyframes pulse-ring {
-      0% { transform: scale(0.95); opacity: 0.8; }
-      50% { transform: scale(1.1); opacity: 0.3; }
-      100% { transform: scale(0.95); opacity: 0.8; }
-    }
-    .animate-nfc {
-      animation: pulse-ring 2.5s infinite ease-in-out;
-    }
-    .checkmark-draw {
-      stroke-dasharray: 50;
-      stroke-dashoffset: 50;
-      animation: draw 0.6s 0.2s cubic-bezier(0.65, 0, 0.45, 1) forwards;
-    }
-    @keyframes draw {
-      100% { stroke-dashoffset: 0; }
-    }
-  </style>
 </head>
 <body class="bg-slate-950 text-slate-800 flex flex-col items-center justify-center min-h-screen p-4 font-sans select-none overflow-hidden antialiased">
 
-  <!-- Фон с мягким свечением -->
-  <div class="fixed inset-0 pointer-events-none flex items-center justify-center">
-    <div class="w-[500px] h-[500px] bg-blue-600/15 rounded-full blur-3xl"></div>
-    <div class="w-[300px] h-[300px] bg-indigo-500/10 rounded-full blur-2xl"></div>
-  </div>
-
-  <!-- Терминал -->
-  <main class="w-full max-w-sm bg-white/95 backdrop-blur-xl rounded-[36px] border border-white/60 shadow-[0_20px_50px_rgba(15,23,42,0.4)] p-6 relative overflow-hidden flex flex-col justify-between min-h-[660px] transition-all duration-300">
+  <main class="w-full max-w-sm bg-white/95 backdrop-blur-xl rounded-[36px] border border-white/60 shadow-2xl p-6 relative overflow-hidden flex flex-col justify-between min-h-[660px]">
     
     <!-- Шапка -->
     <header class="flex items-center justify-between pb-3.5 border-b border-slate-100">
       <div class="flex items-center gap-2.5">
-        <div class="w-9 h-9 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center shadow-md shadow-blue-500/20">
-          <svg class="w-5 h-5" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M19.5 4L5 19.5L19.5 35L22 32.5L10 19.5L22 6.5L19.5 4Z" fill="#F36F21"/>
-            <path d="M20.5 4L35 19.5L20.5 35L18 32.5L30 19.5L18 6.5L20.5 4Z" fill="#FFF"/>
-            <path d="M12 19.5L19.5 12L27 19.5L19.5 27L12 19.5Z" fill="#2BB673"/>
-          </svg>
+        <div class="w-9 h-9 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center shadow-md">
+          <i data-lucide="calculator" class="w-5 h-5 text-white"></i>
         </div>
         <div>
-          <span class="font-extrabold text-sm text-slate-900 leading-tight block">СБП Касса</span>
-          <span class="text-[10px] font-bold text-blue-600 tracking-wider uppercase block">Быстрые платежи</span>
+          <span class="font-extrabold text-sm text-slate-900 block leading-tight">СБП Касса</span>
+          <span class="text-[10px] font-bold text-blue-600 tracking-wider uppercase block">Терминал кассира</span>
         </div>
       </div>
 
-      <button id="openSettingsBtn" class="p-2.5 rounded-2xl bg-slate-50 hover:bg-blue-50 text-slate-600 hover:text-blue-600 transition active:scale-95 border border-slate-100">
+      <button id="openSettingsBtn" class="p-2.5 rounded-2xl bg-slate-50 hover:bg-blue-50 text-slate-600 transition active:scale-95 border border-slate-100">
         <i data-lucide="sliders" class="w-4 h-4"></i>
       </button>
     </header>
 
-    <!-- 1. Экран ввода суммы -->
+    <!-- Экран 1: Ввод суммы -->
     <section id="inputScreen" class="flex flex-col flex-1 justify-between pt-4">
       <div class="text-center my-auto bg-gradient-to-b from-blue-50/80 to-slate-50 p-5 rounded-3xl border border-blue-100/70 shadow-inner">
         <span class="text-[11px] uppercase tracking-widest text-slate-400 font-bold">Сумма к оплате</span>
         <div class="flex items-baseline justify-center gap-1.5 mt-1.5">
-          <span id="amountDisplay" class="text-4xl font-black tracking-tight text-slate-900 transition-all">0</span>
+          <span id="amountDisplay" class="text-4xl font-black tracking-tight text-slate-900">0</span>
           <span class="text-2xl font-extrabold text-blue-600">₽</span>
         </div>
       </div>
 
       <!-- Клавиатура -->
       <div class="grid grid-cols-3 gap-2.5 my-4">
-        <button onclick="pressKey('1')" class="h-13 py-3.5 rounded-2xl bg-slate-50/90 hover:bg-blue-50 text-xl font-bold text-slate-800 transition active:scale-95 border border-slate-100/80 shadow-sm">1</button>
-        <button onclick="pressKey('2')" class="h-13 py-3.5 rounded-2xl bg-slate-50/90 hover:bg-blue-50 text-xl font-bold text-slate-800 transition active:scale-95 border border-slate-100/80 shadow-sm">2</button>
-        <button onclick="pressKey('3')" class="h-13 py-3.5 rounded-2xl bg-slate-50/90 hover:bg-blue-50 text-xl font-bold text-slate-800 transition active:scale-95 border border-slate-100/80 shadow-sm">3</button>
-        <button onclick="pressKey('4')" class="h-13 py-3.5 rounded-2xl bg-slate-50/90 hover:bg-blue-50 text-xl font-bold text-slate-800 transition active:scale-95 border border-slate-100/80 shadow-sm">4</button>
-        <button onclick="pressKey('5')" class="h-13 py-3.5 rounded-2xl bg-slate-50/90 hover:bg-blue-50 text-xl font-bold text-slate-800 transition active:scale-95 border border-slate-100/80 shadow-sm">5</button>
-        <button onclick="pressKey('6')" class="h-13 py-3.5 rounded-2xl bg-slate-50/90 hover:bg-blue-50 text-xl font-bold text-slate-800 transition active:scale-95 border border-slate-100/80 shadow-sm">6</button>
-        <button onclick="pressKey('7')" class="h-13 py-3.5 rounded-2xl bg-slate-50/90 hover:bg-blue-50 text-xl font-bold text-slate-800 transition active:scale-95 border border-slate-100/80 shadow-sm">7</button>
-        <button onclick="pressKey('8')" class="h-13 py-3.5 rounded-2xl bg-slate-50/90 hover:bg-blue-50 text-xl font-bold text-slate-800 transition active:scale-95 border border-slate-100/80 shadow-sm">8</button>
-        <button onclick="pressKey('9')" class="h-13 py-3.5 rounded-2xl bg-slate-50/90 hover:bg-blue-50 text-xl font-bold text-slate-800 transition active:scale-95 border border-slate-100/80 shadow-sm">9</button>
-        <button onclick="pressKey('C')" class="h-13 py-3.5 rounded-2xl bg-rose-50 hover:bg-rose-100 text-rose-500 font-bold transition active:scale-95 border border-rose-100 shadow-sm">C</button>
-        <button onclick="pressKey('0')" class="h-13 py-3.5 rounded-2xl bg-slate-50/90 hover:bg-blue-50 text-xl font-bold text-slate-800 transition active:scale-95 border border-slate-100/80 shadow-sm">0</button>
-        <button onclick="pressKey('backspace')" class="h-13 py-3.5 rounded-2xl bg-slate-50/90 hover:bg-blue-50 flex items-center justify-center text-slate-600 transition active:scale-95 border border-slate-100/80 shadow-sm">
+        <button onclick="pressKey('1')" class="h-13 py-3.5 rounded-2xl bg-slate-50 hover:bg-blue-50 text-xl font-bold text-slate-800 transition active:scale-95 border border-slate-100">1</button>
+        <button onclick="pressKey('2')" class="h-13 py-3.5 rounded-2xl bg-slate-50 hover:bg-blue-50 text-xl font-bold text-slate-800 transition active:scale-95 border border-slate-100">2</button>
+        <button onclick="pressKey('3')" class="h-13 py-3.5 rounded-2xl bg-slate-50 hover:bg-blue-50 text-xl font-bold text-slate-800 transition active:scale-95 border border-slate-100">3</button>
+        <button onclick="pressKey('4')" class="h-13 py-3.5 rounded-2xl bg-slate-50 hover:bg-blue-50 text-xl font-bold text-slate-800 transition active:scale-95 border border-slate-100">4</button>
+        <button onclick="pressKey('5')" class="h-13 py-3.5 rounded-2xl bg-slate-50 hover:bg-blue-50 text-xl font-bold text-slate-800 transition active:scale-95 border border-slate-100">5</button>
+        <button onclick="pressKey('6')" class="h-13 py-3.5 rounded-2xl bg-slate-50 hover:bg-blue-50 text-xl font-bold text-slate-800 transition active:scale-95 border border-slate-100">6</button>
+        <button onclick="pressKey('7')" class="h-13 py-3.5 rounded-2xl bg-slate-50 hover:bg-blue-50 text-xl font-bold text-slate-800 transition active:scale-95 border border-slate-100">7</button>
+        <button onclick="pressKey('8')" class="h-13 py-3.5 rounded-2xl bg-slate-50 hover:bg-blue-50 text-xl font-bold text-slate-800 transition active:scale-95 border border-slate-100">8</button>
+        <button onclick="pressKey('9')" class="h-13 py-3.5 rounded-2xl bg-slate-50 hover:bg-blue-50 text-xl font-bold text-slate-800 transition active:scale-95 border border-slate-100">9</button>
+        <button onclick="pressKey('C')" class="h-13 py-3.5 rounded-2xl bg-rose-50 hover:bg-rose-100 text-rose-500 font-bold transition active:scale-95 border border-rose-100">C</button>
+        <button onclick="pressKey('0')" class="h-13 py-3.5 rounded-2xl bg-slate-50 hover:bg-blue-50 text-xl font-bold text-slate-800 transition active:scale-95 border border-slate-100">0</button>
+        <button onclick="pressKey('backspace')" class="h-13 py-3.5 rounded-2xl bg-slate-50 hover:bg-blue-50 flex items-center justify-center text-slate-600 transition active:scale-95 border border-slate-100">
           <i data-lucide="delete" class="w-5 h-5"></i>
         </button>
       </div>
 
-      <button id="generateBtn" onclick="createPaymentQR()" class="w-full py-4 rounded-2xl bg-gradient-to-r from-blue-600 via-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-extrabold text-base shadow-lg shadow-blue-500/30 transition-all active:scale-[0.98] flex items-center justify-center gap-2">
-        <span id="btnText">Создать QR-код</span>
+      <button id="generateBtn" onclick="createPaymentQR()" class="w-full py-4 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 text-white font-extrabold text-base shadow-lg shadow-blue-500/30 transition-all active:scale-[0.98] flex items-center justify-center gap-2">
+        <span id="btnText">Выставить счёт на экран</span>
         <i data-lucide="arrow-right" class="w-5 h-5"></i>
       </button>
     </section>
 
-    <!-- 2. Экран QR-кода с таймером -->
+    <!-- Экран 2: QR на терминале -->
     <section id="qrScreen" class="hidden flex flex-col flex-1 justify-between items-center pt-2">
-      <!-- Стикер -->
-      <div class="w-full bg-slate-50/80 rounded-3xl p-4 border border-slate-200/80 shadow-sm flex flex-col items-center relative my-auto">
-        <h2 class="text-lg font-black text-slate-900 tracking-tight">Плати по-новому!</h2>
-        <p class="text-[11px] font-medium text-slate-500 text-center mt-0.5">
-          Отсканируйте в любом банковском приложении
-        </p>
-
-        <!-- QR контейнер -->
-        <div class="relative p-2.5 bg-white rounded-2xl border border-slate-200 shadow-sm mt-3 mb-2 flex items-center justify-center">
+      <div class="w-full bg-slate-50/90 rounded-3xl p-4 border border-slate-200/80 shadow-sm flex flex-col items-center my-auto">
+        <h2 class="text-base font-black text-slate-900">QR отправлен на экран</h2>
+        <div class="p-2.5 bg-white rounded-2xl border border-slate-200 shadow-sm my-3">
           <div id="qrcode"></div>
-          
-          <!-- NFC иконка по центру -->
-          <div class="absolute inset-0 m-auto w-8 h-8 bg-white rounded-full flex items-center justify-center shadow-md border border-slate-100 animate-nfc">
-            <svg class="w-4 h-4 text-rose-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M2 8.5C6 4.5 12 4.5 16 8.5"/>
-              <path d="M5 12C8 9 13 9 16 12"/>
-              <path d="M8.5 15.5C10.5 13.5 13.5 13.5 15.5 15.5"/>
-            </svg>
-          </div>
         </div>
-
         <div class="text-2xl font-black text-slate-900 mb-2">
           <span id="qrAmount">0</span> ₽
         </div>
-
-        <!-- Таймер действия QR -->
         <div class="w-full bg-white rounded-xl p-2 border border-slate-200/70 flex items-center justify-between text-xs">
-          <div class="flex items-center gap-1.5 text-slate-600 font-semibold">
-            <i data-lucide="timer" class="w-3.5 h-3.5 text-blue-600"></i>
-            <span>Действует:</span>
-          </div>
+          <span class="text-slate-600 font-semibold flex items-center gap-1.5"><i data-lucide="timer" class="w-3.5 h-3.5 text-blue-600"></i>Таймер:</span>
           <span id="timerDisplay" class="font-extrabold text-blue-600 font-mono">05:00</span>
         </div>
-
-        <!-- СБП брендинг -->
-        <div class="w-full pt-2.5 mt-2.5 border-t border-slate-200/60 flex items-center justify-center gap-1.5 text-[11px] font-bold text-slate-700 uppercase tracking-wide">
-          <svg class="w-5 h-5" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M19.5 4L5 19.5L19.5 35L22 32.5L10 19.5L22 6.5L19.5 4Z" fill="#F36F21"/>
-            <path d="M20.5 4L35 19.5L20.5 35L18 32.5L30 19.5L18 6.5L20.5 4Z" fill="#1475BA"/>
-            <path d="M12 19.5L19.5 12L27 19.5L19.5 27L12 19.5Z" fill="#2BB673"/>
-          </svg>
-          Система быстрых платежей
-        </div>
       </div>
-
-      <button onclick="cancelPayment()" class="w-full mt-3 py-3.5 rounded-2xl bg-slate-100 hover:bg-rose-50 hover:text-rose-600 text-slate-600 font-bold text-sm border border-slate-200 transition active:scale-[0.98]">
+      <button onclick="cancelPayment()" class="w-full mt-3 py-3.5 rounded-2xl bg-rose-50 hover:bg-rose-100 text-rose-600 font-bold text-sm border border-rose-100 transition active:scale-[0.98]">
         Отменить оплату
       </button>
     </section>
 
-    <!-- 3. Экран успешной оплаты (Чек) -->
-    <section id="successScreen" class="hidden flex flex-col flex-1 justify-between items-center pt-2">
+    <!-- Экран 3: Успех -->
+    <section id="successScreen" class="hidden flex flex-col flex-1 justify-between items-center pt-4">
       <div class="w-full flex flex-col items-center my-auto">
-        <!-- Анимированный круг с галочкой -->
         <div class="w-16 h-16 rounded-full bg-emerald-50 border border-emerald-200 flex items-center justify-center shadow-lg shadow-emerald-500/20 mb-3 animate-bounce">
-          <svg class="w-8 h-8 text-emerald-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-            <polyline points="20 6 9 17 4 12" class="checkmark-draw"></polyline>
-          </svg>
+          <i data-lucide="check" class="w-8 h-8 text-emerald-600"></i>
         </div>
-
-        <h2 class="text-xl font-black text-slate-900">Оплата прошла!</h2>
-        <span class="text-xs font-semibold text-emerald-600 mt-0.5">Средства успешно зачислены</span>
-
-        <!-- Электронный чек -->
+        <h2 class="text-xl font-black text-slate-900">Оплачено!</h2>
         <div class="w-full bg-slate-50 rounded-2xl p-4 border border-slate-200/80 shadow-sm mt-4 space-y-2 text-xs">
           <div class="flex justify-between text-slate-500 font-medium">
-            <span>Сумма платежа</span>
+            <span>Сумма</span>
             <span class="font-extrabold text-slate-900 text-sm"><span id="receiptAmount">0</span> ₽</span>
           </div>
           <div class="flex justify-between text-slate-500 font-medium">
-            <span>Способ оплаты</span>
-            <span class="font-semibold text-blue-600">СБП (QR-код)</span>
-          </div>
-          <div class="flex justify-between text-slate-500 font-medium">
-            <span>Дата и время</span>
-            <span id="receiptDate" class="font-semibold text-slate-700">--:--</span>
-          </div>
-          <div class="flex justify-between text-slate-500 font-medium pt-2 border-t border-slate-200">
-            <span>ID транзакции</span>
+            <span>ID</span>
             <span id="receiptId" class="font-mono text-[10px] text-slate-400">#---</span>
           </div>
         </div>
       </div>
-
-      <button onclick="newPayment()" class="w-full mt-4 py-4 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white font-extrabold text-sm shadow-lg shadow-slate-900/20 transition active:scale-[0.98]">
+      <button onclick="newPayment()" class="w-full mt-4 py-4 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white font-extrabold text-sm shadow-lg transition active:scale-[0.98]">
         Новый платёж
       </button>
     </section>
 
-    <!-- Модалка настроек -->
-    <div id="settingsModal" class="hidden absolute inset-0 bg-white/95 backdrop-blur-md p-6 flex flex-col justify-between z-50">
+    <!-- Настройки -->
+    <div id="settingsModal" class="hidden absolute inset-0 bg-white/95 backdrop-blur-md p-6 flex flex-col justify-between z-50 overflow-y-auto">
       <div>
         <div class="flex items-center justify-between pb-3 border-b border-slate-100">
           <h2 class="text-base font-extrabold text-slate-900 flex items-center gap-2">
             <i data-lucide="sliders" class="w-5 h-5 text-blue-600"></i>
-            Настройки ЮKassa
+            Настройки
           </h2>
           <button id="closeSettingsBtn" class="p-1 text-slate-400 hover:text-slate-700">
             <i data-lucide="x" class="w-5 h-5"></i>
           </button>
         </div>
 
-        <div class="space-y-4 mt-6">
+        <div class="space-y-3.5 mt-4">
           <div>
-            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Shop ID</label>
-            <input id="shopIdInput" type="text" placeholder="1350725" class="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 placeholder-slate-400 focus:outline-none focus:border-blue-500 font-medium transition text-sm" />
+            <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Shop ID</label>
+            <input id="shopIdInput" type="text" placeholder="1350725" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 text-sm" />
           </div>
-
           <div>
-            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Секретный ключ</label>
-            <input id="secretKeyInput" type="password" placeholder="live_..." class="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 placeholder-slate-400 focus:outline-none focus:border-blue-500 font-medium transition text-sm" />
+            <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Секретный ключ (API Key)</label>
+            <input id="secretKeyInput" type="password" placeholder="live_..." class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 text-sm" />
+          </div>
+          <div>
+            <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Firebase Realtime DB URL</label>
+            <input id="firebaseUrlInput" type="text" placeholder="https://ваш-проект-default-rtdb.firebaseio.com" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 text-sm" />
           </div>
         </div>
       </div>
 
-      <button onclick="saveSettings()" class="w-full py-3.5 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-sm shadow-md shadow-blue-500/20 transition active:scale-[0.98]">
-        Сохранить в телефоне
+      <button onclick="saveSettings()" class="w-full py-3.5 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-sm shadow-md transition active:scale-[0.98]">
+        Сохранить настройки
       </button>
     </div>
 
@@ -230,7 +151,7 @@
     let currentAmount = '0';
     let checkInterval = null;
     let timerInterval = null;
-    let timeLeft = 300; // 5 минут
+    let timeLeft = 300;
 
     const amountDisplay = document.getElementById('amountDisplay');
     const inputScreen = document.getElementById('inputScreen');
@@ -241,51 +162,57 @@
     const settingsModal = document.getElementById('settingsModal');
     const shopIdInput = document.getElementById('shopIdInput');
     const secretKeyInput = document.getElementById('secretKeyInput');
+    const firebaseUrlInput = document.getElementById('firebaseUrlInput');
     const generateBtn = document.getElementById('generateBtn');
     const btnText = document.getElementById('btnText');
 
     window.addEventListener('DOMContentLoaded', () => {
       shopIdInput.value = localStorage.getItem('yk_shop_id') || '';
       secretKeyInput.value = localStorage.getItem('yk_secret_key') || '';
+      firebaseUrlInput.value = localStorage.getItem('yk_firebase_url') || '';
     });
 
     function pressKey(key) {
-      if (key === 'C') {
-        currentAmount = '0';
-      } else if (key === 'backspace') {
-        currentAmount = currentAmount.length > 1 ? currentAmount.slice(0, -1) : '0';
-      } else {
-        if (currentAmount === '0') {
-          currentAmount = key;
-        } else if (currentAmount.length < 7) {
-          currentAmount += key;
-        }
+      if (key === 'C') currentAmount = '0';
+      else if (key === 'backspace') currentAmount = currentAmount.length > 1 ? currentAmount.slice(0, -1) : '0';
+      else {
+        if (currentAmount === '0') currentAmount = key;
+        else if (currentAmount.length < 7) currentAmount += key;
       }
       amountDisplay.textContent = Number(currentAmount).toLocaleString('ru-RU');
     }
 
     function generateUUID() {
-      return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+      return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
         const r = Math.random() * 16 | 0;
-        const v = c === 'x' ? r : (r & 0x3 | 0x8);
-        return v.toString(16);
+        return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
       });
     }
 
-    // Таймер обратного отсчета
+    async function syncToFirebase(stateData) {
+      const fbUrl = (localStorage.getItem('yk_firebase_url') || firebaseUrlInput.value.trim()).replace(/\/+$/, '');
+      if (!fbUrl) return;
+      try {
+        await fetch(`${fbUrl}/pos_display.json`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(stateData)
+        });
+      } catch (err) {
+        console.error('Firebase sync error:', err);
+      }
+    }
+
     function startTimer() {
       timeLeft = 300;
       clearInterval(timerInterval);
-      
       timerInterval = setInterval(() => {
         timeLeft--;
-        const minutes = String(Math.floor(timeLeft / 60)).padStart(2, '0');
-        const seconds = String(timeLeft % 60).padStart(2, '0');
-        timerDisplay.textContent = `${minutes}:${seconds}`;
-
+        const m = String(Math.floor(timeLeft / 60)).padStart(2, '0');
+        const s = String(timeLeft % 60).padStart(2, '0');
+        timerDisplay.textContent = `${m}:${s}`;
         if (timeLeft <= 0) {
           clearInterval(timerInterval);
-          alert('Время действия QR-кода истекло. Создайте новый.');
           cancelPayment();
         }
       }, 1000);
@@ -293,18 +220,14 @@
 
     async function createPaymentQR() {
       const amount = parseInt(currentAmount, 10);
-      if (isNaN(amount) || amount <= 0) {
-        alert('Введите сумму больше 0');
-        return;
-      }
+      if (isNaN(amount) || amount <= 0) return alert('Введите сумму');
 
       const shopId = localStorage.getItem('yk_shop_id') || shopIdInput.value.trim();
       const secretKey = localStorage.getItem('yk_secret_key') || secretKeyInput.value.trim();
 
       if (!shopId || !secretKey) {
-        alert('Укажите Shop ID и Секретный ключ в настройках!');
         settingsModal.classList.remove('hidden');
-        return;
+        return alert('Заполните настройки!');
       }
 
       generateBtn.disabled = true;
@@ -322,112 +245,89 @@
             'Idempotence-Key': idempotenceKey
           },
           body: JSON.stringify({
-            amount: {
-              value: Number(amount).toFixed(2),
-              currency: 'RUB'
-            },
-            payment_method_data: {
-              type: 'sbp'
-            },
-            confirmation: {
-              type: 'qr'
-            },
+            amount: { value: Number(amount).toFixed(2), currency: 'RUB' },
+            payment_method_data: { type: 'sbp' },
+            confirmation: { type: 'qr' },
             capture: true,
-            description: `Оплата касса СБП: ${amount} руб.`
+            description: `СБП: ${amount} руб.`
           })
         });
 
         const data = await response.json();
-
-        if (!response.ok) {
-          alert('Ответ ЮKassa: ' + (data.description || data.error || 'Ошибка'));
-          return;
-        }
+        if (!response.ok) return alert('Ошибка ЮKassa: ' + (data.description || data.error));
 
         const sbpUrl = data.confirmation?.confirmation_data;
-
-        if (!sbpUrl) {
-          alert('Платёж создан, но ЮKassa не вернула QR.');
-          return;
-        }
+        if (!sbpUrl) return alert('ЮKassa не вернула QR.');
 
         const qrContainer = document.getElementById('qrcode');
         qrContainer.innerHTML = '';
-
-        new QRCode(qrContainer, {
-          text: sbpUrl,
-          width: 175,
-          height: 175,
-          colorDark: '#0f172a',
-          colorLight: '#ffffff',
-          correctLevel: QRCode.CorrectLevel.M
-        });
+        new QRCode(qrContainer, { text: sbpUrl, width: 170, height: 170 });
 
         qrAmount.textContent = Number(currentAmount).toLocaleString('ru-RU');
         inputScreen.classList.add('hidden');
         qrScreen.classList.remove('hidden');
 
+        // Отправляем QR на экран покупателя через Firebase
+        syncToFirebase({
+          status: 'pending',
+          amount: amount,
+          qr_url: sbpUrl,
+          payment_id: data.id,
+          timestamp: Date.now()
+        });
+
         startTimer();
         startPolling(data.id, auth, amount);
 
       } catch (err) {
-        alert('Ошибка связи: ' + err.message);
+        alert('Ошибка: ' + err.message);
       } finally {
         generateBtn.disabled = false;
-        btnText.innerText = 'Создать QR-код';
+        btnText.innerText = 'Выставить счёт на экран';
       }
     }
 
-    // Автопроверка статуса оплаты
     function startPolling(paymentId, auth, amount) {
       if (checkInterval) clearInterval(checkInterval);
-
       checkInterval = setInterval(async () => {
         try {
           const res = await fetch(`${WORKER_URL}/payments/${paymentId}`, {
             headers: { 'Authorization': `Basic ${auth}` }
           });
           const data = await res.json();
-
           if (data.status === 'succeeded') {
             clearInterval(checkInterval);
             clearInterval(timerInterval);
-            showSuccessScreen(data.id, amount);
+            showSuccess(data.id, amount);
           } else if (data.status === 'canceled') {
             clearInterval(checkInterval);
-            clearInterval(timerInterval);
-            alert('Платеж отменен.');
             cancelPayment();
           }
-        } catch (e) {
-          console.error(e);
-        }
+        } catch (e) { console.error(e); }
       }, 2500);
     }
 
-    // Экран успеха с чеком и салютом
-    function showSuccessScreen(paymentId, amount) {
+    function showSuccess(paymentId, amount) {
       qrScreen.classList.add('hidden');
       successScreen.classList.remove('hidden');
-
       document.getElementById('receiptAmount').textContent = Number(amount).toLocaleString('ru-RU');
       document.getElementById('receiptId').textContent = paymentId.slice(0, 16) + '...';
-      
-      const now = new Date();
-      document.getElementById('receiptDate').textContent = now.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' }) + ', ' + now.toLocaleDateString('ru-RU');
 
-      // Запуск конфетти
-      confetti({
-        particleCount: 80,
-        spread: 70,
-        origin: { y: 0.6 },
-        colors: ['#2563eb', '#10b981', '#f59e0b', '#ec4899']
+      // Оповещаем экран покупателя об успехе
+      syncToFirebase({
+        status: 'succeeded',
+        amount: amount,
+        payment_id: paymentId,
+        timestamp: Date.now()
       });
+
+      confetti({ particleCount: 70, spread: 60, origin: { y: 0.6 } });
     }
 
     function cancelPayment() {
       if (checkInterval) clearInterval(checkInterval);
       if (timerInterval) clearInterval(timerInterval);
+      syncToFirebase({ status: 'idle', amount: 0, timestamp: Date.now() });
       qrScreen.classList.add('hidden');
       inputScreen.classList.remove('hidden');
       currentAmount = '0';
@@ -439,6 +339,7 @@
       inputScreen.classList.remove('hidden');
       currentAmount = '0';
       amountDisplay.textContent = '0';
+      syncToFirebase({ status: 'idle', amount: 0, timestamp: Date.now() });
     }
 
     document.getElementById('openSettingsBtn').addEventListener('click', () => settingsModal.classList.remove('hidden'));
@@ -447,6 +348,7 @@
     function saveSettings() {
       localStorage.setItem('yk_shop_id', shopIdInput.value.trim());
       localStorage.setItem('yk_secret_key', secretKeyInput.value.trim());
+      localStorage.setItem('yk_firebase_url', firebaseUrlInput.value.trim());
       settingsModal.classList.add('hidden');
       alert('Настройки сохранены!');
     }
