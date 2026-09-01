@@ -3,140 +3,216 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>СБП Касса — Терминал</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://unpkg.com/lucide@latest"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
-</head>
-<body class="bg-slate-950 text-slate-800 flex flex-col items-center justify-center min-h-screen p-4 font-sans select-none overflow-hidden antialiased">
+  <title>Moon POS • Терминал Кассира</title>
+  
+  <!-- Шрифты -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com">
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&family=Unbounded:wght@600;800;900&display=swap" rel="stylesheet">
 
-  <main class="w-full max-w-sm bg-white/95 backdrop-blur-xl rounded-[36px] border border-white/60 shadow-2xl p-6 relative overflow-hidden flex flex-col justify-between min-h-[660px]">
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- QR Code Library -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <!-- Confetti -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            display: ['Unbounded', 'sans-serif'],
+            sans: ['Montserrat', 'sans-serif'],
+          },
+          colors: {
+            sticker: '#FFF188',
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    @keyframes pulse-ring {
+      0% { transform: scale(0.95); opacity: 0.8; }
+      50% { transform: scale(1.08); opacity: 0.3; }
+      100% { transform: scale(0.95); opacity: 0.8; }
+    }
+    .animate-nfc { animation: pulse-ring 2s infinite ease-in-out; }
+    .checkmark-draw {
+      stroke-dasharray: 50;
+      stroke-dashoffset: 50;
+      animation: draw 0.6s 0.2s cubic-bezier(0.65, 0, 0.45, 1) forwards;
+    }
+    @keyframes draw { 100% { stroke-dashoffset: 0; } }
+  </style>
+</head>
+<body class="bg-[#08080a] text-slate-100 flex flex-col items-center justify-center min-h-screen p-4 font-sans select-none overflow-hidden antialiased">
+
+  <!-- Фоновое свечение Moon -->
+  <div class="fixed inset-0 pointer-events-none flex items-center justify-center">
+    <div class="w-[500px] h-[500px] bg-yellow-300/5 rounded-full blur-3xl"></div>
+    <div class="w-[350px] h-[350px] bg-purple-600/10 rounded-full blur-3xl"></div>
+  </div>
+
+  <!-- Корпус терминала -->
+  <main class="w-full max-w-sm bg-neutral-900/90 backdrop-blur-2xl rounded-[36px] border border-white/10 shadow-[0_20px_60px_rgba(0,0,0,0.9)] p-6 relative overflow-hidden flex flex-col justify-between min-h-[680px] transition-all duration-300">
     
     <!-- Шапка -->
-    <header class="flex items-center justify-between pb-3.5 border-b border-slate-100">
+    <header class="flex items-center justify-between pb-3.5 border-b border-white/10">
       <div class="flex items-center gap-2.5">
-        <div class="w-9 h-9 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center shadow-md">
-          <i data-lucide="calculator" class="w-5 h-5 text-white"></i>
+        <div class="w-9 h-9 rounded-2xl bg-sticker flex items-center justify-center shadow-lg shadow-yellow-300/20">
+          <span class="text-black font-display font-black text-sm">M</span>
         </div>
         <div>
-          <span class="font-extrabold text-sm text-slate-900 block leading-tight">СБП Касса</span>
-          <span class="text-[10px] font-bold text-blue-600 tracking-wider uppercase block">Терминал кассира</span>
+          <span class="font-display font-extrabold text-xs text-white leading-tight block uppercase tracking-wider">Moon POS</span>
+          <span class="text-[10px] font-bold text-neutral-400 tracking-widest uppercase block flex items-center gap-1.5">
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+            Связь с экраном: <span id="headerTermId" class="text-sticker font-mono">term_01</span>
+          </span>
         </div>
       </div>
 
-      <button id="openSettingsBtn" class="p-2.5 rounded-2xl bg-slate-50 hover:bg-blue-50 text-slate-600 transition active:scale-95 border border-slate-100">
-        <i data-lucide="sliders" class="w-4 h-4"></i>
-      </button>
+      <div class="flex items-center gap-2">
+        <button onclick="castMagicTips()" title="Кастовать чаевые на экран" class="p-2.5 rounded-2xl bg-purple-500/20 hover:bg-purple-500/30 text-purple-300 border border-purple-500/30 transition active:scale-95">
+          <i data-lucide="wand-2" class="w-4 h-4"></i>
+        </button>
+        <button id="openSettingsBtn" class="p-2.5 rounded-2xl bg-white/5 hover:bg-white/10 text-neutral-300 transition active:scale-95 border border-white/10">
+          <i data-lucide="sliders" class="w-4 h-4"></i>
+        </button>
+      </div>
     </header>
 
     <!-- Экран 1: Ввод суммы -->
-    <section id="inputScreen" class="flex flex-col flex-1 justify-between pt-4">
-      <div class="text-center my-auto bg-gradient-to-b from-blue-50/80 to-slate-50 p-5 rounded-3xl border border-blue-100/70 shadow-inner">
-        <span class="text-[11px] uppercase tracking-widest text-slate-400 font-bold">Сумма к оплате</span>
-        <div class="flex items-baseline justify-center gap-1.5 mt-1.5">
-          <span id="amountDisplay" class="text-4xl font-black tracking-tight text-slate-900">0</span>
-          <span class="text-2xl font-extrabold text-blue-600">₽</span>
+    <section id="inputScreen" class="flex flex-col flex-1 justify-between pt-3">
+      <div class="text-center my-auto bg-black/50 p-4 rounded-3xl border border-white/10 shadow-inner">
+        <span class="text-[10px] uppercase tracking-widest text-neutral-400 font-display font-bold">Сумма к оплате</span>
+        <div class="flex items-baseline justify-center gap-1.5 mt-1">
+          <span id="amountDisplay" class="font-display text-4xl font-black tracking-tight text-white transition-all">0</span>
+          <span class="text-2xl font-black text-sticker">₽</span>
         </div>
       </div>
 
       <!-- Клавиатура -->
-      <div class="grid grid-cols-3 gap-2.5 my-4">
-        <button onclick="pressKey('1')" class="h-13 py-3.5 rounded-2xl bg-slate-50 hover:bg-blue-50 text-xl font-bold text-slate-800 transition active:scale-95 border border-slate-100">1</button>
-        <button onclick="pressKey('2')" class="h-13 py-3.5 rounded-2xl bg-slate-50 hover:bg-blue-50 text-xl font-bold text-slate-800 transition active:scale-95 border border-slate-100">2</button>
-        <button onclick="pressKey('3')" class="h-13 py-3.5 rounded-2xl bg-slate-50 hover:bg-blue-50 text-xl font-bold text-slate-800 transition active:scale-95 border border-slate-100">3</button>
-        <button onclick="pressKey('4')" class="h-13 py-3.5 rounded-2xl bg-slate-50 hover:bg-blue-50 text-xl font-bold text-slate-800 transition active:scale-95 border border-slate-100">4</button>
-        <button onclick="pressKey('5')" class="h-13 py-3.5 rounded-2xl bg-slate-50 hover:bg-blue-50 text-xl font-bold text-slate-800 transition active:scale-95 border border-slate-100">5</button>
-        <button onclick="pressKey('6')" class="h-13 py-3.5 rounded-2xl bg-slate-50 hover:bg-blue-50 text-xl font-bold text-slate-800 transition active:scale-95 border border-slate-100">6</button>
-        <button onclick="pressKey('7')" class="h-13 py-3.5 rounded-2xl bg-slate-50 hover:bg-blue-50 text-xl font-bold text-slate-800 transition active:scale-95 border border-slate-100">7</button>
-        <button onclick="pressKey('8')" class="h-13 py-3.5 rounded-2xl bg-slate-50 hover:bg-blue-50 text-xl font-bold text-slate-800 transition active:scale-95 border border-slate-100">8</button>
-        <button onclick="pressKey('9')" class="h-13 py-3.5 rounded-2xl bg-slate-50 hover:bg-blue-50 text-xl font-bold text-slate-800 transition active:scale-95 border border-slate-100">9</button>
-        <button onclick="pressKey('C')" class="h-13 py-3.5 rounded-2xl bg-rose-50 hover:bg-rose-100 text-rose-500 font-bold transition active:scale-95 border border-rose-100">C</button>
-        <button onclick="pressKey('0')" class="h-13 py-3.5 rounded-2xl bg-slate-50 hover:bg-blue-50 text-xl font-bold text-slate-800 transition active:scale-95 border border-slate-100">0</button>
-        <button onclick="pressKey('backspace')" class="h-13 py-3.5 rounded-2xl bg-slate-50 hover:bg-blue-50 flex items-center justify-center text-slate-600 transition active:scale-95 border border-slate-100">
+      <div class="grid grid-cols-3 gap-2.5 my-3">
+        <button onclick="pressKey('1')" class="h-12 py-3 rounded-2xl bg-white/5 hover:bg-white/15 text-lg font-display font-bold text-white transition active:scale-95 border border-white/10">1</button>
+        <button onclick="pressKey('2')" class="h-12 py-3 rounded-2xl bg-white/5 hover:bg-white/15 text-lg font-display font-bold text-white transition active:scale-95 border border-white/10">2</button>
+        <button onclick="pressKey('3')" class="h-12 py-3 rounded-2xl bg-white/5 hover:bg-white/15 text-lg font-display font-bold text-white transition active:scale-95 border border-white/10">3</button>
+        <button onclick="pressKey('4')" class="h-12 py-3 rounded-2xl bg-white/5 hover:bg-white/15 text-lg font-display font-bold text-white transition active:scale-95 border border-white/10">4</button>
+        <button onclick="pressKey('5')" class="h-12 py-3 rounded-2xl bg-white/5 hover:bg-white/15 text-lg font-display font-bold text-white transition active:scale-95 border border-white/10">5</button>
+        <button onclick="pressKey('6')" class="h-12 py-3 rounded-2xl bg-white/5 hover:bg-white/15 text-lg font-display font-bold text-white transition active:scale-95 border border-white/10">6</button>
+        <button onclick="pressKey('7')" class="h-12 py-3 rounded-2xl bg-white/5 hover:bg-white/15 text-lg font-display font-bold text-white transition active:scale-95 border border-white/10">7</button>
+        <button onclick="pressKey('8')" class="h-12 py-3 rounded-2xl bg-white/5 hover:bg-white/15 text-lg font-display font-bold text-white transition active:scale-95 border border-white/10">8</button>
+        <button onclick="pressKey('9')" class="h-12 py-3 rounded-2xl bg-white/5 hover:bg-white/15 text-lg font-display font-bold text-white transition active:scale-95 border border-white/10">9</button>
+        <button onclick="pressKey('C')" class="h-12 py-3 rounded-2xl bg-red-500/10 hover:bg-red-500/20 text-red-400 font-display font-bold transition active:scale-95 border border-red-500/20">C</button>
+        <button onclick="pressKey('0')" class="h-12 py-3 rounded-2xl bg-white/5 hover:bg-white/15 text-lg font-display font-bold text-white transition active:scale-95 border border-white/10">0</button>
+        <button onclick="pressKey('backspace')" class="h-12 py-3 rounded-2xl bg-white/5 hover:bg-white/15 flex items-center justify-center text-neutral-300 transition active:scale-95 border border-white/10">
           <i data-lucide="delete" class="w-5 h-5"></i>
         </button>
       </div>
 
-      <button id="generateBtn" onclick="createPaymentQR()" class="w-full py-4 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 text-white font-extrabold text-base shadow-lg shadow-blue-500/30 transition-all active:scale-[0.98] flex items-center justify-center gap-2">
-        <span id="btnText">Выставить счёт на экран</span>
-        <i data-lucide="arrow-right" class="w-5 h-5"></i>
+      <button id="generateBtn" onclick="createPaymentQR()" class="w-full py-4 rounded-2xl bg-sticker hover:bg-yellow-200 text-black font-display font-black text-sm shadow-xl shadow-yellow-300/10 transition-all active:scale-[0.98] flex items-center justify-center gap-2 uppercase tracking-wider">
+        <span id="btnText">Выставить на экран</span>
+        <i data-lucide="arrow-right" class="w-4 h-4"></i>
       </button>
     </section>
 
-    <!-- Экран 2: QR на терминале -->
+    <!-- Экран 2: QR на кассе (Синхронизирован с экраном) -->
     <section id="qrScreen" class="hidden flex flex-col flex-1 justify-between items-center pt-2">
-      <div class="w-full bg-slate-50/90 rounded-3xl p-4 border border-slate-200/80 shadow-sm flex flex-col items-center my-auto">
-        <h2 class="text-base font-black text-slate-900">QR отправлен на экран</h2>
-        <div class="p-2.5 bg-white rounded-2xl border border-slate-200 shadow-sm my-3">
+      <div class="w-full bg-black/60 rounded-3xl p-4 border border-white/10 shadow-lg flex flex-col items-center my-auto">
+        <div class="flex items-center gap-1.5 text-xs text-emerald-400 font-semibold mb-1">
+          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+          QR выведен покупателю
+        </div>
+        <h2 class="font-display font-black text-lg text-white">Ожидание оплаты</h2>
+
+        <div class="relative p-2.5 bg-white rounded-2xl border border-white/20 shadow-md mt-3 mb-2 flex items-center justify-center">
           <div id="qrcode"></div>
         </div>
-        <div class="text-2xl font-black text-slate-900 mb-2">
+
+        <div class="font-display text-2xl font-black text-sticker mb-2">
           <span id="qrAmount">0</span> ₽
         </div>
-        <div class="w-full bg-white rounded-xl p-2 border border-slate-200/70 flex items-center justify-between text-xs">
-          <span class="text-slate-600 font-semibold flex items-center gap-1.5"><i data-lucide="timer" class="w-3.5 h-3.5 text-blue-600"></i>Таймер:</span>
-          <span id="timerDisplay" class="font-extrabold text-blue-600 font-mono">05:00</span>
+
+        <div class="w-full bg-white/5 rounded-xl p-2.5 border border-white/10 flex items-center justify-between text-xs">
+          <span class="text-neutral-400 font-medium flex items-center gap-1.5">
+            <i data-lucide="timer" class="w-3.5 h-3.5 text-sticker"></i>Таймер:
+          </span>
+          <span id="timerDisplay" class="font-display font-bold text-sticker font-mono">05:00</span>
         </div>
       </div>
-      <button onclick="cancelPayment()" class="w-full mt-3 py-3.5 rounded-2xl bg-rose-50 hover:bg-rose-100 text-rose-600 font-bold text-sm border border-rose-100 transition active:scale-[0.98]">
-        Отменить оплату
+
+      <button onclick="cancelPayment()" class="w-full mt-3 py-3.5 rounded-2xl bg-red-500/10 hover:bg-red-500/20 text-red-400 font-display font-bold text-xs uppercase tracking-wider border border-red-500/20 transition active:scale-[0.98]">
+        Отменить оплату ✕
       </button>
     </section>
 
     <!-- Экран 3: Успех -->
-    <section id="successScreen" class="hidden flex flex-col flex-1 justify-between items-center pt-4">
+    <section id="successScreen" class="hidden flex flex-col flex-1 justify-between items-center pt-2">
       <div class="w-full flex flex-col items-center my-auto">
-        <div class="w-16 h-16 rounded-full bg-emerald-50 border border-emerald-200 flex items-center justify-center shadow-lg shadow-emerald-500/20 mb-3 animate-bounce">
-          <i data-lucide="check" class="w-8 h-8 text-emerald-600"></i>
+        <div class="w-16 h-16 rounded-full bg-emerald-500/20 border-2 border-emerald-400 flex items-center justify-center shadow-[0_0_30px_rgba(52,211,153,0.3)] mb-3 animate-bounce">
+          <svg class="w-8 h-8 text-emerald-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="20 6 9 17 4 12" class="checkmark-draw"></polyline>
+          </svg>
         </div>
-        <h2 class="text-xl font-black text-slate-900">Оплачено!</h2>
-        <div class="w-full bg-slate-50 rounded-2xl p-4 border border-slate-200/80 shadow-sm mt-4 space-y-2 text-xs">
-          <div class="flex justify-between text-slate-500 font-medium">
-            <span>Сумма</span>
-            <span class="font-extrabold text-slate-900 text-sm"><span id="receiptAmount">0</span> ₽</span>
+
+        <h2 class="font-display text-2xl font-black text-white uppercase tracking-tight">Оплачено!</h2>
+        <span class="text-xs font-semibold text-emerald-400 mt-0.5">Экран покупателя показал чек</span>
+
+        <div class="w-full bg-black/60 rounded-2xl p-4 border border-white/10 shadow-inner mt-4 space-y-2 text-xs">
+          <div class="flex justify-between text-neutral-400">
+            <span>Сумма платежа</span>
+            <span class="font-display font-black text-white text-sm"><span id="receiptAmount">0</span> ₽</span>
           </div>
-          <div class="flex justify-between text-slate-500 font-medium">
-            <span>ID</span>
-            <span id="receiptId" class="font-mono text-[10px] text-slate-400">#---</span>
+          <div class="flex justify-between text-neutral-400">
+            <span>Способ</span>
+            <span class="font-semibold text-sticker">СБП QR</span>
+          </div>
+          <div class="flex justify-between text-neutral-400 pt-2 border-t border-white/10">
+            <span>ID транзакции</span>
+            <span id="receiptId" class="font-mono text-[10px] text-neutral-500">#---</span>
           </div>
         </div>
       </div>
-      <button onclick="newPayment()" class="w-full mt-4 py-4 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white font-extrabold text-sm shadow-lg transition active:scale-[0.98]">
+
+      <button onclick="newPayment()" class="w-full mt-4 py-4 rounded-2xl bg-white text-black hover:bg-neutral-200 font-display font-black text-xs uppercase tracking-wider shadow-lg transition active:scale-[0.98]">
         Новый платёж
       </button>
     </section>
 
-    <!-- Настройки -->
-    <div id="settingsModal" class="hidden absolute inset-0 bg-white/95 backdrop-blur-md p-6 flex flex-col justify-between z-50 overflow-y-auto">
+    <!-- Модалка настроек -->
+    <div id="settingsModal" class="hidden absolute inset-0 bg-neutral-950/98 backdrop-blur-2xl p-6 flex flex-col justify-between z-50 overflow-y-auto">
       <div>
-        <div class="flex items-center justify-between pb-3 border-b border-slate-100">
-          <h2 class="text-base font-extrabold text-slate-900 flex items-center gap-2">
-            <i data-lucide="sliders" class="w-5 h-5 text-blue-600"></i>
-            Настройки
+        <div class="flex items-center justify-between pb-3 border-b border-white/10">
+          <h2 class="font-display text-sm font-black text-white uppercase tracking-wider flex items-center gap-2">
+            <i data-lucide="sliders" class="w-4 h-4 text-sticker"></i>
+            Настройки Кассы
           </h2>
-          <button id="closeSettingsBtn" class="p-1 text-slate-400 hover:text-slate-700">
+          <button id="closeSettingsBtn" class="p-1 text-neutral-400 hover:text-white">
             <i data-lucide="x" class="w-5 h-5"></i>
           </button>
         </div>
 
-        <div class="space-y-3.5 mt-4">
+        <div class="space-y-3.5 mt-4 text-left">
           <div>
-            <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Shop ID</label>
-            <input id="shopIdInput" type="text" placeholder="1350725" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 text-sm" />
+            <label class="block text-[10px] font-display font-bold text-neutral-400 uppercase tracking-wider mb-1">Shop ID</label>
+            <input id="shopIdInput" type="text" placeholder="1350725" class="w-full px-3.5 py-2.5 rounded-xl bg-neutral-900 border border-white/15 text-white text-sm focus:outline-none focus:border-yellow-300" />
           </div>
           <div>
-            <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Секретный ключ (API Key)</label>
-            <input id="secretKeyInput" type="password" placeholder="live_..." class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 text-sm" />
+            <label class="block text-[10px] font-display font-bold text-neutral-400 uppercase tracking-wider mb-1">Секретный ключ (API Key)</label>
+            <input id="secretKeyInput" type="password" placeholder="live_..." class="w-full px-3.5 py-2.5 rounded-xl bg-neutral-900 border border-white/15 text-white text-sm focus:outline-none focus:border-yellow-300" />
           </div>
           <div>
-            <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Firebase Realtime DB URL</label>
-            <input id="firebaseUrlInput" type="text" placeholder="https://ваш-проект-default-rtdb.firebaseio.com" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 text-sm" />
+            <label class="block text-[10px] font-display font-bold text-neutral-400 uppercase tracking-wider mb-1">ID Терминала (как в экране)</label>
+            <input id="terminalIdInput" type="text" placeholder="term_01" class="w-full px-3.5 py-2.5 rounded-xl bg-neutral-900 border border-white/15 text-white text-sm focus:outline-none focus:border-yellow-300" />
           </div>
         </div>
       </div>
 
-      <button onclick="saveSettings()" class="w-full py-3.5 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-sm shadow-md transition active:scale-[0.98]">
+      <button onclick="saveSettings()" class="w-full py-3.5 rounded-2xl bg-sticker hover:bg-yellow-200 text-black font-display font-black text-xs uppercase tracking-wider shadow-lg transition active:scale-[0.98]">
         Сохранить настройки
       </button>
     </div>
@@ -147,6 +223,7 @@
     lucide.createIcons();
 
     const WORKER_URL = 'https://green-glade-501c.dalordjot.workers.dev';
+    const FIREBASE_DB_URL = 'https://moon-60c5a-default-rtdb.firebaseio.com';
 
     let currentAmount = '0';
     let checkInterval = null;
@@ -159,17 +236,20 @@
     const successScreen = document.getElementById('successScreen');
     const qrAmount = document.getElementById('qrAmount');
     const timerDisplay = document.getElementById('timerDisplay');
+    const headerTermId = document.getElementById('headerTermId');
     const settingsModal = document.getElementById('settingsModal');
     const shopIdInput = document.getElementById('shopIdInput');
     const secretKeyInput = document.getElementById('secretKeyInput');
-    const firebaseUrlInput = document.getElementById('firebaseUrlInput');
+    const terminalIdInput = document.getElementById('terminalIdInput');
     const generateBtn = document.getElementById('generateBtn');
     const btnText = document.getElementById('btnText');
 
     window.addEventListener('DOMContentLoaded', () => {
       shopIdInput.value = localStorage.getItem('yk_shop_id') || '';
       secretKeyInput.value = localStorage.getItem('yk_secret_key') || '';
-      firebaseUrlInput.value = localStorage.getItem('yk_firebase_url') || '';
+      const termId = localStorage.getItem('yk_term_id') || 'term_01';
+      terminalIdInput.value = termId;
+      headerTermId.textContent = termId;
     });
 
     function pressKey(key) {
@@ -189,19 +269,28 @@
       });
     }
 
-    async function syncToFirebase(stateData) {
-      const fbUrl = (localStorage.getItem('yk_firebase_url') || firebaseUrlInput.value.trim()).replace(/\/+$/, '');
-      if (!fbUrl) return;
+    // Отправка данных на экран покупателя (в Firebase Moon)
+    async function syncToMoonDisplay(orderObject) {
+      const termId = localStorage.getItem('yk_term_id') || 'term_01';
       try {
-        await fetch(`${fbUrl}/pos_display.json`, {
+        await fetch(`${FIREBASE_DB_URL}/terminals/${termId}/current_order.json`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(stateData)
+          body: JSON.stringify(orderObject)
         });
       } catch (err) {
         console.error('Firebase sync error:', err);
       }
     }
+
+    // Кастовать экран чаевых на экран
+    window.castMagicTips = async function() {
+      await syncToMoonDisplay({
+        status: 'TRIGGER_MAGIC_TIPS',
+        timestamp: Date.now()
+      });
+      alert('Экран чаевых успешно отправлен на экран покупателя! ✨');
+    };
 
     function startTimer() {
       timeLeft = 300;
@@ -227,7 +316,7 @@
 
       if (!shopId || !secretKey) {
         settingsModal.classList.remove('hidden');
-        return alert('Заполните настройки!');
+        return alert('Заполните настройки Shop ID и API Key!');
       }
 
       generateBtn.disabled = true;
@@ -249,7 +338,7 @@
             payment_method_data: { type: 'sbp' },
             confirmation: { type: 'qr' },
             capture: true,
-            description: `СБП: ${amount} руб.`
+            description: `Заказ Moon • ${amount} руб.`
           })
         });
 
@@ -257,8 +346,9 @@
         if (!response.ok) return alert('Ошибка ЮKassa: ' + (data.description || data.error));
 
         const sbpUrl = data.confirmation?.confirmation_data;
-        if (!sbpUrl) return alert('ЮKassa не вернула QR.');
+        if (!sbpUrl) return alert('ЮKassa не вернула ссылку СБП.');
 
+        // Рендерим QR на кассе
         const qrContainer = document.getElementById('qrcode');
         qrContainer.innerHTML = '';
         new QRCode(qrContainer, { text: sbpUrl, width: 170, height: 170 });
@@ -267,12 +357,16 @@
         inputScreen.classList.add('hidden');
         qrScreen.classList.remove('hidden');
 
-        // Отправляем QR на экран покупателя через Firebase
-        syncToFirebase({
-          status: 'pending',
+        // Отправляем точный формат для твоего экрана покупателя
+        syncToMoonDisplay({
+          status: 'WAITING_FOR_PAYMENT',
           amount: amount,
-          qr_url: sbpUrl,
-          payment_id: data.id,
+          description: 'Заказ Moon ☕',
+          method: 'sbp',
+          qrUrl: sbpUrl,
+          paymentId: data.id,
+          shopId: shopId,
+          secretKey: secretKey,
           timestamp: Date.now()
         });
 
@@ -283,7 +377,7 @@
         alert('Ошибка: ' + err.message);
       } finally {
         generateBtn.disabled = false;
-        btnText.innerText = 'Выставить счёт на экран';
+        btnText.innerText = 'Выставить на экран';
       }
     }
 
@@ -313,21 +407,24 @@
       document.getElementById('receiptAmount').textContent = Number(amount).toLocaleString('ru-RU');
       document.getElementById('receiptId').textContent = paymentId.slice(0, 16) + '...';
 
-      // Оповещаем экран покупателя об успехе
-      syncToFirebase({
-        status: 'succeeded',
+      // Оповещаем экран Moon об успехе
+      syncToMoonDisplay({
+        status: 'PAID',
         amount: amount,
-        payment_id: paymentId,
+        paymentId: paymentId,
         timestamp: Date.now()
       });
 
-      confetti({ particleCount: 70, spread: 60, origin: { y: 0.6 } });
+      confetti({ particleCount: 80, spread: 70, origin: { y: 0.6 }, colors: ['#FFF188', '#34d399', '#ffffff'] });
     }
 
     function cancelPayment() {
       if (checkInterval) clearInterval(checkInterval);
       if (timerInterval) clearInterval(timerInterval);
-      syncToFirebase({ status: 'idle', amount: 0, timestamp: Date.now() });
+      
+      // Возвращаем экран в IDLE
+      syncToMoonDisplay({ status: 'IDLE', timestamp: Date.now() });
+
       qrScreen.classList.add('hidden');
       inputScreen.classList.remove('hidden');
       currentAmount = '0';
@@ -339,16 +436,19 @@
       inputScreen.classList.remove('hidden');
       currentAmount = '0';
       amountDisplay.textContent = '0';
-      syncToFirebase({ status: 'idle', amount: 0, timestamp: Date.now() });
+
+      syncToMoonDisplay({ status: 'IDLE', timestamp: Date.now() });
     }
 
     document.getElementById('openSettingsBtn').addEventListener('click', () => settingsModal.classList.remove('hidden'));
     document.getElementById('closeSettingsBtn').addEventListener('click', () => settingsModal.classList.add('hidden'));
 
     function saveSettings() {
+      const termId = terminalIdInput.value.trim() || 'term_01';
       localStorage.setItem('yk_shop_id', shopIdInput.value.trim());
       localStorage.setItem('yk_secret_key', secretKeyInput.value.trim());
-      localStorage.setItem('yk_firebase_url', firebaseUrlInput.value.trim());
+      localStorage.setItem('yk_term_id', termId);
+      headerTermId.textContent = termId;
       settingsModal.classList.add('hidden');
       alert('Настройки сохранены!');
     }
