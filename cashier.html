@@ -3,97 +3,117 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Оплата по QR — СБП</title>
+  <title>СБП Терминал Оплаты</title>
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- Lucide Icons -->
   <script src="https://unpkg.com/lucide@latest"></script>
   <!-- QR Code Library -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <!-- Canvas Confetti -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+  
   <style>
-    body {
-      background: radial-gradient(circle at top, #1e3a8a 0%, #0f172a 100%);
+    @keyframes pulse-ring {
+      0% { transform: scale(0.95); opacity: 0.8; }
+      50% { transform: scale(1.1); opacity: 0.3; }
+      100% { transform: scale(0.95); opacity: 0.8; }
+    }
+    .animate-nfc {
+      animation: pulse-ring 2.5s infinite ease-in-out;
+    }
+    .checkmark-draw {
+      stroke-dasharray: 50;
+      stroke-dashoffset: 50;
+      animation: draw 0.6s 0.2s cubic-bezier(0.65, 0, 0.45, 1) forwards;
+    }
+    @keyframes draw {
+      100% { stroke-dashoffset: 0; }
     }
   </style>
 </head>
-<body class="text-slate-800 flex flex-col items-center justify-center min-h-screen p-4 font-sans select-none">
+<body class="bg-slate-950 text-slate-800 flex flex-col items-center justify-center min-h-screen p-4 font-sans select-none overflow-hidden antialiased">
 
-  <!-- Основной контейнер-терминал -->
-  <main class="w-full max-w-sm bg-white/95 backdrop-blur-md rounded-[32px] border border-blue-100 shadow-2xl p-6 relative overflow-hidden flex flex-col justify-between min-h-[640px]">
+  <!-- Фон с мягким свечением -->
+  <div class="fixed inset-0 pointer-events-none flex items-center justify-center">
+    <div class="w-[500px] h-[500px] bg-blue-600/15 rounded-full blur-3xl"></div>
+    <div class="w-[300px] h-[300px] bg-indigo-500/10 rounded-full blur-2xl"></div>
+  </div>
+
+  <!-- Терминал -->
+  <main class="w-full max-w-sm bg-white/95 backdrop-blur-xl rounded-[36px] border border-white/60 shadow-[0_20px_50px_rgba(15,23,42,0.4)] p-6 relative overflow-hidden flex flex-col justify-between min-h-[660px] transition-all duration-300">
     
     <!-- Шапка -->
-    <header class="flex items-center justify-between pb-3 border-b border-slate-100">
+    <header class="flex items-center justify-between pb-3.5 border-b border-slate-100">
       <div class="flex items-center gap-2.5">
-        <!-- SVG логотип СБП -->
-        <svg class="w-7 h-7" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M19.5 4L5 19.5L19.5 35L22 32.5L10 19.5L22 6.5L19.5 4Z" fill="#F36F21"/>
-          <path d="M20.5 4L35 19.5L20.5 35L18 32.5L30 19.5L18 6.5L20.5 4Z" fill="#1475BA"/>
-          <path d="M12 19.5L19.5 12L27 19.5L19.5 27L12 19.5Z" fill="#2BB673"/>
-          <path d="M19.5 12L27 19.5L19.5 27V12Z" fill="#B32B87"/>
-        </svg>
+        <div class="w-9 h-9 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center shadow-md shadow-blue-500/20">
+          <svg class="w-5 h-5" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M19.5 4L5 19.5L19.5 35L22 32.5L10 19.5L22 6.5L19.5 4Z" fill="#F36F21"/>
+            <path d="M20.5 4L35 19.5L20.5 35L18 32.5L30 19.5L18 6.5L20.5 4Z" fill="#FFF"/>
+            <path d="M12 19.5L19.5 12L27 19.5L19.5 27L12 19.5Z" fill="#2BB673"/>
+          </svg>
+        </div>
         <div>
-          <span class="font-extrabold text-sm tracking-tight text-blue-950 block leading-tight">Система Быстрых</span>
-          <span class="font-bold text-xs text-blue-600 block tracking-wider uppercase">Платежей</span>
+          <span class="font-extrabold text-sm text-slate-900 leading-tight block">СБП Касса</span>
+          <span class="text-[10px] font-bold text-blue-600 tracking-wider uppercase block">Быстрые платежи</span>
         </div>
       </div>
 
-      <!-- Кнопка Настроек -->
-      <button id="openSettingsBtn" class="p-2.5 rounded-2xl bg-blue-50 hover:bg-blue-100 text-blue-900 transition active:scale-95 shadow-sm">
-        <i data-lucide="settings-2" class="w-5 h-5"></i>
+      <button id="openSettingsBtn" class="p-2.5 rounded-2xl bg-slate-50 hover:bg-blue-50 text-slate-600 hover:text-blue-600 transition active:scale-95 border border-slate-100">
+        <i data-lucide="sliders" class="w-4 h-4"></i>
       </button>
     </header>
 
-    <!-- Секция 1: Ввод суммы и клавиатура -->
+    <!-- 1. Экран ввода суммы -->
     <section id="inputScreen" class="flex flex-col flex-1 justify-between pt-4">
-      <div class="text-center my-auto bg-gradient-to-b from-blue-50/70 to-indigo-50/30 p-4 rounded-3xl border border-blue-100/60 shadow-inner">
-        <span class="text-xs uppercase tracking-widest text-slate-400 font-bold">Сумма к оплате</span>
-        <div class="flex items-baseline justify-center gap-1 mt-1">
-          <span id="amountDisplay" class="text-4xl font-black tracking-tight text-blue-950">0</span>
-          <span class="text-2xl font-bold text-blue-600">₽</span>
+      <div class="text-center my-auto bg-gradient-to-b from-blue-50/80 to-slate-50 p-5 rounded-3xl border border-blue-100/70 shadow-inner">
+        <span class="text-[11px] uppercase tracking-widest text-slate-400 font-bold">Сумма к оплате</span>
+        <div class="flex items-baseline justify-center gap-1.5 mt-1.5">
+          <span id="amountDisplay" class="text-4xl font-black tracking-tight text-slate-900 transition-all">0</span>
+          <span class="text-2xl font-extrabold text-blue-600">₽</span>
         </div>
       </div>
 
-      <!-- Цифровая клавиатура (Numpad) -->
+      <!-- Клавиатура -->
       <div class="grid grid-cols-3 gap-2.5 my-4">
-        <button onclick="pressKey('1')" class="h-13 py-3 rounded-2xl bg-slate-50 hover:bg-blue-50 text-xl font-bold text-slate-700 transition active:scale-95 border border-slate-100">1</button>
-        <button onclick="pressKey('2')" class="h-13 py-3 rounded-2xl bg-slate-50 hover:bg-blue-50 text-xl font-bold text-slate-700 transition active:scale-95 border border-slate-100">2</button>
-        <button onclick="pressKey('3')" class="h-13 py-3 rounded-2xl bg-slate-50 hover:bg-blue-50 text-xl font-bold text-slate-700 transition active:scale-95 border border-slate-100">3</button>
-        <button onclick="pressKey('4')" class="h-13 py-3 rounded-2xl bg-slate-50 hover:bg-blue-50 text-xl font-bold text-slate-700 transition active:scale-95 border border-slate-100">4</button>
-        <button onclick="pressKey('5')" class="h-13 py-3 rounded-2xl bg-slate-50 hover:bg-blue-50 text-xl font-bold text-slate-700 transition active:scale-95 border border-slate-100">5</button>
-        <button onclick="pressKey('6')" class="h-13 py-3 rounded-2xl bg-slate-700 hover:bg-blue-50 text-xl font-bold text-slate-700 transition active:scale-95 border border-slate-100">6</button>
-        <button onclick="pressKey('7')" class="h-13 py-3 rounded-2xl bg-slate-50 hover:bg-blue-50 text-xl font-bold text-slate-700 transition active:scale-95 border border-slate-100">7</button>
-        <button onclick="pressKey('8')" class="h-13 py-3 rounded-2xl bg-slate-50 hover:bg-blue-50 text-xl font-bold text-slate-700 transition active:scale-95 border border-slate-100">8</button>
-        <button onclick="pressKey('9')" class="h-13 py-3 rounded-2xl bg-slate-50 hover:bg-blue-50 text-xl font-bold text-slate-700 transition active:scale-95 border border-slate-100">9</button>
-        <button onclick="pressKey('C')" class="h-13 py-3 rounded-2xl bg-rose-50 hover:bg-rose-100 text-rose-500 font-bold transition active:scale-95 border border-rose-100">C</button>
-        <button onclick="pressKey('0')" class="h-13 py-3 rounded-2xl bg-slate-50 hover:bg-blue-50 text-xl font-bold text-slate-700 transition active:scale-95 border border-slate-100">0</button>
-        <button onclick="pressKey('backspace')" class="h-13 py-3 rounded-2xl bg-slate-50 hover:bg-blue-50 flex items-center justify-center text-slate-600 transition active:scale-95 border border-slate-100">
+        <button onclick="pressKey('1')" class="h-13 py-3.5 rounded-2xl bg-slate-50/90 hover:bg-blue-50 text-xl font-bold text-slate-800 transition active:scale-95 border border-slate-100/80 shadow-sm">1</button>
+        <button onclick="pressKey('2')" class="h-13 py-3.5 rounded-2xl bg-slate-50/90 hover:bg-blue-50 text-xl font-bold text-slate-800 transition active:scale-95 border border-slate-100/80 shadow-sm">2</button>
+        <button onclick="pressKey('3')" class="h-13 py-3.5 rounded-2xl bg-slate-50/90 hover:bg-blue-50 text-xl font-bold text-slate-800 transition active:scale-95 border border-slate-100/80 shadow-sm">3</button>
+        <button onclick="pressKey('4')" class="h-13 py-3.5 rounded-2xl bg-slate-50/90 hover:bg-blue-50 text-xl font-bold text-slate-800 transition active:scale-95 border border-slate-100/80 shadow-sm">4</button>
+        <button onclick="pressKey('5')" class="h-13 py-3.5 rounded-2xl bg-slate-50/90 hover:bg-blue-50 text-xl font-bold text-slate-800 transition active:scale-95 border border-slate-100/80 shadow-sm">5</button>
+        <button onclick="pressKey('6')" class="h-13 py-3.5 rounded-2xl bg-slate-50/90 hover:bg-blue-50 text-xl font-bold text-slate-800 transition active:scale-95 border border-slate-100/80 shadow-sm">6</button>
+        <button onclick="pressKey('7')" class="h-13 py-3.5 rounded-2xl bg-slate-50/90 hover:bg-blue-50 text-xl font-bold text-slate-800 transition active:scale-95 border border-slate-100/80 shadow-sm">7</button>
+        <button onclick="pressKey('8')" class="h-13 py-3.5 rounded-2xl bg-slate-50/90 hover:bg-blue-50 text-xl font-bold text-slate-800 transition active:scale-95 border border-slate-100/80 shadow-sm">8</button>
+        <button onclick="pressKey('9')" class="h-13 py-3.5 rounded-2xl bg-slate-50/90 hover:bg-blue-50 text-xl font-bold text-slate-800 transition active:scale-95 border border-slate-100/80 shadow-sm">9</button>
+        <button onclick="pressKey('C')" class="h-13 py-3.5 rounded-2xl bg-rose-50 hover:bg-rose-100 text-rose-500 font-bold transition active:scale-95 border border-rose-100 shadow-sm">C</button>
+        <button onclick="pressKey('0')" class="h-13 py-3.5 rounded-2xl bg-slate-50/90 hover:bg-blue-50 text-xl font-bold text-slate-800 transition active:scale-95 border border-slate-100/80 shadow-sm">0</button>
+        <button onclick="pressKey('backspace')" class="h-13 py-3.5 rounded-2xl bg-slate-50/90 hover:bg-blue-50 flex items-center justify-center text-slate-600 transition active:scale-95 border border-slate-100/80 shadow-sm">
           <i data-lucide="delete" class="w-5 h-5"></i>
         </button>
       </div>
 
-      <!-- Кнопка создания -->
-      <button id="generateBtn" onclick="createPaymentQR()" class="w-full py-4 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-extrabold text-base shadow-lg shadow-blue-500/25 transition-all active:scale-[0.98] flex items-center justify-center gap-2">
+      <button id="generateBtn" onclick="createPaymentQR()" class="w-full py-4 rounded-2xl bg-gradient-to-r from-blue-600 via-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-extrabold text-base shadow-lg shadow-blue-500/30 transition-all active:scale-[0.98] flex items-center justify-center gap-2">
         <span id="btnText">Создать QR-код</span>
         <i data-lucide="arrow-right" class="w-5 h-5"></i>
       </button>
     </section>
 
-    <!-- Секция 2: Экран платежного стикера СБП -->
+    <!-- 2. Экран QR-кода с таймером -->
     <section id="qrScreen" class="hidden flex flex-col flex-1 justify-between items-center pt-2">
-      <!-- Белый стикер -->
-      <div class="w-full bg-slate-50 rounded-3xl p-5 border border-slate-200/80 shadow-md flex flex-col items-center relative my-auto">
-        <h2 class="text-xl font-black text-blue-950 tracking-tight">Плати по-новому!</h2>
-        <p class="text-[11px] font-semibold text-slate-500 text-center mt-1 max-w-[210px] leading-snug">
-          Отсканируйте в приложении любого банка для оплаты
+      <!-- Стикер -->
+      <div class="w-full bg-slate-50/80 rounded-3xl p-4 border border-slate-200/80 shadow-sm flex flex-col items-center relative my-auto">
+        <h2 class="text-lg font-black text-slate-900 tracking-tight">Плати по-новому!</h2>
+        <p class="text-[11px] font-medium text-slate-500 text-center mt-0.5">
+          Отсканируйте в любом банковском приложении
         </p>
 
-        <!-- QR-контейнер со значком NFC в центре -->
-        <div class="relative p-3 bg-white rounded-2xl border border-slate-200 shadow-sm mt-3.5 mb-3 flex items-center justify-center">
+        <!-- QR контейнер -->
+        <div class="relative p-2.5 bg-white rounded-2xl border border-slate-200 shadow-sm mt-3 mb-2 flex items-center justify-center">
           <div id="qrcode"></div>
           
-          <!-- Пиктограмма волны/бесконтактной оплаты в центре -->
-          <div class="absolute inset-0 m-auto w-9 h-9 bg-white rounded-full flex items-center justify-center shadow-md border border-slate-100 pointer-events-none">
-            <svg class="w-5 h-5 text-rose-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <!-- NFC иконка по центру -->
+          <div class="absolute inset-0 m-auto w-8 h-8 bg-white rounded-full flex items-center justify-center shadow-md border border-slate-100 animate-nfc">
+            <svg class="w-4 h-4 text-rose-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
               <path d="M2 8.5C6 4.5 12 4.5 16 8.5"/>
               <path d="M5 12C8 9 13 9 16 12"/>
               <path d="M8.5 15.5C10.5 13.5 13.5 13.5 15.5 15.5"/>
@@ -101,25 +121,71 @@
           </div>
         </div>
 
-        <div class="text-2xl font-black text-blue-950 mb-3">
+        <div class="text-2xl font-black text-slate-900 mb-2">
           <span id="qrAmount">0</span> ₽
         </div>
 
-        <!-- Нижний блок логотипа СБП -->
-        <div class="w-full pt-3 border-t border-slate-200/60 flex items-center justify-center gap-2">
-          <svg class="w-6 h-6" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <!-- Таймер действия QR -->
+        <div class="w-full bg-white rounded-xl p-2 border border-slate-200/70 flex items-center justify-between text-xs">
+          <div class="flex items-center gap-1.5 text-slate-600 font-semibold">
+            <i data-lucide="timer" class="w-3.5 h-3.5 text-blue-600"></i>
+            <span>Действует:</span>
+          </div>
+          <span id="timerDisplay" class="font-extrabold text-blue-600 font-mono">05:00</span>
+        </div>
+
+        <!-- СБП брендинг -->
+        <div class="w-full pt-2.5 mt-2.5 border-t border-slate-200/60 flex items-center justify-center gap-1.5 text-[11px] font-bold text-slate-700 uppercase tracking-wide">
+          <svg class="w-5 h-5" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M19.5 4L5 19.5L19.5 35L22 32.5L10 19.5L22 6.5L19.5 4Z" fill="#F36F21"/>
             <path d="M20.5 4L35 19.5L20.5 35L18 32.5L30 19.5L18 6.5L20.5 4Z" fill="#1475BA"/>
             <path d="M12 19.5L19.5 12L27 19.5L19.5 27L12 19.5Z" fill="#2BB673"/>
-            <path d="M19.5 12L27 19.5L19.5 27V12Z" fill="#B32B87"/>
           </svg>
-          <span class="font-extrabold text-xs text-blue-950 uppercase tracking-wide">Система быстрых платежей</span>
+          Система быстрых платежей
         </div>
       </div>
 
-      <!-- Кнопка отмены -->
-      <button onclick="cancelPayment()" class="w-full mt-3 py-3 rounded-2xl bg-slate-100 hover:bg-rose-50 hover:text-rose-600 text-slate-600 font-bold text-sm border border-slate-200 transition active:scale-[0.98]">
+      <button onclick="cancelPayment()" class="w-full mt-3 py-3.5 rounded-2xl bg-slate-100 hover:bg-rose-50 hover:text-rose-600 text-slate-600 font-bold text-sm border border-slate-200 transition active:scale-[0.98]">
         Отменить оплату
+      </button>
+    </section>
+
+    <!-- 3. Экран успешной оплаты (Чек) -->
+    <section id="successScreen" class="hidden flex flex-col flex-1 justify-between items-center pt-2">
+      <div class="w-full flex flex-col items-center my-auto">
+        <!-- Анимированный круг с галочкой -->
+        <div class="w-16 h-16 rounded-full bg-emerald-50 border border-emerald-200 flex items-center justify-center shadow-lg shadow-emerald-500/20 mb-3 animate-bounce">
+          <svg class="w-8 h-8 text-emerald-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="20 6 9 17 4 12" class="checkmark-draw"></polyline>
+          </svg>
+        </div>
+
+        <h2 class="text-xl font-black text-slate-900">Оплата прошла!</h2>
+        <span class="text-xs font-semibold text-emerald-600 mt-0.5">Средства успешно зачислены</span>
+
+        <!-- Электронный чек -->
+        <div class="w-full bg-slate-50 rounded-2xl p-4 border border-slate-200/80 shadow-sm mt-4 space-y-2 text-xs">
+          <div class="flex justify-between text-slate-500 font-medium">
+            <span>Сумма платежа</span>
+            <span class="font-extrabold text-slate-900 text-sm"><span id="receiptAmount">0</span> ₽</span>
+          </div>
+          <div class="flex justify-between text-slate-500 font-medium">
+            <span>Способ оплаты</span>
+            <span class="font-semibold text-blue-600">СБП (QR-код)</span>
+          </div>
+          <div class="flex justify-between text-slate-500 font-medium">
+            <span>Дата и время</span>
+            <span id="receiptDate" class="font-semibold text-slate-700">--:--</span>
+          </div>
+          <div class="flex justify-between text-slate-500 font-medium pt-2 border-t border-slate-200">
+            <span>ID транзакции</span>
+            <span id="receiptId" class="font-mono text-[10px] text-slate-400">#---</span>
+          </div>
+        </div>
+      </div>
+
+      <button onclick="newPayment()" class="w-full mt-4 py-4 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white font-extrabold text-sm shadow-lg shadow-slate-900/20 transition active:scale-[0.98]">
+        Новый платёж
       </button>
     </section>
 
@@ -127,7 +193,7 @@
     <div id="settingsModal" class="hidden absolute inset-0 bg-white/95 backdrop-blur-md p-6 flex flex-col justify-between z-50">
       <div>
         <div class="flex items-center justify-between pb-3 border-b border-slate-100">
-          <h2 class="text-base font-extrabold text-blue-950 flex items-center gap-2">
+          <h2 class="text-base font-extrabold text-slate-900 flex items-center gap-2">
             <i data-lucide="sliders" class="w-5 h-5 text-blue-600"></i>
             Настройки ЮKassa
           </h2>
@@ -143,8 +209,8 @@
           </div>
 
           <div>
-            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Секретный ключ (API Key)</label>
-            <input id="secretKeyInput" type="password" placeholder="live_... или test_..." class="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 placeholder-slate-400 focus:outline-none focus:border-blue-500 font-medium transition text-sm" />
+            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Секретный ключ</label>
+            <input id="secretKeyInput" type="password" placeholder="live_..." class="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 placeholder-slate-400 focus:outline-none focus:border-blue-500 font-medium transition text-sm" />
           </div>
         </div>
       </div>
@@ -163,11 +229,15 @@
 
     let currentAmount = '0';
     let checkInterval = null;
+    let timerInterval = null;
+    let timeLeft = 300; // 5 минут
 
     const amountDisplay = document.getElementById('amountDisplay');
     const inputScreen = document.getElementById('inputScreen');
     const qrScreen = document.getElementById('qrScreen');
+    const successScreen = document.getElementById('successScreen');
     const qrAmount = document.getElementById('qrAmount');
+    const timerDisplay = document.getElementById('timerDisplay');
     const settingsModal = document.getElementById('settingsModal');
     const shopIdInput = document.getElementById('shopIdInput');
     const secretKeyInput = document.getElementById('secretKeyInput');
@@ -202,10 +272,29 @@
       });
     }
 
+    // Таймер обратного отсчета
+    function startTimer() {
+      timeLeft = 300;
+      clearInterval(timerInterval);
+      
+      timerInterval = setInterval(() => {
+        timeLeft--;
+        const minutes = String(Math.floor(timeLeft / 60)).padStart(2, '0');
+        const seconds = String(timeLeft % 60).padStart(2, '0');
+        timerDisplay.textContent = `${minutes}:${seconds}`;
+
+        if (timeLeft <= 0) {
+          clearInterval(timerInterval);
+          alert('Время действия QR-кода истекло. Создайте новый.');
+          cancelPayment();
+        }
+      }, 1000);
+    }
+
     async function createPaymentQR() {
       const amount = parseInt(currentAmount, 10);
       if (isNaN(amount) || amount <= 0) {
-        alert('Введите корректную сумму');
+        alert('Введите сумму больше 0');
         return;
       }
 
@@ -244,21 +333,21 @@
               type: 'qr'
             },
             capture: true,
-            description: `Оплата через СБП: ${amount} руб.`
+            description: `Оплата касса СБП: ${amount} руб.`
           })
         });
 
         const data = await response.json();
 
         if (!response.ok) {
-          alert('Ответ ЮKassa: ' + (data.description || data.error || 'Ошибка данных'));
+          alert('Ответ ЮKassa: ' + (data.description || data.error || 'Ошибка'));
           return;
         }
 
         const sbpUrl = data.confirmation?.confirmation_data;
 
         if (!sbpUrl) {
-          alert('Платёж создан, но ЮKassa не вернула ссылку СБП.');
+          alert('Платёж создан, но ЮKassa не вернула QR.');
           return;
         }
 
@@ -278,7 +367,8 @@
         inputScreen.classList.add('hidden');
         qrScreen.classList.remove('hidden');
 
-        startPolling(data.id, auth);
+        startTimer();
+        startPolling(data.id, auth, amount);
 
       } catch (err) {
         alert('Ошибка связи: ' + err.message);
@@ -288,7 +378,8 @@
       }
     }
 
-    function startPolling(paymentId, auth) {
+    // Автопроверка статуса оплаты
+    function startPolling(paymentId, auth, amount) {
       if (checkInterval) clearInterval(checkInterval);
 
       checkInterval = setInterval(async () => {
@@ -300,22 +391,51 @@
 
           if (data.status === 'succeeded') {
             clearInterval(checkInterval);
-            alert('🎉 Оплата успешно получена!');
-            cancelPayment();
+            clearInterval(timerInterval);
+            showSuccessScreen(data.id, amount);
           } else if (data.status === 'canceled') {
             clearInterval(checkInterval);
+            clearInterval(timerInterval);
             alert('Платеж отменен.');
             cancelPayment();
           }
         } catch (e) {
           console.error(e);
         }
-      }, 3000);
+      }, 2500);
+    }
+
+    // Экран успеха с чеком и салютом
+    function showSuccessScreen(paymentId, amount) {
+      qrScreen.classList.add('hidden');
+      successScreen.classList.remove('hidden');
+
+      document.getElementById('receiptAmount').textContent = Number(amount).toLocaleString('ru-RU');
+      document.getElementById('receiptId').textContent = paymentId.slice(0, 16) + '...';
+      
+      const now = new Date();
+      document.getElementById('receiptDate').textContent = now.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' }) + ', ' + now.toLocaleDateString('ru-RU');
+
+      // Запуск конфетти
+      confetti({
+        particleCount: 80,
+        spread: 70,
+        origin: { y: 0.6 },
+        colors: ['#2563eb', '#10b981', '#f59e0b', '#ec4899']
+      });
     }
 
     function cancelPayment() {
       if (checkInterval) clearInterval(checkInterval);
+      if (timerInterval) clearInterval(timerInterval);
       qrScreen.classList.add('hidden');
+      inputScreen.classList.remove('hidden');
+      currentAmount = '0';
+      amountDisplay.textContent = '0';
+    }
+
+    function newPayment() {
+      successScreen.classList.add('hidden');
       inputScreen.classList.remove('hidden');
       currentAmount = '0';
       amountDisplay.textContent = '0';
