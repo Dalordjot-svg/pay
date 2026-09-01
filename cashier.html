@@ -25,7 +25,7 @@
         <span class="font-bold tracking-wide text-sm text-slate-200">СБП Терминал</span>
       </div>
 
-      <!-- Кнопка Профиль / Настройки -->
+      <!-- Кнопка Настройки -->
       <button id="openSettingsBtn" class="p-2.5 rounded-2xl bg-slate-700/60 hover:bg-slate-700 text-slate-300 hover:text-white transition active:scale-95">
         <i data-lucide="settings" class="w-5 h-5"></i>
       </button>
@@ -42,7 +42,7 @@
         </div>
       </div>
 
-      <!-- Цифровая клавиатура (Numpad) -->
+      <!-- Цифровая клавиатура -->
       <div class="grid grid-cols-3 gap-3 my-4">
         <button onclick="pressKey('1')" class="h-14 rounded-2xl bg-slate-700/40 hover:bg-slate-700 text-xl font-semibold text-slate-100 transition active:scale-95">1</button>
         <button onclick="pressKey('2')" class="h-14 rounded-2xl bg-slate-700/40 hover:bg-slate-700 text-xl font-semibold text-slate-100 transition active:scale-95">2</button>
@@ -76,24 +76,21 @@
         </div>
       </div>
 
-      <!-- Контейнер QR -->
       <div class="p-4 bg-white rounded-3xl shadow-xl flex items-center justify-center my-auto">
         <div id="qrcode"></div>
       </div>
 
-      <!-- Статус ожидания -->
       <div class="flex items-center gap-2 text-xs text-indigo-300 font-medium bg-indigo-950/60 px-3 py-1.5 rounded-full border border-indigo-800/40">
         <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
         Ожидание оплаты через СБП...
       </div>
 
-      <!-- Кнопка отмены -->
       <button onclick="cancelPayment()" class="w-full mt-4 py-3.5 rounded-2xl bg-slate-700/50 hover:bg-red-600/20 hover:text-red-400 text-slate-300 font-semibold text-sm border border-slate-700 hover:border-red-500/40 transition-all active:scale-[0.98]">
         Отменить оплату
       </button>
     </section>
 
-    <!-- Модалка: Настройки ЮKassa -->
+    <!-- Модалка настроек -->
     <div id="settingsModal" class="hidden absolute inset-0 bg-slate-900/95 backdrop-blur-md p-6 flex flex-col justify-between z-50">
       <div>
         <div class="flex items-center justify-between pb-3 border-b border-slate-800">
@@ -108,19 +105,19 @@
 
         <div class="space-y-4 mt-6">
           <div>
-            <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">Shop ID (ID магазина)</label>
+            <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">Shop ID</label>
             <input id="shopIdInput" type="text" placeholder="1350725" class="w-full px-4 py-3 rounded-xl bg-slate-800 border border-slate-700 text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 transition text-sm" />
           </div>
 
           <div>
             <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">Секретный ключ (API Key)</label>
-            <input id="secretKeyInput" type="password" placeholder="live_..." class="w-full px-4 py-3 rounded-xl bg-slate-800 border border-slate-700 text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 transition text-sm" />
+            <input id="secretKeyInput" type="password" placeholder="live_... или test_..." class="w-full px-4 py-3 rounded-xl bg-slate-800 border border-slate-700 text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 transition text-sm" />
           </div>
         </div>
       </div>
 
       <button onclick="saveSettings()" class="w-full py-3.5 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-sm shadow-lg shadow-indigo-600/30 transition active:scale-[0.98]">
-        Сохранить
+        Сохранить в браузере
       </button>
     </div>
 
@@ -128,10 +125,6 @@
 
   <script>
     lucide.createIcons();
-
-    // Значения по умолчанию
-    const DEFAULT_SHOP_ID = '1350725';
-    const DEFAULT_SECRET_KEY = 'live_8j1lOkur6GG4mbeVO9zK1kfKj6jvjyuBkmmkZxiu2Yk';
 
     let currentAmount = '0';
     let checkInterval = null;
@@ -147,8 +140,8 @@
     const btnText = document.getElementById('btnText');
 
     window.addEventListener('DOMContentLoaded', () => {
-      shopIdInput.value = localStorage.getItem('yk_shop_id') || DEFAULT_SHOP_ID;
-      secretKeyInput.value = localStorage.getItem('yk_secret_key') || DEFAULT_SECRET_KEY;
+      shopIdInput.value = localStorage.getItem('yk_shop_id') || '';
+      secretKeyInput.value = localStorage.getItem('yk_secret_key') || '';
     });
 
     function pressKey(key) {
@@ -173,8 +166,14 @@
         return;
       }
 
-      const shopId = shopIdInput.value.trim() || DEFAULT_SHOP_ID;
-      const secretKey = secretKeyInput.value.trim() || DEFAULT_SECRET_KEY;
+      const shopId = localStorage.getItem('yk_shop_id') || shopIdInput.value.trim();
+      const secretKey = localStorage.getItem('yk_secret_key') || secretKeyInput.value.trim();
+
+      if (!shopId || !secretKey) {
+        alert('Укажите Shop ID и Секретный ключ в настройках (кнопка сверху справа)!');
+        settingsModal.classList.remove('hidden');
+        return;
+      }
 
       generateBtn.disabled = true;
       btnText.innerText = 'Создание QR...';
@@ -182,9 +181,9 @@
       const auth = btoa(`${shopId}:${secretKey}`);
       const idempotenceKey = 'pay_' + Date.now() + '_' + Math.random().toString(36).substring(2, 9);
       
-      // Использование прямого шлюза с полной передачей заголовков
-      const targetApi = 'https://api.yookassa.ru/v3/payments';
-      const proxyUrl = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(targetApi);
+      // Используем надежный шлюз с полным пробросом POST и заголовков
+      const targetUrl = 'https://api.yookassa.ru/v3/payments';
+      const proxyUrl = 'https://cors-proxy.org/api/' + targetUrl;
 
       try {
         const response = await fetch(proxyUrl, {
@@ -206,25 +205,26 @@
               type: 'qr'
             },
             capture: true,
-            description: `Оплата касса СБП: ${amount} руб.`
+            description: `Оплата по СБП: ${amount} руб.`
           })
         });
 
         const data = await response.json();
 
         if (!response.ok || data.type === 'error') {
-          alert('Ошибка ЮKassa: ' + (data.description || data.error || 'Проверьте данные'));
-          console.error('YooKassa error response:', data);
+          alert('Ошибка ЮKassa: ' + (data.description || data.error || 'Проверьте введённые ключи'));
+          console.error('YooKassa error:', data);
           return;
         }
 
         const sbpUrl = data.confirmation?.confirmation_data;
 
         if (!sbpUrl) {
-          alert('ЮKassa не вернула QR для СБП. Проверьте, включен ли метод СБП в договоре ЮKassa.');
+          alert('ЮKassa не вернула ссылку СБП. Убедитесь, что метод СБП активирован в личном кабинете.');
           return;
         }
 
+        // Рендерим QR
         const qrContainer = document.getElementById('qrcode');
         qrContainer.innerHTML = '';
 
@@ -241,13 +241,44 @@
         inputScreen.classList.add('hidden');
         qrScreen.classList.remove('hidden');
 
+        // Опрос статуса оплаты
+        startPolling(data.id, auth);
+
       } catch (err) {
-        alert('Ошибка связи с шлюзом. Проверьте подключение.');
-        console.error('Network error:', err);
+        alert('Ошибка связи со шлюзом. Попробуйте снова.');
+        console.error('Fetch error:', err);
       } finally {
         generateBtn.disabled = false;
         btnText.innerText = 'Создать QR-код';
       }
+    }
+
+    function startPolling(paymentId, auth) {
+      if (checkInterval) clearInterval(checkInterval);
+
+      checkInterval = setInterval(async () => {
+        try {
+          const checkUrl = 'https://cors-proxy.org/api/' + `https://api.yookassa.ru/v3/payments/${paymentId}`;
+          const res = await fetch(checkUrl, {
+            headers: {
+              'Authorization': `Basic ${auth}`
+            }
+          });
+          const data = await res.json();
+
+          if (data.status === 'succeeded') {
+            clearInterval(checkInterval);
+            alert('🎉 Оплата успешно получена!');
+            cancelPayment();
+          } else if (data.status === 'canceled') {
+            clearInterval(checkInterval);
+            alert('Платеж отменен.');
+            cancelPayment();
+          }
+        } catch (e) {
+          console.error('Polling error:', e);
+        }
+      }, 3000);
     }
 
     function cancelPayment() {
@@ -270,6 +301,7 @@
       localStorage.setItem('yk_shop_id', shopIdInput.value.trim());
       localStorage.setItem('yk_secret_key', secretKeyInput.value.trim());
       settingsModal.classList.add('hidden');
+      alert('Настройки сохранены в телефоне!');
     }
   </script>
 </body>
