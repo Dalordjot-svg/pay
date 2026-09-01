@@ -3,12 +3,11 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Moon POS • Касса СБП QR</title>
+  <title>Moon POS • СБП Оплата</title>
   
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com">
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&family=Syne:wght@700;800;900&family=Unbounded:wght@600;800;900&display=swap" rel="stylesheet">
-  
   <script src="https://cdn.tailwindcss.com"></script>
 
   <script>
@@ -17,15 +16,9 @@
         extend: {
           fontFamily: {
             display: ['Unbounded', 'sans-serif'],
-            accent: ['Syne', 'sans-serif'],
             sans: ['Montserrat', 'sans-serif'],
           },
-          colors: {
-            sticker: '#FFF188',
-            brandDark: '#121212',
-            surface: '#18181d',
-            surfaceLight: '#23232b'
-          }
+          colors: { sticker: '#FFF188', surface: '#18181d', surfaceLight: '#23232b' }
         }
       }
     }
@@ -33,24 +26,14 @@
 
   <style>
     * { -webkit-tap-highlight-color: transparent; user-select: none; }
-    .ambient-bg {
-      background: radial-gradient(circle at 10% 10%, rgba(255, 241, 136, 0.05) 0%, transparent 40%),
-                  radial-gradient(circle at 90% 90%, rgba(59, 130, 246, 0.04) 0%, transparent 50%),
-                  #0d0d10;
-    }
+    body { background: #0d0d10; color: white; }
     .sticker-badge { box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5); }
-    .stamp-badge {
-      clip-path: polygon(50% 0%, 65% 15%, 85% 10%, 85% 30%, 100% 45%, 90% 65%, 95% 85%, 75% 85%, 65% 100%, 45% 90%, 25% 95%, 20% 75%, 0% 65%, 12% 45%, 5% 25%, 25% 20%, 35% 0%);
-    }
-    ::-webkit-scrollbar { width: 6px; height: 6px; }
-    ::-webkit-scrollbar-track { background: rgba(255,255,255,0.02); }
-    ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 4px; }
   </style>
 
-  <!-- Firebase Модуль -->
+  <!-- Firebase -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getDatabase, ref, set, get, update, remove, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+    import { getDatabase, ref, set, get, update, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyB8CBeK8m25rox6BYO8ep6JeBJ7ipmYViQ",
@@ -59,901 +42,80 @@
       projectId: "moon-60c5a",
       storageBucket: "moon-60c5a.firebasestorage.app",
       messagingSenderId: "1010513396599",
-      appId: "1:1010513396599:web:86cbb8164de80b1dcc9772",
-      measurementId: "G-KKE1L09LHS"
+      appId: "1:1010513396599:web:86cbb8164de80b1dcc9772"
     };
 
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
 
-    window.firebaseDB = db;
-    window.dbRef = ref;
-    window.dbSet = set;
-    window.dbGet = get;
-    window.dbUpdate = update;
-    window.dbRemove = remove;
+    window.firebaseDB = db; window.dbRef = ref; window.dbSet = set; window.dbGet = get; window.dbUpdate = update;
 
-    function setCookie(name, value, days = 30) {
-      const d = new Date();
-      d.setTime(d.getTime() + (days * 24 * 60 * 60 * 1000));
-      document.cookie = `${name}=${encodeURIComponent(value)};expires=${d.toUTCString()};path=/;SameSite=Lax`;
-    }
-
-    function getCookie(name) {
-      const matches = document.cookie.match(new RegExp('(?:^|; )' + name.replace(/([\.$?*|{}\(\)\[\]\\\/\+^])/g, '\\$1') + '=([^;]*)'));
-      return matches ? decodeURIComponent(matches[1]) : undefined;
-    }
-
-    // ================= ПОДТЯГИВАНИЕ КЛЮЧЕЙ ЮKASSA ИЗ БАЗЫ =================
-    const terminalId = localStorage.getItem('yk_term_id') || 'term_01';
+    // Подгрузка ключей ЮКассы
     window.yooKassaConfig = { shopId: '', secretKey: '' };
-
-    const ykSettingsRef = ref(db, 'admin_settings/yookassa');
-    onValue(ykSettingsRef, (snapshot) => {
+    onValue(ref(db, 'admin_settings/yookassa'), (snapshot) => {
       const data = snapshot.val();
       if (data && data.shopId && data.secretKey) {
         window.yooKassaConfig.shopId = data.shopId;
         window.yooKassaConfig.secretKey = data.secretKey;
-        console.log("✓ Ключи ЮKassa успешно подгружены из базы данных!");
-      }
-    });
-
-    // Резервная подгрузка из настроек терминала
-    const termSettingsRef = ref(db, `terminals/${terminalId}/settings`);
-    onValue(termSettingsRef, (snapshot) => {
-      const data = snapshot.val();
-      if (data && data.shopId && data.secretKey && !window.yooKassaConfig.shopId) {
-        window.yooKassaConfig.shopId = data.shopId;
-        window.yooKassaConfig.secretKey = data.secretKey;
-      }
-    });
-
-    // ================= ПРОВЕРКА ТОКЕНА И АВТОРИЗАЦИИ =================
-    async function verifyTokenAccess() {
-      const urlParams = new URLSearchParams(window.location.search);
-      let token = urlParams.get('token') || urlParams.get('auth_token') || urlParams.get('key');
-      
-      if (!token) {
-        token = getCookie('moon_auth_token') || localStorage.getItem('moon_auth_token');
-      }
-
-      const authModal = document.getElementById('auth-guard-screen');
-      const authLoading = document.getElementById('auth-loading');
-      const authDenied = document.getElementById('auth-denied');
-      const appContent = document.getElementById('app-root');
-
-      if (!token || token.length < 8) {
-        authLoading.classList.add('hidden');
-        authDenied.classList.remove('hidden');
-        return;
-      }
-
-      try {
-        let userSnap = await get(ref(db, `users/${token}`));
-        let userData = null;
-
-        if (userSnap.exists()) {
-          userData = userSnap.val();
-        } else {
-          let tokenSnap = await get(ref(db, `auth_tokens/${token}`));
-          if (tokenSnap.exists()) {
-            const tokenInfo = tokenSnap.val();
-            const realUserSnap = await get(ref(db, `users/${tokenInfo.userId || tokenInfo.uid}`));
-            if (realUserSnap.exists()) userData = realUserSnap.val();
-            else userData = { name: tokenInfo.userName || 'Сотрудник', userId: tokenInfo.userId || token };
-          }
-        }
-
-        if (userData) {
-          window.currentAuthToken = token;
-          window.currentAuthUser = userData;
-
-          setCookie('moon_auth_token', token, 30);
-          localStorage.setItem('moon_auth_token', token);
-          
-          document.getElementById('user-display-name').innerText = userData.name || userData.username || 'Сотрудник';
-
-          authModal.classList.add('hidden');
-          appContent.classList.remove('hidden');
-
-          if (window.history.replaceState && urlParams.get('token')) {
-            window.history.replaceState({}, document.title, window.location.pathname);
-          }
-        } else {
-          authLoading.classList.add('hidden');
-          authDenied.classList.remove('hidden');
-        }
-      } catch (err) {
-        console.error("Token verification error:", err);
-        authLoading.classList.add('hidden');
-        authDenied.classList.remove('hidden');
-      }
-    }
-
-    verifyTokenAccess();
-
-    // ================= ДВОЙНАЯ ЗАПИСЬ (АДМИН + ПАРТНЕР) =================
-    window.processSuccessfulPayment = async function(amount, method, details = {}) {
-      const token = window.currentAuthToken || localStorage.getItem('moon_auth_token') || 'unknown_partner';
-      const txId = 'tx_' + Date.now();
-      const timestamp = Date.now();
-      const cashierName = window.currentAuthUser ? (window.currentAuthUser.name || 'Сотрудник') : 'Сотрудник';
-
-      let partnerRate = 25;
-      let userRef = ref(db, `users/${token}`);
-      let userSnap = await get(userRef);
-      let userData = userSnap.exists() ? userSnap.val() : (window.currentAuthUser || {});
-
-      const currentTotalSales = (userData.totalSales || 0) + amount;
-      
-      if (currentTotalSales >= 100000) partnerRate = 40;
-      else if (currentTotalSales >= 30000) partnerRate = 30;
-      else partnerRate = 20;
-
-      const partnerCut = Math.round(amount * (partnerRate / 100));
-
-      const partnerTxData = {
-        id: txId,
-        amount: amount,
-        partnerCut: partnerCut,
-        rate: partnerRate,
-        method: method,
-        description: details.title || `Заказ #${txId.slice(-4)}`,
-        terminalId: terminalId,
-        timestamp: timestamp
-      };
-
-      const newBalance = (userData.balance || 0) + partnerCut;
-      const newEarnedToday = (userData.earnedToday || 0) + partnerCut;
-
-      await update(userRef, {
-        balance: newBalance,
-        earnedToday: newEarnedToday,
-        totalSales: currentTotalSales,
-        currentRate: partnerRate,
-        lastActive: timestamp
-      });
-
-      const partnerHistoryRef = ref(db, `users/${token}/transactions/${txId}`);
-      await set(partnerHistoryRef, partnerTxData);
-
-      const adminTxData = {
-        id: txId,
-        amount: amount,
-        partnerCut: partnerCut,
-        netRevenue: amount - partnerCut,
-        method: method,
-        terminalId: terminalId,
-        cashierId: token,
-        cashierName: cashierName,
-        status: 'PAID',
-        description: details.title || `Оплата по СБП QR (${amount} ₽)`,
-        timestamp: timestamp
-      };
-
-      const adminTxRef = ref(db, `admin_transactions/${txId}`);
-      await set(adminTxRef, adminTxData);
-
-      const statsRef = ref(db, `admin_stats/daily`);
-      const statsSnap = await get(statsRef);
-      const prevStats = statsSnap.exists() ? statsSnap.val() : { totalRevenue: 0, totalOrders: 0 };
-
-      await update(statsRef, {
-        totalRevenue: (prevStats.totalRevenue || 0) + amount,
-        totalOrders: (prevStats.totalOrders || 0) + 1,
-        lastOrderTime: timestamp
-      });
-    };
-
-    const orderStatusRef = ref(db, `terminals/${terminalId}/current_order`);
-    
-    onValue(orderStatusRef, (snapshot) => {
-      const data = snapshot.val();
-      const statusBadge = document.getElementById('live-terminal-status');
-      const orderSub = document.getElementById('live-terminal-sub');
-      
-      if (data && data.status === 'WAITING_FOR_PAYMENT') {
-        if (statusBadge) {
-          statusBadge.innerHTML = `<span class="w-2 h-2 rounded-full bg-yellow-400 animate-ping mr-1.5"></span> ${data.amount} ₽ (СБП QR)`;
-          statusBadge.className = 'flex items-center text-[11px] font-bold px-2.5 py-1 rounded-full bg-yellow-500/20 text-yellow-300 border border-yellow-500/30';
-        }
-        if (orderSub) orderSub.innerText = `Ожидание сканирования СБП QR: ${data.amount} ₽`;
-      } else if (data && data.status === 'TRIGGER_MAGIC_TIPS') {
-        if (statusBadge) {
-          statusBadge.innerHTML = `<span class="w-2 h-2 rounded-full bg-purple-400 animate-pulse mr-1.5"></span> 🪄 Чаевые`;
-          statusBadge.className = 'flex items-center text-[11px] font-bold px-2.5 py-1 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/30';
-        }
-        if (orderSub) orderSub.innerText = 'Экран чаевых активен (3 мин)';
-      } else if (data && (data.status === 'PAID' || data.status === 'succeeded' || data.status === 'cash_succeeded')) {
-        if (statusBadge) {
-          statusBadge.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-400 mr-1.5"></span> Оплачено`;
-          statusBadge.className = 'flex items-center text-[11px] font-bold px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30';
-        }
-        if (orderSub) orderSub.innerText = 'Оплата успешно зафиксирована';
-      } else {
-        if (statusBadge) {
-          statusBadge.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-neutral-500 mr-1.5"></span> Свободен`;
-          statusBadge.className = 'flex items-center text-[11px] font-semibold px-2.5 py-1 rounded-full bg-white/5 text-neutral-400 border border-white/10';
-        }
-        if (orderSub) orderSub.innerText = 'Крутится приветствие и реклама';
-      }
-    });
-
-    const adsListRef = ref(db, 'ads_list');
-    onValue(adsListRef, (snapshot) => {
-      const ads = snapshot.val() || {};
-      window.loadedAds = ads;
-      if (typeof window.renderAdsListTable === 'function') {
-        window.renderAdsListTable(ads);
       }
     });
   </script>
 </head>
-<body class="ambient-bg text-white min-h-screen flex flex-col font-sans selection:bg-yellow-300 selection:text-black">
+<body class="min-h-screen flex flex-col font-sans">
 
-  <!-- ================= ЗАЩИТНЫЙ ЭКРАН ================= -->
-  <div id="auth-guard-screen" class="fixed inset-0 z-50 bg-[#0d0d10] flex items-center justify-center p-4">
-    <div id="auth-loading" class="flex flex-col items-center gap-4 text-center">
-      <div class="w-12 h-12 border-4 border-yellow-300/20 border-t-yellow-300 rounded-full animate-spin"></div>
-      <p class="font-display text-sm font-bold tracking-wider text-neutral-300 uppercase">Проверка токена доступа...</p>
-    </div>
-
-    <div id="auth-denied" class="hidden max-w-sm w-full bg-surface border border-rose-500/30 rounded-3xl p-6 text-center shadow-2xl flex flex-col items-center gap-4">
-      <div class="w-16 h-16 rounded-2xl bg-rose-500/10 border border-rose-500/30 flex items-center justify-center text-3xl">
-        🔑
-      </div>
-      <div>
-        <h2 class="font-display text-base md:text-lg font-black uppercase text-white leading-snug">Вход только через Личный кабинет</h2>
-        <p class="text-xs text-neutral-400 mt-2 leading-relaxed">
-          Для доступа к кассе войдите в свой личный кабинет и нажмите кнопку <b>«Открыть кассу»</b>.
-        </p>
-      </div>
-      <a href="dashboard.html" class="w-full bg-sticker text-black font-display font-black text-xs uppercase py-3.5 rounded-xl shadow-lg hover:brightness-110 active:scale-95 transition-all">
-        Перейти в Личный кабинет →
-      </a>
-    </div>
-  </div>
-
-  <!-- ================= ОСНОВНОЙ САЙТ ================= -->
-  <div id="app-root" class="hidden flex-1 flex flex-col pb-20 md:pb-0">
-
-    <!-- ================= TOP BAR ================= -->
-    <header class="w-full bg-surface/90 backdrop-blur-xl border-b border-white/10 px-3 md:px-8 py-3 flex justify-between items-center sticky top-0 z-40">
-      <div class="flex items-center gap-2.5 md:gap-3">
-        <div class="stamp-badge bg-sticker text-black font-display font-black text-[10px] md:text-xs px-2 py-0.5 md:px-2.5 md:py-1 uppercase -rotate-3 shadow-md">
-          MOON POS
-        </div>
-        <div>
-          <h1 class="font-display text-xs md:text-sm font-black tracking-wide text-white uppercase flex items-center gap-1.5">
-            Касса #1
-            <span class="hidden sm:inline-block text-[9px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2 py-0.5 rounded-full font-sans font-semibold">СБП QR</span>
-          </h1>
-          <p id="live-terminal-sub" class="text-[10px] md:text-xs text-neutral-400 hidden sm:block">Крутится приветствие и реклама</p>
-        </div>
-      </div>
-
-      <div class="hidden md:flex items-center bg-black/40 p-1 rounded-2xl border border-white/10">
-        <button id="nav-pos" onclick="openView('pos')" class="px-5 py-2 rounded-xl font-display text-xs font-bold uppercase transition-all bg-sticker text-black shadow">
-          ⚡ Касса & Оплата
-        </button>
-        <button id="nav-ads" onclick="openView('ads')" class="px-5 py-2 rounded-xl font-display text-xs font-bold uppercase transition-all text-neutral-400 hover:text-white">
-          🎨 Реклама
-        </button>
-        <button id="nav-settings" onclick="openView('settings')" class="px-5 py-2 rounded-xl font-display text-xs font-bold uppercase transition-all text-neutral-400 hover:text-white">
-          ⚙️ Настройки
-        </button>
-      </div>
-
-      <div class="flex items-center gap-1.5 sm:gap-2.5">
-        <!-- КНОПКА ПЕРЕХОДА НА ЭКРАН ПОКУПАТЕЛЯ -->
-        <a href="https://dalordjot-svg.github.io/Do-go/" target="_blank" rel="noopener noreferrer" class="flex items-center gap-1 bg-yellow-400/10 hover:bg-yellow-400/20 active:scale-95 text-[11px] text-sticker border border-yellow-400/30 px-2.5 py-1.5 md:px-3.5 md:py-1.5 rounded-xl font-display font-bold transition-all shadow-sm">
-          <span>🖥️</span>
-          <span class="hidden sm:inline">Экран покупателя</span>
-          <span class="sm:hidden">Экран</span>
-          <span class="text-[9px] opacity-75">↗</span>
-        </a>
-
-        <div class="hidden sm:flex flex-col text-right">
-          <span id="user-display-name" class="text-xs font-display font-bold text-white leading-tight truncate max-w-[120px]">Сотрудник</span>
-          <span class="text-[9px] text-emerald-400 font-semibold">Авторизован</span>
-        </div>
-
-        <a href="dashboard.html" title="Вернуться в Личный Кабинет" class="flex items-center gap-1 bg-surfaceLight hover:bg-white/15 active:scale-95 text-[11px] text-white px-2.5 py-1.5 md:px-3 rounded-xl border border-white/10 font-display font-bold transition-all">
-          <span>← ЛК</span>
-        </a>
-
-        <div id="live-terminal-status" class="hidden sm:flex items-center text-[11px] font-semibold px-2.5 py-1 rounded-full bg-white/5 text-neutral-400 border border-white/10">
-          <span class="w-1.5 h-1.5 rounded-full bg-neutral-500 mr-1.5"></span> Свободен
-        </div>
-      </div>
-    </header>
-
-    <!-- ================= СЕКЦИЯ 1: КАССА ================= -->
-    <main id="view-pos" class="flex-1 p-3 md:p-8 max-w-7xl mx-auto w-full grid grid-cols-12 gap-4 md:gap-8 items-start">
+  <main class="flex-1 p-4 md:p-8 flex items-center justify-center">
+    <div class="w-full max-w-md bg-surface border border-white/10 rounded-3xl p-6 md:p-8 flex flex-col gap-6 shadow-2xl">
       
-      <div class="col-span-12 lg:col-span-5 flex flex-col gap-3 md:gap-5 order-2 lg:order-1">
-        
-        <!-- Чаевые -->
-        <div class="bg-purple-900/20 border border-purple-500/30 rounded-2xl md:rounded-3xl p-3.5 md:p-4 flex flex-col gap-2.5 shadow-xl">
-          <div class="flex justify-between items-center">
-            <span class="font-display font-black text-xs uppercase text-purple-300 flex items-center gap-1.5">
-              <span>🪄</span> Экран чаевых (3 мин)
-            </span>
-            <span class="text-[10px] text-purple-400 font-mono">на канцтовары 📚</span>
-          </div>
-          <div class="flex gap-2">
-            <button onclick="castMagicTips()" class="flex-1 bg-purple-600 hover:bg-purple-500 active:scale-95 text-white font-display font-black text-xs uppercase py-2.5 md:py-3 rounded-xl shadow-lg transition-all flex items-center justify-center gap-1.5">
-              <span>🪄 Кастовать экран</span>
-            </button>
-            <button onclick="closeMagicTips()" class="bg-white/10 hover:bg-white/20 active:scale-95 text-neutral-300 font-display font-bold text-xs uppercase px-3 py-2.5 md:py-3 rounded-xl border border-white/10 transition-all">
-              ✕
-            </button>
-          </div>
+      <!-- Экран суммы -->
+      <div class="bg-black/50 border border-white/10 rounded-3xl p-6 text-center">
+        <span class="text-xs text-neutral-400 uppercase font-bold tracking-widest block mb-2">Сумма к оплате (СБП)</span>
+        <div class="flex items-center justify-center gap-2">
+          <span id="amount-display" class="font-display text-6xl font-black tracking-tight">0</span>
+          <span class="font-display text-4xl font-bold text-sticker">₽</span>
         </div>
-
-        <!-- Быстрые позиции -->
-        <div class="bg-surface border border-white/10 rounded-2xl md:rounded-3xl p-4 md:p-6 flex flex-col gap-3 shadow-xl">
-          <div class="flex justify-between items-center">
-            <h3 class="font-display text-xs font-black uppercase text-neutral-300">Быстрый подбор</h3>
-            <span class="text-[10px] text-neutral-500 font-mono">Пресеты</span>
-          </div>
-
-          <div class="grid grid-cols-2 gap-2 md:gap-3">
-            <button onclick="addAmountDirect(290, 'Бабл-ти Классик')" class="bg-surfaceLight hover:bg-white/10 active:scale-95 border border-white/5 p-3 rounded-xl md:rounded-2xl text-left transition-all group">
-              <span class="text-[11px] text-neutral-400 group-hover:text-sticker transition-colors block truncate">Бабл-ти Классик</span>
-              <span class="font-display font-black text-base md:text-xl text-white mt-0.5 block">290 ₽</span>
-            </button>
-            <button onclick="addAmountDirect(350, 'Матча Лате с черникой')" class="bg-surfaceLight hover:bg-white/10 active:scale-95 border border-white/5 p-3 rounded-xl md:rounded-2xl text-left transition-all group">
-              <span class="text-[11px] text-neutral-400 group-hover:text-sticker transition-colors block truncate">Матча Лате</span>
-              <span class="font-display font-black text-base md:text-xl text-white mt-0.5 block">350 ₽</span>
-            </button>
-            <button onclick="addAmountDirect(390, 'Кокосовый Спешл')" class="bg-surfaceLight hover:bg-white/10 active:scale-95 border border-white/5 p-3 rounded-xl md:rounded-2xl text-left transition-all group">
-              <span class="text-[11px] text-neutral-400 group-hover:text-sticker transition-colors block truncate">Кокосовый Спешл</span>
-              <span class="font-display font-black text-base md:text-xl text-white mt-0.5 block">390 ₽</span>
-            </button>
-            <button onclick="addAmountDirect(190, 'Десерт дня')" class="bg-surfaceLight hover:bg-white/10 active:scale-95 border border-white/5 p-3 rounded-xl md:rounded-2xl text-left transition-all group">
-              <span class="text-[11px] text-neutral-400 group-hover:text-sticker transition-colors block truncate">Чизкейк / Десерт</span>
-              <span class="font-display font-black text-base md:text-xl text-white mt-0.5 block">190 ₽</span>
-            </button>
-          </div>
-
-          <div class="pt-2 border-t border-white/10">
-            <div class="grid grid-cols-4 gap-1.5 md:gap-2">
-              <button onclick="addQuickAmount(50)" class="bg-white/5 hover:bg-white/10 active:scale-95 border border-white/10 py-2 rounded-xl text-xs font-display font-bold text-neutral-300">+50 ₽</button>
-              <button onclick="addQuickAmount(100)" class="bg-white/5 hover:bg-white/10 active:scale-95 border border-white/10 py-2 rounded-xl text-xs font-display font-bold text-neutral-300">+100 ₽</button>
-              <button onclick="addQuickAmount(250)" class="bg-white/5 hover:bg-white/10 active:scale-95 border border-white/10 py-2 rounded-xl text-xs font-display font-bold text-neutral-300">+250 ₽</button>
-              <button onclick="addQuickAmount(500)" class="bg-white/5 hover:bg-white/10 active:scale-95 border border-white/10 py-2 rounded-xl text-xs font-display font-bold text-neutral-300">+500 ₽</button>
-            </div>
-          </div>
-        </div>
+        <p id="pos-status-text" class="text-xs text-neutral-400 mt-2">Готов к выставлению СБП QR</p>
       </div>
 
-      <!-- Ввод суммы и выставление счета СБП -->
-      <div class="col-span-12 lg:col-span-7 bg-surface border border-white/10 rounded-2xl md:rounded-3xl p-4 md:p-8 flex flex-col gap-4 md:gap-6 shadow-2xl order-1 lg:order-2">
-        
-        <div class="bg-black/50 border border-white/10 rounded-2xl md:rounded-3xl p-4 md:p-6 text-center relative overflow-hidden">
-          <span class="text-[10px] md:text-xs text-neutral-400 uppercase font-bold tracking-widest block mb-1">Сумма к оплате (СБП)</span>
-          <div class="flex items-center justify-center gap-1.5">
-            <span id="amount-display" class="font-display text-5xl md:text-7xl font-black text-white tracking-tight">0</span>
-            <span class="font-display text-3xl md:text-4xl font-bold text-sticker">₽</span>
-          </div>
-          <p id="pos-status-text" class="text-xs text-neutral-400 mt-1.5 font-medium">Готов к выставлению СБП QR</p>
-        </div>
-
-        <!-- Numpad -->
-        <div class="grid grid-cols-3 gap-2 md:gap-3 max-w-md mx-auto w-full">
-          <button onclick="pressKey('1')" class="h-13 md:h-16 py-3 rounded-2xl bg-surfaceLight hover:bg-white/15 active:scale-95 border border-white/10 font-display text-2xl font-black transition-all">1</button>
-          <button onclick="pressKey('2')" class="h-13 md:h-16 py-3 rounded-2xl bg-surfaceLight hover:bg-white/15 active:scale-95 border border-white/10 font-display text-2xl font-black transition-all">2</button>
-          <button onclick="pressKey('3')" class="h-13 md:h-16 py-3 rounded-2xl bg-surfaceLight hover:bg-white/15 active:scale-95 border border-white/10 font-display text-2xl font-black transition-all">3</button>
-          
-          <button onclick="pressKey('4')" class="h-13 md:h-16 py-3 rounded-2xl bg-surfaceLight hover:bg-white/15 active:scale-95 border border-white/10 font-display text-2xl font-black transition-all">4</button>
-          <button onclick="pressKey('5')" class="h-13 md:h-16 py-3 rounded-2xl bg-surfaceLight hover:bg-white/15 active:scale-95 border border-white/10 font-display text-2xl font-black transition-all">5</button>
-          <button onclick="pressKey('6')" class="h-13 md:h-16 py-3 rounded-2xl bg-surfaceLight hover:bg-white/15 active:scale-95 border border-white/10 font-display text-2xl font-black transition-all">6</button>
-          
-          <button onclick="pressKey('7')" class="h-13 md:h-16 py-3 rounded-2xl bg-surfaceLight hover:bg-white/15 active:scale-95 border border-white/10 font-display text-2xl font-black transition-all">7</button>
-          <button onclick="pressKey('8')" class="h-13 md:h-16 py-3 rounded-2xl bg-surfaceLight hover:bg-white/15 active:scale-95 border border-white/10 font-display text-2xl font-black transition-all">8</button>
-          <button onclick="pressKey('9')" class="h-13 md:h-16 py-3 rounded-2xl bg-surfaceLight hover:bg-white/15 active:scale-95 border border-white/10 font-display text-2xl font-black transition-all">9</button>
-          
-          <button onclick="pressKey('00')" class="h-13 md:h-16 py-3 rounded-2xl bg-white/5 hover:bg-white/10 active:scale-95 border border-white/10 font-display text-lg md:text-xl font-black text-neutral-400">00</button>
-          <button onclick="pressKey('0')" class="h-13 md:h-16 py-3 rounded-2xl bg-surfaceLight hover:bg-white/15 active:scale-95 border border-white/10 font-display text-2xl font-black">0</button>
-          <button onclick="backspace()" class="h-13 md:h-16 py-3 rounded-2xl bg-rose-500/20 hover:bg-rose-500/30 active:scale-95 border border-rose-500/30 flex items-center justify-center text-rose-300 font-bold text-xl">⌫</button>
-        </div>
-
-        <!-- Кнопка выставления СБП QR и сброс -->
-        <div class="flex flex-col gap-2.5 max-w-md mx-auto w-full pt-1">
-          <button id="send-bill-btn" onclick="createDirectSbpPayment()" class="w-full bg-sticker text-black font-display font-black text-sm md:text-base uppercase py-4 rounded-2xl active:scale-[0.98] transition-all sticker-badge flex items-center justify-center gap-2">
-            <span>⚡ Выставить СБП QR</span>
-          </button>
-
-          <button onclick="sendCancelToFirebase()" class="w-full bg-white/10 hover:bg-white/15 active:scale-95 text-neutral-300 font-display font-bold text-xs uppercase py-3.5 rounded-2xl border border-white/10 transition-all flex items-center justify-center gap-1.5">
-            <span>🛑 Сброс экрана</span>
-          </button>
-        </div>
+      <!-- Numpad -->
+      <div class="grid grid-cols-3 gap-3">
+        <button onclick="pressKey('1')" class="h-16 rounded-2xl bg-surfaceLight hover:bg-white/15 border border-white/10 font-display text-2xl font-black">1</button>
+        <button onclick="pressKey('2')" class="h-16 rounded-2xl bg-surfaceLight hover:bg-white/15 border border-white/10 font-display text-2xl font-black">2</button>
+        <button onclick="pressKey('3')" class="h-16 rounded-2xl bg-surfaceLight hover:bg-white/15 border border-white/10 font-display text-2xl font-black">3</button>
+        <button onclick="pressKey('4')" class="h-16 rounded-2xl bg-surfaceLight hover:bg-white/15 border border-white/10 font-display text-2xl font-black">4</button>
+        <button onclick="pressKey('5')" class="h-16 rounded-2xl bg-surfaceLight hover:bg-white/15 border border-white/10 font-display text-2xl font-black">5</button>
+        <button onclick="pressKey('6')" class="h-16 rounded-2xl bg-surfaceLight hover:bg-white/15 border border-white/10 font-display text-2xl font-black">6</button>
+        <button onclick="pressKey('7')" class="h-16 rounded-2xl bg-surfaceLight hover:bg-white/15 border border-white/10 font-display text-2xl font-black">7</button>
+        <button onclick="pressKey('8')" class="h-16 rounded-2xl bg-surfaceLight hover:bg-white/15 border border-white/10 font-display text-2xl font-black">8</button>
+        <button onclick="pressKey('9')" class="h-16 rounded-2xl bg-surfaceLight hover:bg-white/15 border border-white/10 font-display text-2xl font-black">9</button>
+        <button onclick="pressKey('00')" class="h-16 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 font-display text-xl font-black text-neutral-400">00</button>
+        <button onclick="pressKey('0')" class="h-16 rounded-2xl bg-surfaceLight hover:bg-white/15 border border-white/10 font-display text-2xl font-black">0</button>
+        <button onclick="backspace()" class="h-16 rounded-2xl bg-rose-500/20 hover:bg-rose-500/30 border border-rose-500/30 text-rose-300 font-bold text-xl">⌫</button>
       </div>
 
-    </main>
-
-    <!-- ================= СЕКЦИЯ 2: РЕКЛАМА ================= -->
-    <main id="view-ads" class="hidden flex-1 p-3 md:p-8 max-w-7xl mx-auto w-full flex-col gap-4 md:gap-8">
-      <div class="flex justify-between items-center gap-2">
-        <div>
-          <h2 class="font-display text-lg md:text-2xl font-black uppercase text-white">Список баннеров</h2>
-          <p class="text-xs text-neutral-400 hidden sm:block">Включай/отключай показы или создавай новые постеры</p>
-        </div>
-        <button onclick="openAdEditorNew()" class="bg-sticker text-black font-display font-black text-xs uppercase px-4 py-2.5 md:py-3 rounded-xl md:rounded-2xl active:scale-95 transition-all sticker-badge flex items-center gap-1.5">
-          <span>+ Добавить</span>
+      <!-- Кнопки управления -->
+      <div class="flex flex-col gap-3">
+        <button id="send-bill-btn" onclick="createDirectSbpPayment()" class="w-full bg-sticker text-black font-display font-black text-base uppercase py-4 rounded-2xl active:scale-[0.98] transition-transform sticker-badge">
+          ⚡ Выставить СБП QR
+        </button>
+        <button onclick="resetTerminal()" class="w-full bg-white/10 hover:bg-white/15 text-neutral-300 font-display font-bold text-xs uppercase py-3.5 rounded-2xl border border-white/10">
+          🛑 Сброс экрана
         </button>
       </div>
 
-      <div class="bg-surface border border-white/10 rounded-2xl md:rounded-3xl overflow-hidden shadow-2xl p-2 md:p-0">
-        <div id="ads-table-container" class="overflow-x-auto">
-          <table class="w-full text-left border-collapse hidden md:table">
-            <thead>
-              <tr class="border-b border-white/10 bg-black/30 text-[11px] font-display font-bold uppercase tracking-wider text-neutral-400">
-                <th class="p-4 pl-6">Превью</th>
-                <th class="p-4">Заголовок</th>
-                <th class="p-4">Стикер</th>
-                <th class="p-4 text-center">Статус</th>
-                <th class="p-4 pr-6 text-right">Действия</th>
-              </tr>
-            </thead>
-            <tbody id="ads-table-body" class="divide-y divide-white/5 text-sm"></tbody>
-          </table>
-          
-          <div id="ads-mobile-cards" class="flex flex-col gap-2.5 md:hidden"></div>
-        </div>
-      </div>
+    </div>
+  </main>
 
-      <!-- Редактор баннера -->
-      <div id="ad-editor-card" class="bg-surface border border-white/15 rounded-2xl md:rounded-3xl p-4 md:p-8 shadow-2xl flex flex-col gap-4 md:gap-6 text-left">
-        <div class="flex justify-between items-center border-b border-white/10 pb-3 md:pb-4">
-          <div>
-            <h3 id="ad-editor-heading" class="font-display font-black text-sm md:text-lg uppercase text-sticker">Редактор постера</h3>
-            <p class="text-[10px] md:text-xs text-neutral-400">Настройки фото и текстов баннера</p>
-          </div>
-          <button onclick="closeAdEditor()" class="text-neutral-400 hover:text-white text-lg p-1">✕</button>
-        </div>
-
-        <input type="hidden" id="edit-ad-id" value="" />
-
-        <div class="grid grid-cols-12 gap-4 md:gap-8 items-start">
-          <div class="col-span-12 lg:col-span-6 flex flex-col gap-3 md:gap-4">
-            
-            <div class="bg-black/30 border border-white/10 p-3.5 rounded-2xl flex flex-col gap-2">
-              <span class="text-xs font-display font-bold uppercase text-neutral-300">🖼️ Фотография (Cloudinary)</span>
-              <input type="file" id="ad-file-input" accept="image/*" onchange="uploadImageToCloudinaryDesktop(event)" class="w-full text-xs text-neutral-400 file:mr-2 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-sticker file:text-black hover:file:brightness-110 cursor-pointer" />
-              <input type="text" id="edit-ad-img" oninput="updateDesktopLivePreview()" placeholder="https://res.cloudinary.com/..." class="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-yellow-300 font-mono mt-1" />
-              <span id="cld-upload-status" class="text-[11px] font-bold"></span>
-            </div>
-
-            <div class="bg-black/30 border border-white/10 rounded-2xl p-3.5 flex flex-col gap-2.5">
-              <span class="text-xs font-display font-bold uppercase text-sticker flex items-center gap-1.5">
-                <span>🎯</span> Кадрирование фото
-              </span>
-
-              <div>
-                <div class="flex justify-between items-center text-[10px] text-neutral-400 mb-1">
-                  <span>Масштаб (Zoom)</span>
-                  <span id="desk-zoom-val" class="font-mono text-sticker font-bold">105%</span>
-                </div>
-                <input type="range" id="edit-ad-scale" min="100" max="250" value="105" oninput="updateDesktopLivePreview()" class="w-full accent-yellow-300 cursor-pointer h-2 bg-white/10 rounded-lg" />
-              </div>
-
-              <div>
-                <div class="flex justify-between items-center text-[10px] text-neutral-400 mb-1">
-                  <span>Положение по вертикали (Y)</span>
-                  <span id="desk-pos-y-val" class="font-mono text-sticker font-bold">50%</span>
-                </div>
-                <input type="range" id="edit-ad-pos-y" min="0" max="100" value="50" oninput="updateDesktopLivePreview()" class="w-full accent-yellow-300 cursor-pointer h-2 bg-white/10 rounded-lg" />
-              </div>
-
-              <div>
-                <div class="flex justify-between items-center text-[10px] text-neutral-400 mb-1">
-                  <span>Положение по горизонтали (X)</span>
-                  <span id="desk-pos-x-val" class="font-mono text-sticker font-bold">50%</span>
-                </div>
-                <input type="range" id="edit-ad-pos-x" min="0" max="100" value="50" oninput="updateDesktopLivePreview()" class="w-full accent-yellow-300 cursor-pointer h-2 bg-white/10 rounded-lg" />
-              </div>
-            </div>
-
-            <div class="grid grid-cols-2 gap-2">
-              <div>
-                <label class="text-[10px] text-neutral-400 font-bold uppercase block mb-1">Верхний тег</label>
-                <input type="text" id="edit-ad-tag" oninput="updateDesktopLivePreview()" value="вакансия:" class="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none" />
-              </div>
-              <div>
-                <label class="text-[10px] text-neutral-400 font-bold uppercase block mb-1">Штамп справа</label>
-                <input type="text" id="edit-ad-stamp" oninput="updateDesktopLivePreview()" value="АХХУ!" class="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none" />
-              </div>
-            </div>
-
-            <div class="grid grid-cols-2 gap-2">
-              <div>
-                <label class="text-[10px] text-neutral-400 font-bold uppercase block mb-1">Заголовок 1</label>
-                <input type="text" id="edit-ad-title1" oninput="updateDesktopLivePreview()" value="ИЩЕМ" class="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-xs text-white font-bold focus:outline-none" />
-              </div>
-              <div>
-                <label class="text-[10px] text-neutral-400 font-bold uppercase block mb-1">Заголовок 2 (Желтый)</label>
-                <input type="text" id="edit-ad-title2" oninput="updateDesktopLivePreview()" value="В КОМАНДУ" class="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-xs text-sticker font-bold focus:outline-none" />
-              </div>
-            </div>
-
-            <div>
-              <label class="text-[10px] text-neutral-400 font-bold uppercase block mb-1">Подзаголовок</label>
-              <input type="text" id="edit-ad-sub" oninput="updateDesktopLivePreview()" value="Бариста • Мастер вкуса" class="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-xs text-neutral-300 focus:outline-none" />
-            </div>
-
-            <div class="grid grid-cols-2 gap-2">
-              <div>
-                <label class="text-[10px] text-neutral-400 font-bold uppercase block mb-1">Стикер (ЗП / Цена)</label>
-                <input type="text" id="edit-ad-badge-r" oninput="updateDesktopLivePreview()" value="от 65.000 ₽" class="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-xs text-sticker font-bold focus:outline-none" />
-              </div>
-              <div>
-                <label class="text-[10px] text-neutral-400 font-bold uppercase block mb-1">Призыв (CTA)</label>
-                <input type="text" id="edit-ad-cta-r" oninput="updateDesktopLivePreview()" value="«Хочу в команду» →" class="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none" />
-              </div>
-            </div>
-
-            <div class="grid grid-cols-2 gap-2">
-              <div>
-                <label class="text-[10px] text-neutral-400 font-bold uppercase block mb-1">Нижняя плашка</label>
-                <input type="text" id="edit-ad-badge-l-title" oninput="updateDesktopLivePreview()" value="Гибкий график & обучение" class="w-full bg-white/5 border border-white/10 rounded-xl px-2.5 py-2 text-xs text-white focus:outline-none" />
-              </div>
-              <div>
-                <label class="text-[10px] text-neutral-400 font-bold uppercase block mb-1">Текст в плашке</label>
-                <input type="text" id="edit-ad-badge-l-desc" oninput="updateDesktopLivePreview()" value="Опыт не обязателен — всему научим!" class="w-full bg-white/5 border border-white/10 rounded-xl px-2.5 py-2 text-xs text-white focus:outline-none" />
-              </div>
-            </div>
-
-            <div class="flex gap-2.5 pt-2">
-              <button onclick="saveAdToFirebase()" class="flex-1 bg-sticker text-black font-display font-black text-xs uppercase py-3.5 rounded-xl md:rounded-2xl active:scale-95 transition-all sticker-badge">
-                💾 Сохранить баннер
-              </button>
-              <button onclick="closeAdEditor()" class="bg-white/10 hover:bg-white/15 px-4 py-3.5 rounded-xl md:rounded-2xl text-xs font-bold text-neutral-300">
-                Отмена
-              </button>
-            </div>
-
-          </div>
-
-          <div class="col-span-12 lg:col-span-6 flex flex-col gap-2.5">
-            <span class="text-xs uppercase font-bold tracking-wider text-neutral-400">Предварительный просмотр:</span>
-
-            <div class="relative w-full h-[220px] md:h-[340px] rounded-2xl md:rounded-3xl overflow-hidden border border-white/20 shadow-2xl flex items-center justify-between p-4 md:p-6 text-left select-none">
-              <img id="desk-preview-bg" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=1200&auto=format&fit=crop&q=80" class="absolute inset-0 w-full h-full object-cover transition-all duration-150" />
-              <div class="absolute inset-0 bg-gradient-to-r from-black/95 via-black/80 to-black/95"></div>
-              
-              <div class="relative z-10 flex flex-col justify-between h-full max-w-[60%]">
-                <div>
-                  <div class="flex items-center gap-1.5 mb-1">
-                    <span id="desk-preview-tag" class="text-[9px] md:text-[10px] font-bold uppercase tracking-wider text-neutral-300">вакансия:</span>
-                    <span id="desk-preview-stamp" class="stamp-badge bg-white text-black font-display font-black text-[7px] md:text-[8px] px-1.5 py-0.5 uppercase -rotate-6">АХХУ!</span>
-                  </div>
-                  <h3 class="font-display text-lg md:text-2xl font-black uppercase leading-[0.95] text-white">
-                    <span id="desk-preview-title1">ИЩЕМ</span> <br>
-                    <span id="desk-preview-title2" class="text-sticker">В КОМАНДУ</span>
-                  </h3>
-                  <p id="desk-preview-sub" class="font-display text-[9px] md:text-[10px] uppercase tracking-widest text-neutral-300 mt-1 font-bold truncate">
-                    Бариста • Мастер вкуса
-                  </p>
-                </div>
-
-                <div class="sticker-badge bg-white text-black px-2.5 py-1 md:px-3.5 md:py-1.5 rounded-xl max-w-xs transform -rotate-1 border border-neutral-200">
-                  <p id="desk-preview-badge-t" class="font-display text-[8px] md:text-[9px] font-black uppercase leading-tight truncate">Гибкий график & обучение</p>
-                  <p id="desk-preview-badge-d" class="text-[7px] md:text-[8px] text-neutral-600 font-semibold truncate">Опыт не обязателен!</p>
-                </div>
-              </div>
-
-              <div class="relative z-10 flex flex-col justify-between items-end h-full text-right max-w-[38%]">
-                <div class="sticker-badge bg-sticker text-black font-display text-xs md:text-base font-black px-3 py-1 rounded-xl rotate-2 shadow-xl">
-                  <span id="desk-preview-badge-r">от 65.000 ₽</span>
-                </div>
-                <div class="bg-black/60 backdrop-blur-md border border-white/20 p-2 rounded-xl text-right">
-                  <p class="text-[8px] md:text-[10px] text-neutral-200 font-medium">На кассе:</p>
-                  <p id="desk-preview-cta-r" class="font-display text-[8px] md:text-[10px] font-bold text-sticker uppercase truncate">«Хочу в команду» →</p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-        </div>
-      </div>
-
-    </main>
-
-    <!-- ================= СЕКЦИЯ 3: НАСТРОЙКИ ТЕРМИНАЛА ================= -->
-    <main id="view-settings" class="hidden flex-1 p-3 md:p-8 max-w-4xl mx-auto w-full flex-col gap-4 md:gap-6">
-      <div class="bg-surface border border-white/10 rounded-2xl md:rounded-3xl p-4 md:p-8 shadow-2xl flex flex-col gap-4 md:gap-6 text-left">
-        <div class="border-b border-white/10 pb-3">
-          <h2 class="font-display text-base md:text-xl font-black uppercase text-white">⚙️ Настройки терминала</h2>
-          <p class="text-xs text-neutral-400">Параметры интеграций и облако изображений</p>
-        </div>
-
-        <div class="bg-emerald-500/10 border border-emerald-500/30 p-3.5 rounded-2xl flex items-center gap-2 text-xs text-emerald-300">
-          <span>✓</span>
-          <span>Ключи ЮKassa подгружаются автоматически из базы данных админа.</span>
-        </div>
-
-        <div class="flex flex-col gap-3 pt-3 border-t border-white/10">
-          <h3 class="font-display text-xs font-bold uppercase text-sticker">Идентификатор терминала</h3>
-          <div>
-            <label class="text-xs text-neutral-300 font-bold block mb-1">Terminal ID</label>
-            <input type="text" id="desk-terminal-id" value="term_01" class="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-xs text-white font-mono focus:outline-none focus:border-yellow-300" />
-          </div>
-        </div>
-
-        <div class="flex flex-col gap-3 pt-3 border-t border-white/10">
-          <div class="flex justify-between items-center">
-            <h3 class="font-display text-xs font-bold uppercase text-sticker">Облако изображений Cloudinary</h3>
-            <span class="text-[9px] text-neutral-400 font-mono">my_shop_unsigned</span>
-          </div>
-          <div>
-            <label class="text-xs text-neutral-300 font-bold block mb-1">Cloud Name</label>
-            <input type="text" id="desk-cloud-name" placeholder="dxyz123abc" class="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-xs text-white font-mono focus:outline-none focus:border-yellow-300" />
-          </div>
-        </div>
-
-        <button onclick="saveDesktopSettings()" class="w-full bg-sticker text-black font-display font-black text-xs uppercase py-3.5 md:py-4 rounded-xl md:rounded-2xl active:scale-95 transition-all sticker-badge mt-2">
-          Сохранить настройки
-        </button>
-      </div>
-    </main>
-
-    <!-- ================= МОБИЛЬНЫЙ TAPBAR ================= -->
-    <nav class="md:hidden fixed bottom-0 left-0 right-0 bg-surface/95 backdrop-blur-xl border-t border-white/10 p-2 z-50 flex justify-around">
-      <button id="mob-nav-pos" onclick="openView('pos')" class="flex-1 py-2 flex flex-col items-center gap-1 font-display text-[10px] font-bold uppercase text-sticker">
-        <span class="text-lg">⚡</span>
-        <span>Касса</span>
-      </button>
-      <button id="mob-nav-ads" onclick="openView('ads')" class="flex-1 py-2 flex flex-col items-center gap-1 font-display text-[10px] font-bold uppercase text-neutral-400">
-        <span class="text-lg">🎨</span>
-        <span>Реклама</span>
-      </button>
-      <button id="mob-nav-settings" onclick="openView('settings')" class="flex-1 py-2 flex flex-col items-center gap-1 font-display text-[10px] font-bold uppercase text-neutral-400">
-        <span class="text-lg">⚙️</span>
-        <span>Настройки</span>
-      </button>
-    </nav>
-
-  </div>
-
-  <!-- ================= СЦЕНАРИИ ================= -->
   <script>
     let currentInput = "0";
     let activePollInterval = null;
-    let currentItemTitle = "Заказ на кассе";
-    const CLOUDINARY_PRESET = "my_shop_unsigned";
-
-    function openView(view) {
-      document.getElementById('view-pos').classList.add('hidden');
-      document.getElementById('view-ads').classList.add('hidden');
-      document.getElementById('view-settings').classList.add('hidden');
-
-      const btnPos = document.getElementById('nav-pos');
-      const btnAds = document.getElementById('nav-ads');
-      const btnSettings = document.getElementById('nav-settings');
-      const inactiveDesk = 'px-5 py-2 rounded-xl font-display text-xs font-bold uppercase transition-all text-neutral-400 hover:text-white';
-      const activeDesk = 'px-5 py-2 rounded-xl font-display text-xs font-bold uppercase transition-all bg-sticker text-black shadow';
-
-      if (btnPos) btnPos.className = inactiveDesk;
-      if (btnAds) btnAds.className = inactiveDesk;
-      if (btnSettings) btnSettings.className = inactiveDesk;
-
-      const mobPos = document.getElementById('mob-nav-pos');
-      const mobAds = document.getElementById('mob-nav-ads');
-      const mobSettings = document.getElementById('mob-nav-settings');
-      const inactiveMob = 'flex-1 py-2 flex flex-col items-center gap-1 font-display text-[10px] font-bold uppercase text-neutral-400';
-      const activeMob = 'flex-1 py-2 flex flex-col items-center gap-1 font-display text-[10px] font-bold uppercase text-sticker';
-
-      if (mobPos) mobPos.className = inactiveMob;
-      if (mobAds) mobAds.className = inactiveMob;
-      if (mobSettings) mobSettings.className = inactiveMob;
-
-      if (view === 'pos') {
-        document.getElementById('view-pos').classList.remove('hidden');
-        if (btnPos) btnPos.className = activeDesk;
-        if (mobPos) mobPos.className = activeMob;
-      } else if (view === 'ads') {
-        document.getElementById('view-ads').classList.remove('hidden');
-        document.getElementById('view-ads').classList.add('flex');
-        if (btnAds) btnAds.className = activeDesk;
-        if (mobAds) mobAds.className = activeMob;
-        updateDesktopLivePreview();
-      } else if (view === 'settings') {
-        document.getElementById('view-settings').classList.remove('hidden');
-        document.getElementById('view-settings').classList.add('flex');
-        if (btnSettings) btnSettings.className = activeDesk;
-        if (mobSettings) mobSettings.className = activeMob;
-      }
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-
-    window.addEventListener('DOMContentLoaded', () => {
-      document.getElementById('desk-terminal-id').value = localStorage.getItem('yk_term_id') || 'term_01';
-      document.getElementById('desk-cloud-name').value = localStorage.getItem('cld_cloud_name') || '';
-    });
-
-    function saveDesktopSettings() {
-      const termId = document.getElementById('desk-terminal-id').value.trim() || 'term_01';
-      const cloudName = document.getElementById('desk-cloud-name').value.trim();
-
-      localStorage.setItem('yk_term_id', termId);
-      localStorage.setItem('cld_cloud_name', cloudName);
-
-      alert('Настройки сохранены!');
-      openView('pos');
-    }
+    const terminalId = localStorage.getItem('yk_term_id') || 'term_01';
 
     function generateUUID() {
-      return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+      return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
         const r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
         return v.toString(16);
       });
     }
-
-    // ================= ВЫСТАВЛЕНИЕ СБП QR ЧЕРЕЗ АВТО-КЛЮЧИ БАЗЫ =================
-    async function createDirectSbpPayment() {
-      const amount = parseInt(currentInput);
-      if (!amount || amount <= 0) {
-        alert('Введите сумму больше 0');
-        return;
-      }
-
-      const shopId = window.yooKassaConfig.shopId || localStorage.getItem('yk_shop_id') || '1350725';
-      const secretKey = window.yooKassaConfig.secretKey || localStorage.getItem('yk_secret_key');
-      const termId = localStorage.getItem('yk_term_id') || 'term_01';
-
-      if (!shopId || !secretKey) {
-        alert('Ключи ЮKassa ещё не загружены из базы админа. Пожалуйста, укажите их в админ-панели.');
-        return;
-      }
-
-      const sendBtn = document.getElementById('send-bill-btn');
-      const statusText = document.getElementById('pos-status-text');
-      
-      sendBtn.disabled = true;
-      sendBtn.innerHTML = '<span>⏳ Создаем СБП QR...</span>';
-      statusText.innerText = 'Связываемся с ЮKassa...';
-
-      if (activePollInterval) clearInterval(activePollInterval);
-
-      const authHeader = 'Basic ' + btoa(`${shopId}:${secretKey}`);
-      const idempotenceKey = generateUUID();
-      
-      // ИСПРАВЛЕНО: Убран двойной corsproxy
-      const proxyUrl = 'https://corsproxy.io/?' + encodeURIComponent('https://api.yookassa.ru/v3/payments');
-
-      try {
-        const response = await fetch(proxyUrl, {
-          method: 'POST',
-          headers: {
-            'Authorization': authHeader,
-            'Idempotence-Key': idempotenceKey,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            amount: {
-              value: amount.toFixed(2),
-              currency: 'RUB'
-            },
-            payment_method_data: {
-              type: 'sbp'
-            },
-            confirmation: {
-              type: 'qr'
-            },
-            capture: true,
-            description: currentItemTitle || `Оплата по СБП QR (${amount} ₽)`
-          })
-        });
-
-        const payment = await response.json();
-
-        if (!response.ok || !payment.id) {
-          throw new Error(payment.description || payment.code || 'Ошибка ответа ЮKassa');
-        }
-
-        let sbpQrData = '';
-        if (payment.confirmation && payment.confirmation.confirmation_data) {
-          sbpQrData = payment.confirmation.confirmation_data;
-        } else if (payment.confirmation && payment.confirmation.confirmation_url) {
-          sbpQrData = payment.confirmation.confirmation_url;
-        }
-
-        if (window.firebaseDB && window.dbRef && window.dbSet) {
-          const orderRef = window.dbRef(window.firebaseDB, `terminals/${termId}/current_order`);
-          await window.dbSet(orderRef, {
-            status: 'WAITING_FOR_PAYMENT',
-            method: 'sbp',
-            amount: amount,
-            paymentId: payment.id,
-            qrUrl: sbpQrData,
-            shopId: shopId,
-            secretKey: secretKey,
-            description: currentItemTitle || `Заказ #${payment.id.slice(0, 5)}`,
-            timestamp: Date.now()
-          });
-        }
-
-        statusText.innerHTML = `<span class="text-sticker font-bold">СБП QR на ${amount} ₽ на экране! Ждем оплату...</span>`;
-        startDirectPaymentPolling(shopId, secretKey, payment.id, termId, amount);
-
-      } catch (err) {
-        alert('Ошибка ЮKassa: ' + err.message);
-        statusText.innerText = 'Ошибка: ' + err.message;
-      } finally {
-        sendBtn.disabled = false;
-        sendBtn.innerHTML = '<span>⚡ Выставить СБП QR</span>';
-      }
-    }
-
-    function startDirectPaymentPolling(shopId, secretKey, paymentId, termId, amount) {
-      const authHeader = 'Basic ' + btoa(`${shopId}:${secretKey}`);
-      
-      // ИСПРАВЛЕНО: Убран двойной corsproxy
-      const proxyUrl = 'https://corsproxy.io/?' + encodeURIComponent(`https://api.yookassa.ru/v3/payments/${paymentId}`);
-
-      activePollInterval = setInterval(async () => {
-        try {
-          const res = await fetch(proxyUrl, {
-            method: 'GET',
-            headers: {
-              'Authorization': authHeader,
-              'Content-Type': 'application/json'
-            }
-          });
-
-          const data = await res.json();
-
-          if (data && (data.status === 'succeeded' || data.paid === true)) {
-            clearInterval(activePollInterval);
-
-            const finalAmount = data.amount ? parseFloat(data.amount.value) : amount;
-
-            if (window.firebaseDB && window.dbRef && window.dbSet) {
-              const orderRef = window.dbRef(window.firebaseDB, `terminals/${termId}/current_order`);
-              await window.dbSet(orderRef, {
-                status: 'PAID',
-                amount: finalAmount,
-                timestamp: Date.now()
-              });
-            }
-
-            if (typeof window.processSuccessfulPayment === 'function') {
-              await window.processSuccessfulPayment(finalAmount, 'sbp', { title: currentItemTitle });
-            }
-
-            clearAmount();
-            currentItemTitle = "Заказ на кассе";
-            document.getElementById('pos-status-text').innerHTML = '<span class="text-emerald-400 font-bold">✅ Оплата прошла! Начислено в ЛК и записано Админу.</span>';
-          }
-        } catch (e) {
-          console.error("Polling error:", e);
-        }
-      }, 1500);
-    }
-
-
-    window.castMagicTips = async function() {
-      const termId = localStorage.getItem('yk_term_id') || 'term_01';
-      if (window.firebaseDB && window.dbRef && window.dbSet) {
-        const orderRef = window.dbRef(window.firebaseDB, `terminals/${termId}/current_order`);
-        await window.dbSet(orderRef, {
-          status: 'TRIGGER_MAGIC_TIPS',
-          timestamp: Date.now()
-        });
-        document.getElementById('pos-status-text').innerHTML = '<span class="text-purple-400 font-bold">🪄 Экран чаевых запущен!</span>';
-      }
-    };
-
-    window.closeMagicTips = async function() {
-      const termId = localStorage.getItem('yk_term_id') || 'term_01';
-      if (window.firebaseDB && window.dbRef && window.dbSet) {
-        const orderRef = window.dbRef(window.firebaseDB, `terminals/${termId}/current_order`);
-        await window.dbSet(orderRef, { status: 'IDLE' });
-        document.getElementById('pos-status-text').innerText = 'Экран покупателя свободен';
-      }
-    };
 
     function updateDisplay() {
       document.getElementById('amount-display').innerText = currentInput;
@@ -970,331 +132,119 @@
     }
 
     function backspace() {
-      if (currentInput.length > 1) currentInput = currentInput.slice(0, -1);
-      else currentInput = "0";
+      currentInput = currentInput.length > 1 ? currentInput.slice(0, -1) : "0";
       updateDisplay();
     }
 
-    function clearAmount() {
+    async function createDirectSbpPayment() {
+      const amount = parseInt(currentInput);
+      if (!amount || amount <= 0) return alert('Введите сумму больше 0');
+
+      const shopId = window.yooKassaConfig.shopId || localStorage.getItem('yk_shop_id');
+      const secretKey = window.yooKassaConfig.secretKey || localStorage.getItem('yk_secret_key');
+      if (!shopId || !secretKey) return alert('Ключи ЮKassa не загружены.');
+
+      const btn = document.getElementById('send-bill-btn');
+      const status = document.getElementById('pos-status-text');
+      btn.disabled = true;
+      btn.innerText = '⏳ Создаем СБП QR...';
+      status.innerText = 'Связываемся с ЮKassa...';
+
+      if (activePollInterval) clearInterval(activePollInterval);
+
+      // ИСПРАВЛЕНО: корректный URL прокси без двойного оборачивания
+      const authHeader = 'Basic ' + btoa(`${shopId}:${secretKey}`);
+      const proxyUrl = `https://corsproxy.io/?${encodeURIComponent('https://api.yookassa.ru/v3/payments')}`;
+
+      try {
+        const response = await fetch(proxyUrl, {
+          method: 'POST',
+          headers: {
+            'Authorization': authHeader,
+            'Idempotence-Key': generateUUID(),
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            amount: { value: amount.toFixed(2), currency: 'RUB' },
+            payment_method_data: { type: 'sbp' },
+            confirmation: { type: 'qr' },
+            capture: true,
+            description: `Заказ на кассе (${amount} ₽)`
+          })
+        });
+
+        const payment = await response.json();
+        if (!response.ok || !payment.id) throw new Error(payment.description || 'Ошибка API');
+
+        const sbpQrData = payment.confirmation?.confirmation_data || payment.confirmation?.confirmation_url || '';
+
+        if (window.firebaseDB) {
+          await window.dbSet(window.dbRef(window.firebaseDB, `terminals/${terminalId}/current_order`), {
+            status: 'WAITING_FOR_PAYMENT',
+            method: 'sbp',
+            amount: amount,
+            paymentId: payment.id,
+            qrUrl: sbpQrData,
+            timestamp: Date.now()
+          });
+        }
+
+        status.innerHTML = `<span class="text-sticker font-bold">СБП QR на экране! Ждем оплату...</span>`;
+        startDirectPaymentPolling(shopId, secretKey, payment.id, amount);
+
+      } catch (err) {
+        status.innerText = 'Ошибка: ' + err.message;
+      } finally {
+        btn.disabled = false;
+        btn.innerText = '⚡ Выставить СБП QR';
+      }
+    }
+
+    function startDirectPaymentPolling(shopId, secretKey, paymentId, amount) {
+      const authHeader = 'Basic ' + btoa(`${shopId}:${secretKey}`);
+      // ИСПРАВЛЕНО: корректный URL прокси для проверки статуса
+      const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(`https://api.yookassa.ru/v3/payments/${paymentId}`)}`;
+
+      activePollInterval = setInterval(async () => {
+        try {
+          const res = await fetch(proxyUrl, {
+            headers: { 'Authorization': authHeader, 'Content-Type': 'application/json' }
+          });
+          const data = await res.json();
+
+          if (data && (data.status === 'succeeded' || data.paid === true)) {
+            clearInterval(activePollInterval);
+            
+            if (window.firebaseDB) {
+              await window.dbSet(window.dbRef(window.firebaseDB, `terminals/${terminalId}/current_order`), {
+                status: 'PAID', amount: amount, timestamp: Date.now()
+              });
+            }
+
+            currentInput = "0";
+            updateDisplay();
+            document.getElementById('pos-status-text').innerHTML = '<span class="text-emerald-400 font-bold">✅ Оплата прошла!</span>';
+          }
+        } catch (e) { console.error("Polling error:", e); }
+      }, 2000); // Увеличил интервал опроса до 2 сек для стабильности прокси
+    }
+
+    async function resetTerminal() {
+      if (activePollInterval) clearInterval(activePollInterval);
+      if (window.firebaseDB) {
+        await window.dbSet(window.dbRef(window.firebaseDB, `terminals/${terminalId}/current_order`), { status: 'IDLE' });
+      }
       currentInput = "0";
       updateDisplay();
-    }
-
-    function addQuickAmount(val) {
-      const current = parseInt(currentInput) || 0;
-      currentInput = String(current + val);
-      updateDisplay();
-    }
-
-    function addAmountDirect(val, title) {
-      currentInput = String(val);
-      currentItemTitle = title;
-      updateDisplay();
-      document.getElementById('pos-status-text').innerText = `Выбрано: ${title} (${val} ₽)`;
+      document.getElementById('pos-status-text').innerText = 'Готов к выставлению СБП QR';
     }
 
     window.addEventListener('keydown', (e) => {
-      if (['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) return;
       if (e.key >= '0' && e.key <= '9') pressKey(e.key);
       else if (e.key === 'Backspace') backspace();
       else if (e.key === 'Enter') createDirectSbpPayment();
-      else if (e.key === 'Escape') sendCancelToFirebase();
+      else if (e.key === 'Escape') resetTerminal();
     });
-
-    async function sendCancelToFirebase() {
-      if (activePollInterval) clearInterval(activePollInterval);
-      const termId = localStorage.getItem('yk_term_id') || 'term_01';
-      if (window.firebaseDB && window.dbRef && window.dbSet) {
-        const orderRef = window.dbRef(window.firebaseDB, `terminals/${termId}/current_order`);
-        await window.dbSet(orderRef, { status: 'IDLE' });
-      }
-      document.getElementById('pos-status-text').innerText = 'Экран покупателя свободен';
-      clearAmount();
-      currentItemTitle = "Заказ на кассе";
-    }
-
-    // Рендер рекламы
-    window.renderAdsListTable = function(adsObj) {
-      const tbody = document.getElementById('ads-table-body');
-      const mobileCards = document.getElementById('ads-mobile-cards');
-      
-      tbody.innerHTML = '';
-      mobileCards.innerHTML = '';
-
-      const permRow = document.createElement('tr');
-      permRow.className = 'bg-yellow-500/5 hover:bg-yellow-500/10 transition-colors border-b border-yellow-300/20';
-      permRow.innerHTML = `
-        <td class="p-4 pl-6">
-          <div class="w-16 h-12 rounded-xl overflow-hidden bg-neutral-800 border border-yellow-300/40 relative">
-            <img src="https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=200" class="w-full h-full object-cover" />
-          </div>
-        </td>
-        <td class="p-4">
-          <div class="font-display font-black text-sm text-white flex items-center gap-2">
-            МЫ ОТКРЫЛИСЬ! <span class="text-sticker">ЖДЁМ В ГОСТИ</span>
-            <span class="text-[9px] bg-sticker text-black font-display font-black px-2 py-0.5 rounded-full uppercase">30 сек</span>
-          </div>
-          <div class="text-xs text-neutral-300 mt-0.5 font-medium">Кафе быстрого питания • Остановка «Дом быта» 📍</div>
-        </td>
-        <td class="p-4"><span class="bg-sticker text-black font-display font-black text-xs px-2.5 py-1 rounded-lg">ЗАХОДИТЕ!</span></td>
-        <td class="p-4 text-center"><span class="px-3 py-1.5 rounded-full text-xs font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">🔒 Обязательный (30 сек)</span></td>
-        <td class="p-4 pr-6 text-right"><span class="text-xs text-neutral-500 italic">Не удаляется</span></td>
-      `;
-      tbody.appendChild(permRow);
-
-      const permMobCard = document.createElement('div');
-      permMobCard.className = 'bg-yellow-500/10 border border-yellow-300/30 p-3.5 rounded-2xl flex flex-col gap-2';
-      permMobCard.innerHTML = `
-        <div class="flex items-center gap-3">
-          <div class="w-14 h-12 rounded-xl overflow-hidden bg-neutral-800 shrink-0 border border-yellow-300/40">
-            <img src="https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=200" class="w-full h-full object-cover" />
-          </div>
-          <div class="flex-1 min-w-0">
-            <div class="font-display font-black text-xs text-white truncate">МЫ ОТКРЫЛИСЬ! ✨</div>
-            <div class="text-[10px] text-neutral-300 truncate">Остановка «Дом быта» 📍</div>
-          </div>
-          <span class="text-[9px] bg-sticker text-black font-display font-black px-2 py-0.5 rounded-full">30с</span>
-        </div>
-        <div class="flex justify-between items-center pt-2 border-t border-white/10 text-[10px]">
-          <span class="text-emerald-400 font-bold">🔒 Обязательный</span>
-          <span class="text-neutral-500">Не удаляется</span>
-        </div>
-      `;
-      mobileCards.appendChild(permMobCard);
-
-      const keys = Object.keys(adsObj);
-      keys.forEach((id) => {
-        const ad = adsObj[id];
-        const isEnabled = ad.enabled !== false;
-
-        const tr = document.createElement('tr');
-        tr.className = 'hover:bg-white/5 transition-colors';
-        tr.innerHTML = `
-          <td class="p-4 pl-6">
-            <div class="w-16 h-12 rounded-xl overflow-hidden bg-neutral-800 border border-white/10 relative">
-              <img src="${ad.imgUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200'}" 
-                   style="transform: scale(${(ad.scale || 105) / 100}); object-position: ${ad.posX || 50}% ${ad.posY || 50}%;" 
-                   class="w-full h-full object-cover" />
-            </div>
-          </td>
-          <td class="p-4">
-            <div class="font-display font-black text-sm text-white">${ad.title1 || ''} <span class="text-sticker">${ad.title2 || ''}</span></div>
-            <div class="text-xs text-neutral-400 mt-0.5">${ad.subtitle || '—'}</div>
-          </td>
-          <td class="p-4"><span class="bg-sticker text-black font-display font-black text-xs px-2.5 py-1 rounded-lg">${ad.badgeRight || '—'}</span></td>
-          <td class="p-4 text-center">
-            <button onclick="toggleAdStatus('${id}', ${isEnabled})" class="px-3 py-1.5 rounded-full text-xs font-bold transition-all ${isEnabled ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : 'bg-rose-500/20 text-rose-300 border border-rose-500/30'}">
-              ${isEnabled ? '● Активен' : '○ Отключен'}
-            </button>
-          </td>
-          <td class="p-4 pr-6 text-right space-x-2">
-            <button onclick="editAdById('${id}')" class="bg-white/10 hover:bg-white/20 text-xs font-bold px-3 py-1.5 rounded-xl border border-white/10 text-neutral-200">✏️</button>
-            <button onclick="deleteAdById('${id}')" class="bg-rose-500/10 hover:bg-rose-500/20 text-xs font-bold px-3 py-1.5 rounded-xl border border-rose-500/20 text-rose-400">🗑️</button>
-          </td>
-        `;
-        tbody.appendChild(tr);
-
-        const mobCard = document.createElement('div');
-        mobCard.className = 'bg-white/5 border border-white/10 p-3 rounded-2xl flex flex-col gap-2';
-        mobCard.innerHTML = `
-          <div class="flex items-center gap-3">
-            <div class="w-14 h-12 rounded-xl overflow-hidden bg-neutral-800 shrink-0 border border-white/10">
-              <img src="${ad.imgUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200'}" 
-                   style="transform: scale(${(ad.scale || 105) / 100}); object-position: ${ad.posX || 50}% ${ad.posY || 50}%;" 
-                   class="w-full h-full object-cover" />
-            </div>
-            <div class="flex-1 min-w-0">
-              <div class="font-display font-black text-xs text-white truncate">${ad.title1 || ''} <span class="text-sticker">${ad.title2 || ''}</span></div>
-              <div class="text-[10px] text-neutral-400 truncate">${ad.subtitle || '—'}</div>
-            </div>
-            <span class="bg-sticker text-black font-display font-black text-[10px] px-2 py-0.5 rounded-lg shrink-0">${ad.badgeRight || '—'}</span>
-          </div>
-          <div class="flex justify-between items-center pt-2 border-t border-white/10">
-            <button onclick="toggleAdStatus('${id}', ${isEnabled})" class="px-2.5 py-1 rounded-full text-[10px] font-bold ${isEnabled ? 'bg-emerald-500/20 text-emerald-300' : 'bg-rose-500/20 text-rose-300'}">
-              ${isEnabled ? '● В эфире' : '○ Отключен'}
-            </button>
-            <div class="flex gap-2">
-              <button onclick="editAdById('${id}')" class="bg-white/10 text-xs px-2.5 py-1 rounded-lg border border-white/10">✏️ Изменить</button>
-              <button onclick="deleteAdById('${id}')" class="bg-rose-500/20 text-rose-400 text-xs px-2.5 py-1 rounded-lg">🗑️</button>
-            </div>
-          </div>
-        `;
-        mobileCards.appendChild(mobCard);
-      });
-    };
-
-    window.toggleAdStatus = async function(id, currentStatus) {
-      if (window.firebaseDB && window.dbRef && window.dbUpdate) {
-        const adRef = window.dbRef(window.firebaseDB, `ads_list/${id}`);
-        await window.dbUpdate(adRef, { enabled: !currentStatus });
-      }
-    };
-
-    window.deleteAdById = async function(id) {
-      if (!confirm('Удалить этот баннер?')) return;
-      if (window.firebaseDB && window.dbRef && window.dbRemove) {
-        const adRef = window.dbRef(window.firebaseDB, `ads_list/${id}`);
-        await window.dbRemove(adRef);
-      }
-    };
-
-    window.openAdEditorNew = function() {
-      document.getElementById('edit-ad-id').value = 'ad_' + Date.now();
-      document.getElementById('ad-editor-heading').innerText = 'Новый постер';
-      document.getElementById('edit-ad-img').value = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=1200&auto=format&fit=crop&q=80';
-      
-      document.getElementById('edit-ad-scale').value = 105;
-      document.getElementById('edit-ad-pos-x').value = 50;
-      document.getElementById('edit-ad-pos-y').value = 50;
-
-      document.getElementById('edit-ad-tag').value = 'вакансия:';
-      document.getElementById('edit-ad-stamp').value = 'АХХУ!';
-      document.getElementById('edit-ad-title1').value = 'ИЩЕМ';
-      document.getElementById('edit-ad-title2').value = 'В КОМАНДУ';
-      document.getElementById('edit-ad-sub').value = 'Бариста • Мастер вкуса';
-      document.getElementById('edit-ad-badge-r').value = 'от 65.000 ₽';
-      document.getElementById('edit-ad-cta-r').value = '«Хочу в команду» →';
-      document.getElementById('edit-ad-badge-l-title').value = 'Гибкий график & обучение';
-      document.getElementById('edit-ad-badge-l-desc').value = 'Опыт не обязателен — всему научим!';
-      
-      document.getElementById('ad-editor-card').scrollIntoView({ behavior: 'smooth' });
-      updateDesktopLivePreview();
-    };
-
-    window.editAdById = function(id) {
-      const ad = window.loadedAds ? window.loadedAds[id] : null;
-      if (!ad) return;
-
-      document.getElementById('edit-ad-id').value = id;
-      document.getElementById('ad-editor-heading').innerText = 'Редактирование';
-      document.getElementById('edit-ad-img').value = ad.imgUrl || '';
-      
-      document.getElementById('edit-ad-scale').value = ad.scale || 105;
-      document.getElementById('edit-ad-pos-x').value = ad.posX !== undefined ? ad.posX : 50;
-      document.getElementById('edit-ad-pos-y').value = ad.posY !== undefined ? ad.posY : 50;
-
-      document.getElementById('edit-ad-tag').value = ad.tag || '';
-      document.getElementById('edit-ad-stamp').value = ad.stamp || '';
-      document.getElementById('edit-ad-title1').value = ad.title1 || '';
-      document.getElementById('edit-ad-title2').value = ad.title2 || '';
-      document.getElementById('edit-ad-sub').value = ad.subtitle || '';
-      document.getElementById('edit-ad-badge-r').value = ad.badgeRight || '';
-      document.getElementById('edit-ad-cta-r').value = ad.ctaRight || '';
-      document.getElementById('edit-ad-badge-l-title').value = ad.badgeLeftTitle || '';
-      document.getElementById('edit-ad-badge-l-desc').value = ad.badgeLeftDesc || '';
-
-      document.getElementById('ad-editor-card').scrollIntoView({ behavior: 'smooth' });
-      updateDesktopLivePreview();
-    };
-
-    function closeAdEditor() {
-      document.getElementById('edit-ad-id').value = '';
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-
-    function updateDesktopLivePreview() {
-      const img = document.getElementById('edit-ad-img').value.trim() || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=1200";
-      const previewBg = document.getElementById('desk-preview-bg');
-      
-      previewBg.src = img;
-
-      const scale = document.getElementById('edit-ad-scale').value || 105;
-      const posX = document.getElementById('edit-ad-pos-x').value || 50;
-      const posY = document.getElementById('edit-ad-pos-y').value || 50;
-
-      document.getElementById('desk-zoom-val').innerText = `${scale}%`;
-      document.getElementById('desk-pos-x-val').innerText = `${posX}%`;
-      document.getElementById('desk-pos-y-val').innerText = `${posY}%`;
-
-      previewBg.style.transform = `scale(${scale / 100})`;
-      previewBg.style.objectPosition = `${posX}% ${posY}%`;
-
-      document.getElementById('desk-preview-tag').innerText = document.getElementById('edit-ad-tag').value;
-      document.getElementById('desk-preview-stamp').innerText = document.getElementById('edit-ad-stamp').value;
-      document.getElementById('desk-preview-title1').innerText = document.getElementById('edit-ad-title1').value;
-      document.getElementById('desk-preview-title2').innerText = document.getElementById('edit-ad-title2').value;
-      document.getElementById('desk-preview-sub').innerText = document.getElementById('edit-ad-sub').value;
-      document.getElementById('desk-preview-badge-r').innerText = document.getElementById('edit-ad-badge-r').value;
-      document.getElementById('desk-preview-cta-r').innerText = document.getElementById('edit-ad-cta-r').value;
-      document.getElementById('desk-preview-badge-t').innerText = document.getElementById('edit-ad-badge-l-title').value;
-      document.getElementById('desk-preview-badge-d').innerText = document.getElementById('edit-ad-badge-l-desc').value;
-    }
-
-    async function uploadImageToCloudinaryDesktop(e) {
-      const file = e.target.files[0];
-      if (!file) return;
-
-      const cloudName = localStorage.getItem('cld_cloud_name') || document.getElementById('desk-cloud-name').value.trim();
-      const statusEl = document.getElementById('cld-upload-status');
-
-      if (!cloudName) {
-        alert('Укажите Cloud Name в Настройках');
-        openView('settings');
-        return;
-      }
-
-      statusEl.className = 'text-[11px] font-bold text-sticker animate-pulse';
-      statusEl.innerText = '⏳ Загрузка в Cloudinary...';
-
-      const formData = new FormData();
-      formData.append('file', file);
-      formData.append('upload_preset', CLOUDINARY_PRESET);
-
-      try {
-        const response = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
-          method: 'POST',
-          body: formData
-        });
-
-        const data = await response.json();
-
-        if (data.secure_url) {
-          document.getElementById('edit-ad-img').value = data.secure_url;
-          document.getElementById('desk-preview-bg').src = data.secure_url;
-          statusEl.className = 'text-[11px] font-bold text-emerald-400';
-          statusEl.innerText = '✅ Фото загружено!';
-          updateDesktopLivePreview();
-        } else {
-          throw new Error(data.error ? data.error.message : 'Ошибка загрузки');
-        }
-      } catch (err) {
-        statusEl.className = 'text-[11px] font-bold text-rose-400';
-        statusEl.innerText = '❌ Ошибка: ' + err.message;
-      }
-    }
-
-    async function saveAdToFirebase() {
-      let id = document.getElementById('edit-ad-id').value.trim();
-      if (!id) id = 'ad_' + Date.now();
-
-      const adData = {
-        id: id,
-        enabled: true,
-        imgUrl: document.getElementById('edit-ad-img').value.trim() || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=1200",
-        scale: Number(document.getElementById('edit-ad-scale').value) || 105,
-        posX: Number(document.getElementById('edit-ad-pos-x').value) || 50,
-        posY: Number(document.getElementById('edit-ad-pos-y').value) || 50,
-        tag: document.getElementById('edit-ad-tag').value.trim(),
-        stamp: document.getElementById('edit-ad-stamp').value.trim(),
-        title1: document.getElementById('edit-ad-title1').value.trim(),
-        title2: document.getElementById('edit-ad-title2').value.trim(),
-        subtitle: document.getElementById('edit-ad-sub').value.trim(),
-        badgeRight: document.getElementById('edit-ad-badge-r').value.trim(),
-        ctaRight: document.getElementById('edit-ad-cta-r').value.trim(),
-        badgeLeftTitle: document.getElementById('edit-ad-badge-l-title').value.trim(),
-        badgeLeftDesc: document.getElementById('edit-ad-badge-l-desc').value.trim(),
-        updatedAt: Date.now()
-      };
-
-      if (window.firebaseDB && window.dbRef && window.dbSet) {
-        const adRef = window.dbRef(window.firebaseDB, `ads_list/${id}`);
-        await window.dbSet(adRef, adData);
-        alert('🎉 Баннер сохранен!');
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-      } else {
-        alert('Ошибка связи с Firebase');
-      }
-    }
   </script>
 </body>
 </html>
