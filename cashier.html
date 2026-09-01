@@ -4,27 +4,19 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>Оплата по QR — СБП</title>
+  <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Lucide Icons -->
   <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- QR Code Library -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-  
-  <style>
-    /* Фирменные цвета СБП / Финтех */
-    :root {
-      --sbp-blue: #133D8D;
-      --sbp-dark: #0f172a;
-    }
-    input::-webkit-outer-spin-button,
-    input::-webkit-inner-spin-button {
-      -webkit-appearance: none;
-      margin: 0;
-    }
-  </style>
 </head>
 <body class="bg-slate-900 text-slate-100 flex flex-col items-center justify-center min-h-screen p-4 font-sans select-none">
 
-  <main class="w-full max-w-sm bg-slate-800/90 backdrop-blur-md rounded-3xl border border-slate-700/60 shadow-2xl p-6 relative overflow-hidden flex flex-col justify-between min-h-[620px]">
+  <!-- Контейнер терминала -->
+  <main class="w-full max-w-sm bg-slate-800/95 backdrop-blur-md rounded-3xl border border-slate-700/60 shadow-2xl p-6 relative overflow-hidden flex flex-col justify-between min-h-[620px]">
     
+    <!-- Шапка -->
     <header class="flex items-center justify-between pb-3 border-b border-slate-700/50">
       <div class="flex items-center gap-2">
         <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-blue-600 via-indigo-500 to-pink-500 flex items-center justify-center shadow-md">
@@ -33,12 +25,15 @@
         <span class="font-bold tracking-wide text-sm text-slate-200">СБП Терминал</span>
       </div>
 
-      <button id="openSettingsBtn" class="p-2.5 rounded-2xl bg-slate-700/60 hover:bg-slate-700 text-slate-300 hover:text-white transition-all active:scale-95">
+      <!-- Кнопка Профиль / Настройки -->
+      <button id="openSettingsBtn" class="p-2.5 rounded-2xl bg-slate-700/60 hover:bg-slate-700 text-slate-300 hover:text-white transition active:scale-95">
         <i data-lucide="settings" class="w-5 h-5"></i>
       </button>
     </header>
 
+    <!-- Секция 1: Ввод суммы и клавиатура -->
     <section id="inputScreen" class="flex flex-col flex-1 justify-between pt-4">
+      <!-- Табло суммы -->
       <div class="text-center my-auto">
         <span class="text-xs uppercase tracking-wider text-slate-400 font-medium">Сумма к оплате</span>
         <div class="flex items-baseline justify-center gap-1 mt-1">
@@ -47,6 +42,7 @@
         </div>
       </div>
 
+      <!-- Цифровая клавиатура (Numpad) -->
       <div class="grid grid-cols-3 gap-3 my-4">
         <button onclick="pressKey('1')" class="h-14 rounded-2xl bg-slate-700/40 hover:bg-slate-700 text-xl font-semibold text-slate-100 transition active:scale-95">1</button>
         <button onclick="pressKey('2')" class="h-14 rounded-2xl bg-slate-700/40 hover:bg-slate-700 text-xl font-semibold text-slate-100 transition active:scale-95">2</button>
@@ -64,12 +60,14 @@
         </button>
       </div>
 
+      <!-- Кнопка генерации -->
       <button id="generateBtn" onclick="createPaymentQR()" class="w-full py-4 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold text-base shadow-lg shadow-indigo-600/30 transition-all active:scale-[0.98] flex items-center justify-center gap-2">
-        <span>Создать QR-код</span>
+        <span id="btnText">Создать QR-код</span>
         <i data-lucide="arrow-right" class="w-5 h-5"></i>
       </button>
     </section>
 
+    <!-- Секция 2: Экран показа QR-кода -->
     <section id="qrScreen" class="hidden flex flex-col flex-1 justify-between items-center pt-4">
       <div class="text-center">
         <span class="text-xs uppercase tracking-wider text-slate-400 font-medium">Отсканируйте для оплаты</span>
@@ -78,20 +76,24 @@
         </div>
       </div>
 
+      <!-- Контейнер QR -->
       <div class="p-4 bg-white rounded-3xl shadow-xl flex items-center justify-center my-auto">
         <div id="qrcode"></div>
       </div>
 
+      <!-- Статус ожидания -->
       <div class="flex items-center gap-2 text-xs text-indigo-300 font-medium bg-indigo-950/60 px-3 py-1.5 rounded-full border border-indigo-800/40">
         <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
         Ожидание оплаты через СБП...
       </div>
 
+      <!-- Кнопка отмены -->
       <button onclick="cancelPayment()" class="w-full mt-4 py-3.5 rounded-2xl bg-slate-700/50 hover:bg-red-600/20 hover:text-red-400 text-slate-300 font-semibold text-sm border border-slate-700 hover:border-red-500/40 transition-all active:scale-[0.98]">
         Отменить оплату
       </button>
     </section>
 
+    <!-- Модалка: Настройки ЮKassa -->
     <div id="settingsModal" class="hidden absolute inset-0 bg-slate-900/95 backdrop-blur-md p-6 flex flex-col justify-between z-50">
       <div>
         <div class="flex items-center justify-between pb-3 border-b border-slate-800">
@@ -112,7 +114,7 @@
 
           <div>
             <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">Секретный ключ (API Key)</label>
-            <input id="secretKeyInput" type="password" placeholder="test_..." class="w-full px-4 py-3 rounded-xl bg-slate-800 border border-slate-700 text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 transition text-sm" />
+            <input id="secretKeyInput" type="password" placeholder="live_... или test_..." class="w-full px-4 py-3 rounded-xl bg-slate-800 border border-slate-700 text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 transition text-sm" />
           </div>
         </div>
       </div>
@@ -130,9 +132,9 @@
 
     // Состояние
     let currentAmount = '0';
-    let qrcodeObj = null;
+    let checkInterval = null;
 
-    // Элементы
+    // Элементы DOM
     const amountDisplay = document.getElementById('amountDisplay');
     const inputScreen = document.getElementById('inputScreen');
     const qrScreen = document.getElementById('qrScreen');
@@ -140,14 +142,16 @@
     const settingsModal = document.getElementById('settingsModal');
     const shopIdInput = document.getElementById('shopIdInput');
     const secretKeyInput = document.getElementById('secretKeyInput');
+    const generateBtn = document.getElementById('generateBtn');
+    const btnText = document.getElementById('btnText');
 
-    // Загрузка сохраненных настроек
+    // Загрузка сохранённых настроек при открытии
     window.addEventListener('DOMContentLoaded', () => {
       shopIdInput.value = localStorage.getItem('yk_shop_id') || '';
       secretKeyInput.value = localStorage.getItem('yk_secret_key') || '';
     });
 
-    // Обработка клавиатуры
+    // Экранная клавиатура
     function pressKey(key) {
       if (key === 'C') {
         currentAmount = '0';
@@ -156,15 +160,15 @@
       } else {
         if (currentAmount === '0') {
           currentAmount = key;
-        } else if (currentAmount.length < 7) { // Ограничение длины суммы
+        } else if (currentAmount.length < 7) {
           currentAmount += key;
         }
       }
       amountDisplay.textContent = Number(currentAmount).toLocaleString('ru-RU');
     }
 
-    // Создание QR-кода
-    function createPaymentQR() {
+    // Создание реального платежа и генерация QR через ЮKassa
+    async function createPaymentQR() {
       const amount = parseInt(currentAmount, 10);
       if (isNaN(amount) || amount <= 0) {
         alert('Введите корректную сумму для оплаты');
@@ -175,42 +179,120 @@
       const secretKey = localStorage.getItem('yk_secret_key');
 
       if (!shopId || !secretKey) {
-        alert('Пожалуйста, укажите Shop ID и Секретный ключ в настройках профиля сверху');
+        alert('Сначала укажите Shop ID и Секретный ключ в настройках сверху');
         settingsModal.classList.remove('hidden');
         return;
       }
 
-      // Очищаем старый QR
-      const qrContainer = document.getElementById('qrcode');
-      qrContainer.innerHTML = '';
+      generateBtn.disabled = true;
+      btnText.innerText = 'Создание QR...';
 
-      // В боевом варианте тут генерируется ссылка на оплату через бэкенд ЮKassa
-      // Для демонстрации генерируем платежный QR-линк СБП / ЮKassa
-      const paymentPayload = `https://yookassa.ru/checkout/payments/v2/contract?shopId=${shopId}&amount=${amount}`;
+      const auth = btoa(`${shopId}:${secretKey}`);
+      const idempotenceKey = 'pay_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+      const proxyUrl = 'https://corsproxy.io/?' + encodeURIComponent('https://api.yookassa.ru/v3/payments');
 
-      qrcodeObj = new QRCode(qrContainer, {
-        text: paymentPayload,
-        width: 190,
-        height: 190,
-        colorDark: '#0f172a',
-        colorLight: '#ffffff',
-        correctLevel: QRCode.CorrectLevel.M
-      });
+      try {
+        const response = await fetch(proxyUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Basic ${auth}`,
+            'Idempotence-Key': idempotenceKey
+          },
+          body: JSON.stringify({
+            amount: {
+              value: Number(amount).toFixed(2),
+              currency: 'RUB'
+            },
+            payment_method_data: {
+              type: 'sbp'
+            },
+            confirmation: {
+              type: 'qr'
+            },
+            capture: true,
+            description: `Оплата по СБП: ${amount} руб.`
+          })
+        });
 
-      qrAmount.textContent = Number(currentAmount).toLocaleString('ru-RU');
-      inputScreen.classList.add('hidden');
-      qrScreen.classList.remove('hidden');
+        const data = await response.json();
+
+        if (!response.ok) {
+          alert('Ошибка ЮKassa: ' + (data.description || 'Проверьте правильность Shop ID и ключа'));
+          console.error(data);
+          return;
+        }
+
+        const sbpUrl = data.confirmation.confirmation_data;
+
+        // Генерация QR
+        const qrContainer = document.getElementById('qrcode');
+        qrContainer.innerHTML = '';
+
+        new QRCode(qrContainer, {
+          text: sbpUrl,
+          width: 190,
+          height: 190,
+          colorDark: '#0f172a',
+          colorLight: '#ffffff',
+          correctLevel: QRCode.CorrectLevel.M
+        });
+
+        qrAmount.textContent = Number(currentAmount).toLocaleString('ru-RU');
+        inputScreen.classList.add('hidden');
+        qrScreen.classList.remove('hidden');
+
+        // Фоновый опрос статуса платежа
+        startPolling(data.id, auth);
+
+      } catch (err) {
+        alert('Ошибка связи с ЮKassa. Проверьте интернет-соединение.');
+        console.error(err);
+      } finally {
+        generateBtn.disabled = false;
+        btnText.innerText = 'Создать QR-код';
+      }
+    }
+
+    // Автопроверка успешности оплаты
+    function startPolling(paymentId, auth) {
+      if (checkInterval) clearInterval(checkInterval);
+
+      checkInterval = setInterval(async () => {
+        try {
+          const checkUrl = 'https://corsproxy.io/?' + encodeURIComponent(`https://api.yookassa.ru/v3/payments/${paymentId}`);
+          const res = await fetch(checkUrl, {
+            headers: {
+              'Authorization': `Basic ${auth}`
+            }
+          });
+          const data = await res.json();
+
+          if (data.status === 'succeeded') {
+            clearInterval(checkInterval);
+            alert('🎉 Оплата успешно получена!');
+            cancelPayment();
+          } else if (data.status === 'canceled') {
+            clearInterval(checkInterval);
+            alert('Платеж отменен или истек срок действия.');
+            cancelPayment();
+          }
+        } catch (e) {
+          console.error('Ошибка проверки статуса:', e);
+        }
+      }, 3000);
     }
 
     // Отмена оплаты
     function cancelPayment() {
+      if (checkInterval) clearInterval(checkInterval);
       qrScreen.classList.add('hidden');
       inputScreen.classList.remove('hidden');
       currentAmount = '0';
       amountDisplay.textContent = '0';
     }
 
-    // Управление настройками
+    // Настройки
     document.getElementById('openSettingsBtn').addEventListener('click', () => {
       settingsModal.classList.remove('hidden');
     });
