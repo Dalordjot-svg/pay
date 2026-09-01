@@ -1,0 +1,1397 @@
+<!DOCTYPE html>
+<html lang="ru" class="h-full select-none">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Study OS • 9В</title>
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.1/marked.min.js"></script>
+
+  <style>
+    .glass-dock {
+      background: rgba(18, 20, 26, 0.82);
+      backdrop-filter: blur(35px) saturate(210%);
+      -webkit-backdrop-filter: blur(35px) saturate(210%);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+    }
+
+    .glass-panel {
+      background: rgba(22, 25, 34, 0.7);
+      backdrop-filter: blur(25px);
+      -webkit-backdrop-filter: blur(25px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4);
+    }
+
+    @keyframes orb-float-1 {
+      0%, 100% { transform: translate(0, 0) scale(1); }
+      50% { transform: translate(120px, 80px) scale(1.3); }
+    }
+    @keyframes orb-float-2 {
+      0%, 100% { transform: translate(0, 0) scale(1.1); }
+      50% { transform: translate(-100px, -70px) scale(0.9); }
+    }
+
+    .aurora-1 { animation: orb-float-1 18s ease-in-out infinite; }
+    .aurora-2 { animation: orb-float-2 22s ease-in-out infinite; }
+
+    #selection-overlay {
+      cursor: crosshair;
+      touch-action: none;
+    }
+    .selection-box {
+      border: 2px dashed #10b981;
+      background: rgba(16, 185, 129, 0.2);
+      position: absolute;
+      pointer-events: none;
+      box-shadow: 0 0 15px rgba(16, 185, 129, 0.4);
+    }
+
+    /* Радиальное меню быстрого выбора пальцем */
+    .radial-item {
+      transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.2s ease, border-color 0.2s ease;
+    }
+    .radial-item.active-hover {
+      transform: scale(1.25);
+      background: rgba(16, 185, 129, 0.4);
+      border-color: #34d399;
+      box-shadow: 0 0 25px rgba(16, 185, 129, 0.6);
+    }
+
+    /* Рендер ответов ИИ */
+    .ai-rendered-content { line-height: 1.6; }
+    .ai-rendered-content h1, .ai-rendered-content h2, .ai-rendered-content h3 {
+      font-weight: 800;
+      color: #34d399;
+      margin-top: 0.5rem;
+      margin-bottom: 0.25rem;
+    }
+    .ai-rendered-content ul, .ai-rendered-content ol {
+      padding-left: 1.2rem;
+      margin-top: 0.25rem;
+      margin-bottom: 0.25rem;
+    }
+    .ai-rendered-content ol { list-style-type: decimal; }
+    .ai-rendered-content ul { list-style-type: disc; }
+    .ai-rendered-content strong { color: #ffffff; font-weight: 700; }
+    .ai-rendered-content p { margin-bottom: 0.5rem; }
+    
+    .katex { font-size: 1.1em; color: #f3f4f6; }
+    .katex-display { margin: 0.5em 0; overflow-x: auto; overflow-y: hidden; padding: 2px 0; }
+
+    ::-webkit-scrollbar { width: 4px; height: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 9999px;
+    }
+  </style>
+</head>
+
+<body class="bg-[#08090c] text-zinc-100 h-full w-full overflow-hidden relative font-[-apple-system,BlinkMacSystemFont,'SF_Pro_Display','Helvetica_Neue',sans-serif]">
+
+  <div class="absolute inset-0 z-0 pointer-events-none overflow-hidden select-none">
+    <div id="bg-glow-1" class="aurora-1 absolute top-[15%] left-[20%] w-[30rem] h-[30rem] rounded-full bg-emerald-500/20 blur-[120px] transition-colors duration-1000"></div>
+    <div id="bg-glow-2" class="aurora-2 absolute bottom-[15%] right-[20%] w-[32rem] h-[32rem] rounded-full bg-cyan-500/20 blur-[130px] transition-colors duration-1000"></div>
+  </div>
+
+  <div class="relative z-10 h-full w-full flex p-4 md:p-6 gap-4 overflow-hidden">
+    
+    <nav class="w-16 md:w-20 glass-dock rounded-[2.5rem] flex flex-col items-center justify-between py-6 shrink-0 z-30 relative">
+      
+      <div 
+        id="secret-logo-btn" 
+        class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-emerald-500 to-teal-400 flex items-center justify-center text-sm shadow-lg shadow-emerald-500/20 font-black text-black cursor-pointer active:scale-90 transition select-none relative"
+        title="9В"
+      >
+        9В
+      </div>
+
+      <div class="flex flex-col gap-4">
+        <button onclick="switchView('study')" id="nav-btn-study" class="w-11 h-11 rounded-2xl flex items-center justify-center text-lg transition bg-white/20 text-white shadow-md active:scale-90" title="Учебник">
+          📖
+        </button>
+
+        <button onclick="switchView('library')" id="nav-btn-library" class="w-11 h-11 rounded-2xl flex items-center justify-center text-lg transition text-zinc-400 hover:text-white hover:bg-white/10 active:scale-90" title="Библиотека">
+          📚
+        </button>
+
+        <button onclick="switchView('schedule')" id="nav-btn-schedule" class="w-11 h-11 rounded-2xl flex items-center justify-center text-lg transition text-zinc-400 hover:text-white hover:bg-white/10 active:scale-90" title="Расписание">
+          📅
+        </button>
+
+        <button onclick="toggleNotes()" id="nav-btn-notes" class="w-11 h-11 rounded-2xl flex items-center justify-center text-lg transition text-zinc-400 hover:text-white hover:bg-white/10 active:scale-90" title="Заметки">
+          ✏️
+        </button>
+      </div>
+
+      <button onclick="enableZenMode()" class="w-11 h-11 rounded-2xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 flex items-center justify-center text-lg transition hover:bg-emerald-500/25 active:scale-90" title="Дзен-режим">
+        🧘‍♂️
+      </button>
+
+    </nav>
+
+    <div id="radial-palette" class="fixed z-50 pointer-events-none hidden transition-opacity duration-200 opacity-0">
+      <div class="w-12 h-12 rounded-full border-2 border-emerald-400/60 bg-emerald-500/20 backdrop-blur-md flex items-center justify-center shadow-[0_0_30px_rgba(16,185,129,0.5)] -translate-x-1/2 -translate-y-1/2 absolute">
+        <span class="text-xs font-black text-white">9В</span>
+      </div>
+
+      <div id="radial-opt-browser" class="radial-item absolute w-14 h-14 rounded-2xl glass-dock flex flex-col items-center justify-center text-lg border border-white/20 shadow-2xl translate-x-16 -translate-y-14">
+        <span>🌐</span>
+        <span class="text-[8px] font-bold text-zinc-300 uppercase tracking-wider">ГДЗ</span>
+      </div>
+
+      <div id="radial-opt-settings" class="radial-item absolute w-14 h-14 rounded-2xl glass-dock flex flex-col items-center justify-center text-lg border border-white/20 shadow-2xl translate-x-16 translate-y-6">
+        <span>⚙️</span>
+        <span class="text-[8px] font-bold text-zinc-300 uppercase tracking-wider">ИИ</span>
+      </div>
+    </div>
+
+    <div class="flex-1 flex flex-col gap-4 overflow-hidden relative">
+      
+      <header class="h-14 glass-dock rounded-[2rem] px-6 flex items-center justify-between shrink-0 z-20">
+        <div class="flex items-center gap-3">
+          <span class="relative flex h-2.5 w-2.5">
+            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+            <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+          </span>
+          <div>
+            <span class="text-xs font-bold text-white" id="bar-subject-title">Определение...</span>
+            <span class="text-[10px] text-zinc-400 ml-1.5" id="bar-room-title">Кабинет —</span>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-3 bg-white/5 border border-white/10 px-4 py-1.5 rounded-full">
+          <span class="text-[10px] font-medium text-zinc-400 uppercase tracking-wider" id="bar-countdown-label">Звонок через:</span>
+          <span class="font-mono text-sm font-black text-emerald-300" id="bar-countdown">00:00:00</span>
+        </div>
+
+        <div class="flex items-center gap-2 text-xs font-medium text-zinc-300 font-mono">
+          <span id="bar-system-clock">00:00:00</span>
+        </div>
+      </header>
+
+      <section id="view-study" class="flex-1 flex flex-col gap-3 overflow-hidden relative">
+        
+        <div class="h-12 glass-panel rounded-2xl px-4 flex items-center justify-between shrink-0">
+          <div class="flex items-center gap-2">
+            <button onclick="togglePageThumbnails()" class="px-3 py-1.5 bg-white/10 hover:bg-white/15 active:scale-95 rounded-xl text-xs font-medium text-zinc-200 transition">
+              📑 Страницы
+            </button>
+            <span class="text-xs font-bold text-zinc-200 truncate max-w-[140px] md:max-w-xs ml-2" id="reader-book-title">
+              Учебник не выбран
+            </span>
+          </div>
+
+          <div id="secret-page-control" class="flex items-center gap-2 text-xs font-mono cursor-pointer bg-white/5 hover:bg-white/10 px-3 py-1 rounded-xl transition" title="Двойной тап — выделить задание">
+            <button onclick="changePage(-1)" class="w-6 h-6 rounded-lg hover:bg-white/10 flex items-center justify-center font-bold">‹</button>
+            <span class="select-none"><input type="number" id="reader-page-num" min="1" class="w-10 bg-white/10 text-center rounded py-0.5 text-white font-bold focus:outline-none"> / <span id="reader-page-total">1</span></span>
+            <button onclick="changePage(1)" class="w-6 h-6 rounded-lg hover:bg-white/10 flex items-center justify-center font-bold">›</button>
+          </div>
+
+          <div class="flex items-center gap-2">
+            <div class="flex items-center bg-white/10 rounded-xl px-2 py-1">
+              <input type="text" id="pdf-search-input" placeholder="Поиск..." class="bg-transparent text-xs text-white placeholder-zinc-500 focus:outline-none w-16 md:w-24">
+              <button onclick="searchWord()" class="text-xs text-zinc-400 hover:text-white ml-1">🔍</button>
+            </div>
+            
+            <button onclick="zoomDoc(-0.15)" class="w-7 h-7 rounded-xl bg-white/10 hover:bg-white/15 flex items-center justify-center text-xs font-bold text-zinc-300">−</button>
+            <span id="zoom-value-label" class="text-[10px] font-mono text-zinc-400 w-8 text-center font-bold">100%</span>
+            <button onclick="zoomDoc(0.15)" class="w-7 h-7 rounded-xl bg-white/10 hover:bg-white/15 flex items-center justify-center text-xs font-bold text-zinc-300">+</button>
+          </div>
+        </div>
+
+        <div class="flex-1 flex overflow-hidden relative rounded-3xl glass-panel">
+          
+          <aside id="pdf-thumbnails-sidebar" class="w-40 bg-[#0e1017]/95 border-r border-white/10 flex flex-col p-2.5 overflow-y-auto shrink-0 gap-2.5 hidden z-20">
+            <div class="text-[10px] font-bold text-zinc-500 uppercase px-1">Миниатюры</div>
+            <div id="thumbnails-list" class="flex flex-col gap-2.5"></div>
+          </aside>
+
+          <main id="pan-container" class="flex-1 overflow-auto p-6 flex bg-[#06070a] relative" style="touch-action: pan-x pan-y;">
+            <div id="canvas-wrapper" class="m-auto flex items-center justify-center transition-all duration-75 origin-top-left shrink-0 relative">
+              <div id="pdf-empty-state" class="text-center p-8">
+                <div class="text-4xl mb-2">📖</div>
+                <h3 class="text-sm font-bold text-zinc-300">Учебник не открыт</h3>
+                <p class="text-xs text-zinc-500 mt-1 mb-4">Выбери книгу во вкладке Библиотека</p>
+                <button onclick="switchView('library')" class="px-4 py-2 bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 rounded-xl text-xs font-bold">
+                  Открыть Библиотеку
+                </button>
+              </div>
+              <canvas id="main-book-canvas" class="rounded-xl shadow-2xl bg-white hidden"></canvas>
+            </div>
+
+            <div id="selection-overlay" class="absolute inset-0 z-30 hidden bg-black/40"></div>
+          </main>
+
+        </div>
+
+      </section>
+
+      <section id="view-library" class="flex-1 glass-panel rounded-3xl p-6 flex flex-col justify-between overflow-y-auto hidden">
+        <div>
+          <div class="flex items-center justify-between pb-4 border-b border-white/10">
+            <div>
+              <h2 class="text-2xl font-black text-white tracking-tight">Полка учебников</h2>
+              <p class="text-xs text-zinc-400 mt-0.5">Файлы сохраняются прямо в iPad</p>
+            </div>
+            <label class="cursor-pointer px-5 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 active:scale-95 text-xs font-bold rounded-2xl text-white transition shadow-lg flex items-center gap-2">
+              <span>➕ Добавить PDF</span>
+              <input type="file" id="pdf-file-uploader" accept="application/pdf" class="hidden">
+            </label>
+          </div>
+
+          <div id="library-grid" class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6"></div>
+        </div>
+
+        <div class="text-center text-xs text-zinc-500 pt-4 border-t border-white/5">
+          Мгновенный доступ ко всем учебникам
+        </div>
+      </section>
+
+      <section id="view-schedule" class="flex-1 glass-panel rounded-3xl p-6 flex flex-col justify-between overflow-y-auto hidden">
+        <div>
+          <div class="pb-4 border-b border-white/10">
+            <h2 class="text-2xl font-black text-white tracking-tight">Расписание уроков</h2>
+            <p class="text-xs text-zinc-400 mt-0.5">I смена • 9В класс • МБОУ СОШ №22 г. Кызыла</p>
+          </div>
+
+          <div id="full-schedule-list" class="flex flex-col gap-3 mt-6 max-w-2xl"></div>
+        </div>
+
+        <div class="p-4 rounded-2xl bg-white/5 border border-white/5 text-xs text-zinc-300 leading-relaxed mt-4">
+          <b class="text-amber-300">💡 Факт к уроку:</b> <span id="schedule-fact-text">Загрузка...</span>
+        </div>
+      </section>
+
+    </div>
+  </div>
+
+  <div id="secret-browser-modal" class="fixed inset-4 md:inset-8 z-50 glass-dock rounded-[2.5rem] p-4 flex flex-col shadow-2xl transition-all duration-300 scale-95 opacity-0 pointer-events-none">
+    
+    <div id="browser-header" class="flex items-center justify-between pb-3 border-b border-white/10 gap-3">
+      
+      <div class="flex items-center gap-2">
+        <button onclick="browserNav('back')" class="w-8 h-8 rounded-xl bg-white/10 hover:bg-white/20 flex items-center justify-center text-xs text-white font-bold">‹</button>
+        <button onclick="browserNav('reload')" class="w-8 h-8 rounded-xl bg-white/10 hover:bg-white/20 flex items-center justify-center text-xs text-white">🔄</button>
+      </div>
+
+      <div class="flex-1 flex items-center bg-black/50 border border-white/10 rounded-2xl px-3 py-1.5">
+        <span class="text-xs text-zinc-500 mr-2">🔒</span>
+        <input type="text" id="browser-url-input" placeholder="Поиск в интернете или ссылка..." class="bg-transparent text-xs text-white placeholder-zinc-500 focus:outline-none flex-1 font-mono select-text">
+        <button onclick="loadBrowserUrl()" class="px-3 py-1 bg-emerald-600 hover:bg-emerald-500 text-[10px] font-bold text-white rounded-xl transition">
+          Перейти
+        </button>
+      </div>
+
+      <div class="hidden md:flex items-center gap-1.5">
+        <button onclick="openBookmark('https://gdz.ru')" class="px-2.5 py-1 bg-white/5 hover:bg-white/15 text-[10px] font-semibold text-zinc-300 rounded-lg">ГДЗ.ру</button>
+        <button onclick="openBookmark('https://resheba.me')" class="px-2.5 py-1 bg-white/5 hover:bg-white/15 text-[10px] font-semibold text-zinc-300 rounded-lg">Решеба</button>
+        <button onclick="openBookmark('https://ya.ru')" class="px-2.5 py-1 bg-white/5 hover:bg-white/15 text-[10px] font-semibold text-zinc-300 rounded-lg">Яндекс</button>
+      </div>
+
+      <button onclick="closeSecretBrowser()" class="px-3.5 py-1.5 bg-red-500/20 hover:bg-red-500/40 border border-red-500/40 text-red-300 rounded-xl text-xs font-black flex items-center gap-1.5 transition active:scale-90" title="Экстренное закрытие">
+        <span>⚡</span>
+        <span class="hidden sm:inline">Скрыть</span>
+      </button>
+
+    </div>
+
+    <div class="flex-1 mt-3 bg-white rounded-2xl overflow-hidden relative shadow-inner">
+      <iframe id="browser-iframe" class="w-full h-full border-0" src="about:blank"></iframe>
+    </div>
+
+  </div>
+
+  <div id="ai-modal" class="fixed inset-y-4 right-4 w-96 z-50 glass-dock rounded-[2.5rem] p-5 flex flex-col shadow-2xl transition-all duration-300 translate-x-[110%] pointer-events-none">
+    
+    <div class="flex items-center justify-between pb-3 border-b border-white/10">
+      <div class="flex items-center gap-2">
+        <span class="w-3 h-3 rounded-full bg-emerald-400 animate-pulse"></span>
+        <span class="text-xs font-black text-white uppercase tracking-wider">Шпаргалка</span>
+      </div>
+      
+      <div class="flex items-center gap-1.5">
+        <button onclick="startNewAIChat()" class="px-2.5 py-1 bg-white/10 hover:bg-white/20 active:scale-90 text-[11px] font-semibold text-emerald-300 rounded-lg transition">
+          ➕ Новый чат
+        </button>
+        <button onclick="toggleAIChat(false)" class="text-zinc-400 hover:text-white text-sm w-7 h-7 flex items-center justify-center">✕</button>
+      </div>
+    </div>
+
+    <div id="ai-chat-messages" class="flex-1 overflow-y-auto my-3 flex flex-col gap-3 pr-1 text-xs no-scrollbar">
+      <div class="p-3.5 rounded-2xl bg-white/5 border border-white/10 text-zinc-300 leading-relaxed">
+        Скрытый ассистент готов. Сделай <b class="text-emerald-300">двойной тап по номеру страницы</b> в тулбаре, чтобы выделить задачу пальцем, или пиши вопрос сюда.
+      </div>
+    </div>
+
+    <div id="ai-crop-preview-box" class="hidden mb-2 p-2 bg-black/40 rounded-xl border border-white/10 flex items-center justify-between">
+      <div class="flex items-center gap-2">
+        <img id="ai-crop-preview-img" class="h-10 rounded border border-white/10 object-contain bg-white">
+        <span class="text-[10px] text-zinc-400">Фрагмент задачи</span>
+      </div>
+      <button onclick="clearCropPreview()" class="text-zinc-500 hover:text-red-400 text-xs">✕</button>
+    </div>
+
+    <div id="ai-loading" class="text-[11px] text-emerald-400 font-mono py-1 px-2 hidden flex items-center gap-2">
+      <span class="animate-spin">⏳</span>
+      <span>Gemini решает задачу...</span>
+    </div>
+
+    <div class="pt-2 border-t border-white/10 flex gap-2 items-center">
+      <textarea id="ai-prompt-input" rows="2" placeholder="Уточнить вопрос или как записать..." class="flex-1 bg-black/40 border border-white/10 rounded-xl p-2.5 text-xs text-white placeholder-zinc-500 focus:outline-none resize-none select-text"></textarea>
+      <button onclick="sendTextToAI()" class="px-3.5 py-3 bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white font-bold rounded-xl text-xs transition">
+        ➔
+      </button>
+    </div>
+  </div>
+
+  <div id="ai-settings-modal" class="fixed inset-0 z-50 bg-black/70 backdrop-blur-md flex items-center justify-center p-4 transition-all duration-300 opacity-0 pointer-events-none">
+    <div class="glass-dock w-full max-w-md rounded-[2.5rem] p-6 flex flex-col shadow-2xl border border-white/15">
+      <div class="flex items-center justify-between pb-3 border-b border-white/10">
+        <h3 class="text-base font-bold text-white">⚙️ Настройки ИИ-модели</h3>
+        <button onclick="toggleAISettings(false)" class="text-zinc-400 hover:text-white text-xs">✕</button>
+      </div>
+
+      <div class="flex flex-col gap-3 mt-4 text-xs">
+        <div>
+          <label class="text-zinc-400 block mb-1">API Server URL:</label>
+          <input type="text" id="ai-api-url" placeholder="https://generativelanguage.googleapis.com/v1beta/openai" class="w-full bg-black/40 border border-white/10 rounded-xl p-2.5 text-white font-mono focus:outline-none select-text">
+        </div>
+
+        <div>
+          <label class="text-zinc-400 block mb-1">Модель (Gemini Vision):</label>
+          <input type="text" id="ai-model-name" placeholder="gemini-2.5-flash / gemini-1.5-pro" class="w-full bg-black/40 border border-white/10 rounded-xl p-2.5 text-white font-mono focus:outline-none select-text">
+        </div>
+
+        <div>
+          <label class="text-zinc-400 block mb-1">API Key:</label>
+          <input type="password" id="ai-api-key" placeholder="AIzaSy..." class="w-full bg-black/40 border border-white/10 rounded-xl p-2.5 text-white font-mono focus:outline-none select-text">
+        </div>
+      </div>
+
+      <div class="mt-6 flex justify-end gap-2">
+        <button onclick="toggleAISettings(false)" class="px-4 py-2 bg-white/10 rounded-xl text-xs text-zinc-300">Отмена</button>
+        <button onclick="saveAISettings()" class="px-5 py-2 bg-emerald-600 hover:bg-emerald-500 rounded-xl text-xs font-bold text-white shadow-lg">Сохранить</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="zen-screen" onclick="disableZenMode()" class="fixed inset-0 z-50 bg-[#050608]/90 backdrop-blur-3xl overflow-hidden flex flex-col items-center justify-between py-16 px-6 transition-all duration-500 opacity-0 pointer-events-none cursor-pointer">
+    
+    <div class="absolute inset-0 z-0 pointer-events-none">
+      <div class="aurora-1 absolute top-1/3 left-1/4 w-[30rem] h-[30rem] rounded-full bg-emerald-500/25 blur-[120px]"></div>
+      <div class="aurora-2 absolute bottom-1/3 right-1/4 w-[34rem] h-[34rem] rounded-full bg-cyan-500/25 blur-[130px]"></div>
+    </div>
+
+    <div class="relative z-10 flex items-center gap-2">
+      <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
+      <span id="zen-subject-label" class="text-xs uppercase tracking-[0.25em] font-black text-emerald-400">9В • СОШ №22</span>
+    </div>
+
+    <div class="relative z-10 flex flex-col items-center text-center my-auto">
+      <div id="zen-clock" class="text-7xl md:text-[9rem] font-mono font-black tracking-tight text-white drop-shadow-[0_15px_35px_rgba(255,255,255,0.2)] leading-none">
+        00:00:00
+      </div>
+      <div id="zen-date" class="text-sm md:text-base font-bold text-zinc-400 mt-4 tracking-widest uppercase">
+        Вторник • 9В класс
+      </div>
+    </div>
+
+    <div class="relative z-10 flex flex-col items-center gap-2">
+      <div class="glass-dock px-8 py-3.5 rounded-full flex items-center gap-4 text-xs text-zinc-200">
+        <span class="text-zinc-400" id="zen-status-caption">До звонка:</span>
+        <span id="zen-countdown" class="font-mono font-black text-emerald-400 text-sm">00:00:00</span>
+        <div class="h-3.5 w-px bg-white/10"></div>
+        <span class="text-zinc-400">След: <b id="zen-next-lesson" class="text-white font-bold">—</b></span>
+      </div>
+      <p class="text-[11px] text-zinc-500 mt-2">Коснись экрана, чтобы вернуться</p>
+    </div>
+  </div>
+
+  <div id="notes-drawer" class="fixed top-24 right-8 z-40 glass-dock rounded-[2rem] p-5 w-80 flex flex-col transition-all duration-300 opacity-0 scale-95 pointer-events-none shadow-2xl">
+    <div class="flex items-center justify-between pb-3 border-b border-white/10">
+      <span class="text-xs font-bold text-white">Быстрые заметки</span>
+      <button onclick="toggleNotes(false)" class="text-zinc-400 hover:text-white text-xs">✕</button>
+    </div>
+    <textarea id="notes-input" placeholder="Записать задание, формулу, мысль..." class="mt-3 w-full h-48 bg-black/40 border border-white/10 rounded-2xl p-3 text-xs text-zinc-100 placeholder-zinc-500 focus:outline-none resize-none select-text leading-relaxed"></textarea>
+  </div>
+
+  <script>
+    /* ========================================================
+       1. РАСПИСАНИЕ И ЛОГИКА ВРЕМЕНИ
+       ======================================================== */
+    const timetable = [
+      { 
+        num: 1, name: "Иностр. язык", room: "Каб. 204", start: "08:00", end: "08:40",
+        fact: "Английский язык содержит свыше 1 000 000 слов.",
+        glow1: "rgba(59, 130, 246, 0.35)", glow2: "rgba(16, 185, 129, 0.25)"
+      },
+      { 
+        num: 2, name: "Геометрия", room: "Каб. 302", start: "08:45", end: "09:25",
+        fact: "Теорема Пифагора имеет более 370 доказательств.",
+        glow1: "rgba(16, 185, 129, 0.35)", glow2: "rgba(6, 182, 212, 0.25)"
+      },
+      { 
+        num: 3, name: "Родной язык", room: "Каб. 209", start: "09:30", end: "10:10",
+        fact: "Родной язык хранит уникальный культурный код предков.",
+        glow1: "rgba(245, 158, 11, 0.35)", glow2: "rgba(239, 68, 68, 0.25)"
+      },
+      { 
+        num: 4, name: "Химия", room: "Каб. 105", start: "10:20", end: "11:00",
+        fact: "Без пустоты в атомах всё человечество поместилось бы в кубик сахара.",
+        glow1: "rgba(168, 85, 247, 0.35)", glow2: "rgba(236, 72, 153, 0.25)"
+      },
+      { 
+        num: 5, name: "Русский язык", room: "Каб. 205", start: "11:05", end: "11:45",
+        fact: "Буква «Ъ» до реформы занимала до 4% объема книг.",
+        glow1: "rgba(245, 158, 11, 0.35)", glow2: "rgba(16, 185, 129, 0.25)"
+      }
+    ];
+
+    function parseTime(tStr) {
+      const [h, m] = tStr.split(':').map(Number);
+      const d = new Date();
+      d.setHours(h, m, 0, 0);
+      return d;
+    }
+
+    let activeSubject = null;
+
+    function runScheduleTimer() {
+      const now = new Date();
+      const currentHours = now.getHours();
+      
+      const h = String(currentHours).padStart(2, '0');
+      const m = String(now.getMinutes()).padStart(2, '0');
+      const s = String(now.getSeconds()).padStart(2, '0');
+      const clockStr = `${h}:${m}:${s}`;
+
+      document.getElementById('bar-system-clock').textContent = clockStr;
+      document.getElementById('zen-clock').textContent = clockStr;
+
+      const days = ['Воскресенье', 'Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота'];
+      const months = ['января', 'февраля', 'марта', 'апреля', 'мая', 'июня', 'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'];
+      document.getElementById('zen-date').textContent = `${days[now.getDay()]}, ${now.getDate()} ${months[now.getMonth()]} • 9В`;
+
+      let currentLesson = null;
+      let nextLesson = null;
+
+      for (let i = 0; i < timetable.length; i++) {
+        const start = parseTime(timetable[i].start);
+        const end = parseTime(timetable[i].end);
+
+        if (now >= start && now < end) {
+          currentLesson = timetable[i];
+          nextLesson = timetable[i + 1] || null;
+          break;
+        }
+      }
+
+      if (currentLesson) {
+        if (activeSubject !== currentLesson.name) {
+          activeSubject = currentLesson.name;
+          document.getElementById('bg-glow-1').style.backgroundColor = currentLesson.glow1;
+          document.getElementById('bg-glow-2').style.backgroundColor = currentLesson.glow2;
+        }
+
+        const endTime = parseTime(currentLesson.end);
+        const diffSec = Math.max(0, Math.floor((endTime - now) / 1000));
+        const formatted = formatSec(diffSec);
+
+        document.getElementById('bar-subject-title').textContent = `${currentLesson.num}. ${currentLesson.name}`;
+        document.getElementById('bar-room-title').textContent = currentLesson.room;
+        document.getElementById('bar-countdown-label').textContent = "Звонок через:";
+        document.getElementById('bar-countdown').textContent = formatted;
+        document.getElementById('schedule-fact-text').textContent = currentLesson.fact;
+
+        document.getElementById('zen-subject-label').textContent = `${currentLesson.name} • ${currentLesson.room}`;
+        document.getElementById('zen-status-caption').textContent = "До звонка:";
+        document.getElementById('zen-countdown').textContent = formatted;
+        document.getElementById('zen-next-lesson').textContent = nextLesson ? nextLesson.name : "Конец уроков";
+        return;
+      }
+
+      const firstLessonStart = parseTime(timetable[0].start);
+      const lastLessonEnd = parseTime(timetable[timetable.length - 1].end);
+
+      if (currentHours >= 22 || currentHours < 7) {
+        setRestStatus("Ночной отдых", "Уроки с 08:00", "Спим 😴", "Ночь", "1. " + timetable[0].name);
+      } else if (now < firstLessonStart) {
+        const diffSec = Math.max(0, Math.floor((firstLessonStart - now) / 1000));
+        setRestStatus("Скоро уроки", "1-й: " + timetable[0].name, formatSec(diffSec), "До начала", timetable[0].name);
+      } else if (now >= lastLessonEnd) {
+        setRestStatus("Уроки завершены", "Свободное время", "Отдых ✨", "Конец смены", "Завтра");
+      } else {
+        for (let i = 0; i < timetable.length; i++) {
+          if (now < parseTime(timetable[i].start)) {
+            nextLesson = timetable[i];
+            break;
+          }
+        }
+        const nextStart = parseTime(nextLesson.start);
+        const diffSec = Math.max(0, Math.floor((nextStart - now) / 1000));
+        setRestStatus(`Перемена • След: ${nextLesson.name}`, nextLesson.room, formatSec(diffSec), "До начала", nextLesson.name);
+      }
+    }
+
+    function setRestStatus(title, room, countdown, zenLabel, nextSub) {
+      document.getElementById('bar-subject-title').textContent = title;
+      document.getElementById('bar-room-title').textContent = room;
+      document.getElementById('bar-countdown-label').textContent = "Статус:";
+      document.getElementById('bar-countdown').textContent = countdown;
+      document.getElementById('schedule-fact-text').textContent = "В свободное время полезно дать глазам отдохнуть.";
+
+      document.getElementById('zen-subject-label').textContent = title;
+      document.getElementById('zen-status-caption').textContent = zenLabel;
+      document.getElementById('zen-countdown').textContent = countdown;
+      document.getElementById('zen-next-lesson').textContent = nextSub;
+    }
+
+    function formatSec(sec) {
+      const h = Math.floor(sec / 3600);
+      const m = Math.floor((sec % 3600) / 60);
+      const s = sec % 60;
+      return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+    }
+
+    setInterval(runScheduleTimer, 1000);
+    runScheduleTimer();
+
+    /* ========================================================
+       2. РАДИАЛЬНАЯ ПАЛИТРА ЖЕСТОВ НА «9В» (3 СЕКУНДЫ)
+       ======================================================== */
+    const secretBtn = document.getElementById('secret-logo-btn');
+    const radialPalette = document.getElementById('radial-palette');
+    const optBrowser = document.getElementById('radial-opt-browser');
+    const optSettings = document.getElementById('radial-opt-settings');
+
+    let pressTimer = null;
+    let isRadialActive = false;
+    let selectedOption = null;
+    let logoClickCount = 0;
+    let logoClickTimer = null;
+
+    // 4 быстрых тапа -> Чат со шпаргалкой
+    secretBtn.addEventListener('click', () => {
+      if (isRadialActive) return;
+      logoClickCount++;
+      clearTimeout(logoClickTimer);
+      logoClickTimer = setTimeout(() => {
+        if (logoClickCount >= 4) toggleAIChat(true);
+        logoClickCount = 0;
+      }, 400);
+    });
+
+    // Удержание 2.5-3 секунды с вызовом радиальной палитры
+    function onLongPressStart(clientX, clientY) {
+      clearTimeout(pressTimer);
+      pressTimer = setTimeout(() => {
+        isRadialActive = true;
+        showRadialPalette(clientX, clientY);
+      }, 2500); // 2.5 секунды
+    }
+
+    function showRadialPalette(x, y) {
+      radialPalette.style.left = `${x}px`;
+      radialPalette.style.top = `${y}px`;
+      radialPalette.classList.remove('hidden');
+      setTimeout(() => radialPalette.classList.remove('opacity-0'), 10);
+    }
+
+    function hideRadialPalette() {
+      radialPalette.classList.add('opacity-0');
+      setTimeout(() => radialPalette.classList.add('hidden'), 200);
+      isRadialActive = false;
+      optBrowser.classList.remove('active-hover');
+      optSettings.classList.remove('active-hover');
+    }
+
+    // Touch события
+    secretBtn.addEventListener('touchstart', (e) => {
+      const touch = e.touches[0];
+      onLongPressStart(touch.clientX, touch.clientY);
+    }, { passive: true });
+
+    window.addEventListener('touchmove', (e) => {
+      if (!isRadialActive) return;
+      const touch = e.touches[0];
+      detectRadialSelection(touch.clientX, touch.clientY);
+    }, { passive: true });
+
+    window.addEventListener('touchend', () => {
+      clearTimeout(pressTimer);
+      if (isRadialActive) {
+        executeRadialSelection();
+        hideRadialPalette();
+      }
+    });
+
+    // Mouse события
+    secretBtn.addEventListener('mousedown', (e) => {
+      onLongPressStart(e.clientX, e.clientY);
+    });
+
+    window.addEventListener('mousemove', (e) => {
+      if (!isRadialActive) return;
+      detectRadialSelection(e.clientX, e.clientY);
+    });
+
+    window.addEventListener('mouseup', () => {
+      clearTimeout(pressTimer);
+      if (isRadialActive) {
+        executeRadialSelection();
+        hideRadialPalette();
+      }
+    });
+
+    function detectRadialSelection(x, y) {
+      const bRect = optBrowser.getBoundingClientRect();
+      const sRect = optSettings.getBoundingClientRect();
+
+      // Проверяем попадание пальца в область Браузера
+      if (x >= bRect.left - 20 && x <= bRect.right + 20 && y >= bRect.top - 20 && y <= bRect.bottom + 20) {
+        selectedOption = 'browser';
+        optBrowser.classList.add('active-hover');
+        optSettings.classList.remove('active-hover');
+      }
+      // Проверяем попадание пальца в область Настроек ИИ
+      else if (x >= sRect.left - 20 && x <= sRect.right + 20 && y >= sRect.top - 20 && y <= sRect.bottom + 20) {
+        selectedOption = 'settings';
+        optSettings.classList.add('active-hover');
+        optBrowser.classList.remove('active-hover');
+      } else {
+        selectedOption = null;
+        optBrowser.classList.remove('active-hover');
+        optSettings.classList.remove('active-hover');
+      }
+    }
+
+    function executeRadialSelection() {
+      if (selectedOption === 'browser') {
+        openSecretBrowser();
+      } else if (selectedOption === 'settings') {
+        toggleAISettings(true);
+      }
+      selectedOption = null;
+    }
+
+    // Двойной тап по страницам -> Вырезать задание
+    const pageControl = document.getElementById('secret-page-control');
+    let pageTapCount = 0;
+    let pageTapTimer = null;
+
+    pageControl.addEventListener('click', (e) => {
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'BUTTON') return;
+      pageTapCount++;
+      clearTimeout(pageTapTimer);
+      pageTapTimer = setTimeout(() => {
+        if (pageTapCount >= 2) startAreaCrop();
+        pageTapCount = 0;
+      }, 350);
+    });
+
+    /* ========================================================
+       3. СКРЫТЫЙ ВНУТРЕННИЙ БРАУЗЕР (С ПАМЯТЬЮ ВКЛАДОК)
+       ======================================================== */
+    const browserModal = document.getElementById('secret-browser-modal');
+    const browserIframe = document.getElementById('browser-iframe');
+    const browserUrlInput = document.getElementById('browser-url-input');
+
+    // Восстанавливаем последнюю вкладку
+    let lastBrowserUrl = localStorage.getItem('study_last_browser_url') || 'https://ya.ru';
+
+    function openSecretBrowser() {
+      browserModal.classList.remove('opacity-0', 'scale-95', 'pointer-events-none');
+      browserModal.classList.add('opacity-100', 'scale-100');
+
+      if (!browserIframe.src || browserIframe.src === 'about:blank') {
+        browserUrlInput.value = lastBrowserUrl;
+        browserIframe.src = lastBrowserUrl;
+      }
+    }
+
+    function closeSecretBrowser() {
+      browserModal.classList.remove('opacity-100', 'scale-100');
+      browserModal.classList.add('opacity-0', 'scale-95', 'pointer-events-none');
+    }
+
+    // Двойной клик по шапке браузера — тоже экстренное скрытие
+    document.getElementById('browser-header').addEventListener('dblclick', closeSecretBrowser);
+
+    function loadBrowserUrl() {
+      let val = browserUrlInput.value.trim();
+      if (!val) return;
+
+      if (!val.startsWith('http://') && !val.startsWith('https://')) {
+        if (val.includes('.') && !val.includes(' ')) {
+          val = 'https://' + val;
+        } else {
+          // Если это поисковый запрос
+          val = 'https://ya.ru/search/?text=' + encodeURIComponent(val);
+        }
+      }
+
+      browserUrlInput.value = val;
+      browserIframe.src = val;
+      localStorage.setItem('study_last_browser_url', val);
+    }
+
+    browserUrlInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') loadBrowserUrl();
+    });
+
+    function openBookmark(url) {
+      browserUrlInput.value = url;
+      browserIframe.src = url;
+      localStorage.setItem('study_last_browser_url', url);
+    }
+
+    function browserNav(action) {
+      if (action === 'reload') {
+        browserIframe.src = browserIframe.src;
+      } else if (action === 'back') {
+        try { browserIframe.contentWindow.history.back(); } catch (e) {}
+      }
+    }
+
+    /* ========================================================
+       4. ИИ-ДВИЖОК С ПАМЯТЬЮ И РЕНДЕРОМ KATEX
+       ======================================================== */
+    const aiModal = document.getElementById('ai-modal');
+    const aiSettingsModal = document.getElementById('ai-settings-modal');
+
+    let chatHistory = [];
+
+    const SYSTEM_INSTRUCTION = `Ты — идеальный школьный решебник и помощник для тетради. 
+Правила решения:
+1. Решай строго и понятно на русском языке.
+2. Математические формулы и дроби оборачивай строго в одиночные доллары $...$ для inline или двойные $$...$$ для блоков.
+3. В самом конце решения ОБЯЗАТЕЛЬНО сделай отдельный блок:
+✍️ **Запись в тетрадь:**
+(Тут напиши краткую, чистую строку или формулу без лишних слов, которую ученик должен просто переписать в тетрадь).`;
+
+    function startNewAIChat() {
+      chatHistory = [];
+      const container = document.getElementById('ai-chat-messages');
+      container.innerHTML = `
+        <div class="p-3.5 rounded-2xl bg-white/5 border border-white/10 text-zinc-300 leading-relaxed">
+          ✨ <b>Новый чат начат.</b> Память очищена. Задай вопрос или сделай двойной тап по страницам, чтобы отправить задание.
+        </div>
+      `;
+      clearCropPreview();
+    }
+
+    function toggleAIChat(show) {
+      if (show) {
+        aiModal.classList.remove('translate-x-[110%]', 'pointer-events-none');
+      } else {
+        aiModal.classList.add('translate-x-[110%]', 'pointer-events-none');
+      }
+    }
+
+    function toggleAISettings(show) {
+      if (show) {
+        document.getElementById('ai-api-url').value = localStorage.getItem('study_ai_url') || 'https://generativelanguage.googleapis.com/v1beta/openai';
+        document.getElementById('ai-model-name').value = localStorage.getItem('study_ai_model') || 'gemini-2.5-flash';
+        document.getElementById('ai-api-key').value = localStorage.getItem('study_ai_key') || '';
+        aiSettingsModal.classList.remove('opacity-0', 'pointer-events-none');
+      } else {
+        aiSettingsModal.classList.add('opacity-0', 'pointer-events-none');
+      }
+    }
+
+    function saveAISettings() {
+      localStorage.setItem('study_ai_url', document.getElementById('ai-api-url').value.trim());
+      localStorage.setItem('study_ai_model', document.getElementById('ai-model-name').value.trim());
+      localStorage.setItem('study_ai_key', document.getElementById('ai-api-key').value.trim());
+      toggleAISettings(false);
+      alert('Настройки сохранены!');
+    }
+
+    async function callAIWithHistory(newMessages) {
+      const url = (localStorage.getItem('study_ai_url') || 'https://generativelanguage.googleapis.com/v1beta/openai').replace(/\/$/, '') + '/chat/completions';
+      const model = localStorage.getItem('study_ai_model') || 'gemini-2.5-flash';
+      const key = localStorage.getItem('study_ai_key') || '';
+
+      if (!key) {
+        alert('API ключ не задан! Зажми значок «9В», чтобы ввести ключ Gemini.');
+        toggleAISettings(true);
+        return null;
+      }
+
+      chatHistory.push(...newMessages);
+      document.getElementById('ai-loading').classList.remove('hidden');
+
+      try {
+        const response = await fetch(url, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${key}`
+          },
+          body: JSON.stringify({
+            model: model,
+            messages: [
+              { role: 'system', content: SYSTEM_INSTRUCTION },
+              ...chatHistory
+            ]
+          })
+        });
+
+        const data = await response.json();
+        document.getElementById('ai-loading').classList.add('hidden');
+
+        if (data.choices && data.choices[0]) {
+          const aiText = data.choices[0].message.content;
+          chatHistory.push({ role: 'assistant', content: aiText });
+          return aiText;
+        } else {
+          return 'Ошибка API: ' + (data.error ? data.error.message : JSON.stringify(data));
+        }
+      } catch (err) {
+        document.getElementById('ai-loading').classList.add('hidden');
+        return 'Сетевая ошибка: ' + err.message;
+      }
+    }
+
+    function appendAIMessage(sender, rawText) {
+      const container = document.getElementById('ai-chat-messages');
+      const msg = document.createElement('div');
+      msg.className = `p-3.5 rounded-2xl text-xs ai-rendered-content ${sender === 'user' ? 'bg-emerald-600/30 border border-emerald-500/30 text-white ml-6' : 'bg-white/5 border border-white/10 text-zinc-200 mr-4'}`;
+      
+      let formattedHtml = marked.parse(rawText);
+      msg.innerHTML = formattedHtml;
+      container.appendChild(msg);
+
+      if (window.renderMathInElement) {
+        renderMathInElement(msg, {
+          delimiters: [
+            { left: '$$', right: '$$', display: true },
+            { left: '$', right: '$', display: false },
+            { left: '\\(', right: '\\)', display: false },
+            { left: '\\[', right: '\\]', display: true }
+          ],
+          throwOnError: false
+        });
+      }
+
+      container.scrollTop = container.scrollHeight;
+    }
+
+    async function sendTextToAI() {
+      const input = document.getElementById('ai-prompt-input');
+      const text = input.value.trim();
+      if (!text) return;
+
+      appendAIMessage('user', text);
+      input.value = '';
+
+      const reply = await callAIWithHistory([{ role: 'user', content: text }]);
+      if (reply) appendAIMessage('ai', reply);
+    }
+
+    function clearCropPreview() {
+      document.getElementById('ai-crop-preview-box').classList.add('hidden');
+    }
+
+    /* ========================================================
+       5. БЕЛЫЙ ЧЁТКИЙ КРОП СТРАНИЦЫ
+       ======================================================== */
+    let startTouchX = 0, startTouchY = 0;
+    let cropBoxElem = null;
+    const selectionOverlay = document.getElementById('selection-overlay');
+    const mainCanvas = document.getElementById('main-book-canvas');
+
+    function startAreaCrop() {
+      if (!activePDFDoc) {
+        alert('Сначала открой учебник!');
+        return;
+      }
+      selectionOverlay.classList.remove('hidden');
+    }
+
+    selectionOverlay.addEventListener('touchstart', (e) => {
+      const rect = selectionOverlay.getBoundingClientRect();
+      startTouchX = e.touches[0].clientX - rect.left;
+      startTouchY = e.touches[0].clientY - rect.top;
+
+      cropBoxElem = document.createElement('div');
+      cropBoxElem.className = 'selection-box';
+      cropBoxElem.style.left = startTouchX + 'px';
+      cropBoxElem.style.top = startTouchY + 'px';
+      selectionOverlay.appendChild(cropBoxElem);
+    });
+
+    selectionOverlay.addEventListener('touchmove', (e) => {
+      if (!cropBoxElem) return;
+      const rect = selectionOverlay.getBoundingClientRect();
+      const curX = e.touches[0].clientX - rect.left;
+      const curY = e.touches[0].clientY - rect.top;
+
+      const x = Math.min(startTouchX, curX);
+      const y = Math.min(startTouchY, curY);
+      const w = Math.abs(curX - startTouchX);
+      const h = Math.abs(curY - startTouchY);
+
+      cropBoxElem.style.left = x + 'px';
+      cropBoxElem.style.top = y + 'px';
+      cropBoxElem.style.width = w + 'px';
+      cropBoxElem.style.height = h + 'px';
+    });
+
+    selectionOverlay.addEventListener('touchend', async () => {
+      selectionOverlay.classList.add('hidden');
+      if (!cropBoxElem) return;
+
+      const overlayRect = selectionOverlay.getBoundingClientRect();
+      const canvasRect = mainCanvas.getBoundingClientRect();
+
+      const boxLeft = parseFloat(cropBoxElem.style.left) + overlayRect.left;
+      const boxTop = parseFloat(cropBoxElem.style.top) + overlayRect.top;
+      const boxWidth = parseFloat(cropBoxElem.style.width) || 0;
+      const boxHeight = parseFloat(cropBoxElem.style.height) || 0;
+
+      cropBoxElem.remove();
+      cropBoxElem = null;
+
+      if (boxWidth < 15 || boxHeight < 15) return;
+
+      const relLeft = Math.max(0, boxLeft - canvasRect.left);
+      const relTop = Math.max(0, boxTop - canvasRect.top);
+      const relWidth = Math.min(canvasRect.width - relLeft, boxWidth);
+      const relHeight = Math.min(canvasRect.height - relTop, boxHeight);
+
+      const scaleX = mainCanvas.width / canvasRect.width;
+      const scaleY = mainCanvas.height / canvasRect.height;
+
+      const srcX = relLeft * scaleX;
+      const srcY = relTop * scaleY;
+      const srcW = relWidth * scaleX;
+      const srcH = relHeight * scaleY;
+
+      if (srcW <= 0 || srcH <= 0) return;
+
+      const cropCanvas = document.createElement('canvas');
+      cropCanvas.width = srcW;
+      cropCanvas.height = srcH;
+      const cropCtx = cropCanvas.getContext('2d');
+
+      cropCtx.fillStyle = '#FFFFFF';
+      cropCtx.fillRect(0, 0, srcW, srcH);
+      cropCtx.drawImage(mainCanvas, srcX, srcY, srcW, srcH, 0, 0, srcW, srcH);
+
+      const base64Jpeg = cropCanvas.toDataURL('image/jpeg', 0.95);
+
+      document.getElementById('ai-crop-preview-img').src = base64Jpeg;
+      document.getElementById('ai-crop-preview-box').classList.remove('hidden');
+
+      toggleAIChat(true);
+      appendAIMessage('user', '📷 <i>Выделен фрагмент задания:</i>');
+
+      const reply = await callAIWithHistory([
+        {
+          role: 'user',
+          content: [
+            { type: 'text', text: 'Реши это задание из учебника на русском языке. Подробно распиши шаги, выдели итоговый ответ и добавь блок «Запись в тетрадь».' },
+            { type: 'image_url', image_url: { url: base64Jpeg } }
+          ]
+        }
+      ]);
+
+      if (reply) appendAIMessage('ai', reply);
+    });
+
+    /* ========================================================
+       6. INDEXEDDB И PDF РИДЕР
+       ======================================================== */
+    let db;
+    const dbReq = indexedDB.open("StudyOS_Final_V17", 1);
+    dbReq.onupgradeneeded = (e) => {
+      db = e.target.result;
+      if (!db.objectStoreNames.contains("books")) {
+        db.createObjectStore("books", { keyPath: "id", autoIncrement: true });
+      }
+    };
+    dbReq.onsuccess = (e) => {
+      db = e.target.result;
+      renderLibraryUI();
+    };
+
+    function savePDF(name, sizeStr, dateStr, arrayBuffer) {
+      const tx = db.transaction(["books"], "readwrite");
+      tx.objectStore("books").add({ name, size: sizeStr, date: dateStr, data: arrayBuffer, lastPage: 1 });
+      tx.oncomplete = () => renderLibraryUI();
+    }
+
+    function getAllPDFs(cb) {
+      if (!db) return;
+      const tx = db.transaction(["books"], "readonly");
+      const r = tx.objectStore("books").getAll();
+      r.onsuccess = () => cb(r.result);
+    }
+
+    function getPDFById(id, cb) {
+      if (!db) return;
+      const tx = db.transaction(["books"], "readonly");
+      const r = tx.objectStore("books").get(Number(id));
+      r.onsuccess = () => cb(r.result);
+    }
+
+    function updatePage(id, p) {
+      if (!db || !id) return;
+      const tx = db.transaction(["books"], "readwrite");
+      const store = tx.objectStore("books");
+      const r = store.get(Number(id));
+      r.onsuccess = () => {
+        const it = r.result;
+        if (it) { it.lastPage = p; store.put(it); }
+      };
+    }
+
+    function deletePDF(id, e) {
+      e.stopPropagation();
+      const tx = db.transaction(["books"], "readwrite");
+      tx.objectStore("books").delete(Number(id));
+      tx.oncomplete = () => renderLibraryUI();
+    }
+
+    function renderLibraryUI() {
+      getAllPDFs(books => {
+        const grid = document.getElementById('library-grid');
+        grid.innerHTML = '';
+
+        if (!books || books.length === 0) {
+          grid.innerHTML = `<div class="col-span-full text-xs text-zinc-500 py-10 text-center">Библиотека пуста. Добавьте первый PDF учебник.</div>`;
+          return;
+        }
+
+        books.forEach(b => {
+          const card = document.createElement('div');
+          card.className = "p-4 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/5 flex flex-col justify-between cursor-pointer transition active:scale-95";
+          card.onclick = () => openBookInReader(b.id, b.lastPage || 1);
+
+          card.innerHTML = `
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-sm">📕</span>
+              <button onclick="deletePDF(${b.id}, event)" class="text-zinc-500 hover:text-red-400 text-xs px-1">✕</button>
+            </div>
+            <div class="h-28 bg-black/40 rounded-xl flex items-center justify-center mb-3 border border-white/5 relative">
+              <span class="text-3xl">📄</span>
+              <span class="absolute bottom-1 right-1 text-[9px] bg-black/70 px-1.5 py-0.5 rounded text-zinc-300 font-mono">Стр. ${b.lastPage || 1}</span>
+            </div>
+            <div>
+              <h4 class="text-xs font-bold text-white truncate">${b.name}</h4>
+              <span class="text-[10px] text-zinc-400 mt-0.5 block">${b.size}</span>
+            </div>
+          `;
+          grid.appendChild(card);
+        });
+      });
+    }
+
+    document.getElementById('pdf-file-uploader').onchange = (e) => {
+      const file = e.target.files[0];
+      if (file && file.type === "application/pdf") {
+        const sizeMb = (file.size / (1024 * 1024)).toFixed(1) + ' МБ';
+        const dateStr = 'Сегодня, ' + new Date().toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+        const reader = new FileReader();
+        reader.onload = function() {
+          savePDF(file.name.replace('.pdf', ''), sizeMb, dateStr, this.result);
+        };
+        reader.readAsArrayBuffer(file);
+      }
+    };
+
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+    let activePDFDoc = null;
+    let activeBookKey = null;
+    let activePageNum = 1;
+    let zoomLevel = 1.0;
+    let baseWidth = 780;
+    let baseHeight = 1100;
+
+    const emptyState = document.getElementById('pdf-empty-state');
+    const scalerWrapper = document.getElementById('canvas-wrapper');
+    const pageNumInput = document.getElementById('reader-page-num');
+    const totalPagesSpan = document.getElementById('reader-page-total');
+    const thumbsSidebar = document.getElementById('pdf-thumbnails-sidebar');
+    const thumbsContainer = document.getElementById('thumbnails-list');
+
+    function openBookInReader(id, startPage = 1) {
+      getPDFById(id, book => {
+        if (!book || !book.data) return;
+
+        const bufferCopy = book.data.slice(0);
+        pdfjsLib.getDocument({ data: bufferCopy }).promise.then(pdf => {
+          activePDFDoc = pdf;
+          activeBookKey = id;
+          activePageNum = startPage;
+          zoomLevel = 1.0;
+          updateZoomStyles();
+
+          document.getElementById('reader-book-title').textContent = book.name;
+          totalPagesSpan.textContent = pdf.numPages;
+          pageNumInput.max = pdf.numPages;
+
+          emptyState.classList.add('hidden');
+          mainCanvas.classList.remove('hidden');
+
+          switchView('study');
+          renderSinglePage(activePageNum);
+          buildThumbnails(pdf.numPages);
+        });
+      });
+    }
+
+    async function renderSinglePage(num) {
+      if (!activePDFDoc) return;
+      const page = await activePDFDoc.getPage(num);
+
+      const unscaled = page.getViewport({ scale: 1.0 });
+      const targetW = Math.min(window.innerWidth * 0.7, 760);
+      const scale = (targetW * 1.5) / unscaled.width;
+      const viewport = page.getViewport({ scale: scale });
+
+      baseWidth = viewport.width / 1.5;
+      baseHeight = viewport.height / 1.5;
+
+      mainCanvas.width = viewport.width;
+      mainCanvas.height = viewport.height;
+
+      updateZoomStyles();
+
+      const ctx = mainCanvas.getContext('2d');
+      ctx.fillStyle = '#FFFFFF';
+      ctx.fillRect(0, 0, mainCanvas.width, mainCanvas.height);
+
+      await page.render({ canvasContext: ctx, viewport: viewport }).promise;
+
+      activePageNum = num;
+      pageNumInput.value = num;
+
+      highlightActiveThumb(num);
+      if (activeBookKey) updatePage(activeBookKey, num);
+    }
+
+    function updateZoomStyles() {
+      const w = baseWidth * zoomLevel;
+      const h = baseHeight * zoomLevel;
+      mainCanvas.style.width = `${w}px`;
+      mainCanvas.style.height = `${h}px`;
+      scalerWrapper.style.width = `${w}px`;
+      scalerWrapper.style.height = `${h}px`;
+      document.getElementById('zoom-value-label').textContent = `${Math.round(zoomLevel * 100)}%`;
+    }
+
+    function zoomDoc(delta) {
+      zoomLevel = Math.max(0.6, Math.min(3.5, zoomLevel + delta));
+      updateZoomStyles();
+    }
+
+    function changePage(delta) {
+      if (!activePDFDoc) return;
+      const target = activePageNum + delta;
+      if (target >= 1 && target <= activePDFDoc.numPages) {
+        renderSinglePage(target);
+      }
+    }
+
+    pageNumInput.addEventListener('change', e => {
+      const val = parseInt(e.target.value);
+      if (val >= 1 && val <= activePDFDoc.numPages) {
+        renderSinglePage(val);
+      }
+    });
+
+    function togglePageThumbnails() {
+      thumbsSidebar.classList.toggle('hidden');
+    }
+
+    function buildThumbnails(total) {
+      thumbsContainer.innerHTML = '';
+      for (let i = 1; i <= total; i++) {
+        const card = document.createElement('div');
+        card.id = `thumb-item-${i}`;
+        card.dataset.page = i;
+        card.className = "thumb-box p-1.5 rounded-xl border border-white/5 bg-black/40 flex flex-col items-center gap-1 cursor-pointer hover:border-emerald-500/50 transition";
+        card.onclick = () => renderSinglePage(i);
+
+        card.innerHTML = `
+          <div class="w-full bg-[#14161f] rounded-lg overflow-hidden flex items-center justify-center min-h-[85px] relative">
+            <span class="text-[9px] text-zinc-600 font-mono loader-lbl">${i}</span>
+            <canvas id="canvas-thumb-${i}" class="w-full h-auto rounded-lg hidden"></canvas>
+          </div>
+          <span class="text-[10px] text-zinc-400 font-mono font-bold">${i}</span>
+        `;
+        thumbsContainer.appendChild(card);
+      }
+
+      const observer = new IntersectionObserver(entries => {
+        entries.forEach(async entry => {
+          if (entry.isIntersecting) {
+            const pageNum = Number(entry.target.dataset.page);
+            const canvas = document.getElementById(`canvas-thumb-${pageNum}`);
+            if (canvas && canvas.dataset.rendered !== "true") {
+              canvas.dataset.rendered = "true";
+              const page = await activePDFDoc.getPage(pageNum);
+              const vp = page.getViewport({ scale: 0.22 });
+
+              canvas.width = vp.width;
+              canvas.height = vp.height;
+
+              const ctx = canvas.getContext('2d');
+              ctx.fillStyle = '#FFFFFF';
+              ctx.fillRect(0, 0, canvas.width, canvas.height);
+              await page.render({ canvasContext: ctx, viewport: vp }).promise;
+
+              canvas.classList.remove('hidden');
+              const lbl = entry.target.querySelector('.loader-lbl');
+              if (lbl) lbl.classList.add('hidden');
+            }
+          }
+        });
+      }, { root: thumbsSidebar, rootMargin: "250px 0px 250px 0px" });
+
+      document.querySelectorAll('.thumb-box').forEach(el => observer.observe(el));
+    }
+
+    function highlightActiveThumb(num) {
+      document.querySelectorAll('.thumb-box').forEach(b => b.classList.remove('border-emerald-500', 'bg-emerald-500/20'));
+      const cur = document.getElementById(`thumb-item-${num}`);
+      if (cur) {
+        cur.classList.add('border-emerald-500', 'bg-emerald-500/20');
+        cur.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
+    }
+
+    // Pan & Zoom
+    const panViewport = document.getElementById('pan-container');
+    let touchDistance = 0;
+    let initialZoom = 1.0;
+
+    panViewport.addEventListener('touchstart', e => {
+      if (e.touches.length === 2) {
+        touchDistance = Math.hypot(
+          e.touches[0].clientX - e.touches[1].clientX,
+          e.touches[0].clientY - e.touches[1].clientY
+        );
+        initialZoom = zoomLevel;
+      }
+    }, { passive: true });
+
+    panViewport.addEventListener('touchmove', e => {
+      if (e.touches.length === 2 && touchDistance > 0) {
+        const curDist = Math.hypot(
+          e.touches[0].clientX - e.touches[1].clientX,
+          e.touches[0].clientY - e.touches[1].clientY
+        );
+        const factor = curDist / touchDistance;
+        zoomLevel = Math.max(0.6, Math.min(3.5, initialZoom * factor));
+        updateZoomStyles();
+      }
+    }, { passive: true });
+
+    panViewport.addEventListener('touchend', e => {
+      if (e.touches.length < 2) touchDistance = 0;
+    });
+
+    async function searchWord() {
+      const q = document.getElementById('pdf-search-input').value.trim().toLowerCase();
+      if (!q || !activePDFDoc) return;
+
+      for (let i = 1; i <= activePDFDoc.numPages; i++) {
+        const page = await activePDFDoc.getPage(i);
+        const tc = await page.getTextContent();
+        const text = tc.items.map(it => it.str).join(' ').toLowerCase();
+
+        if (text.includes(q)) {
+          renderSinglePage(i);
+          alert(`Найдено на странице ${i}`);
+          return;
+        }
+      }
+      alert('Слово не найдено');
+    }
+
+    /* ========================================================
+       7. НАВИГАЦИЯ, ДЗЕН И ЗАМЕТКИ
+       ======================================================== */
+    function switchView(viewName) {
+      ['study', 'library', 'schedule'].forEach(v => {
+        const sec = document.getElementById(`view-${v}`);
+        const btn = document.getElementById(`nav-btn-${v}`);
+        if (v === viewName) {
+          sec.classList.remove('hidden');
+          btn.className = "w-11 h-11 rounded-2xl flex items-center justify-center text-lg transition bg-white/20 text-white shadow-md active:scale-90";
+        } else {
+          sec.classList.add('hidden');
+          btn.className = "w-11 h-11 rounded-2xl flex items-center justify-center text-lg transition text-zinc-400 hover:text-white hover:bg-white/10 active:scale-90";
+        }
+      });
+
+      if (viewName === 'schedule') {
+        const container = document.getElementById('full-schedule-list');
+        container.innerHTML = '';
+        timetable.forEach(item => {
+          const isCurrent = (item.name === activeSubject);
+          const card = document.createElement('div');
+          card.className = `p-4 rounded-2xl border flex items-center justify-between transition ${isCurrent ? 'bg-emerald-500/20 border-emerald-500/40' : 'bg-white/5 border-white/5'}`;
+          card.innerHTML = `
+            <div class="flex items-center gap-3">
+              <span class="w-2.5 h-2.5 rounded-full ${isCurrent ? 'bg-emerald-400 animate-pulse' : 'bg-zinc-600'}"></span>
+              <div>
+                <div class="flex items-center gap-2">
+                  <span class="text-xs font-bold ${isCurrent ? 'text-emerald-300' : 'text-white'}">${item.num}. ${item.name}</span>
+                  ${isCurrent ? '<span class="text-[9px] font-extrabold px-2 py-0.5 rounded-full bg-emerald-500/30 text-emerald-200">СЕЙЧАС</span>' : ''}
+                </div>
+                <span class="text-[11px] text-zinc-400">${item.room} • I смена</span>
+              </div>
+            </div>
+            <span class="font-mono text-xs font-bold text-zinc-300">${item.start} – ${item.end}</span>
+          `;
+          container.appendChild(card);
+        });
+      }
+    }
+
+    const zenScreen = document.getElementById('zen-screen');
+    function enableZenMode() {
+      zenScreen.classList.remove('opacity-0', 'pointer-events-none');
+      zenScreen.classList.add('opacity-100');
+    }
+    function disableZenMode() {
+      zenScreen.classList.remove('opacity-100');
+      zenScreen.classList.add('opacity-0', 'pointer-events-none');
+    }
+
+    const notesDrawer = document.getElementById('notes-drawer');
+    const notesInput = document.getElementById('notes-input');
+    notesInput.value = localStorage.getItem('study_os_notes_final_v17') || '';
+
+    notesInput.addEventListener('input', () => {
+      localStorage.setItem('study_os_notes_final_v17', notesInput.value);
+    });
+
+    function toggleNotes(force) {
+      const isClosed = notesDrawer.classList.contains('pointer-events-none');
+      const open = force !== undefined ? force : isClosed;
+      if (open) {
+        notesDrawer.classList.remove('opacity-0', 'scale-95', 'pointer-events-none');
+        notesDrawer.classList.add('opacity-100', 'scale-100');
+      } else {
+        notesDrawer.classList.remove('opacity-100', 'scale-100');
+        notesDrawer.classList.add('opacity-0', 'scale-95', 'pointer-events-none');
+      }
+    }
+  </script>
+</body>
+</html>
