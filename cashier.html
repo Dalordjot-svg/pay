@@ -109,12 +109,12 @@
         <div class="space-y-4 mt-6">
           <div>
             <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">Shop ID (ID магазина)</label>
-            <input id="shopIdInput" type="text" placeholder="например: 123456" class="w-full px-4 py-3 rounded-xl bg-slate-800 border border-slate-700 text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 transition text-sm" />
+            <input id="shopIdInput" type="text" placeholder="1350725" class="w-full px-4 py-3 rounded-xl bg-slate-800 border border-slate-700 text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 transition text-sm" />
           </div>
 
           <div>
             <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">Секретный ключ (API Key)</label>
-            <input id="secretKeyInput" type="password" placeholder="live_... или test_..." class="w-full px-4 py-3 rounded-xl bg-slate-800 border border-slate-700 text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 transition text-sm" />
+            <input id="secretKeyInput" type="password" placeholder="live_..." class="w-full px-4 py-3 rounded-xl bg-slate-800 border border-slate-700 text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 transition text-sm" />
           </div>
         </div>
       </div>
@@ -127,14 +127,15 @@
   </main>
 
   <script>
-    // Инициализация иконок Lucide
     lucide.createIcons();
 
-    // Состояние
+    // Значения по умолчанию
+    const DEFAULT_SHOP_ID = '1350725';
+    const DEFAULT_SECRET_KEY = 'live_8j1lOkur6GG4mbeVO9zK1kfKj6jvjyuBkmmkZxiu2Yk';
+
     let currentAmount = '0';
     let checkInterval = null;
 
-    // Элементы DOM
     const amountDisplay = document.getElementById('amountDisplay');
     const inputScreen = document.getElementById('inputScreen');
     const qrScreen = document.getElementById('qrScreen');
@@ -145,13 +146,11 @@
     const generateBtn = document.getElementById('generateBtn');
     const btnText = document.getElementById('btnText');
 
-    // Загрузка сохранённых настроек при открытии
     window.addEventListener('DOMContentLoaded', () => {
-      shopIdInput.value = localStorage.getItem('yk_shop_id') || '';
-      secretKeyInput.value = localStorage.getItem('yk_secret_key') || '';
+      shopIdInput.value = localStorage.getItem('yk_shop_id') || DEFAULT_SHOP_ID;
+      secretKeyInput.value = localStorage.getItem('yk_secret_key') || DEFAULT_SECRET_KEY;
     });
 
-    // Экранная клавиатура
     function pressKey(key) {
       if (key === 'C') {
         currentAmount = '0';
@@ -167,29 +166,25 @@
       amountDisplay.textContent = Number(currentAmount).toLocaleString('ru-RU');
     }
 
-    // Создание реального платежа и генерация QR через ЮKassa
     async function createPaymentQR() {
       const amount = parseInt(currentAmount, 10);
       if (isNaN(amount) || amount <= 0) {
-        alert('Введите корректную сумму для оплаты');
+        alert('Введите сумму больше 0');
         return;
       }
 
-      const shopId = localStorage.getItem('yk_shop_id');
-      const secretKey = localStorage.getItem('yk_secret_key');
-
-      if (!shopId || !secretKey) {
-        alert('Сначала укажите Shop ID и Секретный ключ в настройках сверху');
-        settingsModal.classList.remove('hidden');
-        return;
-      }
+      const shopId = shopIdInput.value.trim() || DEFAULT_SHOP_ID;
+      const secretKey = secretKeyInput.value.trim() || DEFAULT_SECRET_KEY;
 
       generateBtn.disabled = true;
       btnText.innerText = 'Создание QR...';
 
       const auth = btoa(`${shopId}:${secretKey}`);
-      const idempotenceKey = 'pay_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-      const proxyUrl = 'https://corsproxy.io/?' + encodeURIComponent('https://api.yookassa.ru/v3/payments');
+      const idempotenceKey = 'pay_' + Date.now() + '_' + Math.random().toString(36).substring(2, 9);
+      
+      // Использование прямого шлюза с полной передачей заголовков
+      const targetApi = 'https://api.yookassa.ru/v3/payments';
+      const proxyUrl = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(targetApi);
 
       try {
         const response = await fetch(proxyUrl, {
@@ -211,21 +206,25 @@
               type: 'qr'
             },
             capture: true,
-            description: `Оплата по СБП: ${amount} руб.`
+            description: `Оплата касса СБП: ${amount} руб.`
           })
         });
 
         const data = await response.json();
 
-        if (!response.ok) {
-          alert('Ошибка ЮKassa: ' + (data.description || 'Проверьте правильность Shop ID и ключа'));
-          console.error(data);
+        if (!response.ok || data.type === 'error') {
+          alert('Ошибка ЮKassa: ' + (data.description || data.error || 'Проверьте данные'));
+          console.error('YooKassa error response:', data);
           return;
         }
 
-        const sbpUrl = data.confirmation.confirmation_data;
+        const sbpUrl = data.confirmation?.confirmation_data;
 
-        // Генерация QR
+        if (!sbpUrl) {
+          alert('ЮKassa не вернула QR для СБП. Проверьте, включен ли метод СБП в договоре ЮKassa.');
+          return;
+        }
+
         const qrContainer = document.getElementById('qrcode');
         qrContainer.innerHTML = '';
 
@@ -242,48 +241,15 @@
         inputScreen.classList.add('hidden');
         qrScreen.classList.remove('hidden');
 
-        // Фоновый опрос статуса платежа
-        startPolling(data.id, auth);
-
       } catch (err) {
-        alert('Ошибка связи с ЮKassa. Проверьте интернет-соединение.');
-        console.error(err);
+        alert('Ошибка связи с шлюзом. Проверьте подключение.');
+        console.error('Network error:', err);
       } finally {
         generateBtn.disabled = false;
         btnText.innerText = 'Создать QR-код';
       }
     }
 
-    // Автопроверка успешности оплаты
-    function startPolling(paymentId, auth) {
-      if (checkInterval) clearInterval(checkInterval);
-
-      checkInterval = setInterval(async () => {
-        try {
-          const checkUrl = 'https://corsproxy.io/?' + encodeURIComponent(`https://api.yookassa.ru/v3/payments/${paymentId}`);
-          const res = await fetch(checkUrl, {
-            headers: {
-              'Authorization': `Basic ${auth}`
-            }
-          });
-          const data = await res.json();
-
-          if (data.status === 'succeeded') {
-            clearInterval(checkInterval);
-            alert('🎉 Оплата успешно получена!');
-            cancelPayment();
-          } else if (data.status === 'canceled') {
-            clearInterval(checkInterval);
-            alert('Платеж отменен или истек срок действия.');
-            cancelPayment();
-          }
-        } catch (e) {
-          console.error('Ошибка проверки статуса:', e);
-        }
-      }, 3000);
-    }
-
-    // Отмена оплаты
     function cancelPayment() {
       if (checkInterval) clearInterval(checkInterval);
       qrScreen.classList.add('hidden');
@@ -292,7 +258,6 @@
       amountDisplay.textContent = '0';
     }
 
-    // Настройки
     document.getElementById('openSettingsBtn').addEventListener('click', () => {
       settingsModal.classList.remove('hidden');
     });
