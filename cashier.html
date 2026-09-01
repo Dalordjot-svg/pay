@@ -28,6 +28,9 @@
     * { -webkit-tap-highlight-color: transparent; user-select: none; }
     body { background: #0d0d10; color: white; }
     .sticker-badge { box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5); }
+    .stamp-badge {
+      clip-path: polygon(50% 0%, 65% 15%, 85% 10%, 85% 30%, 100% 45%, 90% 65%, 95% 85%, 75% 85%, 65% 100%, 45% 90%, 25% 95%, 20% 75%, 0% 65%, 12% 45%, 5% 25%, 25% 20%, 35% 0%);
+    }
   </style>
 
   <!-- Firebase -->
@@ -48,21 +51,91 @@
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
 
-    window.firebaseDB = db; window.dbRef = ref; window.dbSet = set; window.dbGet = get; window.dbUpdate = update;
+    window.firebaseDB = db;
+    window.dbRef = ref;
+    window.dbSet = set;
+    window.dbGet = get;
+    window.dbUpdate = update;
 
-    // Подгрузка ключей ЮКассы
-    window.yooKassaConfig = { shopId: '', secretKey: '' };
+    // Резервная подгрузка ключей из базы (если заданы глобально)
+    window.yooKassaConfig = {
+      shopId: localStorage.getItem('yk_shop_id') || '',
+      secretKey: localStorage.getItem('yk_secret_key') || ''
+    };
+
     onValue(ref(db, 'admin_settings/yookassa'), (snapshot) => {
       const data = snapshot.val();
-      if (data && data.shopId && data.secretKey) {
+      if (data && data.shopId && data.secretKey && !window.yooKassaConfig.shopId) {
         window.yooKassaConfig.shopId = data.shopId;
         window.yooKassaConfig.secretKey = data.secretKey;
+        updateKeyStatusBadge();
       }
     });
   </script>
 </head>
 <body class="min-h-screen flex flex-col font-sans">
 
+  <!-- ================= TOP BAR ================= -->
+  <header class="w-full bg-surface/90 backdrop-blur-xl border-b border-white/10 px-4 md:px-8 py-3 flex justify-between items-center sticky top-0 z-40">
+    <div class="flex items-center gap-2.5">
+      <div class="stamp-badge bg-sticker text-black font-display font-black text-xs px-2.5 py-1 uppercase -rotate-3 shadow-md">
+        MOON
+      </div>
+      <h1 class="font-display text-xs md:text-sm font-black tracking-wide uppercase">Касса СБП</h1>
+    </div>
+
+    <!-- Панель действий: Ключи + Выход на экран -->
+    <div class="flex items-center gap-2">
+      <!-- Кнопка настройки ключей -->
+      <button onclick="openKeysModal()" class="flex items-center gap-1.5 bg-surfaceLight hover:bg-white/15 active:scale-95 text-xs text-white border border-white/10 px-3 py-2 rounded-xl font-display font-bold transition-all">
+        <span>⚙️</span>
+        <span class="hidden sm:inline">Ключи ЮKassa</span>
+        <span id="keys-status-indicator" class="w-2 h-2 rounded-full bg-rose-500 ml-0.5"></span>
+      </button>
+
+      <!-- Выход на экран покупателя -->
+      <a href="https://dalordjot-svg.github.io/Do-go/" target="_blank" rel="noopener noreferrer" class="flex items-center gap-1.5 bg-yellow-400/10 hover:bg-yellow-400/20 active:scale-95 text-xs text-sticker border border-yellow-400/30 px-3 py-2 rounded-xl font-display font-bold transition-all shadow-sm">
+        <span>🖥️</span>
+        <span>Экран покупателя</span>
+        <span class="text-[10px] opacity-75">↗</span>
+      </a>
+    </div>
+  </header>
+
+  <!-- ================= МОДАЛКА ВВОДА КЛЮЧЕЙ ================= -->
+  <div id="keys-modal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+    <div class="w-full max-w-sm bg-surface border border-white/15 rounded-3xl p-6 shadow-2xl flex flex-col gap-4 text-left">
+      <div class="flex justify-between items-center border-b border-white/10 pb-3">
+        <div>
+          <h3 class="font-display font-black text-sm uppercase text-sticker">Ключи ЮKassa</h3>
+          <p class="text-[11px] text-neutral-400">Данные для выставления СБП QR</p>
+        </div>
+        <button onclick="closeKeysModal()" class="text-neutral-400 hover:text-white text-lg p-1">✕</button>
+      </div>
+
+      <div class="flex flex-col gap-3">
+        <div>
+          <label class="text-[11px] text-neutral-300 font-bold uppercase block mb-1">Shop ID</label>
+          <input type="text" id="modal-shop-id" placeholder="Например: 1350725" class="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-xs text-white font-mono focus:outline-none focus:border-yellow-300" />
+        </div>
+        <div>
+          <label class="text-[11px] text-neutral-300 font-bold uppercase block mb-1">Секретный ключ API</label>
+          <input type="password" id="modal-secret-key" placeholder="test_... или live_..." class="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-xs text-white font-mono focus:outline-none focus:border-yellow-300" />
+        </div>
+      </div>
+
+      <div class="flex gap-2 pt-2">
+        <button onclick="saveKeysFromModal()" class="flex-1 bg-sticker text-black font-display font-black text-xs uppercase py-3 rounded-xl active:scale-95 transition-all sticker-badge">
+          Сохранить
+        </button>
+        <button onclick="closeKeysModal()" class="bg-white/10 hover:bg-white/15 px-4 py-3 rounded-xl text-xs font-bold text-neutral-300">
+          Отмена
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= КАССА И ОПЛАТА ================= -->
   <main class="flex-1 p-4 md:p-8 flex items-center justify-center">
     <div class="w-full max-w-md bg-surface border border-white/10 rounded-3xl p-6 md:p-8 flex flex-col gap-6 shadow-2xl">
       
@@ -92,7 +165,7 @@
         <button onclick="backspace()" class="h-16 rounded-2xl bg-rose-500/20 hover:bg-rose-500/30 border border-rose-500/30 text-rose-300 font-bold text-xl">⌫</button>
       </div>
 
-      <!-- Кнопки управления -->
+      <!-- Действия -->
       <div class="flex flex-col gap-3">
         <button id="send-bill-btn" onclick="createDirectSbpPayment()" class="w-full bg-sticker text-black font-display font-black text-base uppercase py-4 rounded-2xl active:scale-[0.98] transition-transform sticker-badge">
           ⚡ Выставить СБП QR
@@ -109,6 +182,53 @@
     let currentInput = "0";
     let activePollInterval = null;
     const terminalId = localStorage.getItem('yk_term_id') || 'term_01';
+
+    // Управление модалкой ключей
+    function openKeysModal() {
+      document.getElementById('modal-shop-id').value = localStorage.getItem('yk_shop_id') || (window.yooKassaConfig ? window.yooKassaConfig.shopId : '');
+      document.getElementById('modal-secret-key').value = localStorage.getItem('yk_secret_key') || (window.yooKassaConfig ? window.yooKassaConfig.secretKey : '');
+      document.getElementById('keys-modal').classList.remove('hidden');
+    }
+
+    function closeKeysModal() {
+      document.getElementById('keys-modal').classList.add('hidden');
+    }
+
+    function saveKeysFromModal() {
+      const sId = document.getElementById('modal-shop-id').value.trim();
+      const sKey = document.getElementById('modal-secret-key').value.trim();
+
+      if (!sId || !sKey) {
+        alert('Заполните оба поля!');
+        return;
+      }
+
+      localStorage.setItem('yk_shop_id', sId);
+      localStorage.setItem('yk_secret_key', sKey);
+
+      if (window.yooKassaConfig) {
+        window.yooKassaConfig.shopId = sId;
+        window.yooKassaConfig.secretKey = sKey;
+      }
+
+      updateKeyStatusBadge();
+      closeKeysModal();
+    }
+
+    function updateKeyStatusBadge() {
+      const sId = localStorage.getItem('yk_shop_id') || (window.yooKassaConfig && window.yooKassaConfig.shopId);
+      const sKey = localStorage.getItem('yk_secret_key') || (window.yooKassaConfig && window.yooKassaConfig.secretKey);
+      const indicator = document.getElementById('keys-status-indicator');
+      if (indicator) {
+        if (sId && sKey) {
+          indicator.className = 'w-2 h-2 rounded-full bg-emerald-400 ml-0.5';
+        } else {
+          indicator.className = 'w-2 h-2 rounded-full bg-rose-500 ml-0.5';
+        }
+      }
+    }
+
+    window.addEventListener('DOMContentLoaded', updateKeyStatusBadge);
 
     function generateUUID() {
       return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
@@ -140,9 +260,13 @@
       const amount = parseInt(currentInput);
       if (!amount || amount <= 0) return alert('Введите сумму больше 0');
 
-      const shopId = window.yooKassaConfig.shopId || localStorage.getItem('yk_shop_id');
-      const secretKey = window.yooKassaConfig.secretKey || localStorage.getItem('yk_secret_key');
-      if (!shopId || !secretKey) return alert('Ключи ЮKassa не загружены.');
+      const shopId = localStorage.getItem('yk_shop_id') || (window.yooKassaConfig ? window.yooKassaConfig.shopId : '');
+      const secretKey = localStorage.getItem('yk_secret_key') || (window.yooKassaConfig ? window.yooKassaConfig.secretKey : '');
+
+      if (!shopId || !secretKey) {
+        openKeysModal();
+        return;
+      }
 
       const btn = document.getElementById('send-bill-btn');
       const status = document.getElementById('pos-status-text');
@@ -152,7 +276,6 @@
 
       if (activePollInterval) clearInterval(activePollInterval);
 
-      // ИСПРАВЛЕНО: корректный URL прокси без двойного оборачивания
       const authHeader = 'Basic ' + btoa(`${shopId}:${secretKey}`);
       const proxyUrl = `https://corsproxy.io/?${encodeURIComponent('https://api.yookassa.ru/v3/payments')}`;
 
@@ -202,7 +325,6 @@
 
     function startDirectPaymentPolling(shopId, secretKey, paymentId, amount) {
       const authHeader = 'Basic ' + btoa(`${shopId}:${secretKey}`);
-      // ИСПРАВЛЕНО: корректный URL прокси для проверки статуса
       const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(`https://api.yookassa.ru/v3/payments/${paymentId}`)}`;
 
       activePollInterval = setInterval(async () => {
@@ -226,7 +348,7 @@
             document.getElementById('pos-status-text').innerHTML = '<span class="text-emerald-400 font-bold">✅ Оплата прошла!</span>';
           }
         } catch (e) { console.error("Polling error:", e); }
-      }, 2000); // Увеличил интервал опроса до 2 сек для стабильности прокси
+      }, 2000);
     }
 
     async function resetTerminal() {
@@ -240,6 +362,7 @@
     }
 
     window.addEventListener('keydown', (e) => {
+      if (['INPUT', 'TEXTAREA'].includes(document.activeElement?.tagName)) return;
       if (e.key >= '0' && e.key <= '9') pressKey(e.key);
       else if (e.key === 'Backspace') backspace();
       else if (e.key === 'Enter') createDirectSbpPayment();
