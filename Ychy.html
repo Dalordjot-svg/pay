@@ -15,7 +15,7 @@
 
   <style>
     .glass-dock {
-      background: rgba(18, 20, 26, 0.82);
+      background: rgba(18, 20, 26, 0.85);
       backdrop-filter: blur(35px) saturate(210%);
       -webkit-backdrop-filter: blur(35px) saturate(210%);
       border: 1px solid rgba(255, 255, 255, 0.12);
@@ -23,7 +23,7 @@
     }
 
     .glass-panel {
-      background: rgba(22, 25, 34, 0.7);
+      background: rgba(22, 25, 34, 0.72);
       backdrop-filter: blur(25px);
       -webkit-backdrop-filter: blur(25px);
       border: 1px solid rgba(255, 255, 255, 0.08);
@@ -42,7 +42,6 @@
     .aurora-1 { animation: orb-float-1 18s ease-in-out infinite; }
     .aurora-2 { animation: orb-float-2 22s ease-in-out infinite; }
 
-    /* Рамка выделения области учебника */
     #selection-overlay {
       cursor: crosshair;
       touch-action: none;
@@ -66,17 +65,19 @@
       box-shadow: 0 0 25px rgba(16, 185, 129, 0.6);
     }
 
-    /* Нативный гладкий скролл для iPad */
-    .native-scroll-area {
-      -webkit-overflow-scrolling: touch !important;
-      touch-action: pan-x pan-y !important;
+    /* Скролл для области чтения и сайдбара */
+    .reader-scroll-viewport {
+      display: block !important;
       overflow: auto !important;
+      -webkit-overflow-scrolling: touch !important;
+      touch-action: pan-x pan-y pinch-zoom !important;
+      position: relative;
     }
 
-    .native-scroll-y {
+    .sidebar-scroll-y {
+      overflow-y: auto !important;
       -webkit-overflow-scrolling: touch !important;
       touch-action: pan-y !important;
-      overflow-y: auto !important;
     }
 
     /* Рендер ответов ИИ */
@@ -100,7 +101,7 @@
     .katex { font-size: 1.1em; color: #f3f4f6; }
     .katex-display { margin: 0.5em 0; overflow-x: auto; overflow-y: hidden; padding: 2px 0; }
 
-    ::-webkit-scrollbar { width: 5px; height: 5px; }
+    ::-webkit-scrollbar { width: 4px; height: 4px; }
     ::-webkit-scrollbar-track { background: transparent; }
     ::-webkit-scrollbar-thumb {
       background: rgba(255, 255, 255, 0.2);
@@ -222,14 +223,14 @@
 
         <div class="flex-1 flex overflow-hidden relative rounded-3xl glass-panel">
           
-          <aside id="pdf-thumbnails-sidebar" class="w-40 md:w-44 bg-[#0e1017]/95 border-r border-white/10 flex flex-col p-2.5 shrink-0 gap-2.5 hidden z-20 native-scroll-y">
+          <aside id="pdf-thumbnails-sidebar" class="w-40 md:w-44 bg-[#0e1017]/95 border-r border-white/10 flex flex-col p-2.5 shrink-0 gap-2.5 hidden z-20 sidebar-scroll-y">
             <div class="text-[10px] font-bold text-zinc-500 uppercase px-1 select-none">Миниатюры</div>
             <div id="thumbnails-list" class="flex flex-col gap-2.5 pb-8"></div>
           </aside>
 
-          <main id="pan-container" class="flex-1 native-scroll-area p-4 md:p-8 flex bg-[#06070a] relative">
-            <div id="canvas-wrapper" class="m-auto flex items-center justify-center origin-top-left shrink-0 relative transition-all duration-75">
-              <div id="pdf-empty-state" class="text-center p-8 select-none">
+          <main id="pan-container" class="flex-1 reader-scroll-viewport p-4 md:p-10 bg-[#06070a] relative">
+            <div id="canvas-wrapper" class="min-w-full min-h-full flex items-center justify-center relative">
+              <div id="pdf-empty-state" class="text-center p-8 select-none m-auto">
                 <div class="text-4xl mb-2">📖</div>
                 <h3 class="text-sm font-bold text-zinc-300">Учебник не открыт</h3>
                 <p class="text-xs text-zinc-500 mt-1 mb-4">Выбери книгу во вкладке Библиотека</p>
@@ -237,7 +238,7 @@
                   Открыть Библиотеку
                 </button>
               </div>
-              <canvas id="main-book-canvas" class="rounded-xl shadow-2xl bg-white hidden cursor-grab"></canvas>
+              <canvas id="main-book-canvas" class="rounded-xl shadow-2xl bg-white hidden m-auto block"></canvas>
             </div>
 
             <div id="selection-overlay" class="absolute inset-0 z-30 hidden bg-black/40"></div>
@@ -247,7 +248,7 @@
 
       </section>
 
-      <section id="view-library" class="flex-1 glass-panel rounded-3xl p-6 flex flex-col justify-between native-scroll-y hidden">
+      <section id="view-library" class="flex-1 glass-panel rounded-3xl p-6 flex flex-col justify-between sidebar-scroll-y hidden">
         <div>
           <div class="flex items-center justify-between pb-4 border-b border-white/10 select-none">
             <div>
@@ -268,7 +269,7 @@
         </div>
       </section>
 
-      <section id="view-schedule" class="flex-1 glass-panel rounded-3xl p-6 flex flex-col justify-between native-scroll-y hidden">
+      <section id="view-schedule" class="flex-1 glass-panel rounded-3xl p-6 flex flex-col justify-between sidebar-scroll-y hidden">
         <div>
           <div class="pb-4 border-b border-white/10 select-none">
             <h2 class="text-2xl font-black text-white tracking-tight">Расписание уроков</h2>
@@ -336,7 +337,7 @@
       </div>
     </div>
 
-    <div id="ai-chat-messages" class="flex-1 native-scroll-y my-3 flex flex-col gap-3 pr-1 text-xs">
+    <div id="ai-chat-messages" class="flex-1 sidebar-scroll-y my-3 flex flex-col gap-3 pr-1 text-xs">
       <div class="p-3.5 rounded-2xl bg-white/5 border border-white/10 text-zinc-300 leading-relaxed">
         Скрытый ассистент готов. Сделай <b class="text-emerald-300">двойной тап по номеру страницы</b> в тулбаре, чтобы выделить задачу пальцем, или пиши вопрос сюда.
       </div>
@@ -701,7 +702,7 @@
     });
 
     /* ========================================================
-       3. СКРЫТЫЙ БРАУЗЕР (ГДЗ)
+       3. СКРЫТЫЙ БРАУЗЕР
        ======================================================== */
     const browserModal = document.getElementById('secret-browser-modal');
     const browserIframe = document.getElementById('browser-iframe');
@@ -762,7 +763,7 @@
     }
 
     /* ========================================================
-       4. ИИ-ДВИЖОК С ПАМЯТЬЮ И РЕНДЕРОМ KATEX
+       4. ИИ-ДВИЖОК
        ======================================================== */
     const aiModal = document.getElementById('ai-modal');
     const aiSettingsModal = document.getElementById('ai-settings-modal');
@@ -1009,10 +1010,10 @@
     });
 
     /* ========================================================
-       6. INDEXEDDB И PDF РИДЕР С НАСТОЯЩИМ СВОБОДНЫМ СКРОЛЛОМ
+       6. INDEXEDDB И PDF РИДЕР СО СВОБОДНЫМ 2D-СКРОЛЛОМ
        ======================================================== */
     let db;
-    const dbReq = indexedDB.open("StudyOS_Final_V18", 1);
+    const dbReq = indexedDB.open("StudyOS_Native_Pan_V19", 1);
     dbReq.onupgradeneeded = (e) => {
       db = e.target.result;
       if (!db.objectStoreNames.contains("books")) {
@@ -1119,11 +1120,11 @@
     let baseHeight = 1100;
 
     const emptyState = document.getElementById('pdf-empty-state');
-    const scalerWrapper = document.getElementById('canvas-wrapper');
     const pageNumInput = document.getElementById('reader-page-num');
     const totalPagesSpan = document.getElementById('reader-page-total');
     const thumbsSidebar = document.getElementById('pdf-thumbnails-sidebar');
     const thumbsContainer = document.getElementById('thumbnails-list');
+    const panViewport = document.getElementById('pan-container');
 
     function openBookInReader(id, startPage = 1) {
       getPDFById(id, book => {
@@ -1135,7 +1136,6 @@
           activeBookKey = id;
           activePageNum = startPage;
           zoomLevel = 1.0;
-          updateZoomStyles();
 
           document.getElementById('reader-book-title').textContent = book.name;
           totalPagesSpan.textContent = pdf.numPages;
@@ -1186,8 +1186,6 @@
       const h = baseHeight * zoomLevel;
       mainCanvas.style.width = `${w}px`;
       mainCanvas.style.height = `${h}px`;
-      scalerWrapper.style.width = `${w}px`;
-      scalerWrapper.style.height = `${h}px`;
       document.getElementById('zoom-value-label').textContent = `${Math.round(zoomLevel * 100)}%`;
     }
 
@@ -1225,11 +1223,11 @@
         const card = document.createElement('div');
         card.id = `thumb-item-${i}`;
         card.dataset.page = i;
-        card.className = "thumb-box p-1.5 rounded-xl border border-white/5 bg-black/40 flex flex-col items-center gap-1 cursor-pointer hover:border-emerald-500/50 transition select-none";
+        card.className = "thumb-box p-1.5 rounded-xl border border-white/5 bg-black/40 flex flex-col items-center gap-1 cursor-pointer hover:border-emerald-500/50 transition select-none shrink-0";
         card.onclick = () => renderSinglePage(i);
 
         card.innerHTML = `
-          <div class="w-full bg-[#14161f] rounded-lg overflow-hidden flex items-center justify-center min-h-[85px] relative">
+          <div class="w-full bg-[#14161f] rounded-lg overflow-hidden flex items-center justify-center min-h-[85px] relative pointer-events-none">
             <span class="text-[9px] text-zinc-600 font-mono loader-lbl">${i}</span>
             <canvas id="canvas-thumb-${i}" class="w-full h-auto rounded-lg hidden"></canvas>
           </div>
@@ -1262,7 +1260,7 @@
             }
           }
         });
-      }, { root: thumbsSidebar, rootMargin: "300px 0px 300px 0px" });
+      }, { root: thumbsSidebar, rootMargin: "250px 0px 250px 0px" });
 
       document.querySelectorAll('.thumb-box').forEach(el => observer.observe(el));
     }
@@ -1276,12 +1274,11 @@
       }
     }
 
-    /* ПИНЧ-ТУ-ЗУМ ДВУМЯ ПАЛЬЦАМИ (НЕ МЕШАЕТ СКРОЛЛУ ОДНИМ ПАЛЬЦЕМ) */
-    const panViewport = document.getElementById('pan-container');
+    /* ПИНЧ-ТУ-ЗУМ ДВУМЯ ПАЛЬЦАМИ (СКРОЛЛ ОДНИМ ПАЛЬЦЕМ НЕ ПЕРЕХВАТЫВАЕТСЯ) */
     let touchDistance = 0;
     let initialZoom = 1.0;
 
-    panViewport.addEventListener('touchstart', e => {
+    panViewport.addEventListener('touchstart', (e) => {
       if (e.touches.length === 2) {
         touchDistance = Math.hypot(
           e.touches[0].clientX - e.touches[1].clientX,
@@ -1291,7 +1288,7 @@
       }
     }, { passive: true });
 
-    panViewport.addEventListener('touchmove', e => {
+    panViewport.addEventListener('touchmove', (e) => {
       if (e.touches.length === 2 && touchDistance > 0) {
         const curDist = Math.hypot(
           e.touches[0].clientX - e.touches[1].clientX,
@@ -1303,7 +1300,7 @@
       }
     }, { passive: true });
 
-    panViewport.addEventListener('touchend', e => {
+    panViewport.addEventListener('touchend', (e) => {
       if (e.touches.length < 2) touchDistance = 0;
     });
 
@@ -1378,10 +1375,10 @@
 
     const notesDrawer = document.getElementById('notes-drawer');
     const notesInput = document.getElementById('notes-input');
-    notesInput.value = localStorage.getItem('study_os_notes_fixed_v18') || '';
+    notesInput.value = localStorage.getItem('study_os_notes_final_v19') || '';
 
     notesInput.addEventListener('input', () => {
-      localStorage.setItem('study_os_notes_fixed_v18', notesInput.value);
+      localStorage.setItem('study_os_notes_final_v19', notesInput.value);
     });
 
     function toggleNotes(force) {
