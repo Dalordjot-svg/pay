@@ -54,7 +54,6 @@
       box-shadow: 0 0 15px rgba(16, 185, 129, 0.4);
     }
 
-    /* Радиальное меню быстрого выбора */
     .radial-item {
       transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.2s ease, border-color 0.2s ease;
     }
@@ -65,19 +64,15 @@
       box-shadow: 0 0 25px rgba(16, 185, 129, 0.6);
     }
 
-    /* Скролл для области чтения и сайдбара */
-    .reader-scroll-viewport {
-      display: block !important;
-      overflow: auto !important;
-      -webkit-overflow-scrolling: touch !important;
-      touch-action: pan-x pan-y pinch-zoom !important;
-      position: relative;
+    /* Холст с аппаратным ускорением */
+    #viewport-container {
+      touch-action: none !important;
+      user-select: none;
+      -webkit-user-select: none;
     }
-
-    .sidebar-scroll-y {
-      overflow-y: auto !important;
-      -webkit-overflow-scrolling: touch !important;
-      touch-action: pan-y !important;
+    #viewport-pan-layer {
+      transform-origin: 0 0;
+      will-change: transform;
     }
 
     /* Рендер ответов ИИ */
@@ -215,22 +210,23 @@
               <button onclick="searchWord()" class="text-xs text-zinc-400 hover:text-white ml-1">🔍</button>
             </div>
             
-            <button onclick="zoomDoc(-0.15)" class="w-7 h-7 rounded-xl bg-white/10 hover:bg-white/15 flex items-center justify-center text-xs font-bold text-zinc-300">−</button>
+            <button onclick="zoomDoc(-0.2)" class="w-7 h-7 rounded-xl bg-white/10 hover:bg-white/15 flex items-center justify-center text-xs font-bold text-zinc-300">−</button>
             <span id="zoom-value-label" class="text-[10px] font-mono text-zinc-400 w-8 text-center font-bold">100%</span>
-            <button onclick="zoomDoc(0.15)" class="w-7 h-7 rounded-xl bg-white/10 hover:bg-white/15 flex items-center justify-center text-xs font-bold text-zinc-300">+</button>
+            <button onclick="zoomDoc(0.2)" class="w-7 h-7 rounded-xl bg-white/10 hover:bg-white/15 flex items-center justify-center text-xs font-bold text-zinc-300">+</button>
+            <button onclick="resetPanZoom()" class="px-2 py-1 bg-white/10 hover:bg-white/15 text-[10px] rounded-xl text-zinc-300 ml-1" title="Сбросить центровку">Сброс</button>
           </div>
         </div>
 
         <div class="flex-1 flex overflow-hidden relative rounded-3xl glass-panel">
           
-          <aside id="pdf-thumbnails-sidebar" class="w-40 md:w-44 bg-[#0e1017]/95 border-r border-white/10 flex flex-col p-2.5 shrink-0 gap-2.5 hidden z-20 sidebar-scroll-y">
+          <aside id="pdf-thumbnails-sidebar" class="w-40 md:w-44 bg-[#0e1017]/95 border-r border-white/10 flex flex-col p-2.5 shrink-0 gap-2.5 hidden z-20 overflow-y-auto" style="-webkit-overflow-scrolling: touch; touch-action: pan-y;">
             <div class="text-[10px] font-bold text-zinc-500 uppercase px-1 select-none">Миниатюры</div>
             <div id="thumbnails-list" class="flex flex-col gap-2.5 pb-8"></div>
           </aside>
 
-          <main id="pan-container" class="flex-1 reader-scroll-viewport p-4 md:p-10 bg-[#06070a] relative">
-            <div id="canvas-wrapper" class="min-w-full min-h-full flex items-center justify-center relative">
-              <div id="pdf-empty-state" class="text-center p-8 select-none m-auto">
+          <main id="viewport-container" class="flex-1 h-full w-full relative overflow-hidden bg-[#06070a] cursor-grab active:cursor-grabbing">
+            <div id="viewport-pan-layer" class="absolute inset-0 flex items-center justify-center pointer-events-none">
+              <div id="pdf-empty-state" class="text-center p-8 select-none pointer-events-auto">
                 <div class="text-4xl mb-2">📖</div>
                 <h3 class="text-sm font-bold text-zinc-300">Учебник не открыт</h3>
                 <p class="text-xs text-zinc-500 mt-1 mb-4">Выбери книгу во вкладке Библиотека</p>
@@ -238,7 +234,7 @@
                   Открыть Библиотеку
                 </button>
               </div>
-              <canvas id="main-book-canvas" class="rounded-xl shadow-2xl bg-white hidden m-auto block"></canvas>
+              <canvas id="main-book-canvas" class="rounded-xl shadow-2xl bg-white hidden pointer-events-auto"></canvas>
             </div>
 
             <div id="selection-overlay" class="absolute inset-0 z-30 hidden bg-black/40"></div>
@@ -248,7 +244,7 @@
 
       </section>
 
-      <section id="view-library" class="flex-1 glass-panel rounded-3xl p-6 flex flex-col justify-between sidebar-scroll-y hidden">
+      <section id="view-library" class="flex-1 glass-panel rounded-3xl p-6 flex flex-col justify-between overflow-y-auto hidden" style="-webkit-overflow-scrolling: touch;">
         <div>
           <div class="flex items-center justify-between pb-4 border-b border-white/10 select-none">
             <div>
@@ -269,7 +265,7 @@
         </div>
       </section>
 
-      <section id="view-schedule" class="flex-1 glass-panel rounded-3xl p-6 flex flex-col justify-between sidebar-scroll-y hidden">
+      <section id="view-schedule" class="flex-1 glass-panel rounded-3xl p-6 flex flex-col justify-between overflow-y-auto hidden" style="-webkit-overflow-scrolling: touch;">
         <div>
           <div class="pb-4 border-b border-white/10 select-none">
             <h2 class="text-2xl font-black text-white tracking-tight">Расписание уроков</h2>
@@ -337,7 +333,7 @@
       </div>
     </div>
 
-    <div id="ai-chat-messages" class="flex-1 sidebar-scroll-y my-3 flex flex-col gap-3 pr-1 text-xs">
+    <div id="ai-chat-messages" class="flex-1 my-3 flex flex-col gap-3 pr-1 text-xs overflow-y-auto" style="-webkit-overflow-scrolling: touch;">
       <div class="p-3.5 rounded-2xl bg-white/5 border border-white/10 text-zinc-300 leading-relaxed">
         Скрытый ассистент готов. Сделай <b class="text-emerald-300">двойной тап по номеру страницы</b> в тулбаре, чтобы выделить задачу пальцем, или пиши вопрос сюда.
       </div>
@@ -1010,10 +1006,10 @@
     });
 
     /* ========================================================
-       6. INDEXEDDB И PDF РИДЕР СО СВОБОДНЫМ 2D-СКРОЛЛОМ
+       6. НАСТОЯЩИЙ INFINITE PAN & ZOOM ПАЛЬЦЕМ
        ======================================================== */
     let db;
-    const dbReq = indexedDB.open("StudyOS_Native_Pan_V19", 1);
+    const dbReq = indexedDB.open("StudyOS_Final_Pan_Fix", 1);
     dbReq.onupgradeneeded = (e) => {
       db = e.target.result;
       if (!db.objectStoreNames.contains("books")) {
@@ -1115,16 +1111,115 @@
     let activePDFDoc = null;
     let activeBookKey = null;
     let activePageNum = 1;
-    let zoomLevel = 1.0;
     let baseWidth = 780;
     let baseHeight = 1100;
 
+    // ВИРТУАЛЬНАЯ КАМЕРА ПАНОРАМИРОВАНИЯ И ЗУМА
+    let panX = 0;
+    let panY = 0;
+    let currentScale = 1.0;
+
+    const panViewport = document.getElementById('viewport-container');
+    const panLayer = document.getElementById('viewport-pan-layer');
     const emptyState = document.getElementById('pdf-empty-state');
     const pageNumInput = document.getElementById('reader-page-num');
     const totalPagesSpan = document.getElementById('reader-page-total');
     const thumbsSidebar = document.getElementById('pdf-thumbnails-sidebar');
     const thumbsContainer = document.getElementById('thumbnails-list');
-    const panViewport = document.getElementById('pan-container');
+
+    function applyTransform() {
+      panLayer.style.transform = `translate3d(${panX}px, ${panY}px, 0) scale(${currentScale})`;
+      document.getElementById('zoom-value-label').textContent = `${Math.round(currentScale * 100)}%`;
+    }
+
+    function resetPanZoom() {
+      panX = 0;
+      panY = 0;
+      currentScale = 1.0;
+      applyTransform();
+    }
+
+    function zoomDoc(delta) {
+      const newScale = Math.max(0.5, Math.min(4.0, currentScale + delta));
+      currentScale = newScale;
+      applyTransform();
+    }
+
+    // ЖЕСТЫ ТАСКАНИЯ И ЗУМА ДЛЯ VIEWPORT
+    let isDragging = false;
+    let lastX = 0;
+    let lastY = 0;
+    let initialPinchDist = 0;
+    let initialScale = 1.0;
+
+    panViewport.addEventListener('touchstart', (e) => {
+      if (e.touches.length === 1) {
+        isDragging = true;
+        lastX = e.touches[0].clientX;
+        lastY = e.touches[0].clientY;
+      } else if (e.touches.length === 2) {
+        isDragging = false;
+        initialPinchDist = Math.hypot(
+          e.touches[0].clientX - e.touches[1].clientX,
+          e.touches[0].clientY - e.touches[1].clientY
+        );
+        initialScale = currentScale;
+      }
+    }, { passive: false });
+
+    panViewport.addEventListener('touchmove', (e) => {
+      e.preventDefault(); // Полностью отключаем системные жесты Safari
+      if (e.touches.length === 1 && isDragging) {
+        const deltaX = e.touches[0].clientX - lastX;
+        const deltaY = e.touches[0].clientY - lastY;
+        lastX = e.touches[0].clientX;
+        lastY = e.touches[0].clientY;
+        panX += deltaX;
+        panY += deltaY;
+        applyTransform();
+      } else if (e.touches.length === 2 && initialPinchDist > 0) {
+        const curDist = Math.hypot(
+          e.touches[0].clientX - e.touches[1].clientX,
+          e.touches[0].clientY - e.touches[1].clientY
+        );
+        const factor = curDist / initialPinchDist;
+        currentScale = Math.max(0.5, Math.min(4.0, initialScale * factor));
+        applyTransform();
+      }
+    }, { passive: false });
+
+    panViewport.addEventListener('touchend', (e) => {
+      if (e.touches.length === 0) {
+        isDragging = false;
+        initialPinchDist = 0;
+      } else if (e.touches.length === 1) {
+        lastX = e.touches[0].clientX;
+        lastY = e.touches[0].clientY;
+        isDragging = true;
+      }
+    });
+
+    // Мышь для десктопа
+    panViewport.addEventListener('mousedown', (e) => {
+      isDragging = true;
+      lastX = e.clientX;
+      lastY = e.clientY;
+    });
+
+    window.addEventListener('mousemove', (e) => {
+      if (!isDragging) return;
+      const deltaX = e.clientX - lastX;
+      const deltaY = e.clientY - lastY;
+      lastX = e.clientX;
+      lastY = e.clientY;
+      panX += deltaX;
+      panY += deltaY;
+      applyTransform();
+    });
+
+    window.addEventListener('mouseup', () => {
+      isDragging = false;
+    });
 
     function openBookInReader(id, startPage = 1) {
       getPDFById(id, book => {
@@ -1135,7 +1230,7 @@
           activePDFDoc = pdf;
           activeBookKey = id;
           activePageNum = startPage;
-          zoomLevel = 1.0;
+          resetPanZoom();
 
           document.getElementById('reader-book-title').textContent = book.name;
           totalPagesSpan.textContent = pdf.numPages;
@@ -1165,8 +1260,8 @@
 
       mainCanvas.width = viewport.width;
       mainCanvas.height = viewport.height;
-
-      updateZoomStyles();
+      mainCanvas.style.width = `${baseWidth}px`;
+      mainCanvas.style.height = `${baseHeight}px`;
 
       const ctx = mainCanvas.getContext('2d');
       ctx.fillStyle = '#FFFFFF';
@@ -1179,19 +1274,6 @@
 
       highlightActiveThumb(num);
       if (activeBookKey) updatePage(activeBookKey, num);
-    }
-
-    function updateZoomStyles() {
-      const w = baseWidth * zoomLevel;
-      const h = baseHeight * zoomLevel;
-      mainCanvas.style.width = `${w}px`;
-      mainCanvas.style.height = `${h}px`;
-      document.getElementById('zoom-value-label').textContent = `${Math.round(zoomLevel * 100)}%`;
-    }
-
-    function zoomDoc(delta) {
-      zoomLevel = Math.max(0.6, Math.min(3.5, zoomLevel + delta));
-      updateZoomStyles();
     }
 
     function changePage(delta) {
@@ -1274,36 +1356,6 @@
       }
     }
 
-    /* ПИНЧ-ТУ-ЗУМ ДВУМЯ ПАЛЬЦАМИ (СКРОЛЛ ОДНИМ ПАЛЬЦЕМ НЕ ПЕРЕХВАТЫВАЕТСЯ) */
-    let touchDistance = 0;
-    let initialZoom = 1.0;
-
-    panViewport.addEventListener('touchstart', (e) => {
-      if (e.touches.length === 2) {
-        touchDistance = Math.hypot(
-          e.touches[0].clientX - e.touches[1].clientX,
-          e.touches[0].clientY - e.touches[1].clientY
-        );
-        initialZoom = zoomLevel;
-      }
-    }, { passive: true });
-
-    panViewport.addEventListener('touchmove', (e) => {
-      if (e.touches.length === 2 && touchDistance > 0) {
-        const curDist = Math.hypot(
-          e.touches[0].clientX - e.touches[1].clientX,
-          e.touches[0].clientY - e.touches[1].clientY
-        );
-        const factor = curDist / touchDistance;
-        zoomLevel = Math.max(0.6, Math.min(3.5, initialZoom * factor));
-        updateZoomStyles();
-      }
-    }, { passive: true });
-
-    panViewport.addEventListener('touchend', (e) => {
-      if (e.touches.length < 2) touchDistance = 0;
-    });
-
     async function searchWord() {
       const q = document.getElementById('pdf-search-input').value.trim().toLowerCase();
       if (!q || !activePDFDoc) return;
@@ -1375,10 +1427,10 @@
 
     const notesDrawer = document.getElementById('notes-drawer');
     const notesInput = document.getElementById('notes-input');
-    notesInput.value = localStorage.getItem('study_os_notes_final_v19') || '';
+    notesInput.value = localStorage.getItem('study_os_notes_pan_fixed') || '';
 
     notesInput.addEventListener('input', () => {
-      localStorage.setItem('study_os_notes_final_v19', notesInput.value);
+      localStorage.setItem('study_os_notes_pan_fixed', notesInput.value);
     });
 
     function toggleNotes(force) {
