@@ -1,0 +1,922 @@
+import React, { useState, useEffect, useMemo } from 'react';
+import { 
+  Plus, 
+  CheckCircle2, 
+  Check, 
+  Clock, 
+  Image as ImageIcon, 
+  Trash2, 
+  Search, 
+  Filter, 
+  X, 
+  Eye, 
+  ShoppingBag, 
+  ArrowUpDown, 
+  Loader2, 
+  Wifi, 
+  AlertTriangle,
+  Camera,
+  Sparkles
+} from 'lucide-react';
+import { initializeApp } from 'firebase/app';
+import { 
+  getAuth, 
+  signInWithCustomToken, 
+  signInAnonymously, 
+  onAuthStateChanged 
+} from 'firebase/auth';
+import { 
+  getFirestore, 
+  collection, 
+  doc, 
+  addDoc, 
+  updateDoc, 
+  deleteDoc, 
+  onSnapshot 
+} from 'firebase/firestore';
+
+// Инициализация сервисов вне компонента
+const firebaseConfig = typeof __firebase_config !== 'undefined' 
+  ? JSON.parse(__firebase_config) 
+  : { apiKey: "demo", projectId: "demo" };
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+const appId = typeof __app_id !== 'undefined' ? __app_id : 'order-flow-queue';
+
+export default function App() {
+  // Авторизация и загрузка
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  // Данные заказов
+  const [orders, setOrders] = useState([]);
+
+  // Состояния фильтров и модалок
+  const [activeTab, setActiveTab] = useState('all');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [previewImage, setPreviewImage] = useState(null);
+  const [deleteConfirmId, setDeleteConfirmId] = useState(null);
+  const [toastMessage, setToastMessage] = useState(null);
+  const [sortOldestFirst, setSortOldestFirst] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Форма нового заказа
+  const [formData, setFormData] = useState({
+    customer: '',
+    text: '',
+    amount: '',
+    image: null
+  });
+
+  // Всплывающее уведомление
+  const showToast = (msg) => {
+    setToastMessage(msg);
+    setTimeout(() => {
+      setToastMessage(null);
+    }, 3000);
+  };
+
+  // 1. Аутентификация
+  useEffect(() => {
+    const initAuth = async () => {
+      try {
+        if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+          await signInWithCustomToken(auth, __initial_auth_token);
+        } else {
+          await signInAnonymously(auth);
+        }
+      } catch (err) {
+        console.error("Ошибка авторизации:", err);
+      }
+    };
+    initAuth();
+
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+    });
+    return () => unsubscribe();
+  }, []);
+
+  // 2. Получение данных в реальном времени после авторизации
+  useEffect(() => {
+    if (!user) return;
+
+    const ordersCol = collection(db, 'artifacts', appId, 'public', 'data', 'orders');
+    
+    const unsubscribe = onSnapshot(
+      ordersCol,
+      (snapshot) => {
+        const items = [];
+        snapshot.forEach((docSnapshot) => {
+          items.push({
+            id: docSnapshot.id,
+            ...docSnapshot.data()
+          });
+        });
+        setOrders(items);
+        setLoading(false);
+      },
+      (error) => {
+        console.error("Ошибка получения данных:", error);
+        showToast("⚠️ Ошибка синхронизации данных");
+        setLoading(false);
+      }
+    );
+
+    return () => unsubscribe();
+  }, [user]);
+
+  // Сжатие фото для быстрой загрузки
+  const handleImageUpload = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    if (file.size > 10 * 1024 * 1024) {
+      showToast("⚠️ Выберите файл размером до 10 МБ");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const img = new Image();
+      img.src = event.target.result;
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const maxDimension = 1000;
+        let width = img.width;
+        let height = img.height;
+
+        if (width > height) {
+          if (width > maxDimension) {
+            height = Math.round((height * maxDimension) / width);
+            width = maxDimension;
+          }
+        } else {
+          if (height > maxDimension) {
+            width = Math.round((width * maxDimension) / height);
+            height = maxDimension;
+          }
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+
+        const compressedBase64 = canvas.toDataURL('image/jpeg', 0.75);
+        setFormData(prev => ({ ...prev, image: compressedBase64 }));
+        showToast("📸 Фото успешно прикреплено!");
+      };
+    };
+    reader.readAsDataURL(file);
+  };
+
+  // Создание нового заказа с мягкой валидацией
+  const handleCreateOrder = async (e) => {
+    e.preventDefault();
+    if (!user) {
+      showToast("⏳ Подключение к базе данных...");
+      return;
+    }
+
+    const hasPhoto = Boolean(formData.image);
+    const hasText = Boolean(formData.text.trim());
+    const hasCustomer = Boolean(formData.customer.trim());
+
+    // Если фото нет, текст заказа обязателен
+    if (!hasPhoto && !hasText) {
+      showToast("⚠️ Напишите состав заказа или прикрепите фото!");
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const maxOrderNum = orders.reduce((max, o) => (o.orderNumber > max ? o.orderNumber : max), 100);
+      const nextOrderNumber = maxOrderNum + 1;
+
+      // Дефолтные значения, если поля не заполнены
+      const finalCustomer = hasCustomer 
+        ? formData.customer.trim() 
+        : (hasPhoto ? `Заказ по фото #${nextOrderNumber}` : "Клиент");
+
+      const finalText = hasText 
+        ? formData.text.trim() 
+        : "📷 Заказ по фото (детали на прикрепленном изображении)";
+
+      const finalAmount = formData.amount.trim() 
+        ? (formData.amount.includes('₽') ? formData.amount.trim() : `${formData.amount.trim()} ₽`) 
+        : "По чеку";
+
+      const newOrderPayload = {
+        orderNumber: nextOrderNumber,
+        customer: finalCustomer,
+        text: finalText,
+        amount: finalAmount,
+        image: formData.image || null,
+        createdAt: new Date().toISOString(),
+        status: "pending"
+      };
+
+      const ordersCol = collection(db, 'artifacts', appId, 'public', 'data', 'orders');
+      await addDoc(ordersCol, newOrderPayload);
+
+      setFormData({ customer: '', text: '', amount: '', image: null });
+      setIsModalOpen(false);
+      showToast(` Заказ #${nextOrderNumber} сохранен в очереди!`);
+    } catch (err) {
+      console.error("Ошибка сохранения:", err);
+      showToast("❌ Не удалось сохранить заказ");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // Изменение статуса на "Подтвержден"
+  const handleConfirmOrder = async (orderId) => {
+    if (!user) return;
+    try {
+      const orderRef = doc(db, 'artifacts', appId, 'public', 'data', 'orders', orderId);
+      await updateDoc(orderRef, { status: 'confirmed' });
+      showToast("✅ Заказ подтвержден и взят в работу");
+    } catch (err) {
+      console.error(err);
+      showToast("❌ Ошибка при подтверждении");
+    }
+  };
+
+  // Изменение статуса на "Закрыт"
+  const handleCloseOrder = async (orderId) => {
+    if (!user) return;
+    try {
+      const orderRef = doc(db, 'artifacts', appId, 'public', 'data', 'orders', orderId);
+      await updateDoc(orderRef, { status: 'closed' });
+      showToast("🏁 Заказ успешно закрыт");
+    } catch (err) {
+      console.error(err);
+      showToast("❌ Ошибка при закрытии");
+    }
+  };
+
+  // Удаление заказа
+  const handleDeleteOrder = async () => {
+    if (!user || !deleteConfirmId) return;
+    try {
+      const orderRef = doc(db, 'artifacts', appId, 'public', 'data', 'orders', deleteConfirmId);
+      await deleteDoc(orderRef);
+      setDeleteConfirmId(null);
+      showToast("🗑️ Заказ удален");
+    } catch (err) {
+      console.error(err);
+      showToast("❌ Ошибка при удалении");
+    }
+  };
+
+  // Форматирование времени
+  const formatTime = (isoString) => {
+    if (!isoString) return "";
+    const date = new Date(isoString);
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  };
+
+  const getTimePassed = (isoString) => {
+    if (!isoString) return "";
+    const diffMins = Math.floor((new Date() - new Date(isoString)) / 60000);
+    if (diffMins < 1) return "Только что";
+    if (diffMins < 60) return `${diffMins} мин назад`;
+    const diffHours = Math.floor(diffMins / 60);
+    return `${diffHours} ч назад`;
+  };
+
+  // Фильтрация и сортировка: первый поступивший в начале очереди
+  const filteredOrders = useMemo(() => {
+    let list = [...orders];
+
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      list = list.filter(o => 
+        (o.customer && o.customer.toLowerCase().includes(q)) || 
+        (o.text && o.text.toLowerCase().includes(q)) ||
+        String(o.orderNumber).includes(q)
+      );
+    }
+
+    if (activeTab === 'queue') {
+      list = list.filter(o => o.status === 'pending');
+    } else if (activeTab === 'confirmed') {
+      list = list.filter(o => o.status === 'confirmed');
+    } else if (activeTab === 'active') {
+      list = list.filter(o => o.status !== 'closed');
+    } else if (activeTab === 'closed') {
+      list = list.filter(o => o.status === 'closed');
+    }
+
+    list.sort((a, b) => {
+      const timeA = new Date(a.createdAt || 0).getTime();
+      const timeB = new Date(b.createdAt || 0).getTime();
+      return sortOldestFirst ? timeA - timeB : timeB - timeA;
+    });
+
+    return list;
+  }, [orders, searchQuery, activeTab, sortOldestFirst]);
+
+  const stats = {
+    total: orders.length,
+    pending: orders.filter(o => o.status === 'pending').length,
+    confirmed: orders.filter(o => o.status === 'confirmed').length,
+    closed: orders.filter(o => o.status === 'closed').length
+  };
+
+  return (
+    <div className="min-h-screen bg-slate-100 text-slate-800 flex flex-col font-sans">
+      
+      {/* Всплывающий тост */}
+      {toastMessage && (
+        <div className="fixed top-5 right-5 z-50 bg-slate-900 text-white px-5 py-3 rounded-2xl shadow-xl flex items-center gap-3 border border-slate-700 text-sm font-medium animate-fadeIn">
+          <span>{toastMessage}</span>
+        </div>
+      )}
+
+      {/* Шапка */}
+      <header className="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-slate-200 px-4 md:px-8 py-3.5 shadow-sm">
+        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
+          
+          <div className="flex items-center gap-3.5 w-full sm:w-auto">
+            <div className="w-11 h-11 rounded-2xl bg-indigo-600 flex items-center justify-center text-white shadow-md shadow-indigo-100">
+              <ShoppingBag className="w-6 h-6" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h1 className="text-xl font-bold tracking-tight text-slate-900">
+                  Менеджер Заказов
+                </h1>
+                <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+                  <Wifi className="w-3 h-3 text-emerald-500 animate-pulse" />
+                  Автосохранение
+                </span>
+              </div>
+              <p className="text-xs text-slate-500 mt-0.5">
+                Очередь по времени: кто первый сделал заказ, тот в начале списка
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
+            <button
+              onClick={() => setIsModalOpen(true)}
+              className="w-full sm:w-auto flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white font-medium px-5 py-2.5 rounded-xl shadow-lg shadow-indigo-100 transition-all text-sm"
+            >
+              <Plus className="w-4 h-4" />
+              <span>Создать заказ</span>
+            </button>
+          </div>
+        </div>
+      </header>
+
+      {/* Основной контент */}
+      <main className="flex-1 max-w-7xl w-full mx-auto p-4 md:p-8 space-y-6">
+        
+        {/* Карточки со статистикой */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+          <div 
+            onClick={() => setActiveTab('queue')}
+            className={`p-4 rounded-2xl border transition-all cursor-pointer ${
+              activeTab === 'queue' 
+                ? 'bg-amber-50/80 border-amber-300 ring-2 ring-amber-400/20' 
+                : 'bg-white border-slate-200 hover:border-slate-300'
+            }`}
+          >
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-semibold text-amber-800 uppercase tracking-wider">В очереди</span>
+              <span className="p-1.5 bg-amber-100 text-amber-700 rounded-lg">
+                <Clock className="w-4 h-4" />
+              </span>
+            </div>
+            <div className="text-2xl md:text-3xl font-extrabold text-slate-900 mt-2">{stats.pending}</div>
+            <div className="text-xs text-slate-500 mt-1">Ожидают подтверждения</div>
+          </div>
+
+          <div 
+            onClick={() => setActiveTab('confirmed')}
+            className={`p-4 rounded-2xl border transition-all cursor-pointer ${
+              activeTab === 'confirmed' 
+                ? 'bg-blue-50/80 border-blue-300 ring-2 ring-blue-400/20' 
+                : 'bg-white border-slate-200 hover:border-slate-300'
+            }`}
+          >
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-semibold text-blue-800 uppercase tracking-wider">В работе</span>
+              <span className="p-1.5 bg-blue-100 text-blue-700 rounded-lg">
+                <Check className="w-4 h-4" />
+              </span>
+            </div>
+            <div className="text-2xl md:text-3xl font-extrabold text-slate-900 mt-2">{stats.confirmed}</div>
+            <div className="text-xs text-slate-500 mt-1">Подтверждённые заказы</div>
+          </div>
+
+          <div 
+            onClick={() => setActiveTab('closed')}
+            className={`p-4 rounded-2xl border transition-all cursor-pointer ${
+              activeTab === 'closed' 
+                ? 'bg-emerald-50/80 border-emerald-300 ring-2 ring-emerald-400/20' 
+                : 'bg-white border-slate-200 hover:border-slate-300'
+            }`}
+          >
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-semibold text-emerald-800 uppercase tracking-wider">Закрыты</span>
+              <span className="p-1.5 bg-emerald-100 text-emerald-700 rounded-lg">
+                <CheckCircle2 className="w-4 h-4" />
+              </span>
+            </div>
+            <div className="text-2xl md:text-3xl font-extrabold text-slate-900 mt-2">{stats.closed}</div>
+            <div className="text-xs text-slate-500 mt-1">Завершённые заказы</div>
+          </div>
+
+          <div 
+            onClick={() => setActiveTab('all')}
+            className={`p-4 rounded-2xl border transition-all cursor-pointer ${
+              activeTab === 'all' 
+                ? 'bg-indigo-50/80 border-indigo-300 ring-2 ring-indigo-400/20' 
+                : 'bg-white border-slate-200 hover:border-slate-300'
+            }`}
+          >
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-semibold text-indigo-800 uppercase tracking-wider">Всего сохраненных</span>
+              <span className="p-1.5 bg-indigo-100 text-indigo-700 rounded-lg">
+                <Filter className="w-4 h-4" />
+              </span>
+            </div>
+            <div className="text-2xl md:text-3xl font-extrabold text-slate-900 mt-2">{stats.total}</div>
+            <div className="text-xs text-slate-500 mt-1">В вашей базе</div>
+          </div>
+        </div>
+
+        {/* Панель поиска, фильтров и сортировки */}
+        <div className="bg-white p-3 md:p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
+          
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 md:pb-0 scrollbar-none">
+            <button
+              onClick={() => setActiveTab('all')}
+              className={`px-3.5 py-1.5 rounded-xl text-xs md:text-sm font-semibold whitespace-nowrap transition-all ${
+                activeTab === 'all' ? 'bg-slate-900 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-100'
+              }`}
+            >
+              Все ({stats.total})
+            </button>
+            <button
+              onClick={() => setActiveTab('active')}
+              className={`px-3.5 py-1.5 rounded-xl text-xs md:text-sm font-semibold whitespace-nowrap transition-all ${
+                activeTab === 'active' ? 'bg-slate-900 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-100'
+              }`}
+            >
+              Активные ({stats.pending + stats.confirmed})
+            </button>
+            <button
+              onClick={() => setActiveTab('queue')}
+              className={`px-3.5 py-1.5 rounded-xl text-xs md:text-sm font-semibold whitespace-nowrap transition-all ${
+                activeTab === 'queue' ? 'bg-amber-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-100'
+              }`}
+            >
+              В очереди ({stats.pending})
+            </button>
+            <button
+              onClick={() => setActiveTab('confirmed')}
+              className={`px-3.5 py-1.5 rounded-xl text-xs md:text-sm font-semibold whitespace-nowrap transition-all ${
+                activeTab === 'confirmed' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-100'
+              }`}
+            >
+              В работе ({stats.confirmed})
+            </button>
+            <button
+              onClick={() => setActiveTab('closed')}
+              className={`px-3.5 py-1.5 rounded-xl text-xs md:text-sm font-semibold whitespace-nowrap transition-all ${
+                activeTab === 'closed' ? 'bg-emerald-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-100'
+              }`}
+            >
+              Закрытые ({stats.closed})
+            </button>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <div className="relative flex-1 md:w-64">
+              <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+              <input
+                type="text"
+                placeholder="Поиск по имени или тексту..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-9 pr-8 py-2 text-xs md:text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
+              />
+              {searchQuery && (
+                <button 
+                  onClick={() => setSearchQuery('')}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              )}
+            </div>
+
+            <button
+              onClick={() => setSortOldestFirst(prev => !prev)}
+              title={sortOldestFirst ? "Сначала старые (очередь)" : "Сначала новые"}
+              className="flex items-center gap-1.5 px-3 py-2 border border-slate-200 hover:bg-slate-50 active:scale-95 rounded-xl text-xs md:text-sm text-slate-700 whitespace-nowrap transition-all"
+            >
+              <ArrowUpDown className="w-3.5 h-3.5 text-slate-500" />
+              <span className="hidden sm:inline">
+                {sortOldestFirst ? "Очередь: старые вверху" : "Очередь: новые вверху"}
+              </span>
+            </button>
+          </div>
+        </div>
+
+        {/* Загрузка */}
+        {loading ? (
+          <div className="flex flex-col items-center justify-center p-16 text-slate-400">
+            <Loader2 className="w-9 h-9 animate-spin text-indigo-600 mb-3" />
+            <p className="text-sm font-medium text-slate-600">Загрузка сохраненных заказов...</p>
+          </div>
+        ) : filteredOrders.length === 0 ? (
+          <div className="bg-white rounded-3xl border border-dashed border-slate-300 p-12 text-center max-w-lg mx-auto">
+            <div className="w-14 h-14 mx-auto rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center mb-4">
+              <ShoppingBag className="w-7 h-7" />
+            </div>
+            <h3 className="text-lg font-bold text-slate-900">Заказов пока нет</h3>
+            <p className="text-sm text-slate-500 mt-1 max-w-xs mx-auto">
+              {searchQuery 
+                ? "По вашему запросу ничего не нашлось." 
+                : "Очередь чиста! Нажмите кнопку ниже, чтобы создать заказ."}
+            </p>
+            {!searchQuery && (
+              <button
+                onClick={() => setIsModalOpen(true)}
+                className="mt-5 inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium px-4 py-2 rounded-xl text-sm transition-all"
+              >
+                <Plus className="w-4 h-4" />
+                Добавить заказ
+              </button>
+            )}
+          </div>
+        ) : (
+          /* Сетка карточек */
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            {filteredOrders.map((order, index) => {
+              const isClosed = order.status === 'closed';
+              const isConfirmed = order.status === 'confirmed';
+              const isPending = order.status === 'pending';
+
+              return (
+                <div
+                  key={order.id}
+                  className={`flex flex-col bg-white rounded-2xl border transition-all duration-200 overflow-hidden shadow-sm hover:shadow-md ${
+                    isClosed
+                      ? 'border-slate-200 bg-slate-50/50 opacity-80'
+                      : isConfirmed
+                      ? 'border-blue-200 ring-1 ring-blue-500/10'
+                      : 'border-amber-300 ring-1 ring-amber-500/20'
+                  }`}
+                >
+                  {/* Шапка карточки */}
+                  <div className="p-4 pb-3 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+                    <div className="flex items-center gap-2">
+                      <span className="font-mono text-xs font-bold px-2 py-0.5 rounded-lg bg-white text-slate-800 border border-slate-200 shadow-2xs">
+                        #{order.orderNumber}
+                      </span>
+                      {!isClosed && sortOldestFirst && (
+                        <span className="text-[11px] font-semibold bg-amber-100/80 text-amber-800 px-2 py-0.5 rounded-md flex items-center gap-1">
+                          №{index + 1} в очереди
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      {isPending && (
+                        <span className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-800">
+                          <span className="w-1.5 h-1.5 rounded-full bg-amber-600 animate-ping"></span>
+                          В очереди
+                        </span>
+                      )}
+                      {isConfirmed && (
+                        <span className="inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-0.5 rounded-full bg-blue-100 text-blue-800">
+                          <Check className="w-3.5 h-3.5" />
+                          В работе
+                        </span>
+                      )}
+                      {isClosed && (
+                        <span className="inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-0.5 rounded-full bg-slate-200/80 text-slate-600">
+                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                          Закрыт
+                        </span>
+                      )}
+
+                      <button
+                        onClick={() => setDeleteConfirmId(order.id)}
+                        className="text-slate-300 hover:text-rose-500 p-1 rounded-lg transition-colors"
+                        title="Удалить карточку"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Тело карточки */}
+                  <div className="p-4 flex-1 flex flex-col gap-3">
+                    
+                    {/* Клиент и сумма */}
+                    <div className="flex items-start justify-between gap-2">
+                      <div>
+                        <h4 className="font-bold text-slate-900 text-base leading-tight">
+                          {order.customer}
+                        </h4>
+                        <div className="flex items-center gap-1.5 text-xs text-slate-400 mt-1">
+                          <Clock className="w-3 h-3" />
+                          <span>{formatTime(order.createdAt)}</span>
+                          <span>•</span>
+                          <span>{getTimePassed(order.createdAt)}</span>
+                        </div>
+                      </div>
+                      <div className="text-sm font-bold text-slate-800 bg-slate-100 px-2.5 py-1 rounded-lg whitespace-nowrap">
+                        {order.amount}
+                      </div>
+                    </div>
+
+                    {/* Текст заказа */}
+                    <div className="bg-slate-50 border border-slate-100 p-3 rounded-xl text-xs md:text-sm text-slate-700 whitespace-pre-wrap leading-relaxed">
+                      {order.text}
+                    </div>
+
+                    {/* Фото заказа */}
+                    {order.image && (
+                      <div className="relative group rounded-xl overflow-hidden border border-slate-200 bg-slate-100 mt-auto">
+                        <img
+                          src={order.image}
+                          alt={`Фото к заказу #${order.orderNumber}`}
+                          className="w-full h-36 object-cover group-hover:scale-105 transition-transform duration-300"
+                        />
+                        <button
+                          onClick={() => setPreviewImage(order.image)}
+                          className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white gap-1.5 text-xs font-semibold transition-opacity"
+                        >
+                          <Eye className="w-4 h-4" />
+                          Увеличить фото
+                        </button>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Нижние кнопки */}
+                  <div className="p-3 bg-slate-50/60 border-t border-slate-100 grid grid-cols-2 gap-2">
+                    <button
+                      disabled={isConfirmed || isClosed}
+                      onClick={() => handleConfirmOrder(order.id)}
+                      className={`flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl text-xs font-semibold transition-all ${
+                        isConfirmed
+                          ? 'bg-blue-100 text-blue-700 cursor-default'
+                          : isClosed
+                          ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
+                          : 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm active:scale-95'
+                      }`}
+                    >
+                      <Check className="w-3.5 h-3.5" />
+                      <span>{isConfirmed ? 'Подтверждён' : 'Подтвердить'}</span>
+                    </button>
+
+                    <button
+                      disabled={isClosed}
+                      onClick={() => handleCloseOrder(order.id)}
+                      className={`flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl text-xs font-semibold transition-all ${
+                        isClosed
+                          ? 'bg-emerald-100 text-emerald-800 cursor-default'
+                          : 'bg-white hover:bg-rose-50 hover:text-rose-600 text-slate-700 border border-slate-200 shadow-sm active:scale-95'
+                      }`}
+                    >
+                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                      <span>{isClosed ? 'Выполнен' : 'Закрыть'}</span>
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </main>
+
+      {/* Модалка: Создание заказа */}
+      {isModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fadeIn">
+          <div className="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-slate-100 relative max-h-[92vh] overflow-y-auto">
+            
+            <div className="flex items-center justify-between pb-4 border-b border-slate-100">
+              <div className="flex items-center gap-2.5">
+                <div className="p-2 bg-indigo-50 text-indigo-600 rounded-xl">
+                  <ShoppingBag className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-slate-900">Новый заказ</h3>
+                  <p className="text-xs text-slate-500">
+                    {formData.image 
+                      ? "✨ Фото прикреплено — поля можно оставить пустыми" 
+                      : "Заполни поля или просто прикрепи фото"}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setIsModalOpen(false)}
+                className="text-slate-400 hover:text-slate-700 p-1.5 rounded-xl hover:bg-slate-100 transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Блок быстрого прикрепления фото */}
+            <div className="mt-4">
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="text-xs font-semibold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
+                  <Camera className="w-3.5 h-3.5 text-indigo-600" />
+                  <span>Фото заказа / чека</span>
+                </label>
+                {formData.image && (
+                  <span className="text-[11px] font-medium text-emerald-600 flex items-center gap-1">
+                    <Sparkles className="w-3 h-3" /> Поля ниже стали необязательными!
+                  </span>
+                )}
+              </div>
+
+              {formData.image ? (
+                <div className="relative rounded-2xl overflow-hidden border-2 border-indigo-200 bg-slate-100 group shadow-inner">
+                  <img
+                    src={formData.image}
+                    alt="Предпросмотр"
+                    className="w-full h-44 object-cover"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/30 opacity-90 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity flex items-end justify-between p-3">
+                    <span className="text-xs text-white font-medium bg-black/40 px-2.5 py-1 rounded-lg backdrop-blur-xs">
+                      Фото прикреплено
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setFormData(prev => ({ ...prev, image: null }))}
+                      className="bg-rose-600 hover:bg-rose-700 text-white px-3 py-1.5 rounded-xl text-xs font-medium shadow-md transition-colors flex items-center gap-1"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                      Удалить фото
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <label className="border-2 border-dashed border-indigo-200 hover:border-indigo-500 bg-indigo-50/30 hover:bg-indigo-50/60 rounded-2xl p-4 flex flex-col items-center justify-center gap-1.5 cursor-pointer transition-all text-center">
+                  <div className="w-10 h-10 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center shadow-xs">
+                    <ImageIcon className="w-5 h-5" />
+                  </div>
+                  <span className="text-xs font-bold text-indigo-600">Нажмите, чтобы прикрепить фото</span>
+                  <p className="text-[11px] text-slate-500">
+                    Если есть фото, текст и имя заполнять не обязательно!
+                  </p>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageUpload}
+                    className="hidden"
+                  />
+                </label>
+              )}
+            </div>
+
+            <form onSubmit={handleCreateOrder} className="mt-4 space-y-3.5">
+              {/* Поле клиента */}
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="text-xs font-semibold text-slate-700 uppercase tracking-wider">
+                    Клиент / Стол / Телефон
+                  </label>
+                  <span className="text-[11px] text-slate-400">
+                    {formData.image ? "Необязательно" : "Желательно"}
+                  </span>
+                </div>
+                <input
+                  type="text"
+                  placeholder={formData.image ? "Необязательно (по умолчанию 'Заказ по фото')" : "Например: Иван (Стол №4)"}
+                  value={formData.customer}
+                  onChange={(e) => setFormData(prev => ({ ...prev, customer: e.target.value }))}
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+                />
+              </div>
+
+              {/* Текст заказа */}
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="text-xs font-semibold text-slate-700 uppercase tracking-wider">
+                    Текст заказа / Список блюд
+                  </label>
+                  <span className={`text-[11px] font-medium ${formData.image ? "text-slate-400" : "text-amber-600"}`}>
+                    {formData.image ? "Необязательно" : "Обязательно без фото"}
+                  </span>
+                </div>
+                <textarea
+                  rows={2}
+                  placeholder={
+                    formData.image 
+                      ? "Необязательно (детали будут взяты с фотографии)" 
+                      : "Напишите список позиций или комментарий..."
+                  }
+                  value={formData.text}
+                  onChange={(e) => setFormData(prev => ({ ...prev, text: e.target.value }))}
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+                ></textarea>
+              </div>
+
+              {/* Сумма */}
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="text-xs font-semibold text-slate-700 uppercase tracking-wider">
+                    Сумма заказа
+                  </label>
+                  <span className="text-[11px] text-slate-400">Необязательно</span>
+                </div>
+                <input
+                  type="text"
+                  placeholder="Например: 1 450 ₽ (или останется 'По чеку')"
+                  value={formData.amount}
+                  onChange={(e) => setFormData(prev => ({ ...prev, amount: e.target.value }))}
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+                />
+              </div>
+
+              <div className="pt-3 border-t border-slate-100 flex items-center justify-end gap-2.5">
+                <button
+                  type="button"
+                  onClick={() => setIsModalOpen(false)}
+                  className="px-4 py-2.5 text-sm font-medium text-slate-600 hover:bg-slate-100 rounded-xl transition-colors"
+                >
+                  Отмена
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="flex items-center gap-2 px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white text-sm font-semibold rounded-xl shadow-lg shadow-indigo-100 transition-all disabled:opacity-50"
+                >
+                  {isSubmitting && <Loader2 className="w-4 h-4 animate-spin" />}
+                  <span>{formData.image && !formData.text ? "Сохранить по фото" : "Сохранить в очередь"}</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Модалка подтверждения удаления */}
+      {deleteConfirmId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fadeIn">
+          <div className="bg-white rounded-2xl max-w-sm w-full p-5 shadow-2xl border border-slate-100 text-center">
+            <div className="w-12 h-12 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center mx-auto mb-3">
+              <AlertTriangle className="w-6 h-6" />
+            </div>
+            <h4 className="text-base font-bold text-slate-900">Удалить заказ?</h4>
+            <p className="text-xs text-slate-500 mt-1">
+              Карточка будет безвозвратно удалена из базы.
+            </p>
+            <div className="flex gap-2 mt-5">
+              <button
+                onClick={() => setDeleteConfirmId(null)}
+                className="flex-1 py-2 text-xs font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl transition-all"
+              >
+                Отмена
+              </button>
+              <button
+                onClick={handleDeleteOrder}
+                className="flex-1 py-2 text-xs font-semibold text-white bg-rose-600 hover:bg-rose-700 rounded-xl transition-all"
+              >
+                Да, удалить
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Просмотр фото на весь экран */}
+      {previewImage && (
+        <div 
+          onClick={() => setPreviewImage(null)}
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-sm cursor-zoom-out animate-fadeIn"
+        >
+          <div className="relative max-w-3xl w-full max-h-[90vh] flex items-center justify-center">
+            <button
+              onClick={() => setPreviewImage(null)}
+              className="absolute -top-10 right-0 text-white hover:text-slate-300 p-2 text-sm flex items-center gap-1"
+            >
+              <X className="w-6 h-6" />
+              Закрыть
+            </button>
+            <img
+              src={previewImage}
+              alt="Увеличенное фото заказа"
+              className="max-w-full max-h-[85vh] rounded-2xl shadow-2xl object-contain"
+            />
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
