@@ -3,12 +3,12 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Moon POS • Терминал Кассира</title>
+  <title>Moon POS • Терминал Продаж & Меню</title>
   
   <!-- Шрифты -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com">
-  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&family=Unbounded:wght@600;800;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&family=Unbounded:wght@600;700;800;900&display=swap" rel="stylesheet">
 
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -29,6 +29,7 @@
           },
           colors: {
             sticker: '#FFF188',
+            brandDark: '#0a0a0d',
           }
         }
       }
@@ -36,240 +37,722 @@
   </script>
 
   <style>
-    @keyframes pulse-ring {
-      0% { transform: scale(0.95); opacity: 0.8; }
-      50% { transform: scale(1.08); opacity: 0.3; }
-      100% { transform: scale(0.95); opacity: 0.8; }
+    /* Плавные скроллбары */
+    ::-webkit-scrollbar { width: 4px; height: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 9999px; }
+
+    @keyframes pulse-soft {
+      0%, 100% { transform: scale(1); opacity: 0.9; }
+      50% { transform: scale(1.04); opacity: 0.4; }
     }
-    .animate-nfc { animation: pulse-ring 2s infinite ease-in-out; }
+    .animate-glow { animation: pulse-soft 3s infinite ease-in-out; }
+    
     .checkmark-draw {
       stroke-dasharray: 50;
       stroke-dashoffset: 50;
       animation: draw 0.6s 0.2s cubic-bezier(0.65, 0, 0.45, 1) forwards;
     }
     @keyframes draw { 100% { stroke-dashoffset: 0; } }
+
+    /* Тап эффект для сенсорных экранов */
+    .tap-active:active { transform: scale(0.96); transition: transform 0.08s ease; }
   </style>
 </head>
-<body class="bg-[#08080a] text-slate-100 flex flex-col items-center justify-center min-h-screen p-4 font-sans select-none overflow-hidden antialiased">
+<body class="bg-[#070709] text-slate-100 flex flex-col items-center justify-center min-h-screen p-2 sm:p-4 font-sans select-none antialiased overflow-hidden">
 
-  <!-- Фоновое свечение Moon -->
+  <!-- Фон Moon Glow -->
   <div class="fixed inset-0 pointer-events-none flex items-center justify-center">
-    <div class="w-[500px] h-[500px] bg-yellow-300/5 rounded-full blur-3xl"></div>
-    <div class="w-[350px] h-[350px] bg-purple-600/10 rounded-full blur-3xl"></div>
+    <div class="w-[600px] h-[600px] bg-yellow-300/5 rounded-full blur-[140px]"></div>
+    <div class="w-[450px] h-[450px] bg-indigo-600/10 rounded-full blur-[120px]"></div>
   </div>
 
-  <!-- Корпус терминала -->
-  <main class="w-full max-w-sm bg-neutral-900/90 backdrop-blur-2xl rounded-[36px] border border-white/10 shadow-[0_20px_60px_rgba(0,0,0,0.9)] p-6 relative overflow-hidden flex flex-col justify-between min-h-[680px] transition-all duration-300">
+  <!-- Главный терминал кассы -->
+  <main id="posContainer" class="w-full max-w-5xl bg-neutral-900/90 backdrop-blur-3xl rounded-[32px] border border-white/10 shadow-[0_25px_80px_rgba(0,0,0,0.95)] flex flex-col h-[94vh] max-h-[880px] relative overflow-hidden transition-all duration-300">
     
-    <!-- Шапка -->
-    <header class="flex items-center justify-between pb-3.5 border-b border-white/10">
-      <div class="flex items-center gap-2.5">
-        <div class="w-9 h-9 rounded-2xl bg-sticker flex items-center justify-center shadow-lg shadow-yellow-300/20">
+    <!-- ВЕРХНИЙ БАР (Header) -->
+    <header class="flex items-center justify-between px-6 py-3.5 border-b border-white/10 bg-black/40">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-2xl bg-sticker flex items-center justify-center shadow-lg shadow-yellow-300/20">
           <span class="text-black font-display font-black text-sm">M</span>
         </div>
         <div>
-          <span class="font-display font-extrabold text-xs text-white leading-tight block uppercase tracking-wider">Moon POS</span>
-          <span class="text-[10px] font-bold text-neutral-400 tracking-widest uppercase block flex items-center gap-1.5">
-            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-            Связь с экраном: <span id="headerTermId" class="text-sticker font-mono">term_01</span>
+          <div class="flex items-center gap-2">
+            <span class="font-display font-extrabold text-sm text-white uppercase tracking-wider">Moon POS</span>
+            <span class="px-2 py-0.5 rounded-md bg-white/10 text-[10px] font-mono text-sticker">v2.4</span>
+          </div>
+          <span class="text-[11px] font-semibold text-neutral-400 flex items-center gap-1.5 mt-0.5">
+            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+            Терминал: <span id="headerTermId" class="text-sticker font-mono">term_01</span>
           </span>
         </div>
       </div>
 
+      <!-- Вкладки верхнего бара -->
+      <nav class="flex items-center gap-1.5 bg-neutral-950/70 p-1.5 rounded-2xl border border-white/10">
+        <button onclick="switchTab('catalog')" id="tabBtnCatalog" class="px-4 py-2 rounded-xl text-xs font-display font-bold transition flex items-center gap-2 bg-white/15 text-white shadow-sm">
+          <i data-lucide="layout-grid" class="w-3.5 h-3.5 text-sticker"></i>
+          Меню & Заказ
+        </button>
+        <button onclick="switchTab('numpad')" id="tabBtnNumpad" class="px-4 py-2 rounded-xl text-xs font-display font-bold transition flex items-center gap-2 text-neutral-400 hover:text-white">
+          <i data-lucide="calculator" class="w-3.5 h-3.5"></i>
+          Свободная сумма
+        </button>
+        <button onclick="switchTab('admin')" id="tabBtnAdmin" class="px-4 py-2 rounded-xl text-xs font-display font-bold transition flex items-center gap-2 text-neutral-400 hover:text-white">
+          <i data-lucide="database" class="w-3.5 h-3.5"></i>
+          База Меню
+        </button>
+      </nav>
+
+      <!-- Быстрые действия -->
       <div class="flex items-center gap-2">
-        <button onclick="castMagicTips()" title="Кастовать чаевые на экран" class="p-2.5 rounded-2xl bg-purple-500/20 hover:bg-purple-500/30 text-purple-300 border border-purple-500/30 transition active:scale-95">
+        <button onclick="castMagicTips()" title="Отправить чаевые покупателю" class="tap-active p-2.5 rounded-2xl bg-purple-500/20 hover:bg-purple-500/30 text-purple-300 border border-purple-500/30 transition">
           <i data-lucide="wand-2" class="w-4 h-4"></i>
         </button>
-        <button id="openSettingsBtn" class="p-2.5 rounded-2xl bg-white/5 hover:bg-white/10 text-neutral-300 transition active:scale-95 border border-white/10">
+        <button onclick="openSettings()" class="tap-active p-2.5 rounded-2xl bg-white/5 hover:bg-white/10 text-neutral-300 transition border border-white/10">
           <i data-lucide="sliders" class="w-4 h-4"></i>
         </button>
       </div>
     </header>
 
-    <!-- Экран 1: Ввод суммы -->
-    <section id="inputScreen" class="flex flex-col flex-1 justify-between pt-3">
-      <div class="text-center my-auto bg-black/50 p-4 rounded-3xl border border-white/10 shadow-inner">
-        <span class="text-[10px] uppercase tracking-widest text-neutral-400 font-display font-bold">Сумма к оплате</span>
-        <div class="flex items-baseline justify-center gap-1.5 mt-1">
-          <span id="amountDisplay" class="font-display text-4xl font-black tracking-tight text-white transition-all">0</span>
-          <span class="text-2xl font-black text-sticker">₽</span>
-        </div>
-      </div>
+    <!-- ОСНОВНОЙ КОНТЕНТ (3 ЭКРАНА В ОДНОМ) -->
+    <div class="flex-1 flex overflow-hidden relative">
 
-      <!-- Клавиатура -->
-      <div class="grid grid-cols-3 gap-2.5 my-3">
-        <button onclick="pressKey('1')" class="h-12 py-3 rounded-2xl bg-white/5 hover:bg-white/15 text-lg font-display font-bold text-white transition active:scale-95 border border-white/10">1</button>
-        <button onclick="pressKey('2')" class="h-12 py-3 rounded-2xl bg-white/5 hover:bg-white/15 text-lg font-display font-bold text-white transition active:scale-95 border border-white/10">2</button>
-        <button onclick="pressKey('3')" class="h-12 py-3 rounded-2xl bg-white/5 hover:bg-white/15 text-lg font-display font-bold text-white transition active:scale-95 border border-white/10">3</button>
-        <button onclick="pressKey('4')" class="h-12 py-3 rounded-2xl bg-white/5 hover:bg-white/15 text-lg font-display font-bold text-white transition active:scale-95 border border-white/10">4</button>
-        <button onclick="pressKey('5')" class="h-12 py-3 rounded-2xl bg-white/5 hover:bg-white/15 text-lg font-display font-bold text-white transition active:scale-95 border border-white/10">5</button>
-        <button onclick="pressKey('6')" class="h-12 py-3 rounded-2xl bg-white/5 hover:bg-white/15 text-lg font-display font-bold text-white transition active:scale-95 border border-white/10">6</button>
-        <button onclick="pressKey('7')" class="h-12 py-3 rounded-2xl bg-white/5 hover:bg-white/15 text-lg font-display font-bold text-white transition active:scale-95 border border-white/10">7</button>
-        <button onclick="pressKey('8')" class="h-12 py-3 rounded-2xl bg-white/5 hover:bg-white/15 text-lg font-display font-bold text-white transition active:scale-95 border border-white/10">8</button>
-        <button onclick="pressKey('9')" class="h-12 py-3 rounded-2xl bg-white/5 hover:bg-white/15 text-lg font-display font-bold text-white transition active:scale-95 border border-white/10">9</button>
-        <button onclick="pressKey('C')" class="h-12 py-3 rounded-2xl bg-red-500/10 hover:bg-red-500/20 text-red-400 font-display font-bold transition active:scale-95 border border-red-500/20">C</button>
-        <button onclick="pressKey('0')" class="h-12 py-3 rounded-2xl bg-white/5 hover:bg-white/15 text-lg font-display font-bold text-white transition active:scale-95 border border-white/10">0</button>
-        <button onclick="pressKey('backspace')" class="h-12 py-3 rounded-2xl bg-white/5 hover:bg-white/15 flex items-center justify-center text-neutral-300 transition active:scale-95 border border-white/10">
-          <i data-lucide="delete" class="w-5 h-5"></i>
-        </button>
-      </div>
-
-      <button id="generateBtn" onclick="createPaymentQR()" class="w-full py-4 rounded-2xl bg-sticker hover:bg-yellow-200 text-black font-display font-black text-sm shadow-xl shadow-yellow-300/10 transition-all active:scale-[0.98] flex items-center justify-center gap-2 uppercase tracking-wider">
-        <span id="btnText">Выставить на экран</span>
-        <i data-lucide="arrow-right" class="w-4 h-4"></i>
-      </button>
-    </section>
-
-    <!-- Экран 2: QR на кассе (Синхронизирован с экраном) -->
-    <section id="qrScreen" class="hidden flex flex-col flex-1 justify-between items-center pt-2">
-      <div class="w-full bg-black/60 rounded-3xl p-4 border border-white/10 shadow-lg flex flex-col items-center my-auto">
-        <div class="flex items-center gap-1.5 text-xs text-emerald-400 font-semibold mb-1">
-          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
-          QR выведен покупателю
-        </div>
-        <h2 class="font-display font-black text-lg text-white">Ожидание оплаты</h2>
-
-        <div class="relative p-2.5 bg-white rounded-2xl border border-white/20 shadow-md mt-3 mb-2 flex items-center justify-center">
-          <div id="qrcode"></div>
-        </div>
-
-        <div class="font-display text-2xl font-black text-sticker mb-2">
-          <span id="qrAmount">0</span> ₽
-        </div>
-
-        <div class="w-full bg-white/5 rounded-xl p-2.5 border border-white/10 flex items-center justify-between text-xs">
-          <span class="text-neutral-400 font-medium flex items-center gap-1.5">
-            <i data-lucide="timer" class="w-3.5 h-3.5 text-sticker"></i>Таймер:
-          </span>
-          <span id="timerDisplay" class="font-display font-bold text-sticker font-mono">05:00</span>
-        </div>
-      </div>
-
-      <button onclick="cancelPayment()" class="w-full mt-3 py-3.5 rounded-2xl bg-red-500/10 hover:bg-red-500/20 text-red-400 font-display font-bold text-xs uppercase tracking-wider border border-red-500/20 transition active:scale-[0.98]">
-        Отменить оплату ✕
-      </button>
-    </section>
-
-    <!-- Экран 3: Успех -->
-    <section id="successScreen" class="hidden flex flex-col flex-1 justify-between items-center pt-2">
-      <div class="w-full flex flex-col items-center my-auto">
-        <div class="w-16 h-16 rounded-full bg-emerald-500/20 border-2 border-emerald-400 flex items-center justify-center shadow-[0_0_30px_rgba(52,211,153,0.3)] mb-3 animate-bounce">
-          <svg class="w-8 h-8 text-emerald-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-            <polyline points="20 6 9 17 4 12" class="checkmark-draw"></polyline>
-          </svg>
-        </div>
-
-        <h2 class="font-display text-2xl font-black text-white uppercase tracking-tight">Оплачено!</h2>
-        <span class="text-xs font-semibold text-emerald-400 mt-0.5">Экран покупателя показал чек</span>
-
-        <div class="w-full bg-black/60 rounded-2xl p-4 border border-white/10 shadow-inner mt-4 space-y-2 text-xs">
-          <div class="flex justify-between text-neutral-400">
-            <span>Сумма платежа</span>
-            <span class="font-display font-black text-white text-sm"><span id="receiptAmount">0</span> ₽</span>
+      <!-- ================= ВКЛАДКА 1: КАТАЛОГ И ГРУППЫ (КАК НА СКРИНЕ) ================= -->
+      <section id="catalogSection" class="flex-1 flex overflow-hidden">
+        
+        <!-- Левая колонка: Категории + Товары -->
+        <div class="flex-1 flex flex-col p-4 overflow-hidden border-r border-white/10">
+          
+          <!-- Поиск и фильтры групп -->
+          <div class="flex items-center gap-3 mb-3">
+            <div class="relative flex-1">
+              <i data-lucide="search" class="w-4 h-4 text-neutral-400 absolute left-3.5 top-1/2 -translate-y-1/2"></i>
+              <input id="searchItemInput" oninput="renderItemsGrid()" type="text" placeholder="Быстрый поиск позиции..." class="w-full pl-10 pr-4 py-2.5 rounded-2xl bg-black/40 border border-white/10 text-xs text-white placeholder-neutral-500 focus:outline-none focus:border-yellow-300 transition" />
+            </div>
+            <button onclick="clearCurrentOrder()" class="tap-active px-3 py-2.5 rounded-2xl bg-white/5 hover:bg-red-500/20 text-neutral-400 hover:text-red-400 border border-white/10 text-xs font-semibold flex items-center gap-1.5 transition">
+              <i data-lucide="trash-2" class="w-4 h-4"></i> Очистить
+            </button>
           </div>
-          <div class="flex justify-between text-neutral-400">
-            <span>Способ</span>
-            <span class="font-semibold text-sticker">СБП QR</span>
+
+          <!-- Горизонтальный список групп меню -->
+          <div id="categoryTabsList" class="flex gap-2 overflow-x-auto pb-2 scrollbar-none shrink-0 mb-3">
+            <!-- Рендерится через JS -->
           </div>
-          <div class="flex justify-between text-neutral-400 pt-2 border-t border-white/10">
-            <span>ID транзакции</span>
-            <span id="receiptId" class="font-mono text-[10px] text-neutral-500">#---</span>
+
+          <!-- Сетка позиций товаров -->
+          <div id="itemsGrid" class="flex-1 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 overflow-y-auto pr-1">
+            <!-- Рендерится из базы меню -->
           </div>
         </div>
-      </div>
 
-      <button onclick="newPayment()" class="w-full mt-4 py-4 rounded-2xl bg-white text-black hover:bg-neutral-200 font-display font-black text-xs uppercase tracking-wider shadow-lg transition active:scale-[0.98]">
-        Новый платёж
-      </button>
-    </section>
+        <!-- Правая колонка: Чек / Корзина -->
+        <div class="w-80 md:w-96 flex flex-col bg-black/40 p-4 justify-between">
+          <div>
+            <div class="flex items-center justify-between pb-3 border-b border-white/10">
+              <div class="flex items-center gap-2">
+                <i data-lucide="receipt" class="w-4 h-4 text-sticker"></i>
+                <span class="font-display font-bold text-xs uppercase tracking-wider text-white">Текущий заказ</span>
+              </div>
+              <span id="orderItemsCount" class="text-xs font-mono text-neutral-400">0 поз.</span>
+            </div>
 
-    <!-- Модалка настроек -->
-    <div id="settingsModal" class="hidden absolute inset-0 bg-neutral-950/98 backdrop-blur-2xl p-6 flex flex-col justify-between z-50 overflow-y-auto">
-      <div>
-        <div class="flex items-center justify-between pb-3 border-b border-white/10">
-          <h2 class="font-display text-sm font-black text-white uppercase tracking-wider flex items-center gap-2">
-            <i data-lucide="sliders" class="w-4 h-4 text-sticker"></i>
-            Настройки Кассы
-          </h2>
-          <button id="closeSettingsBtn" class="p-1 text-neutral-400 hover:text-white">
+            <!-- Список товаров в чеке -->
+            <div id="orderItemsList" class="overflow-y-auto max-h-[calc(100vh-420px)] mt-2 space-y-2 pr-1">
+              <div class="text-center py-12 text-neutral-500 text-xs font-medium">
+                Выберите товары из меню слева или добавьте свободную сумму
+              </div>
+            </div>
+          </div>
+
+          <!-- Итог и кнопка к оплате -->
+          <div class="pt-4 border-t border-white/10 space-y-3">
+            <div class="flex justify-between items-baseline">
+              <span class="text-xs uppercase tracking-widest text-neutral-400 font-display font-bold">Итого</span>
+              <div class="flex items-baseline gap-1">
+                <span id="cartTotalAmount" class="font-display text-3xl font-black text-white">0</span>
+                <span class="text-xl font-black text-sticker">₽</span>
+              </div>
+            </div>
+
+            <button id="cartPayBtn" onclick="initiatePayment(getCartTotal())" class="tap-active w-full py-4 rounded-2xl bg-sticker hover:bg-yellow-200 text-black font-display font-black text-xs uppercase tracking-wider shadow-lg shadow-yellow-300/10 flex items-center justify-center gap-2 transition">
+              <span>К оплате СБП</span>
+              <i data-lucide="arrow-right" class="w-4 h-4"></i>
+            </button>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- ================= ВКЛАДКА 2: РУЧНАЯ СУММА (NUMPAD) ================= -->
+      <section id="numpadSection" class="hidden flex-1 flex flex-col items-center justify-center p-6">
+        <div class="w-full max-w-sm flex flex-col justify-between h-full py-2">
+          
+          <div class="text-center my-auto bg-black/50 p-6 rounded-3xl border border-white/10 shadow-inner">
+            <span class="text-[10px] uppercase tracking-widest text-neutral-400 font-display font-bold">Свободная сумма к оплате</span>
+            <div class="flex items-baseline justify-center gap-1.5 mt-2">
+              <span id="amountDisplay" class="font-display text-5xl font-black tracking-tight text-white transition-all">0</span>
+              <span class="text-3xl font-black text-sticker">₽</span>
+            </div>
+          </div>
+
+          <!-- Клавиатура -->
+          <div class="grid grid-cols-3 gap-2.5 my-4">
+            <button onclick="pressKey('1')" class="tap-active h-14 rounded-2xl bg-white/5 hover:bg-white/15 text-xl font-display font-bold text-white border border-white/10">1</button>
+            <button onclick="pressKey('2')" class="tap-active h-14 rounded-2xl bg-white/5 hover:bg-white/15 text-xl font-display font-bold text-white border border-white/10">2</button>
+            <button onclick="pressKey('3')" class="tap-active h-14 rounded-2xl bg-white/5 hover:bg-white/15 text-xl font-display font-bold text-white border border-white/10">3</button>
+            <button onclick="pressKey('4')" class="tap-active h-14 rounded-2xl bg-white/5 hover:bg-white/15 text-xl font-display font-bold text-white border border-white/10">4</button>
+            <button onclick="pressKey('5')" class="tap-active h-14 rounded-2xl bg-white/5 hover:bg-white/15 text-xl font-display font-bold text-white border border-white/10">5</button>
+            <button onclick="pressKey('6')" class="tap-active h-14 rounded-2xl bg-white/5 hover:bg-white/15 text-xl font-display font-bold text-white border border-white/10">6</button>
+            <button onclick="pressKey('7')" class="tap-active h-14 rounded-2xl bg-white/5 hover:bg-white/15 text-xl font-display font-bold text-white border border-white/10">7</button>
+            <button onclick="pressKey('8')" class="tap-active h-14 rounded-2xl bg-white/5 hover:bg-white/15 text-xl font-display font-bold text-white border border-white/10">8</button>
+            <button onclick="pressKey('9')" class="tap-active h-14 rounded-2xl bg-white/5 hover:bg-white/15 text-xl font-display font-bold text-white border border-white/10">9</button>
+            <button onclick="pressKey('C')" class="tap-active h-14 rounded-2xl bg-red-500/10 hover:bg-red-500/20 text-red-400 font-display font-bold border border-red-500/20">C</button>
+            <button onclick="pressKey('0')" class="tap-active h-14 rounded-2xl bg-white/5 hover:bg-white/15 text-xl font-display font-bold text-white border border-white/10">0</button>
+            <button onclick="pressKey('backspace')" class="tap-active h-14 rounded-2xl bg-white/5 hover:bg-white/15 flex items-center justify-center text-neutral-300 border border-white/10">
+              <i data-lucide="delete" class="w-6 h-6"></i>
+            </button>
+          </div>
+
+          <button onclick="initiatePayment(parseInt(currentNumpadAmount, 10))" class="tap-active w-full py-4 rounded-2xl bg-sticker hover:bg-yellow-200 text-black font-display font-black text-xs uppercase tracking-wider shadow-lg flex items-center justify-center gap-2">
+            <span>Выставить сумму на экран</span>
+            <i data-lucide="arrow-right" class="w-4 h-4"></i>
+          </button>
+        </div>
+      </section>
+
+      <!-- ================= ВКЛАДКА 3: БАЗА & ОБНОВЛЕНИЕ МЕНЮ ================= -->
+      <section id="adminSection" class="hidden flex-1 flex flex-col p-6 overflow-y-auto">
+        <div class="max-w-4xl mx-auto w-full">
+          <div class="flex items-center justify-between pb-4 border-b border-white/10 mb-6">
+            <div>
+              <h2 class="font-display font-bold text-lg text-white">Управление базой меню</h2>
+              <p class="text-xs text-neutral-400">Добавляй новые позиции, настраивай категории и сохраняй в кассу</p>
+            </div>
+            <div class="flex gap-2">
+              <button onclick="resetMenuToDefault()" class="tap-active px-3 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-neutral-400 hover:text-white border border-white/10 text-xs font-semibold">
+                Сброс до стандартного
+              </button>
+              <button onclick="syncMenuToCloud()" class="tap-active px-4 py-2 rounded-xl bg-sticker hover:bg-yellow-200 text-black font-display font-bold text-xs">
+                Синхронизировать с базой
+              </button>
+            </div>
+          </div>
+
+          <!-- Форма добавления позиции -->
+          <div class="bg-black/40 p-5 rounded-3xl border border-white/10 mb-6">
+            <h3 class="font-display font-bold text-sm text-white mb-4 flex items-center gap-2">
+              <i data-lucide="plus-circle" class="w-4 h-4 text-sticker"></i>
+              Добавить позицию в базу
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
+              <div>
+                <label class="block text-[10px] font-display font-bold text-neutral-400 uppercase mb-1">Название блюда</label>
+                <input id="newItemName" type="text" placeholder="Напр. Матча Латте" class="w-full px-3.5 py-2.5 rounded-xl bg-neutral-900 border border-white/10 text-xs text-white focus:outline-none focus:border-yellow-300" />
+              </div>
+              <div>
+                <label class="block text-[10px] font-display font-bold text-neutral-400 uppercase mb-1">Группа / Категория</label>
+                <select id="newItemCategory" class="w-full px-3.5 py-2.5 rounded-xl bg-neutral-900 border border-white/10 text-xs text-white focus:outline-none focus:border-yellow-300">
+                  <option value="Лимонады">Лимонады</option>
+                  <option value="Бабл-ти">Бабл-ти</option>
+                  <option value="Кофе и Горячее">Кофе и Горячее</option>
+                  <option value="Холодный кофе">Холодный кофе</option>
+                  <option value="Чаи">Чаи</option>
+                  <option value="Молочные коктейли">Молочные коктейли</option>
+                  <option value="Десерты">Десерты</option>
+                  <option value="Сытная еда">Сытная еда</option>
+                  <option value="Матча">Матча</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-[10px] font-display font-bold text-neutral-400 uppercase mb-1">Цена (₽)</label>
+                <input id="newItemPrice" type="number" placeholder="290" class="w-full px-3.5 py-2.5 rounded-xl bg-neutral-900 border border-white/10 text-xs text-white focus:outline-none focus:border-yellow-300" />
+              </div>
+              <div class="flex items-end">
+                <button onclick="addNewMenuItem()" class="tap-active w-full py-2.5 rounded-xl bg-sticker hover:bg-yellow-200 text-black font-display font-black text-xs uppercase tracking-wider">
+                  Сохранить в базу
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Список позиций в базе с кнопкой удаления -->
+          <div class="bg-black/40 rounded-3xl border border-white/10 overflow-hidden">
+            <div class="px-5 py-3.5 border-b border-white/10 flex justify-between items-center text-xs font-display font-bold text-neutral-400 uppercase">
+              <span>Позиции в текущей базе</span>
+              <span id="dbItemsTotalCount">0 шт.</span>
+            </div>
+            <div id="dbItemsTable" class="divide-y divide-white/5 max-h-[360px] overflow-y-auto">
+              <!-- Заполняется через JS -->
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= ЭКРАН ОПЛАТЫ (МИНИМАЛИСТИЧНЫЙ И СТИЛЬНЫЙ) ================= -->
+      <section id="paymentOverlay" class="hidden absolute inset-0 bg-[#070709]/95 backdrop-blur-2xl z-40 flex flex-col items-center justify-between p-8">
+        <!-- Шапка оплаты -->
+        <div class="w-full flex items-center justify-between max-w-md">
+          <div class="flex items-center gap-2">
+            <span class="w-2.5 h-2.5 rounded-full bg-sticker animate-ping"></span>
+            <span class="text-xs font-display font-bold uppercase tracking-wider text-neutral-400">Оплата через СБП</span>
+          </div>
+          <button onclick="cancelPayment()" class="tap-active p-2 rounded-xl bg-white/5 hover:bg-white/10 text-neutral-400 hover:text-white">
             <i data-lucide="x" class="w-5 h-5"></i>
           </button>
         </div>
 
-        <div class="space-y-3.5 mt-4 text-left">
+        <!-- Центральный красивый блок QR -->
+        <div class="w-full max-w-sm flex flex-col items-center my-auto">
+          
+          <div class="text-center mb-6">
+            <span class="text-xs uppercase font-display font-bold tracking-widest text-neutral-400">Сумма к списанию</span>
+            <div class="flex items-baseline justify-center gap-1.5 mt-1">
+              <span id="activePayAmount" class="font-display text-5xl font-black text-white">0</span>
+              <span class="text-3xl font-black text-sticker">₽</span>
+            </div>
+          </div>
+
+          <!-- QR карточка с неоновым свечением -->
+          <div class="relative p-5 bg-white rounded-3xl shadow-[0_0_50px_rgba(255,241,136,0.15)] border-4 border-white/20 flex flex-col items-center">
+            <div id="qrcodeBox" class="rounded-xl overflow-hidden"></div>
+            <div class="mt-3 flex items-center gap-2 text-black/80 font-bold text-[11px] uppercase tracking-wider">
+              <i data-lucide="scan" class="w-3.5 h-3.5"></i>
+              Отсканируйте камерой банка
+            </div>
+          </div>
+
+          <!-- Таймер ожидания -->
+          <div class="mt-6 flex items-center gap-2 px-4 py-2 rounded-2xl bg-white/5 border border-white/10 text-xs">
+            <i data-lucide="clock" class="w-4 h-4 text-sticker"></i>
+            <span class="text-neutral-400">Действителен:</span>
+            <span id="payTimer" class="font-mono font-bold text-sticker text-sm">05:00</span>
+          </div>
+        </div>
+
+        <!-- Кнопка отмены -->
+        <div class="w-full max-w-sm">
+          <button onclick="cancelPayment()" class="tap-active w-full py-3.5 rounded-2xl bg-red-500/10 hover:bg-red-500/20 text-red-400 font-display font-bold text-xs uppercase tracking-wider border border-red-500/20 transition">
+            Отменить платёж ✕
+          </button>
+        </div>
+      </section>
+
+      <!-- ================= ЭКРАН УСПЕХА ================= -->
+      <section id="successOverlay" class="hidden absolute inset-0 bg-[#070709]/98 backdrop-blur-2xl z-50 flex flex-col items-center justify-between p-8">
+        <div class="w-full max-w-sm my-auto flex flex-col items-center text-center">
+          <div class="w-20 h-20 rounded-3xl bg-emerald-500/20 border-2 border-emerald-400 flex items-center justify-center shadow-[0_0_40px_rgba(52,211,153,0.3)] mb-4">
+            <svg class="w-10 h-10 text-emerald-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="20 6 9 17 4 12" class="checkmark-draw"></polyline>
+            </svg>
+          </div>
+
+          <h2 class="font-display text-3xl font-black text-white uppercase tracking-tight">Оплачено!</h2>
+          <p class="text-xs font-medium text-neutral-400 mt-1">Чек передан на экран гостя</p>
+
+          <div class="w-full bg-neutral-900/80 rounded-2xl p-5 border border-white/10 shadow-inner mt-6 space-y-3 text-xs text-left">
+            <div class="flex justify-between text-neutral-400">
+              <span>Сумма</span>
+              <span class="font-display font-black text-white text-base"><span id="successAmountText">0</span> ₽</span>
+            </div>
+            <div class="flex justify-between text-neutral-400">
+              <span>Метод</span>
+              <span class="font-semibold text-sticker">СБP QR-код</span>
+            </div>
+            <div class="flex justify-between text-neutral-400 pt-2 border-t border-white/10">
+              <span>ID Транзакции</span>
+              <span id="successPaymentId" class="font-mono text-[10px] text-neutral-500">#...</span>
+            </div>
+          </div>
+        </div>
+
+        <button onclick="finishSuccessAndReset()" class="tap-active w-full max-w-sm py-4 rounded-2xl bg-sticker text-black font-display font-black text-xs uppercase tracking-wider shadow-lg">
+          Следующий заказ
+        </button>
+      </section>
+
+    </div>
+
+    <!-- МОДАЛКА НАСТРОЕК СВЯЗИ С ЮKASSA И FIREBASE -->
+    <div id="settingsModal" class="hidden absolute inset-0 bg-neutral-950/98 backdrop-blur-2xl p-6 flex flex-col justify-between z-50 overflow-y-auto">
+      <div class="max-w-md mx-auto w-full">
+        <div class="flex items-center justify-between pb-3 border-b border-white/10">
+          <h2 class="font-display text-sm font-black text-white uppercase tracking-wider flex items-center gap-2">
+            <i data-lucide="sliders" class="w-4 h-4 text-sticker"></i>
+            Настройки POS
+          </h2>
+          <button onclick="closeSettings()" class="p-1 text-neutral-400 hover:text-white">
+            <i data-lucide="x" class="w-5 h-5"></i>
+          </button>
+        </div>
+
+        <div class="space-y-4 mt-5 text-left">
           <div>
-            <label class="block text-[10px] font-display font-bold text-neutral-400 uppercase tracking-wider mb-1">Shop ID</label>
-            <input id="shopIdInput" type="text" placeholder="1350725" class="w-full px-3.5 py-2.5 rounded-xl bg-neutral-900 border border-white/15 text-white text-sm focus:outline-none focus:border-yellow-300" />
+            <label class="block text-[10px] font-display font-bold text-neutral-400 uppercase mb-1">Shop ID</label>
+            <input id="shopIdInput" type="text" placeholder="1350725" class="w-full px-3.5 py-2.5 rounded-xl bg-neutral-900 border border-white/15 text-white text-xs focus:outline-none focus:border-yellow-300" />
           </div>
           <div>
-            <label class="block text-[10px] font-display font-bold text-neutral-400 uppercase tracking-wider mb-1">Секретный ключ (API Key)</label>
-            <input id="secretKeyInput" type="password" placeholder="live_..." class="w-full px-3.5 py-2.5 rounded-xl bg-neutral-900 border border-white/15 text-white text-sm focus:outline-none focus:border-yellow-300" />
+            <label class="block text-[10px] font-display font-bold text-neutral-400 uppercase mb-1">Секретный ключ (API Key)</label>
+            <input id="secretKeyInput" type="password" placeholder="live_..." class="w-full px-3.5 py-2.5 rounded-xl bg-neutral-900 border border-white/15 text-white text-xs focus:outline-none focus:border-yellow-300" />
           </div>
           <div>
-            <label class="block text-[10px] font-display font-bold text-neutral-400 uppercase tracking-wider mb-1">ID Терминала (как в экране)</label>
-            <input id="terminalIdInput" type="text" placeholder="term_01" class="w-full px-3.5 py-2.5 rounded-xl bg-neutral-900 border border-white/15 text-white text-sm focus:outline-none focus:border-yellow-300" />
+            <label class="block text-[10px] font-display font-bold text-neutral-400 uppercase mb-1">ID Терминала (для синхронизации экрана)</label>
+            <input id="terminalIdInput" type="text" placeholder="term_01" class="w-full px-3.5 py-2.5 rounded-xl bg-neutral-900 border border-white/15 text-white text-xs focus:outline-none focus:border-yellow-300" />
           </div>
         </div>
       </div>
 
-      <button onclick="saveSettings()" class="w-full py-3.5 rounded-2xl bg-sticker hover:bg-yellow-200 text-black font-display font-black text-xs uppercase tracking-wider shadow-lg transition active:scale-[0.98]">
-        Сохранить настройки
-      </button>
+      <div class="max-w-md mx-auto w-full">
+        <button onclick="saveSettings()" class="tap-active w-full py-3.5 rounded-2xl bg-sticker text-black font-display font-black text-xs uppercase tracking-wider">
+          Сохранить настройки
+        </button>
+      </div>
     </div>
 
   </main>
 
   <script>
+    // Инициализация иконок
     lucide.createIcons();
 
     const WORKER_URL = 'https://green-glade-501c.dalordjot.workers.dev';
     const FIREBASE_DB_URL = 'https://moon-60c5a-default-rtdb.firebaseio.com';
 
-    let currentAmount = '0';
-    let checkInterval = null;
-    let timerInterval = null;
-    let timeLeft = 300;
+    // Цветовая палитра категорий (вдохновлена скриншотом планшета)
+    const CATEGORY_STYLES = {
+      'Лимонады': { bg: 'bg-emerald-600/30', border: 'border-emerald-500/40', text: 'text-emerald-300', icon: 'glass-water' },
+      'Бабл-ти': { bg: 'bg-purple-600/30', border: 'border-purple-500/40', text: 'text-purple-300', icon: 'cup-soda' },
+      'Кофе и Горячее': { bg: 'bg-amber-600/30', border: 'border-amber-500/40', text: 'text-amber-300', icon: 'coffee' },
+      'Холодный кофе': { bg: 'bg-sky-600/30', border: 'border-sky-500/40', text: 'text-sky-300', icon: 'snowflake' },
+      'Чаи': { bg: 'bg-teal-600/30', border: 'border-teal-500/40', text: 'text-teal-300', icon: 'flower2' },
+      'Молочные коктейли': { bg: 'bg-pink-600/30', border: 'border-pink-500/40', text: 'text-pink-300', icon: 'milk' },
+      'Десерты': { bg: 'bg-yellow-500/25', border: 'border-yellow-400/40', text: 'text-yellow-300', icon: 'cake' },
+      'Сытная еда': { bg: 'bg-rose-600/30', border: 'border-rose-500/40', text: 'text-rose-300', icon: 'pizza' },
+      'Матча': { bg: 'bg-lime-600/30', border: 'border-lime-500/40', text: 'text-lime-300', icon: 'leaf' }
+    };
 
-    const amountDisplay = document.getElementById('amountDisplay');
-    const inputScreen = document.getElementById('inputScreen');
-    const qrScreen = document.getElementById('qrScreen');
-    const successScreen = document.getElementById('successScreen');
-    const qrAmount = document.getElementById('qrAmount');
-    const timerDisplay = document.getElementById('timerDisplay');
-    const headerTermId = document.getElementById('headerTermId');
-    const settingsModal = document.getElementById('settingsModal');
-    const shopIdInput = document.getElementById('shopIdInput');
-    const secretKeyInput = document.getElementById('secretKeyInput');
-    const terminalIdInput = document.getElementById('terminalIdInput');
-    const generateBtn = document.getElementById('generateBtn');
-    const btnText = document.getElementById('btnText');
+    // Стандартное меню
+    const DEFAULT_MENU = [
+      { id: 'm1', name: 'Лимонад Маракуйя', category: 'Лимонады', price: 290 },
+      { id: 'm2', name: 'Лимонад Клубника-Базилик', category: 'Лимонады', price: 290 },
+      { id: 'm3', name: 'Бабл-Ти Таро', category: 'Бабл-ти', price: 360 },
+      { id: 'm4', name: 'Бабл-Ти Классик', category: 'Бабл-ти', price: 340 },
+      { id: 'm5', name: 'Капучино 350мл', category: 'Кофе и Горячее', price: 240 },
+      { id: 'm6', name: 'Флэт Уайт', category: 'Кофе и Горячее', price: 260 },
+      { id: 'm7', name: 'Айс Латте Карамель', category: 'Холодный кофе', price: 280 },
+      { id: 'm8', name: 'Бамбл Кофе', category: 'Холодный кофе', price: 320 },
+      { id: 'm9', name: 'Чай Гречишный', category: 'Чаи', price: 210 },
+      { id: 'm10', name: 'Матча Латте Кокос', category: 'Матча', price: 310 },
+      { id: 'm11', name: 'Чизкейк Сан-Себастьян', category: 'Десерты', price: 350 },
+      { id: 'm12', name: 'Круассан с лососем', category: 'Сытная еда', price: 420 },
+    ];
 
+    // Состояние кассы
+    let menuItems = [];
+    let cart = []; // [{ item, count }]
+    let selectedCategory = 'Все';
+    let currentNumpadAmount = '0';
+    let activePaymentId = null;
+    let pollInterval = null;
+    let timerCountdown = null;
+
+    // Инициализация приложения
     window.addEventListener('DOMContentLoaded', () => {
-      shopIdInput.value = localStorage.getItem('yk_shop_id') || '';
-      secretKeyInput.value = localStorage.getItem('yk_secret_key') || '';
-      const termId = localStorage.getItem('yk_term_id') || 'term_01';
-      terminalIdInput.value = termId;
-      headerTermId.textContent = termId;
+      loadSettings();
+      loadMenuDatabase();
+      renderCategoryTabs();
+      renderItemsGrid();
+      setupGestures();
     });
 
-    function pressKey(key) {
-      if (key === 'C') currentAmount = '0';
-      else if (key === 'backspace') currentAmount = currentAmount.length > 1 ? currentAmount.slice(0, -1) : '0';
-      else {
-        if (currentAmount === '0') currentAmount = key;
-        else if (currentAmount.length < 7) currentAmount += key;
+    // Загрузка настроек
+    function loadSettings() {
+      const shopId = localStorage.getItem('yk_shop_id') || '';
+      const secKey = localStorage.getItem('yk_secret_key') || '';
+      const termId = localStorage.getItem('yk_term_id') || 'term_01';
+      document.getElementById('shopIdInput').value = shopId;
+      document.getElementById('secretKeyInput').value = secKey;
+      document.getElementById('terminalIdInput').value = termId;
+      document.getElementById('headerTermId').textContent = termId;
+    }
+
+    // Сохранение настроек
+    function saveSettings() {
+      const termId = document.getElementById('terminalIdInput').value.trim() || 'term_01';
+      localStorage.setItem('yk_shop_id', document.getElementById('shopIdInput').value.trim());
+      localStorage.setItem('yk_secret_key', document.getElementById('secretKeyInput').value.trim());
+      localStorage.setItem('yk_term_id', termId);
+      document.getElementById('headerTermId').textContent = termId;
+      closeSettings();
+    }
+
+    function openSettings() { document.getElementById('settingsModal').classList.remove('hidden'); }
+    function closeSettings() { document.getElementById('settingsModal').classList.add('hidden'); }
+
+    // ================= БАЗА ДАННЫХ МЕНЮ =================
+    function loadMenuDatabase() {
+      const saved = localStorage.getItem('moon_menu_items');
+      if (saved) {
+        try {
+          menuItems = JSON.parse(saved);
+        } catch (e) {
+          menuItems = [...DEFAULT_MENU];
+        }
+      } else {
+        menuItems = [...DEFAULT_MENU];
+        saveMenuDatabase();
       }
-      amountDisplay.textContent = Number(currentAmount).toLocaleString('ru-RU');
+      renderAdminTable();
     }
 
-    function generateUUID() {
-      return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
-        const r = Math.random() * 16 | 0;
-        return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
+    function saveMenuDatabase() {
+      localStorage.setItem('moon_menu_items', JSON.stringify(menuItems));
+      renderItemsGrid();
+      renderAdminTable();
+    }
+
+    function addNewMenuItem() {
+      const nameInput = document.getElementById('newItemName');
+      const catInput = document.getElementById('newItemCategory');
+      const priceInput = document.getElementById('newItemPrice');
+
+      const name = nameInput.value.trim();
+      const category = catInput.value;
+      const price = parseFloat(priceInput.value);
+
+      if (!name || isNaN(price) || price <= 0) {
+        alert('Пожалуйста, введите корректное название и цену!');
+        return;
+      }
+
+      const newItem = {
+        id: 'item_' + Date.now(),
+        name,
+        category,
+        price
+      };
+
+      menuItems.unshift(newItem);
+      saveMenuDatabase();
+
+      nameInput.value = '';
+      priceInput.value = '';
+      alert(`Позиция "${name}" успешно добавлена в базу!`);
+    }
+
+    function deleteMenuItem(id) {
+      if (confirm('Удалить позицию из базы?')) {
+        menuItems = menuItems.filter(item => item.id !== id);
+        saveMenuDatabase();
+      }
+    }
+
+    function resetMenuToDefault() {
+      if (confirm('Сбросить меню до стандартного списка?')) {
+        menuItems = [...DEFAULT_MENU];
+        saveMenuDatabase();
+      }
+    }
+
+    async function syncMenuToCloud() {
+      const termId = localStorage.getItem('yk_term_id') || 'term_01';
+      try {
+        await fetch(`${FIREBASE_DB_URL}/terminals/${termId}/menu.json`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(menuItems)
+        });
+        alert('База позиций успешно отправлена в облако! ✨');
+      } catch (err) {
+        alert('Ошибка синхронизации с базой: ' + err.message);
+      }
+    }
+
+    function renderAdminTable() {
+      const table = document.getElementById('dbItemsTable');
+      document.getElementById('dbItemsTotalCount').textContent = `${menuItems.length} позиций`;
+      
+      table.innerHTML = menuItems.map(item => `
+        <div class="px-5 py-3 flex items-center justify-between hover:bg-white/5 transition">
+          <div class="flex items-center gap-3">
+            <span class="w-2.5 h-2.5 rounded-full bg-sticker"></span>
+            <div>
+              <div class="text-xs font-bold text-white">${item.name}</div>
+              <div class="text-[10px] text-neutral-400 font-semibold">${item.category}</div>
+            </div>
+          </div>
+          <div class="flex items-center gap-4">
+            <span class="font-display font-bold text-xs text-sticker">${item.price} ₽</span>
+            <button onclick="deleteMenuItem('${item.id}')" class="p-1.5 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 transition">
+              <i data-lucide="trash" class="w-3.5 h-3.5"></i>
+            </button>
+          </div>
+        </div>
+      `).join('');
+      lucide.createIcons();
+    }
+
+    // ================= РЕНДЕР КАТАЛОГА И ВКЛАДОК ГРУПП =================
+    function renderCategoryTabs() {
+      const container = document.getElementById('categoryTabsList');
+      const categories = ['Все', ...Object.keys(CATEGORY_STYLES)];
+      
+      container.innerHTML = categories.map(cat => {
+        const isSelected = selectedCategory === cat;
+        return `
+          <button onclick="selectCategory('${cat}')" class="tap-active px-3.5 py-1.5 rounded-xl text-xs font-display font-bold whitespace-nowrap transition border ${
+            isSelected 
+              ? 'bg-sticker text-black border-sticker shadow-sm' 
+              : 'bg-white/5 text-neutral-300 hover:text-white border-white/10'
+          }">
+            ${cat}
+          </button>
+        `;
+      }).join('');
+    }
+
+    function selectCategory(cat) {
+      selectedCategory = cat;
+      renderCategoryTabs();
+      renderItemsGrid();
+    }
+
+    function renderItemsGrid() {
+      const grid = document.getElementById('itemsGrid');
+      const query = (document.getElementById('searchItemInput')?.value || '').toLowerCase().trim();
+
+      const filtered = menuItems.filter(item => {
+        const matchesCat = selectedCategory === 'Все' || item.category === selectedCategory;
+        const matchesQuery = item.name.toLowerCase().includes(query);
+        return matchesCat && matchesQuery;
       });
+
+      if (filtered.length === 0) {
+        grid.innerHTML = `<div class="col-span-full text-center py-16 text-neutral-500 text-xs">Ничего не найдено</div>`;
+        return;
+      }
+
+      grid.innerHTML = filtered.map(item => {
+        const style = CATEGORY_STYLES[item.category] || { bg: 'bg-neutral-800', border: 'border-white/10', text: 'text-neutral-300', icon: 'tag' };
+        return `
+          <div onclick="addToCart('${item.id}')" class="tap-active p-3.5 rounded-2xl ${style.bg} ${style.border} border flex flex-col justify-between cursor-pointer hover:border-white/40 transition group">
+            <div>
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-[10px] uppercase font-bold tracking-wider ${style.text}">${item.category}</span>
+                <i data-lucide="${style.icon}" class="w-4 h-4 ${style.text}"></i>
+              </div>
+              <h4 class="font-display font-extrabold text-xs text-white leading-snug line-clamp-2">${item.name}</h4>
+            </div>
+            <div class="mt-4 flex items-center justify-between">
+              <span class="font-display font-black text-sm text-sticker">${item.price} ₽</span>
+              <span class="w-6 h-6 rounded-lg bg-white/10 group-hover:bg-sticker group-hover:text-black flex items-center justify-center text-xs font-bold transition">
+                +
+              </span>
+            </div>
+          </div>
+        `;
+      }).join('');
+      lucide.createIcons();
     }
 
-    // Отправка данных на экран покупателя (в Firebase Moon)
+    // ================= КОРЗИНА И ЧЕК =================
+    function addToCart(itemId) {
+      const item = menuItems.find(i => i.id === itemId);
+      if (!item) return;
+
+      const existing = cart.find(entry => entry.item.id === itemId);
+      if (existing) {
+        existing.count++;
+      } else {
+        cart.push({ item, count: 1 });
+      }
+      renderCart();
+    }
+
+    function changeCount(itemId, delta) {
+      const entry = cart.find(e => e.item.id === itemId);
+      if (!entry) return;
+      entry.count += delta;
+      if (entry.count <= 0) {
+        cart = cart.filter(e => e.item.id !== itemId);
+      }
+      renderCart();
+    }
+
+    function clearCurrentOrder() {
+      cart = [];
+      renderCart();
+    }
+
+    function getCartTotal() {
+      return cart.reduce((sum, e) => sum + (e.item.price * e.count), 0);
+    }
+
+    function renderCart() {
+      const list = document.getElementById('orderItemsList');
+      const totalAmount = getCartTotal();
+      
+      document.getElementById('cartTotalAmount').textContent = totalAmount.toLocaleString('ru-RU');
+      document.getElementById('orderItemsCount').textContent = `${cart.reduce((acc, c) => acc + c.count, 0)} поз.`;
+
+      if (cart.length === 0) {
+        list.innerHTML = `
+          <div class="text-center py-12 text-neutral-500 text-xs font-medium">
+            Выберите позиции из каталога слева
+          </div>
+        `;
+        return;
+      }
+
+      list.innerHTML = cart.map(({ item, count }) => `
+        <div class="flex items-center justify-between p-2.5 rounded-xl bg-white/5 border border-white/10">
+          <div class="flex-1 pr-2">
+            <div class="text-xs font-bold text-white truncate">${item.name}</div>
+            <div class="text-[10px] text-neutral-400">${item.price} ₽ × ${count} = <span class="text-sticker font-bold">${item.price * count} ₽</span></div>
+          </div>
+          <div class="flex items-center gap-1.5">
+            <button onclick="changeCount('${item.id}', -1)" class="w-6 h-6 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-white flex items-center justify-center text-xs font-bold">-</button>
+            <span class="text-xs font-mono font-bold w-4 text-center">${count}</span>
+            <button onclick="changeCount('${item.id}', 1)" class="w-6 h-6 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-white flex items-center justify-center text-xs font-bold">+</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // ================= ПЕРЕКЛЮЧЕНИЕ ВКЛАДОК =================
+    function switchTab(tab) {
+      document.getElementById('catalogSection').classList.add('hidden');
+      document.getElementById('numpadSection').classList.add('hidden');
+      document.getElementById('adminSection').classList.add('hidden');
+
+      ['tabBtnCatalog', 'tabBtnNumpad', 'tabBtnAdmin'].forEach(id => {
+        document.getElementById(id).className = "px-4 py-2 rounded-xl text-xs font-display font-bold transition flex items-center gap-2 text-neutral-400 hover:text-white";
+      });
+
+      if (tab === 'catalog') {
+        document.getElementById('catalogSection').classList.remove('hidden');
+        document.getElementById('tabBtnCatalog').className = "px-4 py-2 rounded-xl text-xs font-display font-bold transition flex items-center gap-2 bg-white/15 text-white shadow-sm";
+      } else if (tab === 'numpad') {
+        document.getElementById('numpadSection').classList.remove('hidden');
+        document.getElementById('tabBtnNumpad').className = "px-4 py-2 rounded-xl text-xs font-display font-bold transition flex items-center gap-2 bg-white/15 text-white shadow-sm";
+      } else if (tab === 'admin') {
+        document.getElementById('adminSection').classList.remove('hidden');
+        document.getElementById('tabBtnAdmin').className = "px-4 py-2 rounded-xl text-xs font-display font-bold transition flex items-center gap-2 bg-white/15 text-white shadow-sm";
+      }
+    }
+
+    // ================= КЛАВИАТУРА NUMPAD =================
+    function pressKey(key) {
+      if (key === 'C') currentNumpadAmount = '0';
+      else if (key === 'backspace') currentNumpadAmount = currentNumpadAmount.length > 1 ? currentNumpadAmount.slice(0, -1) : '0';
+      else {
+        if (currentNumpadAmount === '0') currentNumpadAmount = key;
+        else if (currentNumpadAmount.length < 7) currentNumpadAmount += key;
+      }
+      document.getElementById('amountDisplay').textContent = Number(currentNumpadAmount).toLocaleString('ru-RU');
+    }
+
+    // ================= СИНХРОНИЗАЦИЯ С ЭКРАНОМ (FIREBASE) =================
     async function syncToMoonDisplay(orderObject) {
       const termId = localStorage.getItem('yk_term_id') || 'term_01';
       try {
@@ -283,47 +766,39 @@
       }
     }
 
-    // Кастовать экран чаевых на экран
     window.castMagicTips = async function() {
       await syncToMoonDisplay({
         status: 'TRIGGER_MAGIC_TIPS',
         timestamp: Date.now()
       });
-      alert('Экран чаевых успешно отправлен на экран покупателя! ✨');
+      alert('Экран чаевых запущен у покупателя! ✨');
     };
 
-    function startTimer() {
-      timeLeft = 300;
-      clearInterval(timerInterval);
-      timerInterval = setInterval(() => {
-        timeLeft--;
-        const m = String(Math.floor(timeLeft / 60)).padStart(2, '0');
-        const s = String(timeLeft % 60).padStart(2, '0');
-        timerDisplay.textContent = `${m}:${s}`;
-        if (timeLeft <= 0) {
-          clearInterval(timerInterval);
-          cancelPayment();
-        }
-      }, 1000);
-    }
-
-    async function createPaymentQR() {
-      const amount = parseInt(currentAmount, 10);
-      if (isNaN(amount) || amount <= 0) return alert('Введите сумму');
-
-      const shopId = localStorage.getItem('yk_shop_id') || shopIdInput.value.trim();
-      const secretKey = localStorage.getItem('yk_secret_key') || secretKeyInput.value.trim();
-
-      if (!shopId || !secretKey) {
-        settingsModal.classList.remove('hidden');
-        return alert('Заполните настройки Shop ID и API Key!');
+    // ================= ОПЛАТА СБП =================
+    async function initiatePayment(amount) {
+      if (!amount || amount <= 0) {
+        alert('Сумма заказа должна быть больше 0 ₽');
+        return;
       }
 
-      generateBtn.disabled = true;
-      btnText.innerText = 'Создание...';
+      const shopId = localStorage.getItem('yk_shop_id') || document.getElementById('shopIdInput').value.trim();
+      const secretKey = localStorage.getItem('yk_secret_key') || document.getElementById('secretKeyInput').value.trim();
+
+      if (!shopId || !secretKey) {
+        openSettings();
+        alert('Заполните Shop ID и API Key в настройках!');
+        return;
+      }
+
+      document.getElementById('activePayAmount').textContent = amount.toLocaleString('ru-RU');
+      const overlay = document.getElementById('paymentOverlay');
+      overlay.classList.remove('hidden');
+
+      const qrBox = document.getElementById('qrcodeBox');
+      qrBox.innerHTML = '<div class="p-8 text-neutral-800 text-xs font-bold animate-pulse">Генерация СБП...</div>';
 
       const auth = btoa(`${shopId}:${secretKey}`);
-      const idempotenceKey = generateUUID();
+      const idempotenceKey = 'pos_' + Date.now() + '_' + Math.random().toString(36).substring(2, 9);
 
       try {
         const response = await fetch(`${WORKER_URL}/payments`, {
@@ -338,76 +813,82 @@
             payment_method_data: { type: 'sbp' },
             confirmation: { type: 'qr' },
             capture: true,
-            description: `Заказ Moon • ${amount} руб.`
+            description: `Заказ Moon POS • ${amount} руб.`
           })
         });
 
         const data = await response.json();
-        if (!response.ok) return alert('Ошибка ЮKassa: ' + (data.description || data.error));
+        if (!response.ok) throw new Error(data.description || data.error || 'Ошибка создания платежа');
 
         const sbpUrl = data.confirmation?.confirmation_data;
-        if (!sbpUrl) return alert('ЮKassa не вернула ссылку СБП.');
+        if (!sbpUrl) throw new Error('ЮKassa не вернула QR ссылку СБП');
 
-        // Рендерим QR на кассе
-        const qrContainer = document.getElementById('qrcode');
-        qrContainer.innerHTML = '';
-        new QRCode(qrContainer, { text: sbpUrl, width: 170, height: 170 });
+        qrBox.innerHTML = '';
+        new QRCode(qrBox, { text: sbpUrl, width: 200, height: 200 });
 
-        qrAmount.textContent = Number(currentAmount).toLocaleString('ru-RU');
-        inputScreen.classList.add('hidden');
-        qrScreen.classList.remove('hidden');
-
-        // Отправляем точный формат для твоего экрана покупателя
+        // Отправка на экран покупателя
         syncToMoonDisplay({
           status: 'WAITING_FOR_PAYMENT',
           amount: amount,
-          description: 'Заказ Moon ☕',
+          description: 'Заказ Moon POS',
           method: 'sbp',
           qrUrl: sbpUrl,
           paymentId: data.id,
-          shopId: shopId,
-          secretKey: secretKey,
           timestamp: Date.now()
         });
 
-        startTimer();
+        startPaymentTimer();
         startPolling(data.id, auth, amount);
 
       } catch (err) {
         alert('Ошибка: ' + err.message);
-      } finally {
-        generateBtn.disabled = false;
-        btnText.innerText = 'Выставить на экран';
+        cancelPayment();
       }
     }
 
+    function startPaymentTimer() {
+      let seconds = 300;
+      clearInterval(timerCountdown);
+      timerCountdown = setInterval(() => {
+        seconds--;
+        const m = String(Math.floor(seconds / 60)).padStart(2, '0');
+        const s = String(seconds % 60).padStart(2, '0');
+        document.getElementById('payTimer').textContent = `${m}:${s}`;
+        if (seconds <= 0) {
+          clearInterval(timerCountdown);
+          cancelPayment();
+        }
+      }, 1000);
+    }
+
     function startPolling(paymentId, auth, amount) {
-      if (checkInterval) clearInterval(checkInterval);
-      checkInterval = setInterval(async () => {
+      if (pollInterval) clearInterval(pollInterval);
+      pollInterval = setInterval(async () => {
         try {
           const res = await fetch(`${WORKER_URL}/payments/${paymentId}`, {
             headers: { 'Authorization': `Basic ${auth}` }
           });
           const data = await res.json();
           if (data.status === 'succeeded') {
-            clearInterval(checkInterval);
-            clearInterval(timerInterval);
-            showSuccess(data.id, amount);
+            clearInterval(pollInterval);
+            clearInterval(timerCountdown);
+            showPaymentSuccess(data.id, amount);
           } else if (data.status === 'canceled') {
-            clearInterval(checkInterval);
+            clearInterval(pollInterval);
             cancelPayment();
           }
-        } catch (e) { console.error(e); }
+        } catch (e) {
+          console.error(e);
+        }
       }, 2500);
     }
 
-    function showSuccess(paymentId, amount) {
-      qrScreen.classList.add('hidden');
-      successScreen.classList.remove('hidden');
-      document.getElementById('receiptAmount').textContent = Number(amount).toLocaleString('ru-RU');
-      document.getElementById('receiptId').textContent = paymentId.slice(0, 16) + '...';
+    function showPaymentSuccess(paymentId, amount) {
+      document.getElementById('paymentOverlay').classList.add('hidden');
+      document.getElementById('successOverlay').classList.remove('hidden');
+      document.getElementById('successAmountText').textContent = amount.toLocaleString('ru-RU');
+      document.getElementById('successPaymentId').textContent = '#' + paymentId.substring(0, 16);
 
-      // Оповещаем экран Moon об успехе
       syncToMoonDisplay({
         status: 'PAID',
         amount: amount,
@@ -415,42 +896,52 @@
         timestamp: Date.now()
       });
 
-      confetti({ particleCount: 80, spread: 70, origin: { y: 0.6 }, colors: ['#FFF188', '#34d399', '#ffffff'] });
+      confetti({ particleCount: 90, spread: 80, origin: { y: 0.6 }, colors: ['#FFF188', '#34d399', '#ffffff'] });
     }
 
     function cancelPayment() {
-      if (checkInterval) clearInterval(checkInterval);
-      if (timerInterval) clearInterval(timerInterval);
-      
-      // Возвращаем экран в IDLE
-      syncToMoonDisplay({ status: 'IDLE', timestamp: Date.now() });
-
-      qrScreen.classList.add('hidden');
-      inputScreen.classList.remove('hidden');
-      currentAmount = '0';
-      amountDisplay.textContent = '0';
-    }
-
-    function newPayment() {
-      successScreen.classList.add('hidden');
-      inputScreen.classList.remove('hidden');
-      currentAmount = '0';
-      amountDisplay.textContent = '0';
-
+      clearInterval(pollInterval);
+      clearInterval(timerCountdown);
+      document.getElementById('paymentOverlay').classList.add('hidden');
       syncToMoonDisplay({ status: 'IDLE', timestamp: Date.now() });
     }
 
-    document.getElementById('openSettingsBtn').addEventListener('click', () => settingsModal.classList.remove('hidden'));
-    document.getElementById('closeSettingsBtn').addEventListener('click', () => settingsModal.classList.add('hidden'));
+    function finishSuccessAndReset() {
+      document.getElementById('successOverlay').classList.add('hidden');
+      clearCurrentOrder();
+      currentNumpadAmount = '0';
+      document.getElementById('amountDisplay').textContent = '0';
+      syncToMoonDisplay({ status: 'IDLE', timestamp: Date.now() });
+    }
 
-    function saveSettings() {
-      const termId = terminalIdInput.value.trim() || 'term_01';
-      localStorage.setItem('yk_shop_id', shopIdInput.value.trim());
-      localStorage.setItem('yk_secret_key', secretKeyInput.value.trim());
-      localStorage.setItem('yk_term_id', termId);
-      headerTermId.textContent = termId;
-      settingsModal.classList.add('hidden');
-      alert('Настройки сохранены!');
+    // ================= БЫСТРЫЕ СВАЙПЫ / ЖЕСТЫ =================
+    function setupGestures() {
+      let touchStartX = 0;
+      let touchEndX = 0;
+      const container = document.getElementById('posContainer');
+
+      container.addEventListener('touchstart', e => {
+        touchStartX = e.changedTouches[0].screenX;
+      }, { passive: true });
+
+      container.addEventListener('touchend', e => {
+        touchEndX = e.changedTouches[0].screenX;
+        handleSwipe();
+      }, { passive: true });
+
+      function handleSwipe() {
+        const diff = touchEndX - touchStartX;
+        if (Math.abs(diff) > 75) {
+          if (diff < 0) {
+            // Свайп влево: переключаем с меню на калькулятор или базу
+            const isCatalog = !document.getElementById('catalogSection').classList.contains('hidden');
+            if (isCatalog) switchTab('numpad');
+          } else {
+            // Свайп вправо: возврат в каталог
+            switchTab('catalog');
+          }
+        }
+      }
     }
   </script>
 </body>
