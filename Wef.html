@@ -3,29 +3,29 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>ChefOS • Справочник Кондитера</title>
+  <title>ChefOS • Цех Кондитера</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🍰</text></svg>">
 
-  <!-- Tailwind CSS & Font Awesome -->
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 
   <!-- Firebase Modular Scripts -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-    import { getDatabase, ref, set, onValue, update } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-database.js";
+    import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-database.js";
 
     const firebaseConfig = {
-      apiKey: "AIzaSyD5mwAHrvCi7mdA5r0Fp_4n99pNUEJ__hs",
-      authDomain: "bonoid-2c468.firebaseapp.com",
-      databaseURL: "https://bonoid-2c468-default-rtdb.firebaseio.com",
-      projectId: "bonoid-2c468",
-      storageBucket: "bonoid-2c468.firebasestorage.app",
-      messagingSenderId: "639486433884",
-      appId: "1:639486433884:web:c3d32c0ce129113c29a499",
-      measurementId: "G-TZMFB5N6P2"
+      apiKey: "AIzaSyCT2aJ8rF5KRCIFS3W6r4wbQeyBzkhmqnc",
+      authDomain: "lte-bank.firebaseapp.com",
+      databaseURL: "https://lte-bank-default-rtdb.firebaseio.com",
+      projectId: "lte-bank",
+      storageBucket: "lte-bank.firebasestorage.app",
+      messagingSenderId: "286397543738",
+      appId: "1:286397543738:web:c3ef297e6b6666620c4c03",
+      measurementId: "G-Q9BM100F5P"
     };
 
     const fbApp = initializeApp(firebaseConfig);
@@ -33,1126 +33,448 @@
 
     window.fbDb = fbDb;
     window.fbRef = ref;
-    window.fbSet = set;
-    window.fbUpdate = update;
     window.fbOnValue = onValue;
 
     window.dispatchEvent(new Event('firebase-ready'));
   </script>
 
-  <script>
-    tailwind.config = {
-      darkMode: 'class',
-      theme: {
-        extend: {
-          fontFamily: {
-            sans: ['-apple-system', 'BlinkMacSystemFont', '"SF Pro Text"', '"SF Pro Display"', '"Plus Jakarta Sans"', 'sans-serif'],
-          },
-          colors: {
-            apple: {
-              black: '#000000',
-              space: '#0A0A0C',
-              card: '#16161A',
-              cardLight: '#FFFFFF',
-              cardBorder: 'rgba(255, 255, 255, 0.08)',
-              cardBorderLight: 'rgba(0, 0, 0, 0.06)',
-              subtext: '#86868B',
-              gold: '#E5A957',
-              goldLight: '#F5C780',
-              blue: '#2997FF',
-              emerald: '#30D158',
-              crimson: '#FF453A'
-            }
-          }
-        }
-      }
-    };
-  </script>
-
   <style>
-    /* iOS Momentum Scrolling & Touch Callout Suppression */
-    * {
-      -webkit-tap-highlight-color: transparent;
-      outline: none;
+    * { 
+      -webkit-tap-highlight-color: transparent; 
+      outline: none; 
+      box-sizing: border-box;
     }
+    
     body {
-      font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+      background-color: #08080c;
+      color: #f1f5f9;
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      text-rendering: optimizeLegibility;
       -webkit-font-smoothing: antialiased;
-    }
-    .no-scrollbar::-webkit-scrollbar { display: none; }
-    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-
-    /* Frosted glass backdrop utilities */
-    .glass-dock {
-      background: rgba(22, 22, 26, 0.78);
-      backdrop-filter: blur(28px) saturate(190%);
-      -webkit-backdrop-filter: blur(28px) saturate(190%);
-      border: 1px solid rgba(255, 255, 255, 0.12);
-    }
-    .light .glass-dock {
-      background: rgba(255, 255, 255, 0.85);
-      border: 1px solid rgba(0, 0, 0, 0.08);
     }
 
     .bento-card {
-      background: #151518;
+      background: #121218;
       border: 1px solid rgba(255, 255, 255, 0.08);
-      transition: all 0.28s cubic-bezier(0.16, 1, 0.3, 1);
-    }
-    .light .bento-card {
-      background: #FFFFFF;
-      border: 1px solid rgba(0, 0, 0, 0.07);
+      border-radius: 22px;
+      transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
     }
 
-    /* Apple Morphing Text Animation */
-    .apple-glow-orb {
-      background: radial-gradient(circle, rgba(229, 169, 87, 0.28) 0%, rgba(229, 169, 87, 0) 70%);
-      filter: blur(50px);
+    /* --- Адаптивное отображение текста на экранах телефонов и планшетов --- */
+    .rich-display {
+      font-size: 15px; /* Крупный читаемый шрифт на телефоне */
+      line-height: 1.75;
+      color: #e2e8f0;
+      word-break: normal;
+      overflow-wrap: anywhere; /* Не рвёт слова на куски, переносит естественно */
+      hyphens: manual;
     }
 
-    /* Live Inline Editing outline in Chef Mode */
-    .admin-mode [contenteditable="true"] {
-      cursor: text;
-      border-radius: 8px;
-      transition: background 0.15s, box-shadow 0.15s;
+    @media (min-width: 640px) {
+      .rich-display {
+        font-size: 15.5px;
+        line-height: 1.8;
+      }
     }
-    .admin-mode [contenteditable="true"]:hover {
-      background: rgba(229, 169, 87, 0.12);
-      box-shadow: 0 0 0 1.5px rgba(229, 169, 87, 0.45);
+
+    /* Маркер-хайлайтер с защитой от разрыва строки внутри тега */
+    .rich-display mark {
+      background: rgba(245, 158, 11, 0.28);
+      color: #fde68a;
+      padding: 2px 6px;
+      border-radius: 6px;
+      border: 1px solid rgba(245, 158, 11, 0.45);
+      font-weight: 700;
+      box-decoration-break: clone;
+      -webkit-box-decoration-break: clone;
+      display: inline;
     }
-    .admin-mode [contenteditable="true"]:focus {
-      background: rgba(229, 169, 87, 0.18);
-      box-shadow: 0 0 0 2px #E5A957;
+
+    .rich-display b, 
+    .rich-display strong {
+      font-weight: 700;
+      color: #ffffff;
+    }
+
+    .rich-display u {
+      text-decoration-color: #f59e0b;
+      text-underline-offset: 3px;
+    }
+
+    .rich-display s {
+      color: #64748b;
+    }
+
+    .rich-display .chef-color-danger {
+      color: #fda4af !important;
+      font-weight: 700;
+    }
+
+    .rich-display .chef-color-gold {
+      color: #fde047 !important;
+      font-weight: 700;
+    }
+
+    .rich-display .chef-color-emerald {
+      color: #6ee7b7 !important;
+      font-weight: 700;
+    }
+
+    /* Блок подсказок шефа */
+    .rich-display .chef-callout {
+      display: block;
+      margin: 12px 0;
+      padding: 12px 14px;
+      background: rgba(245, 158, 11, 0.12);
+      border-left: 3.5px solid #f59e0b;
+      border-radius: 4px 14px 14px 4px;
+      color: #fef3c7;
+      font-size: 14.5px;
+      line-height: 1.65;
+    }
+
+    /* Адаптивные списки: компактные отступы на смартфонах */
+    .rich-display ul {
+      list-style-type: disc;
+      padding-left: 18px;
+      margin: 8px 0;
+    }
+
+    .rich-display ol {
+      list-style-type: decimal;
+      padding-left: 20px;
+      margin: 8px 0;
+    }
+
+    .rich-display li {
+      margin-bottom: 8px;
+      padding-left: 4px;
+    }
+
+    .rich-display li::marker {
+      color: #f59e0b;
+      font-weight: bold;
     }
   </style>
 </head>
-<body class="bg-apple-black text-slate-100 min-h-screen pb-32 select-none">
+<body class="min-h-screen pb-28 select-none">
 
-
-  <div id="appleWelcomeScreen" class="fixed inset-0 z-50 flex flex-col items-center justify-between p-8 bg-black transition-opacity duration-700 pointer-events-auto">
-    
-    <!-- Top Bar -->
-    <div class="w-full flex justify-between items-center max-w-sm pt-4">
-      <span class="text-[11px] font-mono tracking-widest uppercase text-apple-subtext">ChefOS • v2.6</span>
-      <button onclick="exitAppleIntro()" class="text-xs font-semibold px-3 py-1.5 rounded-full bg-white/10 hover:bg-white/20 text-slate-300 transition backdrop-blur-md">
-        Пропустить
-      </button>
-    </div>
-
-    <!-- Center Morphing Text Stage -->
-    <div class="relative flex flex-col items-center justify-center text-center my-auto">
-      <div class="apple-glow-orb absolute w-72 h-72 rounded-full pointer-events-none -z-10"></div>
-      
-      <div class="w-16 h-16 rounded-3xl bg-gradient-to-tr from-amber-500/20 to-amber-300/10 border border-amber-400/30 flex items-center justify-center text-3xl mb-8 shadow-2xl backdrop-blur-xl">
-        🧁
-      </div>
-
-      <h1 id="morphGreeting" class="text-4xl sm:text-5xl font-extrabold tracking-tight text-white transition-all duration-500 transform translate-y-0 opacity-100">
-        Привет
-      </h1>
-      
-      <p id="morphSub" class="text-sm text-apple-subtext mt-3 font-medium transition-all duration-500 max-w-xs">
-        Калибровка рецептур и граммовок
-      </p>
-
-      <div class="flex items-center gap-2 mt-6 px-3.5 py-1.5 rounded-full bg-white/5 border border-white/10 text-[11px] font-mono text-apple-gold">
-        <span class="w-1.5 h-1.5 rounded-full bg-apple-emerald animate-pulse"></span>
-        <span id="welcomeFbStatus">Связь с базой данных...</span>
-      </div>
-    </div>
-
-    <!-- Bottom Apple Signature Line -->
-    <div class="text-[11px] font-medium text-white/30 text-center pb-4 tracking-wider uppercase">
-      Кондитерский цех • Точный тайминг
-    </div>
-  </div>
-
-
-  <div id="pinModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-2xl opacity-0 pointer-events-none transition-opacity duration-300">
-    <div class="w-full max-w-xs flex flex-col items-center text-center space-y-6">
-      
-      <div class="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center text-xl text-apple-gold border border-white/10">
-        <i class="fa-solid fa-lock"></i>
-      </div>
-
-      <div>
-        <h3 class="text-lg font-bold text-white tracking-tight">Панель Шефа</h3>
-        <p class="text-xs text-apple-subtext mt-1">Введите PIN-код для редактирования</p>
-      </div>
-
-      <!-- 4 PIN Dots -->
-      <div class="flex gap-4 my-2">
-        <div id="dot-0" class="w-3.5 h-3.5 rounded-full border border-white/30 transition-all duration-150"></div>
-        <div id="dot-1" class="w-3.5 h-3.5 rounded-full border border-white/30 transition-all duration-150"></div>
-        <div id="dot-2" class="w-3.5 h-3.5 rounded-full border border-white/30 transition-all duration-150"></div>
-        <div id="dot-3" class="w-3.5 h-3.5 rounded-full border border-white/30 transition-all duration-150"></div>
-      </div>
-
-      <!-- Apple Numeric Keypad -->
-      <div class="grid grid-cols-3 gap-3 w-full max-w-[240px]">
-        <button onclick="pressPin('1')" class="h-16 rounded-full bg-white/10 active:bg-white/30 text-xl font-medium text-white transition flex flex-col items-center justify-center">1</button>
-        <button onclick="pressPin('2')" class="h-16 rounded-full bg-white/10 active:bg-white/30 text-xl font-medium text-white transition flex flex-col items-center justify-center">2</button>
-        <button onclick="pressPin('3')" class="h-16 rounded-full bg-white/10 active:bg-white/30 text-xl font-medium text-white transition flex flex-col items-center justify-center">3</button>
-
-        <button onclick="pressPin('4')" class="h-16 rounded-full bg-white/10 active:bg-white/30 text-xl font-medium text-white transition flex flex-col items-center justify-center">4</button>
-        <button onclick="pressPin('5')" class="h-16 rounded-full bg-white/10 active:bg-white/30 text-xl font-medium text-white transition flex flex-col items-center justify-center">5</button>
-        <button onclick="pressPin('6')" class="h-16 rounded-full bg-white/10 active:bg-white/30 text-xl font-medium text-white transition flex flex-col items-center justify-center">6</button>
-
-        <button onclick="pressPin('7')" class="h-16 rounded-full bg-white/10 active:bg-white/30 text-xl font-medium text-white transition flex flex-col items-center justify-center">7</button>
-        <button onclick="pressPin('8')" class="h-16 rounded-full bg-white/10 active:bg-white/30 text-xl font-medium text-white transition flex flex-col items-center justify-center">8</button>
-        <button onclick="pressPin('9')" class="h-16 rounded-full bg-white/10 active:bg-white/30 text-xl font-medium text-white transition flex flex-col items-center justify-center">9</button>
-
-        <button onclick="closePinModal()" class="h-16 rounded-full text-xs font-semibold text-apple-subtext hover:text-white transition flex items-center justify-center">Отмена</button>
-        <button onclick="pressPin('0')" class="h-16 rounded-full bg-white/10 active:bg-white/30 text-xl font-medium text-white transition flex flex-col items-center justify-center">0</button>
-        <button onclick="deletePinDigit()" class="h-16 rounded-full text-sm text-apple-subtext hover:text-white transition flex items-center justify-center">
-          <i class="fa-solid fa-delete-left"></i>
-        </button>
-      </div>
-
-      <p class="text-[10px] text-white/30 font-mono">По умолчанию: 1234</p>
-    </div>
-  </div>
-
-
-  <header class="sticky top-0 z-30 bg-apple-space/85 backdrop-blur-2xl border-b border-white/5 px-4 sm:px-6 py-3.5">
-    <div class="max-w-4xl mx-auto flex items-center justify-between gap-3">
-      
-      <!-- Brand & Mode Pill -->
-      <div class="flex items-center gap-3">
-        <div class="w-10 h-10 rounded-2xl bg-gradient-to-br from-amber-500/20 to-amber-700/10 border border-amber-400/30 flex items-center justify-center text-lg shadow-sm">
-          🍰
-        </div>
+  <!-- Header -->
+  <header class="sticky top-0 z-30 bg-[#08080c]/95 backdrop-blur-xl border-b border-white/10 px-4 sm:px-6 py-3">
+    <div class="max-w-4xl mx-auto flex items-center justify-between">
+      <div class="flex items-center gap-2.5">
+        <span class="text-2xl drop-shadow">🍰</span>
         <div>
-          <div class="flex items-center gap-2">
-            <h2 class="text-sm font-bold tracking-tight text-white flex items-center gap-1.5">
-              ChefOS
-            </h2>
-            <span id="activeModeBadge" class="text-[9px] font-mono font-bold px-2 py-0.5 rounded-full bg-white/10 text-apple-subtext border border-white/10 uppercase tracking-wider">
-              ЦЕХ
-            </span>
-          </div>
-          <p id="liveCloudStatus" class="text-[10px] font-mono text-apple-emerald flex items-center gap-1 mt-0.5">
-            <span class="w-1.5 h-1.5 rounded-full bg-apple-emerald"></span> Синхронизировано
+          <h1 class="text-base font-extrabold text-white tracking-tight leading-none">ChefOS • Цех</h1>
+          <p id="cloudStatus" class="text-[10px] font-mono text-emerald-400 mt-1 flex items-center gap-1">
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> База онлайн
           </p>
         </div>
       </div>
 
-      <!-- Quick Action Controls -->
-      <div class="flex items-center gap-2">
-        <!-- New Recipe Button (Admin only) -->
-        <button id="btnAddNewRecipe" onclick="openNewRecipeSheet()" class="hidden px-3 py-1.5 rounded-xl bg-apple-gold text-black text-xs font-bold hover:bg-apple-goldLight transition items-center gap-1.5 shadow-sm">
-          <i class="fa-solid fa-plus"></i> <span class="hidden sm:inline">Рецепт</span>
-        </button>
-
-        <!-- Exit Admin Mode (Admin only) -->
-        <button id="btnLockAdmin" onclick="exitAdminMode()" class="hidden px-3 py-1.5 rounded-xl bg-white/10 text-white text-xs font-semibold hover:bg-white/20 transition items-center gap-1.5 border border-white/10">
-          <i class="fa-solid fa-lock-open text-apple-gold"></i> Заблокировать
-        </button>
-
-        <!-- Multiplier for Rolls (in kitchen mode) -->
-        <div id="meringueMultiplierBox" class="flex items-center bg-white/5 border border-white/10 rounded-xl p-0.5 text-xs font-mono font-bold">
-          <button onclick="setRollsCount(1)" id="btnMul1" class="px-2.5 py-1 rounded-lg bg-apple-gold text-black transition">1 шт.</button>
-          <button onclick="setRollsCount(2)" id="btnMul2" class="px-2.5 py-1 rounded-lg text-slate-400 hover:text-white transition">2 шт.</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Live Search Bar -->
-    <div class="max-w-4xl mx-auto mt-2.5">
-      <div class="relative w-full">
-        <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-apple-subtext text-xs"></i>
-        <input id="searchInput" type="text" oninput="handleSearch()" placeholder="Поиск десерта, ингредиента или температуры..."
-               class="w-full pl-9 pr-8 py-2 rounded-xl bg-white/5 border border-white/10 text-xs text-white placeholder-apple-subtext focus:bg-white/10 focus:border-apple-gold/50 transition">
-        <button onclick="clearSearch()" id="clearSearchBtn" class="hidden absolute right-3 top-1/2 -translate-y-1/2 text-apple-subtext hover:text-white text-xs">
-          ✕
-        </button>
-      </div>
+      <a href="admin.html" class="px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 active:scale-95 text-white text-xs font-semibold transition flex items-center gap-1.5 border border-white/10">
+        <i class="fa-solid fa-user-gear text-amber-400"></i>
+        <span>Шеф</span>
+      </a>
     </div>
   </header>
 
-
-  <main class="max-w-4xl mx-auto px-4 sm:px-6 pt-5 space-y-6">
-
-    <!-- Active Admin Live Notification Bar -->
-    <div id="adminNoticeBar" class="hidden p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-between gap-3 text-xs">
-      <div class="flex items-center gap-2.5 text-apple-gold">
-        <i class="fa-solid fa-wand-magic-sparkles text-sm"></i>
-        <span><b>Режим Шефа активен:</b> нажимайте на любой текст или цифру прямо в карточках для моментальной правки.</span>
-      </div>
-      <button onclick="saveAllEditsToCloud()" class="px-3 py-1.5 rounded-xl bg-apple-gold text-black font-bold shrink-0 hover:bg-apple-goldLight transition shadow">
-        Сохранить в облако
-      </button>
-    </div>
-
-    <!-- Active Timer Card (Floats when running) -->
-    <div id="globalActiveTimerModule" class="hidden p-4 rounded-3xl bento-card border border-apple-gold/30 bg-gradient-to-r from-amber-950/20 to-black flex items-center justify-between gap-4">
+  <!-- Active Oven Timer -->
+  <div class="max-w-4xl mx-auto px-3.5 sm:px-6 pt-3">
+    <div id="activeTimerWidget" class="hidden p-3.5 sm:p-4 rounded-2xl bento-card border-amber-500/40 bg-gradient-to-r from-amber-950/30 to-[#121218] flex items-center justify-between shadow-2xl">
       <div class="flex items-center gap-3">
-        <div class="w-10 h-10 rounded-2xl bg-apple-gold/20 text-apple-gold flex items-center justify-center text-lg animate-pulse">
-          ⏱
-        </div>
+        <span class="text-2xl animate-pulse">🔥</span>
         <div>
-          <div id="activeTimerName" class="text-xs font-bold text-white uppercase tracking-wider">Выпечка меренги</div>
-          <div id="activeTimerSubtitle" class="text-[11px] text-apple-subtext">Холодный старт • 150°C</div>
+          <div id="activeTimerTitle" class="text-xs sm:text-sm font-bold text-white uppercase tracking-wider line-clamp-1">Печь в работе</div>
+          <div id="activeTimerSub" class="text-[11px] text-amber-400/80 font-mono">50 минут</div>
         </div>
       </div>
       <div class="flex items-center gap-3">
-        <span id="activeTimerDigits" class="font-mono text-2xl font-extrabold text-apple-gold">50:00</span>
-        <button onclick="stopGlobalTimer()" class="w-8 h-8 rounded-xl bg-white/10 hover:bg-rose-500/20 text-white hover:text-rose-400 flex items-center justify-center text-xs transition">
-          ✕
-        </button>
+        <span id="activeTimerDigits" class="font-mono text-xl sm:text-2xl font-black text-amber-400">50:00</span>
+        <button onclick="stopTimer()" class="w-8 h-8 rounded-lg bg-white/10 text-white hover:bg-rose-500/20 hover:text-rose-400 active:scale-90 transition flex items-center justify-center text-xs">✕</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <main class="max-w-4xl mx-auto px-3.5 sm:px-6 pt-3 space-y-4">
+
+    <!-- Filters & Search -->
+    <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5">
+      <div class="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 no-scrollbar">
+        <button onclick="setFilter('all')" id="f-all" class="px-3.5 py-1.5 rounded-xl bg-amber-500 text-black text-xs font-bold whitespace-nowrap transition">Все</button>
+        <button onclick="setFilter('popular')" id="f-popular" class="px-3.5 py-1.5 rounded-xl bg-white/5 text-slate-300 hover:text-white text-xs font-bold border border-white/10 whitespace-nowrap transition">🔥 Популярные</button>
+        <button onclick="setFilter('regular')" id="f-regular" class="px-3.5 py-1.5 rounded-xl bg-white/5 text-slate-300 hover:text-white text-xs font-bold border border-white/10 whitespace-nowrap transition">Остальные</button>
+      </div>
+      <div class="relative w-full sm:w-64">
+        <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-xs"></i>
+        <input id="searchInput" type="text" oninput="renderRecipes()" placeholder="Поиск десерта..."
+               class="w-full pl-8 pr-3 py-2 rounded-xl bg-white/5 border border-white/10 text-xs text-white placeholder-slate-500 focus:border-amber-400">
       </div>
     </div>
 
-    <!-- Dynamic Modular Recipe Sections -->
-    <div id="modularContainer" class="space-y-8">
-      <!-- Injected via JavaScript from Firebase -->
+    <!-- Recipes List -->
+    <div id="recipesContainer" class="space-y-3.5">
+      <!-- Injected via JavaScript -->
     </div>
   </main>
 
-
-  <nav class="fixed bottom-4 left-1/2 -translate-x-1/2 z-40 w-[92%] max-w-sm rounded-3xl glass-dock px-4 py-2.5 shadow-2xl flex items-center justify-around">
-    
-    <!-- All Recipes -->
-    <button onclick="scrollToSection('modularContainer')" class="flex flex-col items-center gap-1 text-apple-gold transition">
-      <i class="fa-solid fa-kitchen-set text-base"></i>
-      <span class="text-[9px] font-medium tracking-tight">Рецепты</span>
-    </button>
-
-    <!-- 10-Min Mixer Chronometer -->
-    <button onclick="scrollToSection('mod-mixer-stage')" class="flex flex-col items-center gap-1 text-apple-subtext hover:text-white transition">
-      <i class="fa-solid fa-stopwatch text-base"></i>
-      <span class="text-[9px] font-medium tracking-tight">Тайминг</span>
-    </button>
-
-    <!-- Shopping List -->
-    <button onclick="openShoppingDrawer()" class="flex flex-col items-center gap-1 text-apple-subtext hover:text-white transition">
-      <i class="fa-solid fa-cart-shopping text-base"></i>
-      <span class="text-[9px] font-medium tracking-tight">Закуп</span>
-    </button>
-
-    <!-- Chef Passcode Button -->
-    <button onclick="handleChefAuthClick()" id="dockAdminBtn" class="flex flex-col items-center gap-1 text-apple-subtext hover:text-apple-gold transition">
-      <i class="fa-solid fa-user-gear text-base"></i>
-      <span class="text-[9px] font-medium tracking-tight" id="dockAdminLabel">Шеф</span>
-    </button>
-  </nav>
-
-
-  <div id="shoppingDrawer" class="fixed inset-0 z-50 bg-black/70 backdrop-blur-md opacity-0 pointer-events-none transition-opacity duration-300 flex items-end justify-center">
-    <div id="shoppingSheet" class="w-full max-w-lg max-h-[85vh] bg-apple-card border-t border-white/10 rounded-t-[32px] p-6 shadow-2xl flex flex-col space-y-4 transform translate-y-full transition-transform duration-300">
-      
-      <!-- Drawer Grabber -->
-      <div class="w-12 h-1.5 bg-white/20 rounded-full mx-auto -mt-2"></div>
-
-      <div class="flex items-center justify-between border-b border-white/10 pb-3">
-        <div class="flex items-center gap-2">
-          <span class="text-2xl">🛒</span>
-          <div>
-            <h3 class="text-base font-bold text-white">Список покупок</h3>
-            <p class="text-[11px] text-apple-subtext">То, чего не хватает в цехе</p>
-          </div>
-        </div>
-        <button onclick="closeShoppingDrawer()" class="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-xs text-slate-300">✕</button>
-      </div>
-
-      <div class="space-y-2 overflow-y-auto flex-1 no-scrollbar text-xs">
-        <label class="flex items-center gap-3 p-3.5 rounded-2xl bg-white/5 border border-white/5 cursor-pointer">
-          <input type="checkbox" onchange="toggleStrike(this)" class="w-4 h-4 rounded text-apple-gold accent-amber-500">
-          <span class="flex-1 text-white font-medium">Сливки 33–35% — <b>1 литр</b> (Петмол / Parmalat)</span>
-        </label>
-        <label class="flex items-center gap-3 p-3.5 rounded-2xl bg-white/5 border border-white/5 cursor-pointer">
-          <input type="checkbox" onchange="toggleStrike(this)" class="w-4 h-4 rounded text-apple-gold accent-amber-500">
-          <span class="flex-1 text-white font-medium">Яйца куриные — <b>1 десяток (С0/С1)</b></span>
-        </label>
-        <label class="flex items-center gap-3 p-3.5 rounded-2xl bg-white/5 border border-white/5 cursor-pointer">
-          <input type="checkbox" onchange="toggleStrike(this)" class="w-4 h-4 rounded text-apple-gold accent-amber-500">
-          <span class="flex-1 text-white font-medium">Лимоны свежие — <b>2 шт.</b> (сок в меренгу и чизкейк)</span>
-        </label>
-        <label class="flex items-center gap-3 p-3.5 rounded-2xl bg-white/5 border border-white/5 cursor-pointer">
-          <input type="checkbox" onchange="toggleStrike(this)" class="w-4 h-4 rounded text-apple-gold accent-amber-500">
-          <span class="flex-1 text-white font-medium">Печенье («Юбилейное» / к чаю) — <b>1 пачка (16 шт.)</b></span>
-        </label>
-      </div>
-
-      <div class="p-3 rounded-2xl bg-white/5 text-[11px] text-apple-subtext flex items-center gap-2">
-        <i class="fa-solid fa-circle-check text-apple-emerald text-sm"></i>
-        <span>Сахар, крахмал, творожный сыр, бананы и сливочное масло уже есть в наличии.</span>
-      </div>
-    </div>
-  </div>
-
-  <!-- Toast Notification -->
-  <div id="appleToast" class="fixed top-5 left-1/2 -translate-x-1/2 z-50 transform -translate-y-24 opacity-0 pointer-events-none transition-all duration-300 max-w-sm w-11/12 glass-dock px-4 py-3 rounded-2xl shadow-2xl flex items-center gap-3">
-    <span id="toastIcon" class="text-lg text-apple-gold">✨</span>
-    <span id="toastMsg" class="text-xs font-semibold text-white flex-1">Оповещение</span>
-  </div>
-
-
   <script>
-    /* Web Audio API Apple Click & Chimes */
-    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-
-    function playTone(freq, duration = 0.1, type = 'sine') {
-      try {
-        if (audioCtx.state === 'suspended') audioCtx.resume();
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-        osc.type = type;
-        osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-        gain.gain.setValueAtTime(0.12, audioCtx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
-        osc.connect(gain);
-        gain.connect(audioCtx.destination);
-        osc.start();
-        osc.stop(audioCtx.currentTime + duration);
-      } catch (e) {}
-    }
-
-    function playHaptic() {
-      if ('vibrate' in navigator) {
-        try { navigator.vibrate(12); } catch (e) {}
-      }
-    }
-
-    function showToast(msg, icon = '✨') {
-      playTone(880, 0.12);
-      playHaptic();
-      const toast = document.getElementById('appleToast');
-      document.getElementById('toastMsg').innerText = msg;
-      document.getElementById('toastIcon').innerText = icon;
-      toast.classList.remove('-translate-y-24', 'opacity-0');
-      toast.classList.add('translate-y-0', 'opacity-100');
-      setTimeout(() => {
-        toast.classList.remove('translate-y-0', 'opacity-100');
-        toast.classList.add('-translate-y-24', 'opacity-0');
-      }, 2800);
-    }
-
-    /* Core Default Pastry Handbook Data */
-    const DEFAULT_DATA = {
+    const BASELINE_RECIPES = {
       meringue: {
         id: 'meringue',
         title: 'Меренговый рулет',
         emoji: '🍓',
-        tag: 'Выпечка • Рулет',
+        isPopular: true,
         ovenTemp: '150°C',
         bakeMinutes: 50,
-        isColdStart: true,
-        summary: 'Холодный запуск 150°C 50 мин. Поминутный тайминг миксера и сушка ягод.',
-        ingredients: [
-          { name: 'Белки яичные (сразу в сухую чашу)', qty: '6 шт. (200–220 г)', key: 'whites' },
-          { name: 'Сахар (в меренгу)', qty: '280 г', key: 'sugar' },
-          { name: 'Лимонный сок', qty: '8 мл', key: 'lemon' },
-          { name: 'Крахмал кукурузный', qty: '8 г', key: 'starch' },
-          { name: 'Клубника замороженная', qty: '100 г', key: 'strawberries' },
-          { name: 'Творожный сыр (крем)', qty: '200 г', key: 'cheese' },
-          { name: 'Сливки 33% (крем)', qty: '100 г', key: 'cream' },
-          { name: 'Сахар (в крем)', qty: '50 г', key: 'creamSugar' }
-        ],
-        steps: [
-          {
-            title: 'Чаша миксера & Холодный старт',
-            desc: 'В сухую чашу разбить 6 яиц, отделяя белки (200–220 г). Отвесить сахар, лимонный сок и крахмал под руку. ⚠️ Духовку заранее НЕ включать!'
-          },
-          {
-            title: 'Секундомер замеса (0:00 — 7:00)',
-            desc: '0–5 мин: взбивать с 1-й скорости, плавно повышая до белой пены. На 5:00 влить 8 мл лимонного сока. С 6-й минуты разгонять: строго +1 скорость каждую минуту. На 7:00 всыпать весь сахар (280 г).'
-          },
-          {
-            title: 'Чек-поинт клюва и крахмал (8:50 — 10:00)',
-            desc: 'На 8:50–9:00 СТОП МИКСЕР! Вынимаем венчик: масса плотная, не течёт и держит клюв. В 9:00 всыпаем крахмал (8 г) и довзбиваем ровно 1 минуту до 10:00.'
-          },
-          {
-            title: 'Формовка и запуск печи',
-            desc: 'Разровнять в прямоугольник на коврике. Поставить противень в ХОЛОДНУЮ духовку, включить 150°C на 50 минут!'
-          },
-          {
-            title: 'Ягоды в СВЧ и крем',
-            desc: 'Клубнику (100 г) в микроволновку на 30 сек. Нарезать пластинками и подсушить на салфетках. Взбить сыр (200 г), сливки (100 г) и сахар (50 г) и убрать в витрину.'
-          },
-          {
-            title: 'Шлюз остывания и фирменный декор',
-            desc: 'Приоткрывать дверцу печи плавно. Остывшую меренгу перевернуть, снять коврик (сухую крошку собрать в миску!). Смазать кремом, выложить клубнику, свернуть. Сверху отсадить волны и посыпать крошкой.'
-          }
-        ]
+        ingredients: `<ul>
+<li><b>Белки яичные</b> (в сухую чашу) — 6 шт. (200–220 г)</li>
+<li>Сахар (в меренгу) — <b>280 г</b></li>
+<li>Лимонный сок — 8 мл</li>
+<li>Крахмал кукурузный — 8 г</li>
+<li>Клубника замороженная — 100 г</li>
+<li>Творожный сыр (крем) — 200 г</li>
+<li>Сливки 33% (крем) — 100 г</li>
+<li>Сахар (в крем) — 50 г</li>
+</ul>`,
+        instructions: `<ol>
+<li><mark>Тщательно обезжирить</mark> и вытереть насухо чашу миксера и венчик. Разбить 6 яиц. <span class="chef-color-danger">Духовку заранее НЕ включать (холодный старт!)</span>.</li>
+<li><b>0:00–5:00</b> — включить 1-ю скорость, плавно довести до устойчивой белой пены.</li>
+<li>На отметке <b>5:00</b> влить 8 мл лимонного сока.</li>
+<li>С 6-й минуты разгон: строго <u>+1 скорость в минуту</u>.</li>
+<li>На отметке <b>7:00</b> тонкой струйкой всыпать весь сахар (280 г).</li>
+<li>На 8:50–9:00 остановить миксер: масса держит плотный клюв.</li>
+<li>На 9:00 всыпать кукурузный крахмал (8 г) и довзбивать ровно 1 минуту.</li>
+<li>Выложить готовую меренгу на силиконовый коврик ровным прямоугольником.</li>
+<li><div class="chef-callout">🔥 Поставить противень в ХОЛОДНУЮ духовку, включить 150°C ровно на 50 минут!</div></li>
+<li>Остывшую меренгу перевернуть, смазать кремом и свернуть рулет.</li>
+</ol>`
       },
-
       cheesecake: {
         id: 'cheesecake',
         title: 'Классический чизкейк',
         emoji: '🧀',
-        tag: 'Выпечка • Торт',
+        isPopular: true,
         ovenTemp: '175°C',
         bakeMinutes: 50,
-        isColdStart: false,
-        summary: 'Основа в морозилку на 30 мин. Обязательная отстойка массы 30–60 минут.',
-        ingredients: [
-          { name: 'Печенье («Юбилейное»)', qty: '16 шт. (~180 г)' },
-          { name: 'Сливочное масло (растопить)', qty: '150 г' },
-          { name: 'Творожный сыр', qty: '550 г' },
-          { name: 'Сливки 33%', qty: '150 г' },
-          { name: 'Сахар', qty: '120 г' },
-          { name: 'Крахмал кукурузный', qty: '10 г' },
-          { name: 'Яйца куриные', qty: '2 шт.' },
-          { name: 'Сметана 20%', qty: '2 ст. ложки' },
-          { name: 'Сок лимона', qty: '2–3 капли' }
-        ],
-        steps: [
-          {
-            title: 'Основа в морозилку (30 мин)',
-            desc: '16 шт. печенья измельчить в блендере до крошки, перемешать со 150 г растопленного сливочного масла. Сформировать в форме дно и бортики, убрать в морозильник на 30 минут.'
-          },
-          {
-            title: 'Сырная смесь и ОТСТОЙКА',
-            desc: 'Взбить сыр 550 г, сливки 150 г, сахар 120 г, крахмал 10 г, сок лимона, 2 яйца и сметану. ⏳ ОБЯЗАТЕЛЬНО оставить массу при комнатной температуре на 30–60 минут, чтобы вышли микропузыри.'
-          },
-          {
-            title: 'Выпечка',
-            desc: 'Залить на замороженную основу. Выпекать при 175°C ровно 50 минут.'
-          }
-        ]
+        ingredients: `<ul>
+<li>Печенье («Юбилейное») — 16 шт. (~180 г)</li>
+<li>Сливочное масло (растопить) — 150 г</li>
+<li><b>Творожный сыр</b> — 550 г</li>
+<li>Сливки 33% — 150 г</li>
+<li>Сахар — 120 г</li>
+<li>Крахмал кукурузный — 10 г</li>
+<li>Яйца куриные — 2 шт.</li>
+<li>Сметана 20% — 2 ст. л.</li>
+</ul>`,
+        instructions: `<ol>
+<li>Печенье измельчить в крошку со 150 г масла, утрамбовать основу и убрать в морозилку на 30 мин.</li>
+<li>Смешать сыр, сливки, сахар и крахмал. По одному ввести яйца и сметану.</li>
+<li><mark>Вымешивать на минимальной скорости</mark>, чтобы не насыщать воздухом.</li>
+<li><div class="chef-callout">Обязательно оставить массу на 30–60 минут на столе, чтобы вышли микропузыри!</div></li>
+<li>Залить на замороженную основу и выпекать при <span class="chef-color-gold">175°C ровно 50 минут</span>.</li>
+</ol>`
       },
-
       banana: {
         id: 'banana',
         title: 'Банановый хлеб',
         emoji: '🍌',
-        tag: 'Выпечка • Кекс',
+        isPopular: false,
         ovenTemp: '175°C',
         bakeMinutes: 50,
-        isColdStart: false,
-        summary: 'Мгновенная реакция соды: замесить и сразу в разогретую печь.',
-        ingredients: [
-          { name: 'Бананы спелые', qty: '2 шт.' },
-          { name: 'Яйца куриные', qty: '2 шт.' },
-          { name: 'Масло сливочное растопленное', qty: '130 г' },
-          { name: 'Сахар', qty: '150 г (тесто) + 25 г (крем)' },
-          { name: 'Мука пшеничная', qty: '250 г' },
-          { name: 'Соль мелкая', qty: '1 ч. л. БЕЗ горки' },
-          { name: 'Сода пищевая', qty: '1 ч. л. С ГОРКОЙ' },
-          { name: 'Творожный сыр (крем)', qty: '250 г' },
-          { name: 'Сливки 33% (крем)', qty: '40 г' }
-        ],
-        steps: [
-          {
-            title: 'Пюре и духовка',
-            desc: 'Духовку разогреть до 175°C. В блендере пробить 2 банана и 2 яйца в шелковистую эмульсию.'
-          },
-          {
-            title: 'Эмульсия и мука',
-            desc: 'В миске взбить 130 г растопленного масла со 150 г сахара. Добавить банановую смесь, всыпать 250 г муки и размешать.'
-          },
-          {
-            title: 'Сода с горкой и СРАЗУ В ПЕЧЬ!',
-            desc: 'Всыпать соль без горки и соду С ГОРКОЙ, перемешать и МОМЕНТАЛЬНО отправить в духовку 175°C на 50 минут.'
-          },
-          {
-            title: 'Крем',
-            desc: 'Взбить 250 г творожного сыра, 25 г сахара и 40 г сливок. Украсить остывший хлеб.'
-          }
-        ]
+        ingredients: `<ul>
+<li>Бананы спелые — 2 шт.</li>
+<li>Яйца куриные — 2 шт.</li>
+<li>Масло сливочное растопленное — 130 г</li>
+<li>Сахар — 150 г (тесто) + 25 г (крем)</li>
+<li>Мука пшеничная — 250 г</li>
+<li>Соль мелкая — 1 ч. л. без горки</li>
+<li><span class="chef-color-danger">Сода пищевая — 1 ч. л. С ГОРКОЙ</span></li>
+</ul>`,
+        instructions: `<ol>
+<li>Разогреть духовку заранее до <span class="chef-color-gold">175°C</span>.</li>
+<li>В блендере взбить бананы с яйцами в шелковистую эмульсию.</li>
+<li>Соединить с растопленным маслом, сахаром и мукой.</li>
+<li>Всыпать соль и соду с горкой, вымешивать <u>не дольше 15 секунд</u>!</li>
+<li><span class="chef-color-danger">МОМЕНТАЛЬНО</span> перелить в форму и поставить в печь на 50 минут.</li>
+</ol>`
       }
     };
 
-    /* App Global State */
-    window.state = {
-      recipes: JSON.parse(JSON.stringify(DEFAULT_DATA)),
-      rollsMultiplier: 1,
-      isAdmin: false,
-      pinInput: '',
-      pinCorrect: '1234',
-      activeTimer: null,
-      activeTimerRemaining: 0,
-      activeTimerInterval: null,
-      mixerTimer: null,
-      mixerRemaining: 600, // 10 minutes
-      mixerInterval: null
-    };
+    window.recipes = {};
+    window.currentFilter = 'all';
+    window.expandedId = null;
+    let timerInterval = null;
+    let timerSeconds = 0;
 
+    function initData() {
+      try {
+        const raw = localStorage.getItem('pastry_recipes_simple');
+        if (raw) window.recipes = JSON.parse(raw);
+        else window.recipes = BASELINE_RECIPES;
+      } catch (e) {
+        window.recipes = BASELINE_RECIPES;
+      }
+      renderRecipes();
 
-    const morphGreetings = [
-      { text: "Привет", sub: "Калибровка кондитерского цеха" },
-      { text: "Hello", sub: "Modular Recipe Engine" },
-      { text: "Bonjour", sub: "Pâtisserie Haute Précision" },
-      { text: "Приветствую вас, Шеф", sub: "Готово к работе" }
-    ];
-
-    function runAppleIntro() {
-      let idx = 0;
-      const titleEl = document.getElementById('morphGreeting');
-      const subEl = document.getElementById('morphSub');
-      const introBox = document.getElementById('appleWelcomeScreen');
-
-      playTone(520, 0.2);
-
-      const interval = setInterval(() => {
-        idx++;
-        if (idx < morphGreetings.length) {
-          titleEl.style.opacity = '0';
-          titleEl.style.transform = 'scale(0.94) translateY(8px)';
-          subEl.style.opacity = '0';
-
-          setTimeout(() => {
-            titleEl.innerText = morphGreetings[idx].text;
-            subEl.innerText = morphGreetings[idx].sub;
-            titleEl.style.opacity = '1';
-            titleEl.style.transform = 'scale(1) translateY(0)';
-            subEl.style.opacity = '1';
-            playTone(580 + idx * 70, 0.15);
-          }, 240);
-        } else {
-          clearInterval(interval);
-          setTimeout(() => {
-            exitAppleIntro();
-          }, 800);
-        }
-      }, 1000);
-    }
-
-    function exitAppleIntro() {
-      const introBox = document.getElementById('appleWelcomeScreen');
-      introBox.classList.add('opacity-0');
-      setTimeout(() => {
-        introBox.classList.add('hidden');
-      }, 700);
-    }
-
-
-    window.addEventListener('firebase-ready', () => {
-      const db = window.fbDb;
-      const handbookRef = window.fbRef(db, 'pastry_handbook/recipes');
-
-      window.fbOnValue(handbookRef, (snapshot) => {
-        const val = snapshot.val();
-        if (val) {
-          window.state.recipes = val;
-          document.getElementById('liveCloudStatus').innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-apple-emerald"></span> Облако синхронизировано';
-          document.getElementById('welcomeFbStatus').innerText = 'Синхронизировано онлайн';
-        } else {
-          // Upload baseline
-          window.fbSet(handbookRef, DEFAULT_DATA);
-          document.getElementById('liveCloudStatus').innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-apple-emerald"></span> База создана';
-        }
-        renderBentoModules();
-      }, (err) => {
-        console.warn('Firebase error / offline fallback:', err);
-        document.getElementById('liveCloudStatus').innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span> Локальный кэш';
-        renderBentoModules();
-      });
-    });
-
-    function saveAllEditsToCloud() {
-      if (!window.fbDb) return;
-      const handbookRef = window.fbRef(window.fbDb, 'pastry_handbook/recipes');
-      window.fbSet(handbookRef, window.state.recipes)
-        .then(() => {
-          showToast('Все изменения синхронизированы с облаком!', '☁️');
-        })
-        .catch(e => {
-          showToast('Ошибка сохранения: ' + e.message, '⚠️');
+      function connect() {
+        if (!window.fbDb || !window.fbRef || !window.fbOnValue) return;
+        const recRef = window.fbRef(window.fbDb, 'pastry_handbook/recipes_simple');
+        window.fbOnValue(recRef, (snap) => {
+          const val = snap.val();
+          if (val && Object.keys(val).length > 0) {
+            window.recipes = val;
+            localStorage.setItem('pastry_recipes_simple', JSON.stringify(val));
+          }
+          renderRecipes();
         });
+      }
+
+      if (window.fbDb) connect();
+      else window.addEventListener('firebase-ready', connect);
     }
 
+    function setFilter(f) {
+      window.currentFilter = f;
+      ['all', 'popular', 'regular'].forEach(t => {
+        const b = document.getElementById(`f-${t}`);
+        if (t === f) b.className = "px-3.5 py-1.5 rounded-xl bg-amber-500 text-black text-xs font-bold whitespace-nowrap transition";
+        else b.className = "px-3.5 py-1.5 rounded-xl bg-white/5 text-slate-300 hover:text-white text-xs font-bold border border-white/10 whitespace-nowrap transition";
+      });
+      renderRecipes();
+    }
 
-    function renderBentoModules() {
-      const container = document.getElementById('modularContainer');
-      const query = (document.getElementById('searchInput').value || '').toLowerCase().trim();
+    function toggleExpand(id) {
+      window.expandedId = window.expandedId === id ? null : id;
+      renderRecipes();
+    }
+
+    function renderRecipes() {
+      const container = document.getElementById('recipesContainer');
+      const q = (document.getElementById('searchInput').value || '').toLowerCase().trim();
       container.innerHTML = '';
 
-      Object.values(window.state.recipes).forEach(recipe => {
-        // Search filter
-        if (query) {
-          const matchTitle = recipe.title.toLowerCase().includes(query);
-          const matchSummary = (recipe.summary || '').toLowerCase().includes(query);
-          const matchIng = (recipe.ingredients || []).some(i => i.name.toLowerCase().includes(query) || i.qty.toLowerCase().includes(query));
-          if (!matchTitle && !matchSummary && !matchIng) return;
-        }
+      let list = Object.values(window.recipes);
 
-        const section = document.createElement('div');
-        section.id = `recipe-${recipe.id}`;
-        section.className = "space-y-4";
+      if (q) {
+        list = list.filter(r => 
+          (r.title || '').toLowerCase().includes(q) ||
+          (r.ingredients || '').toLowerCase().includes(q) ||
+          (r.instructions || '').toLowerCase().includes(q)
+        );
+      }
 
-        const isMeringue = recipe.id === 'meringue';
-        const mul = window.state.rollsMultiplier;
+      if (window.currentFilter === 'popular') list = list.filter(r => r.isPopular);
+      else if (window.currentFilter === 'regular') list = list.filter(r => !r.isPopular);
+      else list.sort((a, b) => (b.isPopular ? 1 : 0) - (a.isPopular ? 1 : 0));
 
-        section.innerHTML = `
-          <!-- Bento Header Module -->
-          <div class="p-6 rounded-[32px] bento-card relative overflow-hidden">
-            <div class="flex flex-wrap items-center justify-between gap-3">
-              <div class="flex items-center gap-3.5">
-                <span class="text-3xl p-3 rounded-2xl bg-white/5 border border-white/10" 
-                      ${window.state.isAdmin ? `contenteditable="true" onblur="updateField('${recipe.id}', 'emoji', this.innerText)"` : ''}>
-                  ${recipe.emoji || '🍰'}
-                </span>
-                <div>
-                  <span class="text-[10px] font-mono tracking-wider text-apple-gold uppercase font-bold"
-                        ${window.state.isAdmin ? `contenteditable="true" onblur="updateField('${recipe.id}', 'tag', this.innerText)"` : ''}>
-                    ${recipe.tag || 'Выпечка'}
-                  </span>
-                  <h3 class="text-xl sm:text-2xl font-bold tracking-tight text-white"
-                      ${window.state.isAdmin ? `contenteditable="true" onblur="updateField('${recipe.id}', 'title', this.innerText)"` : ''}>
-                    ${recipe.title}
-                  </h3>
+      if (list.length === 0) {
+        container.innerHTML = `<div class="p-8 text-center text-slate-500 bento-card text-sm">Рецепты не найдены</div>`;
+        return;
+      }
+
+      list.forEach(r => {
+        const isExp = window.expandedId === r.id;
+        const card = document.createElement('div');
+        card.className = `bento-card overflow-hidden transition ${isExp ? 'border-amber-500/40 shadow-xl' : 'hover:border-white/20'}`;
+
+        card.innerHTML = `
+          <!-- Header Card (Крупные кликабельные зоны для пальцев) -->
+          <div onclick="toggleExpand('${r.id}')" class="p-4 sm:p-5 flex items-center justify-between cursor-pointer select-none gap-2">
+            <div class="flex items-center gap-3 min-w-0">
+              <span class="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-xl sm:text-2xl shrink-0">
+                ${r.emoji || '🧁'}
+              </span>
+              <div class="min-w-0">
+                <div class="flex items-center gap-1.5 flex-wrap">
+                  <h3 class="text-base sm:text-lg font-bold text-white tracking-tight truncate">${r.title}</h3>
+                  ${r.isPopular ? `<span class="px-1.5 py-0.5 rounded text-[9px] font-mono font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30 shrink-0">🔥 ТОП</span>` : ''}
                 </div>
-              </div>
-
-              <!-- Badges & Timer trigger -->
-              <div class="flex items-center gap-2">
-                <div class="px-3 py-1.5 rounded-xl bg-white/5 border border-white/10 text-xs font-mono font-bold text-apple-gold">
-                  🔥 <span ${window.state.isAdmin ? `contenteditable="true" onblur="updateField('${recipe.id}', 'ovenTemp', this.innerText)"` : ''}>${recipe.ovenTemp}</span>
+                <div class="text-xs text-slate-400 font-mono mt-0.5">
+                  🔥 ${r.ovenTemp} • ⏱ ${r.bakeMinutes} мин
                 </div>
-                <button onclick="startOvenTimer('${recipe.id}', '${recipe.title}', ${recipe.bakeMinutes || 50})" 
-                        class="px-3.5 py-1.5 rounded-xl bg-apple-gold text-black text-xs font-bold hover:bg-apple-goldLight transition flex items-center gap-1.5 shadow">
-                  <i class="fa-solid fa-play text-[10px]"></i> <span>${recipe.bakeMinutes || 50} мин</span>
-                </button>
               </div>
             </div>
 
-            <!-- Summary / Subtitle -->
-            <p class="text-xs text-apple-subtext mt-3 leading-relaxed"
-               ${window.state.isAdmin ? `contenteditable="true" onblur="updateField('${recipe.id}', 'summary', this.innerText)"` : ''}>
-              ${recipe.summary || ''}
-            </p>
-
-            ${recipe.isColdStart ? `
-              <div class="mt-3 p-3 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs flex items-center gap-2.5">
-                <span class="text-base">🛑</span>
-                <span><b>Холодный старт:</b> Духовку заранее <b>НЕ ВКЛЮЧАТЬ!</b> Противень ставится в холодную печь (150°C 50 мин).</span>
-              </div>
-            ` : ''}
-          </div>
-
-          <!-- Bento Grid: Ingredients & Steps Split -->
-          <div class="grid grid-cols-1 md:grid-cols-12 gap-4">
-            
-            <!-- Left: Ingredients Check-Module (5 cols) -->
-            <div class="md:col-span-5 p-5 rounded-[28px] bento-card space-y-3">
-              <div class="flex items-center justify-between border-b border-white/5 pb-2.5">
-                <span class="text-xs font-bold uppercase tracking-wider text-apple-subtext flex items-center gap-1.5">
-                  <i class="fa-solid fa-scale-balanced text-apple-gold"></i> Ингредиенты
-                </span>
-                ${isMeringue ? `<span class="text-[10px] font-mono font-bold text-apple-gold">${mul} шт.</span>` : ''}
-              </div>
-
-              <div class="space-y-2 text-xs">
-                ${(recipe.ingredients || []).map((ing, idx) => {
-                  let displayQty = ing.qty;
-                  if (isMeringue && mul === 2) {
-                    if (ing.key === 'whites') displayQty = '12 шт. (400–440 г)';
-                    else if (ing.key === 'sugar') displayQty = '560 г';
-                    else if (ing.key === 'lemon') displayQty = '16 мл';
-                    else if (ing.key === 'starch') displayQty = '16 г';
-                    else if (ing.key === 'strawberries') displayQty = '200 г';
-                    else if (ing.key === 'cheese') displayQty = '400 г';
-                    else if (ing.key === 'cream') displayQty = '200 г';
-                    else if (ing.key === 'creamSugar') displayQty = '100 г';
-                  }
-
-                  return `
-                    <label class="flex items-start gap-3 p-2.5 rounded-2xl bg-white/[0.03] hover:bg-white/[0.06] border border-white/5 cursor-pointer transition">
-                      <input type="checkbox" onchange="toggleStrike(this)" class="w-4 h-4 mt-0.5 rounded text-apple-gold accent-amber-500">
-                      <div class="flex-1">
-                        <div class="text-white font-medium"
-                             ${window.state.isAdmin ? `contenteditable="true" onblur="updateIngredient('${recipe.id}', ${idx}, 'name', this.innerText)"` : ''}>
-                          ${ing.name}
-                        </div>
-                        <div class="font-mono font-bold text-apple-gold text-[11px] mt-0.5"
-                             ${window.state.isAdmin ? `contenteditable="true" onblur="updateIngredient('${recipe.id}', ${idx}, 'qty', this.innerText)"` : ''}>
-                          ${displayQty}
-                        </div>
-                      </div>
-                    </label>
-                  `;
-                }).join('')}
-              </div>
-            </div>
-
-            <!-- Right: Steps Sequence (7 cols) -->
-            <div class="md:col-span-7 p-5 rounded-[28px] bento-card space-y-3">
-              <div class="flex items-center justify-between border-b border-white/5 pb-2.5">
-                <span class="text-xs font-bold uppercase tracking-wider text-apple-subtext flex items-center gap-1.5">
-                  <i class="fa-solid fa-list-check text-apple-gold"></i> Пошаговый процесс
-                </span>
-                <span class="text-[10px] text-apple-subtext">${(recipe.steps || []).length} этапов</span>
-              </div>
-
-              <div class="space-y-3 text-xs">
-                ${(recipe.steps || []).map((st, sIdx) => `
-                  <div class="p-3.5 rounded-2xl bg-white/[0.03] border border-white/5 space-y-1">
-                    <div class="flex items-center gap-2">
-                      <span class="w-5 h-5 rounded-full bg-apple-gold/20 text-apple-gold flex items-center justify-center font-mono font-bold text-[10px]">
-                        ${sIdx + 1}
-                      </span>
-                      <h5 class="font-bold text-white text-xs"
-                          ${window.state.isAdmin ? `contenteditable="true" onblur="updateStep('${recipe.id}', ${sIdx}, 'title', this.innerText)"` : ''}>
-                        ${st.title}
-                      </h5>
-                    </div>
-                    <p class="text-apple-subtext text-[11px] leading-relaxed pl-7"
-                       ${window.state.isAdmin ? `contenteditable="true" onblur="updateStep('${recipe.id}', ${sIdx}, 'desc', this.innerText)"` : ''}>
-                      ${st.desc}
-                    </p>
-                  </div>
-                `).join('')}
+            <div class="flex items-center gap-2 shrink-0">
+              <button onclick="event.stopPropagation(); startTimer('${r.title}', ${r.bakeMinutes})" 
+                      class="px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 active:scale-95 text-black text-xs font-bold transition flex items-center gap-1.5 shadow">
+                <i class="fa-solid fa-play text-[9px]"></i>
+                <span class="hidden xs:inline">Таймер</span>
+              </button>
+              <div class="w-7 h-7 rounded-lg bg-white/5 flex items-center justify-center text-slate-400">
+                <i class="fa-solid fa-chevron-down text-xs transition-transform duration-200 ${isExp ? 'rotate-180 text-amber-400' : ''}"></i>
               </div>
             </div>
           </div>
 
-          <!-- If Meringue: Embed the 10-Minute Chronometer Bento Module -->
-          ${isMeringue ? `
-            <div id="mod-mixer-stage" class="p-5 rounded-[28px] bento-card border border-amber-500/30 bg-gradient-to-br from-amber-950/10 to-black space-y-3">
-              <div class="flex items-center justify-between">
-                <div class="flex items-center gap-2.5">
-                  <span class="w-9 h-9 rounded-2xl bg-apple-gold/20 text-apple-gold flex items-center justify-center text-sm">⏱</span>
-                  <div>
-                    <h4 class="text-sm font-bold text-white">Интерактивный 10-минутный тайминг миксера</h4>
-                    <p class="text-[10px] text-apple-subtext">Поминутное управление оборотами и контроль клюва</p>
-                  </div>
-                </div>
-                <button onclick="toggleMixerStopwatch()" id="btnMixerWatch" class="px-4 py-2 rounded-xl bg-apple-gold text-black font-bold text-xs shadow hover:bg-apple-goldLight transition">
-                  Старт замеса
-                </button>
-              </div>
-
-              <!-- Mixer Progress Bar & Status -->
-              <div class="space-y-2 pt-2">
-                <div class="flex items-center justify-between text-xs font-mono font-bold">
-                  <span id="mixerTimeDisplay" class="text-apple-gold text-lg">00:00 / 10:00</span>
-                  <span id="mixerCurrentCue" class="text-slate-300 text-[11px] font-sans">Ожидание старта</span>
-                </div>
-                <div class="w-full h-2 rounded-full bg-white/10 overflow-hidden">
-                  <div id="mixerProgressBar" class="h-full bg-apple-gold rounded-full transition-all duration-300" style="width: 0%;"></div>
+          <!-- Развернутый текст, адаптированный под экраны смартфонов -->
+          ${isExp ? `
+            <div class="px-3.5 sm:px-5 pb-5 pt-1 border-t border-white/5 space-y-3.5">
+              
+              <!-- Ингредиенты -->
+              <div class="p-3.5 sm:p-4 rounded-2xl bg-black/50 border border-white/5 space-y-2">
+                <h4 class="text-[11px] sm:text-xs font-mono font-bold text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
+                  <i class="fa-solid fa-scale-balanced"></i> Ингредиенты:
+                </h4>
+                <div class="rich-display">
+                  ${r.ingredients || '<span class="text-slate-500">Ингредиенты не указаны.</span>'}
                 </div>
               </div>
 
-              <!-- Checkpoint badges -->
-              <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1 text-[10px] font-mono text-apple-subtext">
-                <div class="p-2 rounded-xl bg-white/5 border border-white/5">0–5м: 1-я скор. (пенка)</div>
-                <div class="p-2 rounded-xl bg-white/5 border border-white/5">5м: Лимонный сок 8мл</div>
-                <div class="p-2 rounded-xl bg-white/5 border border-white/5">6м: +1 скор./мин до 9</div>
-                <div class="p-2 rounded-xl bg-white/5 border border-white/5">7м: Сахар 280г</div>
-                <div class="p-2 rounded-xl bg-white/5 border border-white/5 col-span-2 text-apple-gold font-bold">8:50–9:00м: СТОП ТЕСТ ВЕНЧИКА!</div>
-                <div class="p-2 rounded-xl bg-white/5 border border-white/5 col-span-2">9:00–10:00м: Крахмал и финал</div>
+              <!-- Инструкция -->
+              <div class="p-3.5 sm:p-4 rounded-2xl bg-black/50 border border-white/5 space-y-2">
+                <h4 class="text-[11px] sm:text-xs font-mono font-bold text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
+                  <i class="fa-solid fa-list-check"></i> Пошаговый процесс:
+                </h4>
+                <div class="rich-display">
+                  ${r.instructions || '<span class="text-slate-500">Инструкция не указана.</span>'}
+                </div>
               </div>
+
             </div>
           ` : ''}
         `;
-        container.appendChild(section);
+        container.appendChild(card);
       });
     }
 
+    function startTimer(title, minutes) {
+      if (timerInterval) clearInterval(timerInterval);
+      timerSeconds = minutes * 60;
 
-    function handleChefAuthClick() {
-      playTone(600, 0.1);
-      playHaptic();
-      if (window.state.isAdmin) {
-        exitAdminMode();
-      } else {
-        openPinModal();
-      }
-    }
+      const w = document.getElementById('activeTimerWidget');
+      w.classList.remove('hidden');
+      document.getElementById('activeTimerTitle').innerText = title;
+      document.getElementById('activeTimerSub').innerText = `${minutes} минут`;
 
-    function openPinModal() {
-      window.state.pinInput = '';
-      updatePinDots();
-      const modal = document.getElementById('pinModal');
-      modal.classList.remove('opacity-0', 'pointer-events-none');
-    }
+      updateTimerDisplay();
 
-    function closePinModal() {
-      const modal = document.getElementById('pinModal');
-      modal.classList.add('opacity-0', 'pointer-events-none');
-      window.state.pinInput = '';
-    }
-
-    function pressPin(digit) {
-      if (window.state.pinInput.length < 4) {
-        window.state.pinInput += digit;
-        playTone(400 + window.state.pinInput.length * 80, 0.08);
-        playHaptic();
-        updatePinDots();
-
-        if (window.state.pinInput.length === 4) {
-          setTimeout(verifyPin, 180);
-        }
-      }
-    }
-
-    function deletePinDigit() {
-      if (window.state.pinInput.length > 0) {
-        window.state.pinInput = window.state.pinInput.slice(0, -1);
-        playTone(320, 0.08);
-        playHaptic();
-        updatePinDots();
-      }
-    }
-
-    function updatePinDots() {
-      const len = window.state.pinInput.length;
-      for (let i = 0; i < 4; i++) {
-        const dot = document.getElementById(`dot-${i}`);
-        if (i < len) {
-          dot.className = "w-3.5 h-3.5 rounded-full bg-apple-gold border border-apple-gold shadow-[0_0_8px_rgba(229,169,87,0.8)] scale-110 transition-all duration-150";
+      timerInterval = setInterval(() => {
+        timerSeconds--;
+        if (timerSeconds <= 0) {
+          clearInterval(timerInterval);
+          alert(`⏰ Время вышло! ${title} готов!`);
+          stopTimer();
         } else {
-          dot.className = "w-3.5 h-3.5 rounded-full border border-white/30 transition-all duration-150";
-        }
-      }
-    }
-
-    function verifyPin() {
-      if (window.state.pinInput === window.state.pinCorrect) {
-        playTone(880, 0.15);
-        setTimeout(() => playTone(1046, 0.2), 120);
-        closePinModal();
-        enterAdminMode();
-      } else {
-        playTone(220, 0.3, 'sawtooth');
-        showToast('Неверный PIN-код', '❌');
-        window.state.pinInput = '';
-        updatePinDots();
-      }
-    }
-
-    function enterAdminMode() {
-      window.state.isAdmin = true;
-      document.body.classList.add('admin-mode');
-      document.getElementById('activeModeBadge').innerText = 'ШЕФ';
-      document.getElementById('activeModeBadge').className = "text-[9px] font-mono font-bold px-2 py-0.5 rounded-full bg-amber-500/20 text-apple-gold border border-amber-500/40 uppercase tracking-wider";
-      document.getElementById('dockAdminLabel').innerText = 'Закрыть';
-      document.getElementById('dockAdminBtn').classList.add('text-apple-gold');
-      document.getElementById('adminNoticeBar').classList.remove('hidden');
-      document.getElementById('btnLockAdmin').classList.remove('hidden');
-      document.getElementById('btnAddNewRecipe').classList.remove('hidden');
-      renderBentoModules();
-      showToast('Режим Шефа активирован. Правьте текст прямо на экране!', '👑');
-    }
-
-    function exitAdminMode() {
-      window.state.isAdmin = false;
-      document.body.classList.remove('admin-mode');
-      document.getElementById('activeModeBadge').innerText = 'ЦЕХ';
-      document.getElementById('activeModeBadge').className = "text-[9px] font-mono font-bold px-2 py-0.5 rounded-full bg-white/10 text-apple-subtext border border-white/10 uppercase tracking-wider";
-      document.getElementById('dockAdminLabel').innerText = 'Шеф';
-      document.getElementById('dockAdminBtn').classList.remove('text-apple-gold');
-      document.getElementById('adminNoticeBar').classList.add('hidden');
-      document.getElementById('btnLockAdmin').classList.add('hidden');
-      document.getElementById('btnAddNewRecipe').classList.add('hidden');
-      renderBentoModules();
-      showToast('Панель Шефа заблокирована', '🔒');
-    }
-
-
-    function updateField(recipeId, field, val) {
-      if (!window.state.recipes[recipeId]) return;
-      window.state.recipes[recipeId][field] = val.trim();
-      syncLocalRecipe(recipeId);
-    }
-
-    function updateIngredient(recipeId, idx, field, val) {
-      if (!window.state.recipes[recipeId] || !window.state.recipes[recipeId].ingredients[idx]) return;
-      window.state.recipes[recipeId].ingredients[idx][field] = val.trim();
-      syncLocalRecipe(recipeId);
-    }
-
-    function updateStep(recipeId, idx, field, val) {
-      if (!window.state.recipes[recipeId] || !window.state.recipes[recipeId].steps[idx]) return;
-      window.state.recipes[recipeId].steps[idx][field] = val.trim();
-      syncLocalRecipe(recipeId);
-    }
-
-    function syncLocalRecipe(recipeId) {
-      if (window.fbDb) {
-        const recRef = window.fbRef(window.fbDb, `pastry_handbook/recipes/${recipeId}`);
-        window.fbSet(recRef, window.state.recipes[recipeId]);
-      }
-    }
-
-    function openNewRecipeSheet() {
-      const newId = 'rec_' + Date.now();
-      const newRecipe = {
-        id: newId,
-        title: 'Новый десерт',
-        emoji: '✨',
-        tag: 'Выпечка',
-        ovenTemp: '175°C',
-        bakeMinutes: 40,
-        isColdStart: false,
-        summary: 'Нажмите, чтобы ввести описание технологии приготовления.',
-        ingredients: [
-          { name: 'Ингредиент 1', qty: '100 г' },
-          { name: 'Ингредиент 2', qty: '50 г' }
-        ],
-        steps: [
-          { title: 'Подготовка', desc: 'Отвесить ингредиенты и подготовить форму.' },
-          { title: 'Выпекание', desc: 'Выпекать до сухой зубочистки.' }
-        ]
-      };
-      window.state.recipes[newId] = newRecipe;
-      syncLocalRecipe(newId);
-      renderBentoModules();
-      showToast('Новый рецепт добавлен в конец списка!', '📝');
-      scrollToSection(`recipe-${newId}`);
-    }
-
-
-    function setRollsCount(count) {
-      window.state.rollsMultiplier = count;
-      playTone(550, 0.08);
-      playHaptic();
-      const b1 = document.getElementById('btnMul1');
-      const b2 = document.getElementById('btnMul2');
-      if (count === 1) {
-        b1.className = "px-2.5 py-1 rounded-lg bg-apple-gold text-black transition";
-        b2.className = "px-2.5 py-1 rounded-lg text-slate-400 hover:text-white transition";
-      } else {
-        b2.className = "px-2.5 py-1 rounded-lg bg-apple-gold text-black transition";
-        b1.className = "px-2.5 py-1 rounded-lg text-slate-400 hover:text-white transition";
-      }
-      renderBentoModules();
-      showToast(`Граммовки рулета пересчитаны на ${count} шт.`, '⚖️');
-    }
-
-    function startOvenTimer(recipeId, title, minutes) {
-      if (window.state.activeTimerInterval) clearInterval(window.state.activeTimerInterval);
-      window.state.activeTimer = recipeId;
-      window.state.activeTimerRemaining = minutes * 60;
-
-      const mod = document.getElementById('globalActiveTimerModule');
-      mod.classList.remove('hidden');
-      document.getElementById('activeTimerName').innerText = title;
-      document.getElementById('activeTimerSubtitle').innerText = `${minutes} мин выпечки`;
-
-      updateGlobalTimerDisplay();
-      playTone(660, 0.15);
-      showToast(`Таймер печи на ${minutes} мин запущен!`, '🔥');
-
-      window.state.activeTimerInterval = setInterval(() => {
-        window.state.activeTimerRemaining--;
-        if (window.state.activeTimerRemaining <= 0) {
-          clearInterval(window.state.activeTimerInterval);
-          playTone(880, 0.4);
-          setTimeout(() => playTone(880, 0.4), 500);
-          showToast(`Печь готова: ${title} можно доставать!`, '🔔');
-          stopGlobalTimer();
-        } else {
-          updateGlobalTimerDisplay();
+          updateTimerDisplay();
         }
       }, 1000);
     }
 
-    function updateGlobalTimerDisplay() {
-      const rem = window.state.activeTimerRemaining;
-      const m = String(Math.floor(rem / 60)).padStart(2, '0');
-      const s = String(rem % 60).padStart(2, '0');
+    function updateTimerDisplay() {
+      const m = String(Math.floor(timerSeconds / 60)).padStart(2, '0');
+      const s = String(timerSeconds % 60).padStart(2, '0');
       document.getElementById('activeTimerDigits').innerText = `${m}:${s}`;
     }
 
-    function stopGlobalTimer() {
-      if (window.state.activeTimerInterval) clearInterval(window.state.activeTimerInterval);
-      document.getElementById('globalActiveTimerModule').classList.add('hidden');
+    function stopTimer() {
+      if (timerInterval) clearInterval(timerInterval);
+      document.getElementById('activeTimerWidget').classList.add('hidden');
     }
 
-    /* 10-Minute Mixer Stopwatch */
-    let mixerSeconds = 0;
-    let mixerTimer = null;
-
-    function toggleMixerStopwatch() {
-      const btn = document.getElementById('btnMixerWatch');
-      if (mixerTimer) {
-        clearInterval(mixerTimer);
-        mixerTimer = null;
-        btn.innerText = 'Продолжить';
-        btn.classList.replace('bg-rose-500', 'bg-apple-gold');
-      } else {
-        btn.innerText = 'Пауза';
-        btn.classList.replace('bg-apple-gold', 'bg-rose-500');
-        playTone(600, 0.1);
-
-        mixerTimer = setInterval(() => {
-          mixerSeconds++;
-          const percent = Math.min(100, (mixerSeconds / 600) * 100);
-          document.getElementById('mixerProgressBar').style.width = `${percent}%`;
-
-          const m = String(Math.floor(mixerSeconds / 60)).padStart(2, '0');
-          const s = String(mixerSeconds % 60).padStart(2, '0');
-          document.getElementById('mixerTimeDisplay').innerText = `${m}:${s} / 10:00`;
-
-          // Cues
-          const cueEl = document.getElementById('mixerCurrentCue');
-          if (mixerSeconds < 300) {
-            cueEl.innerText = "0–5м: 1-я скорость, плавно растим обороты до белой пенки";
-          } else if (mixerSeconds === 300) {
-            playTone(880, 0.3);
-            cueEl.innerText = "5:00: Влить 8 мл лимонного сока!";
-          } else if (mixerSeconds < 360) {
-            cueEl.innerText = "5–6м: Вымешивание с лимонным соком";
-          } else if (mixerSeconds < 420) {
-            cueEl.innerText = "6м: Разгон миксера! +1 скорость в минуту до 9-й";
-          } else if (mixerSeconds === 420) {
-            playTone(880, 0.3);
-            cueEl.innerText = "7:00: Всыпать 280 г сахара!";
-          } else if (mixerSeconds >= 530 && mixerSeconds <= 540) {
-            cueEl.innerText = "⚠️ 8:50: СТОП МИКСЕР! Тест венчика на клюв!";
-          } else if (mixerSeconds === 540) {
-            playTone(1046, 0.3);
-            cueEl.innerText = "9:00: Всыпать 8 г крахмала!";
-          } else if (mixerSeconds < 600) {
-            cueEl.innerText = "9–10м: Финальный глянец";
-          } else {
-            clearInterval(mixerTimer);
-            mixerTimer = null;
-            btn.innerText = 'Завершено';
-            playTone(1046, 0.5);
-            cueEl.innerText = "10:00: Меренга готова к формовке!";
-          }
-        }, 1000);
-      }
-    }
-
-    /* Shopping Drawer & Navigation */
-    function openShoppingDrawer() {
-      playTone(500, 0.08);
-      const drawer = document.getElementById('shoppingDrawer');
-      const sheet = document.getElementById('shoppingSheet');
-      drawer.classList.remove('opacity-0', 'pointer-events-none');
-      sheet.classList.remove('translate-y-full');
-    }
-
-    function closeShoppingDrawer() {
-      const drawer = document.getElementById('shoppingDrawer');
-      const sheet = document.getElementById('shoppingSheet');
-      drawer.classList.add('opacity-0', 'pointer-events-none');
-      sheet.classList.add('translate-y-full');
-    }
-
-    function toggleStrike(chk) {
-      playTone(chk.checked ? 750 : 400, 0.06);
-      const text = chk.nextElementSibling;
-      if (chk.checked) text.classList.add('line-through', 'opacity-40');
-      else text.classList.remove('line-through', 'opacity-40');
-    }
-
-    function scrollToSection(id) {
-      const el = document.getElementById(id);
-      if (el) el.scrollIntoView({ behavior: 'smooth' });
-    }
-
-    function handleSearch() {
-      const val = document.getElementById('searchInput').value;
-      document.getElementById('clearSearchBtn').classList.toggle('hidden', !val);
-      renderBentoModules();
-    }
-
-    function clearSearch() {
-      document.getElementById('searchInput').value = '';
-      document.getElementById('clearSearchBtn').classList.add('hidden');
-      renderBentoModules();
-    }
-
-    window.addEventListener('DOMContentLoaded', () => {
-      runAppleIntro();
-      renderBentoModules();
-    });
+    window.addEventListener('DOMContentLoaded', initData);
   </script>
 </body>
 </html>
