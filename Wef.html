@@ -1,0 +1,1702 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Справочник-Книга Кондитера</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Inter:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;1,600&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            serif: ['Playfair Display', 'Georgia', 'serif'],
+            display: ['Cinzel', 'serif'],
+          },
+          colors: {
+            pastry: {
+              50: '#FDFBF7',
+              100: '#F7F3EB',
+              200: '#EDE4D3',
+              300: '#DFCEB4',
+              400: '#C7A87E',
+              500: '#B08853',
+              600: '#8E6738',
+              700: '#6C4C27',
+              800: '#4B331A',
+              900: '#2A1C0E',
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(176, 136, 83, 0.4); border-radius: 9999px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(176, 136, 83, 0.7); }
+    .paper-texture {
+      background-image: radial-gradient(#d8ccbe 0.75px, transparent 0.75px);
+      background-size: 22px 22px;
+    }
+    .dark .paper-texture {
+      background-image: radial-gradient(#30261c 0.75px, transparent 0.75px);
+      background-size: 22px 22px;
+    }
+    .strike-done { text-decoration: line-through; opacity: 0.5; }
+    @keyframes pulse-ring {
+      0% { transform: scale(0.97); opacity: 0.85; }
+      50% { transform: scale(1.03); opacity: 1; }
+      100% { transform: scale(0.97); opacity: 0.85; }
+    }
+    .alarm-active { animation: pulse-ring 1.1s infinite ease-in-out; }
+  </style>
+</head>
+<body class="bg-[#FAF7F2] dark:bg-[#14110F] text-[#2C241E] dark:text-[#EFE9DF] min-h-screen flex flex-col font-sans transition-colors duration-200 paper-texture">
+
+  <div id="toast" class="fixed top-4 left-1/2 -translate-x-1/2 z-50 transform -translate-y-28 opacity-0 pointer-events-none transition-all duration-300 max-w-sm w-11/12 bg-pastry-900 text-amber-100 dark:bg-amber-100 dark:text-slate-900 px-4 py-3 rounded-2xl shadow-xl flex items-center gap-3 border border-amber-500/40">
+    <span id="toastIcon" class="text-xl">🔔</span>
+    <div id="toastMessage" class="text-sm font-semibold flex-1">Оповещение кондитера</div>
+  </div>
+
+  <div id="floatingTimerWidget" class="hidden fixed bottom-4 right-4 z-40 bg-white/95 dark:bg-zinc-900/95 border-2 border-amber-500/80 rounded-2xl shadow-2xl p-3 backdrop-blur-md flex items-center gap-3">
+    <div class="w-10 h-10 rounded-xl bg-amber-100 dark:bg-amber-950/60 flex items-center justify-center text-amber-700 dark:text-amber-300 font-bold text-lg" id="floatTimerIcon">⏱</div>
+    <div>
+      <div class="text-[10px] uppercase tracking-wider text-slate-500 dark:text-slate-400 font-bold" id="floatTimerLabel">Таймер</div>
+      <div class="text-lg font-mono font-bold text-amber-600 dark:text-amber-400" id="floatTimerDigits">50:00</div>
+    </div>
+    <div class="flex items-center gap-1.5 ml-2">
+      <button onclick="app.pauseResumeTimer()" id="floatTimerPauseBtn" class="p-2 rounded-xl bg-amber-50 dark:bg-zinc-800 text-amber-700 dark:text-amber-300 text-xs font-bold hover:bg-amber-100">⏸</button>
+      <button onclick="app.stopTimer()" class="p-2 rounded-xl bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 text-xs font-bold hover:bg-rose-100">✕</button>
+    </div>
+  </div>
+
+  <header class="sticky top-0 z-30 bg-[#FAF7F2]/95 dark:bg-[#14110F]/95 backdrop-blur-md border-b border-pastry-200 dark:border-zinc-800 px-4 py-3">
+    <div class="max-w-5xl mx-auto flex items-center justify-between gap-3">
+      <div class="flex items-center gap-3 cursor-pointer select-none" onclick="app.showCatalog()">
+        <div class="w-10 h-10 rounded-2xl bg-gradient-to-br from-amber-500 to-amber-800 flex items-center justify-center text-xl shadow-md text-white font-serif">
+          🍰
+        </div>
+        <div>
+          <h1 class="font-serif text-lg sm:text-xl font-bold tracking-tight text-pastry-900 dark:text-pastry-100">
+            Книга Кондитера
+          </h1>
+          <p class="text-[10px] uppercase tracking-widest text-pastry-600 dark:text-pastry-400 font-semibold">
+            Цех • Рецепты • Тайминг • Закуп
+          </p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <button onclick="app.showShoppingList()" class="px-3 py-1.5 rounded-xl border border-amber-500/40 bg-amber-500/10 text-amber-900 dark:text-amber-200 text-xs font-bold hover:bg-amber-500/20 transition flex items-center gap-1.5">
+          <span>🛒</span>
+          <span class="hidden sm:inline">Список</span>
+          <span>Закупа</span>
+        </button>
+
+        <button onclick="app.openCreamsSection()" class="px-3 py-1.5 rounded-xl border border-pastry-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-xs font-semibold text-pastry-800 dark:text-pastry-200 hover:border-amber-500 transition flex items-center gap-1.5">
+          <span>🥣</span>
+          <span>Крема</span>
+        </button>
+
+        <button onclick="toggleDarkMode()" title="Переключить тему" class="w-9 h-9 rounded-xl border border-pastry-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-pastry-700 dark:text-amber-300 flex items-center justify-center text-sm shadow-sm">
+          <span id="themeIcon">🌙</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-5xl mx-auto w-full px-4 sm:px-6 py-6 flex-1">
+    <div id="viewCatalog" class="space-y-6">
+      <div class="relative overflow-hidden rounded-3xl bg-gradient-to-r from-[#291A0D] via-[#402A16] to-[#1E1107] text-amber-50 p-6 sm:p-8 shadow-xl border border-amber-900/50">
+        <div class="relative z-10 max-w-2xl space-y-2">
+          <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/20 border border-amber-400/30 text-amber-300 text-xs uppercase tracking-wider font-semibold">
+            <span>✨</span> Поэтапное шеф-руководство
+          </div>
+          <h2 class="font-serif text-2xl sm:text-3xl font-bold leading-tight">
+            Выберите десерт для приготовления
+          </h2>
+          <p class="text-sm text-amber-200/80">
+            Взвешивание в тару без лишней посуды, пошаговый тайминг оборотов миксера, холодный запуск духовки и нарезка начинки.
+          </p>
+        </div>
+        <div class="absolute -right-8 -bottom-10 text-9xl opacity-15 pointer-events-none select-none">
+          🍓
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-5" id="recipeCardsGrid">
+        <!-- Injected dynamically -->
+      </div>
+
+      <!-- Quick Shopping Alert Banner -->
+      <div onclick="app.showShoppingList()" class="cursor-pointer rounded-2xl border-2 border-dashed border-amber-400 dark:border-amber-600/50 p-4 bg-amber-50/70 dark:bg-amber-950/20 hover:bg-amber-100/60 dark:hover:bg-amber-950/40 transition flex items-center justify-between gap-4">
+        <div class="flex items-center gap-3">
+          <span class="text-2xl">🛒</span>
+          <div>
+            <div class="font-bold text-sm text-amber-900 dark:text-amber-200">Чек-лист закупа в магазин</div>
+            <div class="text-xs text-amber-800/80 dark:text-amber-300/70">Сливки 33% 1л, 1 десяток яиц, 2 лимона, печенье 1 пачка</div>
+          </div>
+        </div>
+        <span class="text-xs font-bold px-3 py-1.5 rounded-xl bg-amber-600 text-white shadow-sm whitespace-nowrap">Открыть список →</span>
+      </div>
+    </div>
+
+    <div id="viewRecipe" class="hidden space-y-5">
+      <div class="flex flex-wrap items-center justify-between gap-3 bg-white dark:bg-zinc-900 p-3.5 rounded-2xl border border-pastry-200 dark:border-zinc-800 shadow-sm">
+        <button onclick="app.showCatalog()" class="inline-flex items-center gap-2 text-xs font-bold text-pastry-700 dark:text-pastry-300 hover:text-amber-600 transition px-2 py-1 rounded-lg">
+          <span>← В каталог блюд</span>
+        </button>
+        
+        <div class="flex items-center gap-2">
+          <span class="text-xs text-slate-500 dark:text-slate-400 font-medium">Режим:</span>
+          <div class="bg-pastry-100 dark:bg-zinc-800 p-1 rounded-xl flex items-center gap-1 text-xs">
+            <button id="btnModeStep" onclick="app.toggleRecipeMode('step')" class="px-2.5 py-1 rounded-lg font-semibold bg-white dark:bg-zinc-700 text-pastry-900 dark:text-amber-300 shadow-sm transition">
+              📖 По шагам
+            </button>
+            <button id="btnModeCard" onclick="app.toggleRecipeMode('card')" class="px-2.5 py-1 rounded-lg font-semibold text-slate-500 dark:text-slate-400 hover:text-pastry-900 dark:hover:text-white transition">
+              📋 Шеф-карта (Всё сразу)
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Header Card -->
+      <div class="rounded-3xl bg-white dark:bg-zinc-900 border border-pastry-200 dark:border-zinc-800 p-5 sm:p-7 shadow-sm space-y-4">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <div class="flex flex-wrap items-center gap-2">
+              <span id="recipeBadge" class="text-xs font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-md bg-amber-100 dark:bg-amber-950/80 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-800">Рулет</span>
+              <span id="recipeOvenTemp" class="text-xs font-semibold text-slate-600 dark:text-slate-300 flex items-center gap-1">🔥 150°C</span>
+              <span class="text-slate-300 dark:text-zinc-700">•</span>
+              <span id="recipeBakeDuration" class="text-xs font-semibold text-slate-600 dark:text-slate-300 flex items-center gap-1">⏳ 50 мин</span>
+            </div>
+            <h2 id="recipeTitle" class="font-serif text-2xl sm:text-3xl font-bold text-pastry-900 dark:text-white mt-1.5">Меренговый рулет</h2>
+            <p id="recipeSubtitle" class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">Воздушная меренга, сушёные пластинки клубники и нежный сливочно-сырный крем</p>
+          </div>
+
+          <!-- Quantity Selector for Meringue Roll (1 or 2 pcs) -->
+          <div id="recipeQtyControlContainer" class="bg-pastry-50 dark:bg-zinc-800/80 border border-pastry-200 dark:border-zinc-700 p-3 rounded-2xl flex items-center gap-3">
+            <div>
+              <div class="text-[10px] uppercase font-bold tracking-wider text-slate-500 dark:text-slate-400">Партия:</div>
+              <div class="text-xs font-bold text-pastry-900 dark:text-white" id="qtySelectedSummary">1 рулет</div>
+            </div>
+            <div class="inline-flex p-1 bg-white dark:bg-zinc-900 rounded-xl border border-pastry-200 dark:border-zinc-700 text-xs font-bold">
+              <button id="btnQty1" onclick="app.setRollMultiplier(1)" class="px-3 py-1.5 rounded-lg bg-amber-600 text-white shadow transition">1 шт.</button>
+              <button id="btnQty2" onclick="app.setRollMultiplier(2)" class="px-3 py-1.5 rounded-lg text-slate-600 dark:text-slate-300 hover:text-amber-600 transition">2 шт.</button>
+            </div>
+          </div>
+        </div>
+
+        <div id="coldOvenAlertBanner" class="hidden p-4 rounded-2xl bg-rose-500/10 border-2 border-rose-500/40 text-rose-900 dark:text-rose-200 flex items-start sm:items-center justify-between gap-3">
+          <div class="flex items-start sm:items-center gap-3">
+            <span class="text-2xl">🛑</span>
+            <div class="text-xs sm:text-sm">
+              <span class="font-bold uppercase tracking-wider text-rose-700 dark:text-rose-300">ВАЖНЕЙШЕЕ ПРАВИЛО:</span>
+              <span class="font-medium">Духовку заранее <b>НЕ ВКЛЮЧАТЬ</b>! Меренга ставится в абсолютно холодную печь и нагревается вместе с ней!</span>
+            </div>
+          </div>
+          <span class="shrink-0 text-xs font-mono font-bold px-2.5 py-1 rounded-lg bg-rose-600 text-white uppercase">Холодный старт</span>
+        </div>
+      </div>
+
+      <!-- Step Navigation Pill Progress -->
+      <div id="recipeProgressContainer" class="space-y-2">
+        <div class="flex items-center justify-between text-xs font-semibold text-slate-500 dark:text-slate-400 px-1">
+          <span id="stepProgressLabel">Шаг 1</span>
+          <span id="stepProgressPercent">0%</span>
+        </div>
+        <div class="w-full h-2 bg-pastry-200 dark:bg-zinc-800 rounded-full overflow-hidden">
+          <div id="stepProgressBar" class="h-full bg-gradient-to-r from-amber-500 to-amber-600 rounded-full transition-all duration-300" style="width: 10%"></div>
+        </div>
+        <div id="stepIndicatorsRow" class="flex gap-1.5 overflow-x-auto no-scrollbar py-1"></div>
+      </div>
+
+      <!-- Active Step Container -->
+      <div id="stepCardContainer" class="bg-white dark:bg-zinc-900 border border-pastry-200 dark:border-zinc-800 rounded-3xl p-5 sm:p-8 shadow-sm space-y-6">
+        <div id="dynamicStepContent"></div>
+
+        <div id="stepNavButtons" class="flex items-center justify-between pt-5 border-t border-pastry-100 dark:border-zinc-800">
+          <button id="btnPrevStep" onclick="app.prevStep()" class="px-5 py-2.5 rounded-2xl border border-pastry-300 dark:border-zinc-700 text-pastry-800 dark:text-zinc-200 text-sm font-semibold hover:bg-pastry-100 dark:hover:bg-zinc-800 transition disabled:opacity-40 disabled:cursor-not-allowed">
+            ← Назад
+          </button>
+          <div class="flex items-center gap-2">
+            <button onclick="app.resetRecipeChecks()" title="Сбросить чек-лист" class="px-3 py-2 rounded-xl text-xs text-slate-400 hover:text-rose-500 transition">
+              Сбросить отметки
+            </button>
+            <button id="btnNextStep" onclick="app.nextStep()" class="px-6 py-2.5 rounded-2xl bg-amber-600 hover:bg-amber-700 text-white text-sm font-bold shadow-md hover:shadow-lg transition">
+              Далее →
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div id="fullCardContainer" class="hidden space-y-6"></div>
+    </div>
+
+    <div id="viewShopping" class="hidden space-y-6">
+      <div class="flex items-center justify-between gap-3 bg-white dark:bg-zinc-900 p-4 rounded-2xl border border-pastry-200 dark:border-zinc-800">
+        <button onclick="app.showCatalog()" class="inline-flex items-center gap-2 text-xs font-bold text-pastry-700 dark:text-pastry-300 hover:text-amber-600 transition">
+          <span>← Назад в каталог</span>
+        </button>
+        <span class="text-xs font-mono uppercase tracking-wider text-amber-700 dark:text-amber-400 bg-amber-100 dark:bg-amber-950 px-2.5 py-1 rounded-lg font-bold">
+          Закуп в магазин
+        </span>
+      </div>
+
+      <div class="bg-white dark:bg-zinc-900 border border-pastry-200 dark:border-zinc-800 rounded-3xl p-6 sm:p-8 shadow-sm space-y-6">
+        <div class="flex flex-wrap items-center justify-between gap-3 border-b border-pastry-100 dark:border-zinc-800 pb-4">
+          <div>
+            <h3 class="font-serif text-2xl font-bold text-pastry-900 dark:text-white flex items-center gap-2">
+              <span>🛒</span> Список покупок в магазин
+            </h3>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">
+              Отметьте товары по мере складывания в корзину
+            </p>
+          </div>
+          <button onclick="app.resetShoppingChecklist()" class="text-xs text-slate-400 hover:text-rose-500 transition">
+            Сбросить галочки
+          </button>
+        </div>
+
+        <div class="space-y-3" id="shoppingItemsList">
+          <!-- Injected via JS -->
+        </div>
+
+        <!-- Inventory In Stock Reference -->
+        <div class="pt-4 border-t border-pastry-100 dark:border-zinc-800 space-y-3">
+          <h4 class="text-xs uppercase tracking-wider font-bold text-slate-400">Уже есть на кухне (не покупать):</h4>
+          <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs text-slate-600 dark:text-slate-300">
+            <div class="p-2.5 rounded-xl bg-pastry-50 dark:bg-zinc-800/60 border border-pastry-200/60 dark:border-zinc-700/60 flex items-center gap-2">
+              <span class="text-emerald-500 font-bold">✓</span> Сахар (есть)
+            </div>
+            <div class="p-2.5 rounded-xl bg-pastry-50 dark:bg-zinc-800/60 border border-pastry-200/60 dark:border-zinc-700/60 flex items-center gap-2">
+              <span class="text-emerald-500 font-bold">✓</span> Крахмал кукурузный
+            </div>
+            <div class="p-2.5 rounded-xl bg-pastry-50 dark:bg-zinc-800/60 border border-pastry-200/60 dark:border-zinc-700/60 flex items-center gap-2">
+              <span class="text-emerald-500 font-bold">✓</span> Творожный сыр
+            </div>
+            <div class="p-2.5 rounded-xl bg-pastry-50 dark:bg-zinc-800/60 border border-pastry-200/60 dark:border-zinc-700/60 flex items-center gap-2">
+              <span class="text-emerald-500 font-bold">✓</span> Сливочное масло
+            </div>
+            <div class="p-2.5 rounded-xl bg-pastry-50 dark:bg-zinc-800/60 border border-pastry-200/60 dark:border-zinc-700/60 flex items-center gap-2">
+              <span class="text-emerald-500 font-bold">✓</span> Сметана (2 ложки)
+            </div>
+            <div class="p-2.5 rounded-xl bg-pastry-50 dark:bg-zinc-800/60 border border-pastry-200/60 dark:border-zinc-700/60 flex items-center gap-2">
+              <span class="text-emerald-500 font-bold">✓</span> Бананы + Мука + Сода/Соль
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="viewCreams" class="hidden space-y-6">
+      <div class="flex items-center justify-between gap-3 bg-white dark:bg-zinc-900 p-4 rounded-2xl border border-pastry-200 dark:border-zinc-800">
+        <button onclick="app.showCatalog()" class="inline-flex items-center gap-2 text-xs font-bold text-pastry-700 dark:text-pastry-300 hover:text-amber-600 transition">
+          <span>← Назад в каталог</span>
+        </button>
+        <span class="text-xs font-mono uppercase tracking-wider text-amber-700 dark:text-amber-400 bg-amber-100 dark:bg-amber-950 px-2.5 py-1 rounded-lg font-bold">
+          Граммовки кремов
+        </span>
+      </div>
+
+      <!-- Meringue Roll Cream -->
+      <div class="bg-white dark:bg-zinc-900 border border-pastry-200 dark:border-zinc-800 rounded-3xl p-6 shadow-sm space-y-4">
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <div class="flex items-center gap-3">
+            <span class="text-3xl">🍓</span>
+            <div>
+              <h3 class="font-serif text-xl font-bold text-pastry-900 dark:text-white">Крем на меренговый рулет</h3>
+              <p class="text-xs text-slate-500 dark:text-slate-400">Сливочно-сырный крем (без фисташки)</p>
+            </div>
+          </div>
+          <div class="inline-flex p-1 bg-pastry-100 dark:bg-zinc-800 rounded-xl border border-pastry-200 dark:border-zinc-700 text-xs font-bold">
+            <button id="tabRollCream1" onclick="app.setQuickRollCreamQty(1)" class="px-3 py-1.5 rounded-lg bg-amber-600 text-white shadow transition">
+              На 1 рулет
+            </button>
+            <button id="tabRollCream2" onclick="app.setQuickRollCreamQty(2)" class="px-3 py-1.5 rounded-lg text-slate-600 dark:text-slate-300 hover:text-amber-600 transition">
+              На 2 рулета
+            </button>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div class="bg-pastry-50 dark:bg-zinc-800/60 p-4 rounded-2xl border border-pastry-100 dark:border-zinc-700/60 text-center">
+            <div class="text-xs text-slate-500 dark:text-slate-400 uppercase font-semibold">Творожный сыр</div>
+            <div id="qRollCheese" class="text-2xl font-bold font-mono text-amber-600 dark:text-amber-400 mt-1">200 г</div>
+          </div>
+          <div class="bg-pastry-50 dark:bg-zinc-800/60 p-4 rounded-2xl border border-pastry-100 dark:border-zinc-700/60 text-center">
+            <div class="text-xs text-slate-500 dark:text-slate-400 uppercase font-semibold">Сливки 33%</div>
+            <div id="qRollCream" class="text-2xl font-bold font-mono text-pastry-900 dark:text-white mt-1">100 г</div>
+          </div>
+          <div class="bg-pastry-50 dark:bg-zinc-800/60 p-4 rounded-2xl border border-pastry-100 dark:border-zinc-700/60 text-center">
+            <div class="text-xs text-slate-500 dark:text-slate-400 uppercase font-semibold">Сахар</div>
+            <div id="qRollSugar" class="text-2xl font-bold font-mono text-pastry-900 dark:text-white mt-1">50 г</div>
+          </div>
+        </div>
+
+        <div class="p-3 rounded-xl bg-amber-500/10 text-xs text-amber-900 dark:text-amber-200">
+          💡 Взбить вместе в чаше до однородной плотной массы и отправить в холодильник / витрину до сборки.
+        </div>
+      </div>
+
+      <!-- Banana Bread Cream -->
+      <div class="bg-white dark:bg-zinc-900 border border-pastry-200 dark:border-zinc-800 rounded-3xl p-6 shadow-sm space-y-4">
+        <div class="flex items-center gap-3">
+          <span class="text-3xl">🍌</span>
+          <div>
+            <h3 class="font-serif text-xl font-bold text-pastry-900 dark:text-white">Крем для бананового хлеба</h3>
+            <p class="text-xs text-slate-500 dark:text-slate-400">Сливочно-сырная шапочка</p>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div class="bg-pastry-50 dark:bg-zinc-800/60 p-4 rounded-2xl border border-pastry-100 dark:border-zinc-700/60 text-center">
+            <div class="text-xs text-slate-500 dark:text-slate-400 uppercase font-semibold">Творожный сыр</div>
+            <div class="text-2xl font-bold font-mono text-amber-600 dark:text-amber-400 mt-1">250 г</div>
+          </div>
+          <div class="bg-pastry-50 dark:bg-zinc-800/60 p-4 rounded-2xl border border-pastry-100 dark:border-zinc-700/60 text-center">
+            <div class="text-xs text-slate-500 dark:text-slate-400 uppercase font-semibold">Сливки 33%</div>
+            <div class="text-2xl font-bold font-mono text-pastry-900 dark:text-white mt-1">40 г</div>
+          </div>
+          <div class="bg-pastry-50 dark:bg-zinc-800/60 p-4 rounded-2xl border border-pastry-100 dark:border-zinc-700/60 text-center">
+            <div class="text-xs text-slate-500 dark:text-slate-400 uppercase font-semibold">Сахар</div>
+            <div class="text-2xl font-bold font-mono text-pastry-900 dark:text-white mt-1">25 г</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    const playTimerChime = (freqs = [587.33, 880]) => {
+      try {
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const now = audioCtx.currentTime;
+        freqs.forEach((freq, idx) => {
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(freq, now + idx * 0.2);
+          gain.gain.setValueAtTime(0.28, now + idx * 0.2);
+          gain.gain.exponentialRampToValueAtTime(0.0001, now + idx * 0.2 + 0.55);
+
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+
+          osc.start(now + idx * 0.2);
+          osc.stop(now + idx * 0.2 + 0.6);
+        });
+      } catch (e) {}
+    };
+
+    function showNotification(text, icon = '⏱️') {
+      const toast = document.getElementById('toast');
+      const toastMsg = document.getElementById('toastMessage');
+      const toastIcon = document.getElementById('toastIcon');
+      if (!toast) return;
+      toastMsg.innerText = text;
+      toastIcon.innerText = icon;
+
+      toast.classList.remove('-translate-y-28', 'opacity-0');
+      toast.classList.add('translate-y-0', 'opacity-100');
+
+      setTimeout(() => {
+        toast.classList.remove('translate-y-0', 'opacity-100');
+        toast.classList.add('-translate-y-28', 'opacity-0');
+      }, 3500);
+    }
+
+    const SHOPPING_LIST = [
+      { id: 'shop_cream', name: 'Сливки 33–35% (животные для взбивания)', amount: '1 литр', desc: 'Петмол, Parmalat, Чудское Озеро или Белый Город' },
+      { id: 'shop_eggs', name: 'Яйца куриные', amount: '1 десяток (10 шт.)', desc: 'Категория С0 или С1' },
+      { id: 'shop_lemon', name: 'Лимоны свежие', amount: '2 шт.', desc: 'На сок в меренгу и чизкейк' },
+      { id: 'shop_cookies', name: 'Печенье сахарное («Юбилейное» или «К чаю»)', amount: '1 пачка', desc: 'На основу чизкейка (нужно 16 шт.)' }
+    ];
+
+    const RECIPES_DATA = {
+      meringue: {
+        id: 'meringue',
+        title: 'Меренговый рулет',
+        badge: 'Рулет',
+        emoji: '🍓',
+        tagline: 'Воздушная меренга, сушёные пластинки клубники и нежный сливочно-сырный крем',
+        ovenTemp: '150°C',
+        bakeTimeMinutes: 50,
+        supportsMultiplier: true,
+        basePrep: {
+          eggs: 6,
+          whitesGramsMin: 200,
+          whitesGramsMax: 220,
+          sugarMeringue: 280,
+          lemonJuiceMl: 8,
+          starchGrams: 8,
+          strawberryGrams: 100,
+          cheeseGrams: 200,
+          creamGrams: 100,
+          sugarCream: 50
+        }
+      },
+
+      cheesecake: {
+        id: 'cheesecake',
+        title: 'Классический чизкейк',
+        badge: 'Чизкейк',
+        emoji: '🧀',
+        tagline: 'Песочная база из 16 печений и отстоянная сырная начинка',
+        ovenTemp: '175°C',
+        bakeTimeMinutes: 50,
+        supportsMultiplier: false,
+        prepChecklist: [
+          { id: 'c_ing_1', name: 'Печенье («Юбилейное»)', qty: '16 шт.', note: 'пробить в блендере до крошки' },
+          { id: 'c_ing_2', name: 'Сливочное масло', qty: '150 г', note: 'растопить и смешать с печеньем' },
+          { id: 'c_ing_3', name: 'Творожный сыр', qty: '550 г', note: 'комнатной температуры' },
+          { id: 'c_ing_4', name: 'Сливки 33%', qty: '150 г', note: 'в сырную массу' },
+          { id: 'c_ing_5', name: 'Сахар', qty: '120 г', note: 'в начинку' },
+          { id: 'c_ing_6', name: 'Крахмал кукурузный', qty: '10 г', note: 'для связки' },
+          { id: 'c_ing_7', name: 'Яйца куриные', qty: '2 шт.', note: 'в начинку' },
+          { id: 'c_ing_8', name: 'Сметана', qty: '2 ст. л.', note: 'для кремовости' },
+          { id: 'c_ing_9', name: 'Сок лимона', qty: 'пару капель', note: 'для баланса вкуса' },
+        ],
+        steps: [
+          {
+            title: 'Песочная основа в морозилку (30 мин)',
+            action: '16 штук печенья измельчить в блендере до мелкой крошки. В отдельной ёмкости растопить 150 г сливочного масла, перемешать с печеньем, расформировать дно и бортики в форме и отправить в морозильник СТРОГО на 30 минут.',
+            warning: 'Выдержка в морозилке 30 минут обязательна для правильной стабилизации основы!',
+            timerMin: 30
+          },
+          {
+            title: 'Взбивание сырной массы',
+            action: 'В чаше соединить: 550 г творожного сыра, 150 г сливок 33%, 120 г сахара, 10 г крахмала, пару капель сока лимона, 2 яйца и 2 столовые ложки сметаны. Взбить на низкой/средней скорости до однородной гладкой текстуры.',
+            tip: 'Не взбивайте на максимуме, чтобы не насыщать массу пузырями воздуха.',
+            timerMin: null
+          },
+          {
+            title: 'ОТСТОЙКА СЫРНОЙ МАССЫ (30–60 минут)',
+            action: 'Оставить взбитую сырную смесь настояться при комнатной температуре от 30 минут до 1 часа. За это время из неё выйдут лишние пузырьки воздуха.',
+            tip: 'Благодаря этому чизкейк при запекании не вздуется бугром и не растрескается.',
+            timerMin: 30
+          },
+          {
+            title: 'Выпечка в духовке 175°C (50 минут)',
+            action: 'Достать замороженную основу из морозильника, налить поверх неё отстоянную сырную массу. Отправить в духовку на 175°C ровно на 50 минут.',
+            timerMin: 50
+          },
+          {
+            title: 'Охлаждение и стабилизация',
+            action: 'После выпечки остудить в приоткрытой печи, затем убрать в холод минимум на 4 часа для идеального среза.',
+            timerMin: null
+          }
+        ]
+      },
+
+      banana: {
+        id: 'banana',
+        title: 'Банановый хлеб',
+        badge: 'Кекс',
+        emoji: '🍌',
+        tagline: 'Быстрый замес и моментальная посадка в духовку',
+        ovenTemp: '175°C',
+        bakeTimeMinutes: 50,
+        supportsMultiplier: false,
+        prepChecklist: [
+          { id: 'b_ing_1', name: 'Бананы спелые', qty: '2 шт.', note: 'в блендер' },
+          { id: 'b_ing_2', name: 'Яйца куриные', qty: '2 шт.', note: 'в блендер к бананам' },
+          { id: 'b_ing_3', name: 'Масло сливочное', qty: '130 г', note: 'растопить' },
+          { id: 'b_ing_4', name: 'Сахар', qty: '150 г', note: 'взбить с растопленным маслом' },
+          { id: 'b_ing_5', name: 'Мука', qty: '250 г', note: 'просеять' },
+          { id: 'b_ing_6', name: 'Соль мелкая', qty: '1 ложка БЕЗ горки', note: 'в самый финал замеса' },
+          { id: 'b_ing_7', name: 'Сода пищевая', qty: '1 ложка С ГОРКОЙ', note: 'добавить и сразу в печь!' },
+          { id: 'b_prep_form', name: 'Форма для хлеба', qty: '1 шт.', note: 'выстелить пергаментом' },
+          { id: 'b_prep_oven', name: 'Духовка на разогрев', qty: '175°C', note: 'включить заранее' },
+        ],
+        steps: [
+          {
+            title: 'Подготовка формы, духовки и бананового пюре',
+            action: 'Включить духовку на 175°C. Подготовить и выстелить пергаментом форму. В блендере взбить 2 банана и 2 яйца в единое пюре.',
+            timerMin: null
+          },
+          {
+            title: 'Масляный замес и соединение',
+            action: 'В отдельной миске взбить 130 г растопленного сливочного масла со 150 г сахара. Добавить бананово-яичную смесь, всыпать 250 г муки и перемешать.',
+            timerMin: null
+          },
+          {
+            title: 'КРИТИЧЕСКИЙ ШАГ: Соль, Сода и СРАЗУ В ДУХОВКУ!',
+            action: 'Добавить в смесь соль (1 ложка БЕЗ горки) и соду (1 ложка С ГОРКОЙ). Быстро перемешать лопаткой, вылить в подготовленную форму и СРАЗУ ЖЕ отправить в духовку 175°C на 50 минут!',
+            warning: 'Сода вступает в мгновенную реакцию — форму ставить в печь без малейшего промедления!',
+            timerMin: 50
+          },
+          {
+            title: 'Сливочно-сырный крем',
+            action: 'Взбить 250 г творожного сыра, 25 г сахара и 40 г сливок 33% до плотной пышной массы. Нанести красивой шапочкой на полностью остывший банановый хлеб.',
+            timerMin: null
+          }
+        ]
+      }
+    };
+  </script>
+
+  <script>
+    const app = {
+      currentRecipe: null,
+      currentStepIndex: 0,
+      recipeMode: 'step',
+      rollMultiplier: 1,
+      quickRollCreamMultiplier: 1,
+      checkedItems: {},
+      shoppingChecks: {},
+
+      timer: {
+        interval: null,
+        remainingSeconds: 0,
+        isRunning: false,
+        label: ''
+      },
+
+      mixerTimer: {
+        interval: null,
+        secondsElapsed: 0,
+        isRunning: false
+      },
+
+      init() {
+        this.renderCatalog();
+        this.renderShoppingList();
+        this.updateQuickRollCreamDisplay();
+      },
+
+      showCatalog() {
+        document.getElementById('viewCatalog').classList.remove('hidden');
+        document.getElementById('viewRecipe').classList.add('hidden');
+        document.getElementById('viewShopping').classList.add('hidden');
+        document.getElementById('viewCreams').classList.add('hidden');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      },
+
+      showShoppingList() {
+        document.getElementById('viewCatalog').classList.add('hidden');
+        document.getElementById('viewRecipe').classList.add('hidden');
+        document.getElementById('viewShopping').classList.remove('hidden');
+        document.getElementById('viewCreams').classList.add('hidden');
+        this.renderShoppingList();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      },
+
+      openCreamsSection() {
+        document.getElementById('viewCatalog').classList.add('hidden');
+        document.getElementById('viewRecipe').classList.add('hidden');
+        document.getElementById('viewShopping').classList.add('hidden');
+        document.getElementById('viewCreams').classList.remove('hidden');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      },
+
+      openRecipe(recipeId) {
+        this.currentRecipe = RECIPES_DATA[recipeId];
+        this.currentStepIndex = 0;
+        this.recipeMode = 'step';
+
+        document.getElementById('viewCatalog').classList.add('hidden');
+        document.getElementById('viewShopping').classList.add('hidden');
+        document.getElementById('viewCreams').classList.add('hidden');
+        document.getElementById('viewRecipe').classList.remove('hidden');
+
+        const qtyContainer = document.getElementById('recipeQtyControlContainer');
+        const coldOvenAlert = document.getElementById('coldOvenAlertBanner');
+
+        if (this.currentRecipe.supportsMultiplier) {
+          qtyContainer.classList.remove('hidden');
+          coldOvenAlert.classList.remove('hidden');
+        } else {
+          qtyContainer.classList.add('hidden');
+          coldOvenAlert.classList.add('hidden');
+        }
+
+        this.renderRecipeHeader();
+        this.toggleRecipeMode('step');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      },
+
+      setRollMultiplier(qty) {
+        this.rollMultiplier = qty;
+        const btn1 = document.getElementById('btnQty1');
+        const btn2 = document.getElementById('btnQty2');
+        const summary = document.getElementById('qtySelectedSummary');
+
+        if (qty === 1) {
+          btn1.className = "px-3 py-1.5 rounded-lg bg-amber-600 text-white shadow transition";
+          btn2.className = "px-3 py-1.5 rounded-lg text-slate-600 dark:text-slate-300 hover:text-amber-600 transition";
+          summary.innerText = "1 рулет (база)";
+        } else {
+          btn2.className = "px-3 py-1.5 rounded-lg bg-amber-600 text-white shadow transition";
+          btn1.className = "px-3 py-1.5 rounded-lg text-slate-600 dark:text-slate-300 hover:text-amber-600 transition";
+          summary.innerText = "2 рулета (удвоено)";
+        }
+
+        showNotification(`Граммовки пересчитаны на ${qty} рулет(а)!`, '⚖️');
+        if (this.recipeMode === 'step') {
+          this.renderStep();
+        } else {
+          this.renderFullCard();
+        }
+      },
+
+      toggleRecipeMode(mode) {
+        this.recipeMode = mode;
+        const btnStep = document.getElementById('btnModeStep');
+        const btnCard = document.getElementById('btnModeCard');
+        const stepProgress = document.getElementById('recipeProgressContainer');
+        const stepContainer = document.getElementById('stepCardContainer');
+        const fullCard = document.getElementById('fullCardContainer');
+
+        if (mode === 'step') {
+          btnStep.className = "px-2.5 py-1 rounded-lg font-semibold bg-white dark:bg-zinc-700 text-pastry-900 dark:text-amber-300 shadow-sm transition";
+          btnCard.className = "px-2.5 py-1 rounded-lg font-semibold text-slate-500 dark:text-slate-400 hover:text-pastry-900 dark:hover:text-white transition";
+          stepProgress.classList.remove('hidden');
+          stepContainer.classList.remove('hidden');
+          fullCard.classList.add('hidden');
+          this.renderStep();
+        } else {
+          btnCard.className = "px-2.5 py-1 rounded-lg font-semibold bg-white dark:bg-zinc-700 text-pastry-900 dark:text-amber-300 shadow-sm transition";
+          btnStep.className = "px-2.5 py-1 rounded-lg font-semibold text-slate-500 dark:text-slate-400 hover:text-pastry-900 dark:hover:text-white transition";
+          stepProgress.classList.add('hidden');
+          stepContainer.classList.add('hidden');
+          fullCard.classList.remove('hidden');
+          this.renderFullCard();
+        }
+      },
+
+      renderCatalog() {
+        const grid = document.getElementById('recipeCardsGrid');
+        grid.innerHTML = '';
+
+        Object.values(RECIPES_DATA).forEach(rec => {
+          const card = document.createElement('div');
+          card.className = "group cursor-pointer bg-white dark:bg-zinc-900 border border-pastry-200 dark:border-zinc-800 hover:border-amber-500 dark:hover:border-amber-500/80 rounded-3xl p-6 shadow-sm hover:shadow-xl transition duration-200 flex flex-col justify-between";
+          card.onclick = () => this.openRecipe(rec.id);
+
+          const stepCount = rec.id === 'meringue' ? 8 : (rec.steps.length + 1);
+
+          card.innerHTML = `
+            <div>
+              <div class="flex items-center justify-between gap-2">
+                <span class="text-3xl p-2.5 rounded-2xl bg-amber-50 dark:bg-zinc-800/80 border border-pastry-200 dark:border-zinc-700/60">${rec.emoji}</span>
+                <div class="flex items-center gap-1.5 text-xs font-semibold text-slate-500 dark:text-slate-400 bg-pastry-50 dark:bg-zinc-800/60 px-2.5 py-1 rounded-xl">
+                  <span>🔥 ${rec.ovenTemp}</span>
+                  <span>•</span>
+                  <span>⏳ ${rec.bakeTimeMinutes}м</span>
+                </div>
+              </div>
+              <h3 class="font-serif text-xl font-bold text-pastry-900 dark:text-white mt-4 group-hover:text-amber-600 transition">
+                ${rec.title}
+              </h3>
+              <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1.5 line-clamp-2">
+                ${rec.tagline}
+              </p>
+              ${rec.supportsMultiplier ? `
+                <div class="mt-2.5 inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-amber-500/10 text-amber-800 dark:text-amber-300 text-[11px] font-bold">
+                  ⚖️ Переключатель: 1 шт. или 2 шт.
+                </div>
+              ` : ''}
+              
+              <div class="mt-4 pt-4 border-t border-pastry-100 dark:border-zinc-800/80 flex items-center justify-between text-xs text-slate-400">
+                <span>Шагов: ${stepCount}</span>
+                <span class="text-amber-600 dark:text-amber-400 font-bold group-hover:translate-x-1 transition duration-150">Открыть книгу →</span>
+              </div>
+            </div>
+          `;
+          grid.appendChild(card);
+        });
+      },
+
+      renderShoppingList() {
+        const container = document.getElementById('shoppingItemsList');
+        if (!container) return;
+        container.innerHTML = '';
+
+        SHOPPING_LIST.forEach(item => {
+          const isDone = this.shoppingChecks[item.id] || false;
+          const row = document.createElement('label');
+          row.className = `flex items-start gap-3.5 p-4 rounded-2xl border transition cursor-pointer select-none ${
+            isDone 
+              ? 'bg-amber-50/70 dark:bg-amber-950/20 border-amber-400/50 dark:border-amber-800/50' 
+              : 'bg-pastry-50 dark:bg-zinc-800/60 border-pastry-200 dark:border-zinc-700/60 hover:border-amber-300'
+          }`;
+          row.innerHTML = `
+            <input type="checkbox" onchange="app.toggleShopCheck('${item.id}', this)" ${isDone ? 'checked' : ''} class="mt-1 w-5 h-5 rounded text-amber-600 focus:ring-0 cursor-pointer">
+            <div class="${isDone ? 'strike-done' : ''} flex-1">
+              <div class="text-sm font-bold text-pastry-900 dark:text-white flex flex-wrap justify-between items-baseline gap-2">
+                <span>${item.name}</span>
+                <span class="font-mono text-amber-700 dark:text-amber-400 bg-amber-100 dark:bg-amber-950/80 px-2 py-0.5 rounded-lg text-xs font-bold">${item.amount}</span>
+              </div>
+              <div class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">${item.desc}</div>
+            </div>
+          `;
+          container.appendChild(row);
+        });
+      },
+
+      toggleShopCheck(id, checkbox) {
+        this.shoppingChecks[id] = checkbox.checked;
+        const textDiv = checkbox.nextElementSibling;
+        if (checkbox.checked) {
+          textDiv.classList.add('strike-done');
+        } else {
+          textDiv.classList.remove('strike-done');
+        }
+      },
+
+      resetShoppingChecklist() {
+        this.shoppingChecks = {};
+        this.renderShoppingList();
+        showNotification('Список закупа сброшен', '🔄');
+      },
+
+      renderRecipeHeader() {
+        const r = this.currentRecipe;
+        document.getElementById('recipeTitle').innerText = r.title;
+        document.getElementById('recipeSubtitle').innerText = r.tagline;
+        document.getElementById('recipeBadge').innerText = r.badge;
+        document.getElementById('recipeOvenTemp').innerHTML = `🔥 ${r.ovenTemp}`;
+        document.getElementById('recipeBakeDuration').innerHTML = `⏳ ${r.bakeTimeMinutes} мин`;
+
+        this.renderStepIndicators();
+      },
+
+      getMeringueCalculatedData() {
+        const m = this.rollMultiplier;
+        const b = RECIPES_DATA.meringue.basePrep;
+        return {
+          multiplier: m,
+          eggs: b.eggs * m,
+          whitesMin: b.whitesGramsMin * m,
+          whitesMax: b.whitesGramsMax * m,
+          sugarMeringue: b.sugarMeringue * m,
+          lemonJuice: b.lemonJuiceMl * m,
+          starch: b.starchGrams * m,
+          strawberry: b.strawberryGrams * m,
+          cheese: b.cheeseGrams * m,
+          cream: b.creamGrams * m,
+          sugarCream: b.sugarCream * m
+        };
+      },
+
+      getMeringueSteps() {
+        return [
+          { title: 'ЭТАП 1: Поминутный хронометраж замеса (10 минут)' },
+          { title: 'ЭТАП 2: Формовка & Холодный запуск печи (150°C, 50 мин)' },
+          { title: 'ЭТАП 3: Клубничная начинка (СВЧ 30 сек + сушка пластинок)' },
+          { title: 'ЭТАП 4: Сливочно-сырный крем в витрину' },
+          { title: 'ЭТАП 5: Остывание рулета (Шлюз дверцы печи)' },
+          { title: 'ЭТАП 6: Сборка и сбор сухой крошки с коврика' },
+          { title: 'ЭТАП 7: Фирменный декор (Волны и хрустящая посыпка)' }
+        ];
+      },
+
+      renderStepIndicators() {
+        const r = this.currentRecipe;
+        const totalSteps = r.id === 'meringue' 
+          ? (this.getMeringueSteps().length + 1)
+          : (r.steps.length + 1);
+
+        const row = document.getElementById('stepIndicatorsRow');
+        row.innerHTML = '';
+
+        for (let i = 0; i < totalSteps; i++) {
+          const btn = document.createElement('button');
+          const isChecklist = (i === 0);
+          const label = isChecklist ? '📋 Чек-лист' : `Этап ${i}`;
+          
+          btn.className = `px-3 py-1 rounded-xl text-xs font-semibold whitespace-nowrap transition ${
+            i === this.currentStepIndex
+              ? 'bg-amber-600 text-white shadow-sm'
+              : 'bg-pastry-100 dark:bg-zinc-800 text-slate-600 dark:text-slate-400 hover:bg-pastry-200 dark:hover:bg-zinc-700'
+          }`;
+          btn.innerText = label;
+          btn.onclick = () => {
+            this.currentStepIndex = i;
+            this.renderStep();
+          };
+          row.appendChild(btn);
+        }
+      },
+
+      renderStep() {
+        const r = this.currentRecipe;
+        const isMeringue = (r.id === 'meringue');
+        const stepsList = isMeringue ? this.getMeringueSteps() : r.steps;
+        const totalSteps = stepsList.length + 1;
+        const isChecklist = (this.currentStepIndex === 0);
+
+        const progressPercent = Math.round(((this.currentStepIndex + 1) / totalSteps) * 100);
+        document.getElementById('stepProgressPercent').innerText = `${progressPercent}%`;
+        document.getElementById('stepProgressBar').style.width = `${progressPercent}%`;
+        document.getElementById('stepProgressLabel').innerText = isChecklist 
+          ? `Шаг 1 из ${totalSteps}: Подготовка и взвешивание сырья`
+          : `Шаг ${this.currentStepIndex + 1} из ${totalSteps}: ${stepsList[this.currentStepIndex - 1].title}`;
+
+        this.renderStepIndicators();
+
+        const btnPrev = document.getElementById('btnPrevStep');
+        const btnNext = document.getElementById('btnNextStep');
+        btnPrev.disabled = (this.currentStepIndex === 0);
+        btnNext.innerText = (this.currentStepIndex === totalSteps - 1) ? '🎉 Завершить' : 'Далее →';
+
+        const container = document.getElementById('dynamicStepContent');
+
+        if (isChecklist) {
+          if (isMeringue) {
+            const c = this.getMeringueCalculatedData();
+            container.innerHTML = `
+              <div class="space-y-5">
+                <div class="flex items-center gap-3">
+                  <span class="w-10 h-10 rounded-2xl bg-amber-100 dark:bg-amber-950/70 border border-amber-300 dark:border-amber-800 flex items-center justify-center text-xl text-amber-800 dark:text-amber-200 font-bold">0</span>
+                  <div>
+                    <h3 class="font-serif text-xl sm:text-2xl font-bold text-pastry-900 dark:text-white">Подготовка & Взвешивание в чашу</h3>
+                    <p class="text-xs text-slate-500 dark:text-slate-400">Расчет строго на <b>${c.multiplier} рулет(а)</b></p>
+                  </div>
+                </div>
+
+                <div class="p-4 rounded-2xl bg-rose-500/10 border-2 border-rose-500/40 text-rose-900 dark:text-rose-200 flex items-start gap-3">
+                  <span class="text-2xl">🛑</span>
+                  <div class="text-xs sm:text-sm">
+                    <b class="uppercase">Духовку заранее НЕ включать!</b><br>
+                    Она должна оставаться абсолютно холодной. Противень с меренгой отправляется в холодную печь.
+                  </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                  <label class="flex items-start gap-3 p-3.5 rounded-2xl border transition cursor-pointer select-none bg-pastry-50 dark:bg-zinc-800/60 border-pastry-200 dark:border-zinc-700/60 hover:border-amber-300">
+                    <input type="checkbox" onchange="app.toggleCheck('m_whites', this)" ${this.checkedItems['m_whites'] ? 'checked' : ''} class="mt-1 w-4 h-4 rounded text-amber-600 focus:ring-0 cursor-pointer">
+                    <div class="${this.checkedItems['m_whites'] ? 'strike-done' : ''} flex-1">
+                      <div class="text-sm font-bold text-pastry-900 dark:text-white flex justify-between">
+                        <span>Белки сразу в тару миксера</span>
+                        <span class="font-mono text-amber-700 dark:text-amber-300 ml-2 font-semibold">${c.eggs} шт. (~${c.whitesMin}-${c.whitesMax} г)</span>
+                      </div>
+                      <div class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Разбить яйца прямо в сухую чашу без лишней посуды (без капли желтка!)</div>
+                    </div>
+                  </label>
+
+                  <label class="flex items-start gap-3 p-3.5 rounded-2xl border transition cursor-pointer select-none bg-pastry-50 dark:bg-zinc-800/60 border-pastry-200 dark:border-zinc-700/60 hover:border-amber-300">
+                    <input type="checkbox" onchange="app.toggleCheck('m_sugar', this)" ${this.checkedItems['m_sugar'] ? 'checked' : ''} class="mt-1 w-4 h-4 rounded text-amber-600 focus:ring-0 cursor-pointer">
+                    <div class="${this.checkedItems['m_sugar'] ? 'strike-done' : ''} flex-1">
+                      <div class="text-sm font-bold text-pastry-900 dark:text-white flex justify-between">
+                        <span>Сахар в отдельный стакан</span>
+                        <span class="font-mono text-amber-700 dark:text-amber-300 ml-2 font-semibold">${c.sugarMeringue} г</span>
+                      </div>
+                      <div class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Подготовить под руку, всыпается на 7-й минуте</div>
+                    </div>
+                  </label>
+
+                  <label class="flex items-start gap-3 p-3.5 rounded-2xl border transition cursor-pointer select-none bg-pastry-50 dark:bg-zinc-800/60 border-pastry-200 dark:border-zinc-700/60 hover:border-amber-300">
+                    <input type="checkbox" onchange="app.toggleCheck('m_lemon', this)" ${this.checkedItems['m_lemon'] ? 'checked' : ''} class="mt-1 w-4 h-4 rounded text-amber-600 focus:ring-0 cursor-pointer">
+                    <div class="${this.checkedItems['m_lemon'] ? 'strike-done' : ''} flex-1">
+                      <div class="text-sm font-bold text-pastry-900 dark:text-white flex justify-between">
+                        <span>Лимонный сок в рюмку</span>
+                        <span class="font-mono text-amber-700 dark:text-amber-300 ml-2 font-semibold">${c.lemonJuice} мл</span>
+                      </div>
+                      <div class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Выжать из свежего лимона, вливается на 5-й минуте</div>
+                    </div>
+                  </label>
+
+                  <label class="flex items-start gap-3 p-3.5 rounded-2xl border transition cursor-pointer select-none bg-pastry-50 dark:bg-zinc-800/60 border-pastry-200 dark:border-zinc-700/60 hover:border-amber-300">
+                    <input type="checkbox" onchange="app.toggleCheck('m_starch', this)" ${this.checkedItems['m_starch'] ? 'checked' : ''} class="mt-1 w-4 h-4 rounded text-amber-600 focus:ring-0 cursor-pointer">
+                    <div class="${this.checkedItems['m_starch'] ? 'strike-done' : ''} flex-1">
+                      <div class="text-sm font-bold text-pastry-900 dark:text-white flex justify-between">
+                        <span>Крахмал кукурузный</span>
+                        <span class="font-mono text-amber-700 dark:text-amber-300 ml-2 font-semibold">${c.starch} г</span>
+                      </div>
+                      <div class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Всыпается на 9-й минуте строго после теста венчика</div>
+                    </div>
+                  </label>
+
+                  <label class="flex items-start gap-3 p-3.5 rounded-2xl border transition cursor-pointer select-none bg-pastry-50 dark:bg-zinc-800/60 border-pastry-200 dark:border-zinc-700/60 hover:border-amber-300">
+                    <input type="checkbox" onchange="app.toggleCheck('m_strawb', this)" ${this.checkedItems['m_strawb'] ? 'checked' : ''} class="mt-1 w-4 h-4 rounded text-amber-600 focus:ring-0 cursor-pointer">
+                    <div class="${this.checkedItems['m_strawb'] ? 'strike-done' : ''} flex-1">
+                      <div class="text-sm font-bold text-pastry-900 dark:text-white flex justify-between">
+                        <span>Клубника (в морозилке)</span>
+                        <span class="font-mono text-amber-700 dark:text-amber-300 ml-2 font-semibold">${c.strawberry} г</span>
+                      </div>
+                      <div class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Оставить в морозилке до момента выпечки</div>
+                    </div>
+                  </label>
+
+                  <label class="flex items-start gap-3 p-3.5 rounded-2xl border transition cursor-pointer select-none bg-pastry-50 dark:bg-zinc-800/60 border-pastry-200 dark:border-zinc-700/60 hover:border-amber-300">
+                    <input type="checkbox" onchange="app.toggleCheck('m_pan', this)" ${this.checkedItems['m_pan'] ? 'checked' : ''} class="mt-1 w-4 h-4 rounded text-amber-600 focus:ring-0 cursor-pointer">
+                    <div class="${this.checkedItems['m_pan'] ? 'strike-done' : ''} flex-1">
+                      <div class="text-sm font-bold text-pastry-900 dark:text-white flex justify-between">
+                        <span>Противень + силиконовый коврик</span>
+                        <span class="font-mono text-amber-700 dark:text-amber-300 ml-2 font-semibold">готов</span>
+                      </div>
+                      <div class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Для формовки прямоугольника</div>
+                    </div>
+                  </label>
+                </div>
+              </div>
+            `;
+          } else {
+            container.innerHTML = `
+              <div class="space-y-5">
+                <div class="flex items-center gap-3">
+                  <span class="w-10 h-10 rounded-2xl bg-amber-100 dark:bg-amber-950/70 border border-amber-300 dark:border-amber-800 flex items-center justify-center text-xl text-amber-800 dark:text-amber-200 font-bold">0</span>
+                  <div>
+                    <h3 class="font-serif text-xl sm:text-2xl font-bold text-pastry-900 dark:text-white">Подготовка & Взвешивание ингредиентов</h3>
+                    <p class="text-xs text-slate-500 dark:text-slate-400">Отметьте подготовленное сырье</p>
+                  </div>
+                </div>
+
+                <div class="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-between gap-4">
+                  <div class="flex items-center gap-3">
+                    <span class="text-2xl">🔥</span>
+                    <div>
+                      <div class="text-xs uppercase font-bold text-amber-800 dark:text-amber-300">Духовка на прогрев</div>
+                      <div class="text-sm font-semibold text-slate-800 dark:text-slate-200">Выставить температуру <b>${r.ovenTemp}</b></div>
+                    </div>
+                  </div>
+                  <span class="text-xs font-mono font-bold bg-amber-200 dark:bg-amber-900/60 text-amber-900 dark:text-amber-200 px-2.5 py-1 rounded-lg">${r.ovenTemp}</span>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+                  ${r.prepChecklist.map(item => {
+                    const isChecked = this.checkedItems[item.id] || false;
+                    return `
+                      <label class="flex items-start gap-3 p-3.5 rounded-2xl border transition cursor-pointer select-none ${
+                        isChecked 
+                          ? 'bg-amber-50/70 dark:bg-amber-950/30 border-amber-400/60 dark:border-amber-700/60' 
+                          : 'bg-pastry-50 dark:bg-zinc-800/60 border-pastry-200 dark:border-zinc-700/60 hover:border-amber-300'
+                      }">
+                        <input type="checkbox" onchange="app.toggleCheck('${item.id}', this)" ${isChecked ? 'checked' : ''} class="mt-1 w-4 h-4 rounded text-amber-600 focus:ring-0 cursor-pointer">
+                        <div class="${isChecked ? 'strike-done' : ''} flex-1">
+                          <div class="text-sm font-bold text-pastry-900 dark:text-white flex justify-between">
+                            <span>${item.name}</span>
+                            <span class="font-mono text-amber-700 dark:text-amber-300 ml-2 font-semibold">${item.qty}</span>
+                          </div>
+                          <div class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">${item.note}</div>
+                        </div>
+                      </label>
+                    `;
+                  }).join('')}
+                </div>
+              </div>
+            `;
+          }
+          return;
+        }
+
+        if (isMeringue) {
+          this.renderMeringueStep(this.currentStepIndex - 1, container);
+        } else {
+          const step = r.steps[this.currentStepIndex - 1];
+          let timerBox = '';
+          if (step.timerMin) {
+            timerBox = `
+              <div class="mt-5 p-4 rounded-2xl bg-amber-500/10 border-2 border-dashed border-amber-500/40 flex flex-wrap items-center justify-between gap-4">
+                <div class="flex items-center gap-3">
+                  <div class="w-12 h-12 rounded-2xl bg-amber-500 text-white flex items-center justify-center text-xl font-bold shadow-md">⏱</div>
+                  <div>
+                    <div class="text-xs uppercase font-bold text-amber-800 dark:text-amber-300">Таймер шага</div>
+                    <div class="text-base font-bold text-slate-800 dark:text-slate-100">${step.timerMin} минут (${step.title})</div>
+                  </div>
+                </div>
+                <button onclick="app.startTimer(${step.timerMin * 60}, '${step.title}')" class="px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold transition shadow-sm">
+                  Запустить таймер
+                </button>
+              </div>
+            `;
+          }
+
+          container.innerHTML = `
+            <div class="space-y-5">
+              <div class="flex items-center gap-3">
+                <span class="w-10 h-10 rounded-2xl bg-amber-600 text-white flex items-center justify-center text-xl font-bold shadow-sm">
+                  ${this.currentStepIndex}
+                </span>
+                <div>
+                  <span class="text-xs uppercase tracking-wider font-semibold text-amber-700 dark:text-amber-400">Этап приготовления</span>
+                  <h3 class="font-serif text-xl sm:text-2xl font-bold text-pastry-900 dark:text-white">${step.title}</h3>
+                </div>
+              </div>
+
+              <div class="p-5 sm:p-6 rounded-2xl bg-pastry-50 dark:bg-zinc-800/70 border border-pastry-200 dark:border-zinc-700/80 text-base sm:text-lg leading-relaxed text-slate-800 dark:text-slate-200 font-medium">
+                ${step.action}
+              </div>
+
+              ${step.warning ? `
+                <div class="p-4 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-900 dark:text-rose-200 flex items-start gap-3">
+                  <span class="text-xl">⚠️</span>
+                  <div class="text-sm font-semibold">${step.warning}</div>
+                </div>
+              ` : ''}
+
+              ${step.tip ? `
+                <div class="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-900 dark:text-amber-200 flex items-start gap-3">
+                  <span class="text-xl">💡</span>
+                  <div class="text-xs sm:text-sm"><b>Шеф-подсказка:</b> ${step.tip}</div>
+                </div>
+              ` : ''}
+
+              ${timerBox}
+            </div>
+          `;
+        }
+      },
+
+      renderMeringueStep(idx, container) {
+        const c = this.getMeringueCalculatedData();
+
+        if (idx === 0) {
+          container.innerHTML = `
+            <div class="space-y-6">
+              <div class="flex items-center gap-3">
+                <span class="w-10 h-10 rounded-2xl bg-amber-600 text-white flex items-center justify-center text-xl font-bold shadow-sm">1</span>
+                <div>
+                  <span class="text-xs uppercase tracking-wider font-bold text-amber-700 dark:text-amber-400">Поминутный хронометраж</span>
+                  <h3 class="font-serif text-xl sm:text-2xl font-bold text-pastry-900 dark:text-white">Замес меренги (10 минут)</h3>
+                </div>
+              </div>
+
+              <!-- Interactive Live Mixer Stopwatch -->
+              <div class="p-5 rounded-3xl bg-amber-500/10 border-2 border-amber-500/30 space-y-4">
+                <div class="flex flex-wrap items-center justify-between gap-3">
+                  <div>
+                    <div class="text-xs font-bold uppercase tracking-wider text-amber-800 dark:text-amber-300">Хронометр миксера</div>
+                    <div class="font-mono text-3xl font-extrabold text-amber-700 dark:text-amber-400 mt-0.5" id="mixerTimerDisplay">00:00</div>
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <button onclick="app.toggleMixerTimer()" id="btnMixerTimerToggle" class="px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs shadow-md transition">
+                      Старт 10-минутки
+                    </button>
+                    <button onclick="app.resetMixerTimer()" class="px-3 py-2 rounded-xl bg-pastry-200 dark:bg-zinc-700 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-pastry-300">
+                      Сброс
+                    </button>
+                  </div>
+                </div>
+                <div id="mixerCurrentCue" class="p-3 rounded-xl bg-white/80 dark:bg-zinc-800/90 border border-amber-400/40 text-xs sm:text-sm font-semibold text-amber-950 dark:text-amber-100 flex items-center gap-2">
+                  <span>⏱</span> <span>Нажмите «Старт» одновременно с включением 1-й скорости миксера</span>
+                </div>
+              </div>
+
+              <div class="space-y-3 text-sm">
+                <div class="p-4 rounded-2xl bg-pastry-50 dark:bg-zinc-800/70 border border-pastry-200 dark:border-zinc-700/80 space-y-1">
+                  <div class="flex items-center justify-between">
+                    <span class="font-bold text-pastry-900 dark:text-white flex items-center gap-2">
+                      <span class="px-2 py-0.5 rounded-md bg-pastry-200 dark:bg-zinc-700 font-mono text-xs">0:00 — 5:00</span>
+                      Плавный старт до белой пенки
+                    </span>
+                    <span class="text-xs font-semibold text-amber-600 dark:text-amber-400">Скорости 1 → 3</span>
+                  </div>
+                  <p class="text-slate-600 dark:text-slate-300 text-xs sm:text-sm pt-1">
+                    В чаше <b>${c.eggs} белков (~${c.whitesMin}-${c.whitesMax} г)</b>. Включаем 1-ю скорость и плавно поднимаем обороты в течение 5 минут до образования стабильной белой пенки.
+                  </p>
+                </div>
+
+                <div class="p-4 rounded-2xl bg-pastry-50 dark:bg-zinc-800/70 border border-pastry-200 dark:border-zinc-700/80 space-y-1">
+                  <div class="flex items-center justify-between">
+                    <span class="font-bold text-pastry-900 dark:text-white flex items-center gap-2">
+                      <span class="px-2 py-0.5 rounded-md bg-amber-500/20 text-amber-800 dark:text-amber-300 font-mono text-xs font-bold">5:00</span>
+                      Ввод лимонного сока
+                    </span>
+                    <span class="text-xs font-mono font-bold text-amber-600 dark:text-amber-400">${c.lemonJuice} мл</span>
+                  </div>
+                  <p class="text-slate-600 dark:text-slate-300 text-xs sm:text-sm pt-1">
+                    После образования пенки вливаем <b>${c.lemonJuice} мл лимонного сока</b>. Продолжаем вымешивать до 7-й минуты.
+                  </p>
+                </div>
+
+                <div class="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 space-y-1">
+                  <div class="flex items-center justify-between">
+                    <span class="font-bold text-amber-950 dark:text-amber-200 flex items-center gap-2">
+                      <span class="px-2 py-0.5 rounded-md bg-amber-600 text-white font-mono text-xs font-bold">6:00</span>
+                      Разгон миксера
+                    </span>
+                    <span class="text-xs font-bold text-amber-700 dark:text-amber-300">+1 скорость каждую 1 мин</span>
+                  </div>
+                  <p class="text-amber-900 dark:text-amber-200 text-xs sm:text-sm pt-1">
+                    С 6-й минуты начинаем постепенно повышать обороты миксера до 9-й скорости: строго одна скорость каждые 60 секунд.
+                  </p>
+                </div>
+
+                <div class="p-4 rounded-2xl bg-pastry-50 dark:bg-zinc-800/70 border border-pastry-200 dark:border-zinc-700/80 space-y-1">
+                  <div class="flex items-center justify-between">
+                    <span class="font-bold text-pastry-900 dark:text-white flex items-center gap-2">
+                      <span class="px-2 py-0.5 rounded-md bg-pastry-200 dark:bg-zinc-700 font-mono text-xs font-bold">7:00</span>
+                      Всыпаем сахар
+                    </span>
+                    <span class="text-xs font-mono font-bold text-amber-600 dark:text-amber-400">${c.sugarMeringue} г</span>
+                  </div>
+                  <p class="text-slate-600 dark:text-slate-300 text-xs sm:text-sm pt-1">
+                    Всыпаем <b>${c.sugarMeringue} г сахара</b>. Продолжаем активное взбивание на высокой скорости.
+                  </p>
+                </div>
+
+                <div class="p-5 rounded-2xl bg-rose-500/15 border-2 border-rose-500/50 space-y-2">
+                  <div class="flex items-center justify-between">
+                    <span class="font-extrabold text-rose-950 dark:text-rose-200 flex items-center gap-2 text-sm sm:text-base">
+                      <span>🛑</span>
+                      <span class="px-2 py-0.5 rounded-md bg-rose-600 text-white font-mono text-xs">8:50 — 9:00</span>
+                      ЧЕК-ПОИНТ: Тест на венчике!
+                    </span>
+                  </div>
+                  <p class="text-rose-900 dark:text-rose-100 text-xs sm:text-sm leading-relaxed font-medium">
+                    <b>Останавливаем миксер и поднимаем венчик:</b> если пенка не падает, не течет и держится уверенно стойким клювом — супер, вы молодцы! Только теперь можно вводить крахмал!
+                  </p>
+                </div>
+
+                <div class="p-4 rounded-2xl bg-pastry-50 dark:bg-zinc-800/70 border border-pastry-200 dark:border-zinc-700/80 space-y-1">
+                  <div class="flex items-center justify-between">
+                    <span class="font-bold text-pastry-900 dark:text-white flex items-center gap-2">
+                      <span class="px-2 py-0.5 rounded-md bg-emerald-600 text-white font-mono text-xs font-bold">9:00 — 10:00</span>
+                      Крахмал & Финал (1 минута)
+                    </span>
+                    <span class="text-xs font-mono font-bold text-emerald-600 dark:text-emerald-400">${c.starch} г</span>
+                  </div>
+                  <p class="text-slate-600 dark:text-slate-300 text-xs sm:text-sm pt-1">
+                    Всыпаем <b>${c.starch} г крахмала</b> и довзбиваем ровно до 10-й минуты. Меренга готова к формовке.
+                  </p>
+                </div>
+              </div>
+            </div>
+          `;
+          return;
+        }
+
+        if (idx === 1) {
+          container.innerHTML = `
+            <div class="space-y-5">
+              <div class="flex items-center gap-3">
+                <span class="w-10 h-10 rounded-2xl bg-amber-600 text-white flex items-center justify-center text-xl font-bold shadow-sm">2</span>
+                <div>
+                  <span class="text-xs uppercase tracking-wider font-bold text-amber-700 dark:text-amber-400">Формовка и духовка</span>
+                  <h3 class="font-serif text-xl sm:text-2xl font-bold text-pastry-900 dark:text-white">Холодный запуск духовки (150°C, 50 минут)</h3>
+                </div>
+              </div>
+
+              <div class="p-5 rounded-2xl bg-rose-500/10 border-2 border-rose-500/40 text-rose-950 dark:text-rose-200 space-y-2">
+                <div class="font-bold text-sm uppercase flex items-center gap-2">
+                  <span>🛑</span> ПРАВИЛО ХОЛОДНОГО СТАРТА:
+                </div>
+                <p class="text-xs sm:text-sm leading-relaxed">
+                  1. Выложить меренгу на противень с силиконовым ковриком и лопаткой сформировать ровный прямоугольник.<br>
+                  2. <b>Поставить противень в ХОЛОДНУЮ духовку!</b><br>
+                  3. <b>ТОЛЬКО СЕЙЧАС включить духовку на 150°C</b> и запустить таймер на <b>50 минут</b>. Меренга должна прогреваться и подниматься вместе с духовкой.
+                </p>
+              </div>
+
+              <div class="p-5 rounded-3xl bg-amber-500/10 border border-amber-500/30 flex flex-wrap items-center justify-between gap-4">
+                <div class="flex items-center gap-3">
+                  <div class="w-12 h-12 rounded-2xl bg-amber-600 text-white flex items-center justify-center text-xl font-bold shadow-md">🔥</div>
+                  <div>
+                    <div class="text-xs uppercase font-bold text-amber-800 dark:text-amber-300">Таймер выпечки</div>
+                    <div class="text-lg font-bold text-slate-800 dark:text-white">50 минут при 150°C</div>
+                  </div>
+                </div>
+                <button onclick="app.startTimer(50 * 60, 'Выпечка меренги (150°C)')" class="px-5 py-2.5 rounded-2xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-sm shadow-md transition">
+                  Запустить 50 мин
+                </button>
+              </div>
+            </div>
+          `;
+          return;
+        }
+
+        if (idx === 2) {
+          container.innerHTML = `
+            <div class="space-y-5">
+              <div class="flex items-center gap-3">
+                <span class="w-10 h-10 rounded-2xl bg-amber-600 text-white flex items-center justify-center text-xl font-bold shadow-sm">3</span>
+                <div>
+                  <span class="text-xs uppercase tracking-wider font-bold text-amber-700 dark:text-amber-400">Ягодный слой (пока печется меренга)</span>
+                  <h3 class="font-serif text-xl sm:text-2xl font-bold text-pastry-900 dark:text-white">Подготовка клубники</h3>
+                </div>
+              </div>
+
+              <div class="p-5 rounded-2xl bg-pastry-50 dark:bg-zinc-800/70 border border-pastry-200 dark:border-zinc-700/80 space-y-3 text-sm">
+                <div class="flex items-center justify-between">
+                  <span class="font-bold text-base text-pastry-900 dark:text-white">Клубника: ${c.strawberry} г</span>
+                  <span class="px-2.5 py-1 rounded-xl bg-rose-100 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 text-xs font-bold font-mono">СВЧ: 30 сек</span>
+                </div>
+                <ol class="space-y-2 text-xs sm:text-sm text-slate-700 dark:text-slate-300 list-decimal pl-5">
+                  <li>Достать из морозилки <b>${c.strawberry} г клубники</b>.</li>
+                  <li>Поставить в микроволновку ровно на <b>30 секунд</b> (только чтобы нож легко резал, но ягода не поплыла в кашу).</li>
+                  <li>Нарезать клубнику аккуратными тонкими <b>пластинками</b>.</li>
+                  <li>Выложить пластинки на бумажные салфетки/полотенца сушиться от лишней влаги.</li>
+                </ol>
+              </div>
+            </div>
+          `;
+          return;
+        }
+
+        if (idx === 3) {
+          container.innerHTML = `
+            <div class="space-y-5">
+              <div class="flex items-center gap-3">
+                <span class="w-10 h-10 rounded-2xl bg-amber-600 text-white flex items-center justify-center text-xl font-bold shadow-sm">4</span>
+                <div>
+                  <span class="text-xs uppercase tracking-wider font-bold text-amber-700 dark:text-amber-400">Начинка & Витрина</span>
+                  <h3 class="font-serif text-xl sm:text-2xl font-bold text-pastry-900 dark:text-white">Крем в витрину до остывания</h3>
+                </div>
+              </div>
+
+              <div class="p-5 rounded-2xl bg-pastry-50 dark:bg-zinc-800/70 border border-pastry-200 dark:border-zinc-700/80 space-y-4">
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-center">
+                  <div class="p-3 bg-white dark:bg-zinc-900 rounded-xl border border-pastry-200 dark:border-zinc-700">
+                    <div class="text-[10px] text-slate-400 uppercase">Творожный сыр</div>
+                    <div class="font-mono font-bold text-lg mt-1 text-amber-600 dark:text-amber-400">${c.cheese} г</div>
+                  </div>
+                  <div class="p-3 bg-white dark:bg-zinc-900 rounded-xl border border-pastry-200 dark:border-zinc-700">
+                    <div class="text-[10px] text-slate-400 uppercase">Сливки 33%</div>
+                    <div class="font-mono font-bold text-lg mt-1 text-pastry-900 dark:text-white">${c.cream} г</div>
+                  </div>
+                  <div class="p-3 bg-white dark:bg-zinc-900 rounded-xl border border-pastry-200 dark:border-zinc-700">
+                    <div class="text-[10px] text-slate-400 uppercase">Сахар</div>
+                    <div class="font-mono font-bold text-lg mt-1 text-pastry-900 dark:text-white">${c.sugarCream} г</div>
+                  </div>
+                </div>
+
+                <div class="text-xs sm:text-sm text-slate-700 dark:text-slate-300 space-y-2 pt-2 border-t border-pastry-100 dark:border-zinc-700">
+                  <p>1. В чашу миксера положить сыр, налить сливки и всыпать сахар.</p>
+                  <p>2. Взбить всё до плотной однородной массы.</p>
+                  <p>3. <b>Положить готовый крем в холодильник / витрину</b> пока меренга не будет готова и полностью не остынет.</p>
+                </div>
+              </div>
+            </div>
+          `;
+          return;
+        }
+
+        if (idx === 4) {
+          container.innerHTML = `
+            <div class="space-y-5">
+              <div class="flex items-center gap-3">
+                <span class="w-10 h-10 rounded-2xl bg-amber-600 text-white flex items-center justify-center text-xl font-bold shadow-sm">5</span>
+                <div>
+                  <span class="text-xs uppercase tracking-wider font-bold text-amber-700 dark:text-amber-400">Шлюз остывания</span>
+                  <h3 class="font-serif text-xl sm:text-2xl font-bold text-pastry-900 dark:text-white">Постепенное открытие печи</h3>
+                </div>
+              </div>
+
+              <div class="p-5 rounded-2xl bg-rose-500/10 border-2 border-rose-500/40 text-rose-950 dark:text-rose-200 space-y-3">
+                <div class="font-bold text-sm uppercase flex items-center gap-2">
+                  <span>⚠️</span> Не открывать духовку настежь сразу!
+                </div>
+                <p class="text-xs sm:text-sm leading-relaxed">
+                  После 50 минут выпечки: <b>не открываем резко, а слегка приоткрываем</b>, и так постепенно, пока не откроете духовку настежь.
+                </p>
+              </div>
+
+              <div class="p-5 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-950 dark:text-emerald-200 flex items-start gap-3">
+                <span class="text-2xl">✋</span>
+                <div>
+                  <div class="font-bold text-sm">Проверка руками:</div>
+                  <div class="text-xs sm:text-sm mt-0.5">
+                    Если вы можете брать противень голыми руками без дискомфорта и вам не горячо — супер, всё готово к сборке!
+                  </div>
+                </div>
+              </div>
+            </div>
+          `;
+          return;
+        }
+
+        if (idx === 5) {
+          container.innerHTML = `
+            <div class="space-y-5">
+              <div class="flex items-center gap-3">
+                <span class="w-10 h-10 rounded-2xl bg-amber-600 text-white flex items-center justify-center text-xl font-bold shadow-sm">6</span>
+                <div>
+                  <span class="text-xs uppercase tracking-wider font-bold text-amber-700 dark:text-amber-400">Сборка</span>
+                  <h3 class="font-serif text-xl sm:text-2xl font-bold text-pastry-900 dark:text-white">Переворот, крем, клубника и сворачивание</h3>
+                </div>
+              </div>
+
+              <div class="p-5 rounded-2xl bg-pastry-50 dark:bg-zinc-800/70 border border-pastry-200 dark:border-zinc-700/80 space-y-3 text-xs sm:text-sm text-slate-700 dark:text-slate-300">
+                <ol class="space-y-2 list-decimal pl-5 leading-relaxed">
+                  <li>Перевернуть остывшую меренгу на чистый лист пергамента и аккуратно снять силиконовый коврик.</li>
+                  <li class="font-bold text-amber-700 dark:text-amber-300">
+                    Остатки подсохшей меренги с коврика аккуратно собрать в миску — они пойдут на посыпку!
+                  </li>
+                  <li>Достать крем из витрины. Намазать ровный слой крема на меренгу (оставив немного на декор).</li>
+                  <li>Равномерно разложить подсушенные пластинки клубники.</li>
+                  <li>Аккуратно и плотно скрутить рулет при помощи пергамента.</li>
+                </ol>
+              </div>
+            </div>
+          `;
+          return;
+        }
+
+        if (idx === 6) {
+          container.innerHTML = `
+            <div class="space-y-5">
+              <div class="flex items-center gap-3">
+                <span class="w-10 h-10 rounded-2xl bg-amber-600 text-white flex items-center justify-center text-xl font-bold shadow-sm">7</span>
+                <div>
+                  <span class="text-xs uppercase tracking-wider font-bold text-amber-700 dark:text-amber-400">Декор шефа</span>
+                  <h3 class="font-serif text-xl sm:text-2xl font-bold text-pastry-900 dark:text-white">Кондитерский рукав, волны и посыпка</h3>
+                </div>
+              </div>
+
+              <div class="p-5 rounded-2xl bg-pastry-50 dark:bg-zinc-800/70 border border-pastry-200 dark:border-zinc-700/80 space-y-3 text-xs sm:text-sm text-slate-700 dark:text-slate-300">
+                <ul class="space-y-2 list-disc pl-5 leading-relaxed">
+                  <li>Оставшийся крем переложить в кондитерский рукав (мешок).</li>
+                  <li>Нарисовать по верху стандартный узор — красивые <b>волны</b>.</li>
+                  <li>Посыпать хрустящим тестом (крошкой), которое собрали с коврика от меренги.</li>
+                  <li>Украсить ягодами. Рулет полностью готов!</li>
+                </ul>
+              </div>
+
+              <div class="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-950 dark:text-emerald-200 text-center font-bold text-sm">
+                🎉 Рулет готов на витрину!
+              </div>
+            </div>
+          `;
+          return;
+        }
+      },
+
+      renderFullCard() {
+        const r = this.currentRecipe;
+        const container = document.getElementById('fullCardContainer');
+
+        if (r.id === 'meringue') {
+          const c = this.getMeringueCalculatedData();
+          container.innerHTML = `
+            <div class="bg-white dark:bg-zinc-900 border border-pastry-200 dark:border-zinc-800 rounded-3xl p-6 sm:p-8 space-y-6">
+              <div class="flex flex-wrap items-center justify-between gap-3 border-b border-pastry-200 dark:border-zinc-800 pb-4">
+                <div>
+                  <h3 class="font-serif text-2xl font-bold text-pastry-900 dark:text-white">
+                    🍓 Меренговый рулет — Шеф-карта (${c.multiplier} шт.)
+                  </h3>
+                  <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Все этапы на одном экране</p>
+                </div>
+                <div class="p-2.5 rounded-xl bg-rose-500/10 border border-rose-500/30 text-xs font-bold text-rose-700 dark:text-rose-300">
+                  🛑 Холодный запуск духовки: 150°C 50 мин
+                </div>
+              </div>
+
+              <div class="space-y-3">
+                <h4 class="text-xs uppercase tracking-wider font-bold text-amber-700 dark:text-amber-400">1. Сырье:</h4>
+                <div class="grid sm:grid-cols-2 gap-2 text-xs sm:text-sm">
+                  <div class="p-2.5 rounded-xl bg-pastry-50 dark:bg-zinc-800/60 flex justify-between">
+                    <span>Белки сразу в тару</span><b>${c.eggs} шт. (~${c.whitesMin}-${c.whitesMax} г)</b>
+                  </div>
+                  <div class="p-2.5 rounded-xl bg-pastry-50 dark:bg-zinc-800/60 flex justify-between">
+                    <span>Сахар в меренгу</span><b>${c.sugarMeringue} г</b>
+                  </div>
+                  <div class="p-2.5 rounded-xl bg-pastry-50 dark:bg-zinc-800/60 flex justify-between">
+                    <span>Лимонный сок</span><b>${c.lemonJuice} мл</b>
+                  </div>
+                  <div class="p-2.5 rounded-xl bg-pastry-50 dark:bg-zinc-800/60 flex justify-between">
+                    <span>Крахмал</span><b>${c.starch} г</b>
+                  </div>
+                  <div class="p-2.5 rounded-xl bg-pastry-50 dark:bg-zinc-800/60 flex justify-between">
+                    <span>Клубника заморозка</span><b>${c.strawberry} г</b>
+                  </div>
+                  <div class="p-2.5 rounded-xl bg-pastry-50 dark:bg-zinc-800/60 flex justify-between">
+                    <span>Крем (сыр ${c.cheese}г + сливки ${c.cream}г + сахар ${c.sugarCream}г)</span><b>в витрину</b>
+                  </div>
+                </div>
+              </div>
+
+              <div class="space-y-3 pt-2">
+                <h4 class="text-xs uppercase tracking-wider font-bold text-amber-700 dark:text-amber-400">2. Шаги:</h4>
+                <div class="space-y-2 text-xs sm:text-sm">
+                  <div class="p-2.5 rounded-xl bg-pastry-50 dark:bg-zinc-800/60"><b>0:00-5:00:</b> Скорость с 1-й плавно повышая до белой пенки.</div>
+                  <div class="p-2.5 rounded-xl bg-pastry-50 dark:bg-zinc-800/60"><b>5:00:</b> Влить лимонный сок, мешать до 7-й минуты.</div>
+                  <div class="p-2.5 rounded-xl bg-amber-500/10"><b>6:00:</b> Разгон миксера до 9-й скорости (+1 скорость каждую 1 мин).</div>
+                  <div class="p-2.5 rounded-xl bg-pastry-50 dark:bg-zinc-800/60"><b>7:00:</b> Всыпать весь сахар.</div>
+                  <div class="p-2.5 rounded-xl bg-rose-500/15 font-semibold"><b>8:50-9:00:</b> Чек-поинт! Стоп миксер, проверить венчик. Если стойкий клюв — всыпать крахмал.</div>
+                  <div class="p-2.5 rounded-xl bg-pastry-50 dark:bg-zinc-800/60"><b>9:00-10:00:</b> Довзбивать 1 мин до глянца.</div>
+                  <div class="p-2.5 rounded-xl bg-rose-500/10"><b>Печь:</b> Прямоугольник на коврике. В ХОЛОДНУЮ духовку, включить 150°C на 50 мин.</div>
+                  <div class="p-2.5 rounded-xl bg-pastry-50 dark:bg-zinc-800/60"><b>Начинка:</b> Клубнику в СВЧ 30 сек, нарезать пластинками, подсушить. Крем взбить и в витрину.</div>
+                  <div class="p-2.5 rounded-xl bg-pastry-50 dark:bg-zinc-800/60"><b>Остывание & Декор:</b> Приоткрывать духовку постепенно. Проверить противень руками. Перевернуть, снять коврик, собрать крошку. Намазать крем, клубнику, свернуть. Волны из мешка, посыпать крошкой с коврика и ягодами.</div>
+                </div>
+              </div>
+            </div>
+          `;
+        } else {
+          container.innerHTML = `
+            <div class="bg-white dark:bg-zinc-900 border border-pastry-200 dark:border-zinc-800 rounded-3xl p-6 sm:p-8 space-y-6">
+              <h3 class="font-serif text-2xl font-bold text-pastry-900 dark:text-white flex items-center gap-2">
+                <span>${r.emoji}</span> <span>${r.title} — Шеф-карта</span>
+              </h3>
+              <div class="space-y-3">
+                <h4 class="text-xs uppercase tracking-wider font-bold text-amber-700 dark:text-amber-400">1. Сырье:</h4>
+                <div class="grid sm:grid-cols-2 gap-2 text-sm">
+                  ${r.prepChecklist.map(i => `
+                    <div class="p-2.5 rounded-xl bg-pastry-50 dark:bg-zinc-800/60 flex justify-between">
+                      <span>${i.name}</span>
+                      <b class="font-mono text-amber-700 dark:text-amber-300">${i.qty}</b>
+                    </div>
+                  `).join('')}
+                </div>
+              </div>
+              <div class="space-y-3 pt-2">
+                <h4 class="text-xs uppercase tracking-wider font-bold text-amber-700 dark:text-amber-400">2. Шаги:</h4>
+                <div class="space-y-2">
+                  ${r.steps.map((s, idx) => `
+                    <div class="p-3 rounded-xl bg-pastry-50 dark:bg-zinc-800/60 text-xs sm:text-sm">
+                      <b>Этап ${idx + 1}: ${s.title}</b> — ${s.action}
+                      ${s.warning ? `<div class="text-rose-600 font-semibold mt-1">⚠️ ${s.warning}</div>` : ''}
+                    </div>
+                  `).join('')}
+                </div>
+              </div>
+            </div>
+          `;
+        }
+      },
+
+      nextStep() {
+        const r = this.currentRecipe;
+        const stepsCount = r.id === 'meringue' 
+          ? this.getMeringueSteps().length + 1 
+          : r.steps.length + 1;
+
+        if (this.currentStepIndex < stepsCount - 1) {
+          this.currentStepIndex++;
+          this.renderStep();
+          window.scrollTo({ top: 120, behavior: 'smooth' });
+        } else {
+          this.renderCompletionScreen();
+        }
+      },
+
+      prevStep() {
+        if (this.currentStepIndex > 0) {
+          this.currentStepIndex--;
+          this.renderStep();
+          window.scrollTo({ top: 120, behavior: 'smooth' });
+        }
+      },
+
+      toggleCheck(id, checkbox) {
+        this.checkedItems[id] = checkbox.checked;
+        const textDiv = checkbox.nextElementSibling;
+        if (checkbox.checked) {
+          textDiv.classList.add('strike-done');
+        } else {
+          textDiv.classList.remove('strike-done');
+        }
+      },
+
+      resetRecipeChecks() {
+        this.checkedItems = {};
+        this.renderStep();
+        showNotification('Отметки сброшены', '🔄');
+      },
+
+      toggleMixerTimer() {
+        const btn = document.getElementById('btnMixerTimerToggle');
+        if (this.mixerTimer.isRunning) {
+          clearInterval(this.mixerTimer.interval);
+          this.mixerTimer.isRunning = false;
+          btn.innerText = 'Продолжить';
+        } else {
+          this.mixerTimer.isRunning = true;
+          btn.innerText = 'Пауза';
+          this.mixerTimer.interval = setInterval(() => {
+            this.mixerTimer.secondsElapsed++;
+            this.updateMixerDisplay();
+          }, 1000);
+        }
+      },
+
+      resetMixerTimer() {
+        clearInterval(this.mixerTimer.interval);
+        this.mixerTimer.isRunning = false;
+        this.mixerTimer.secondsElapsed = 0;
+        const btn = document.getElementById('btnMixerTimerToggle');
+        if (btn) btn.innerText = 'Старт 10-минутки';
+        this.updateMixerDisplay();
+      },
+
+      updateMixerDisplay() {
+        const el = document.getElementById('mixerTimerDisplay');
+        const cue = document.getElementById('mixerCurrentCue');
+        if (!el) return;
+
+        const sec = this.mixerTimer.secondsElapsed;
+        const m = String(Math.floor(sec / 60)).padStart(2, '0');
+        const s = String(sec % 60).padStart(2, '0');
+        el.innerText = `${m}:${s}`;
+
+        if (!cue) return;
+
+        if (sec < 300) {
+          cue.innerHTML = `<span>⏳</span> <span>0:00-5:00: Взбивайте с 1-й скорости, плавно поднимайте обороты до белой пенки</span>`;
+        } else if (sec >= 300 && sec < 360) {
+          cue.innerHTML = `<span>🍋</span> <span class="text-amber-800 dark:text-amber-300 font-bold">5:00: Влейте лимонный сок! Перемешивайте до 7-й минуты.</span>`;
+          if (sec === 300) playTimerChime([440, 660]);
+        } else if (sec >= 360 && sec < 420) {
+          cue.innerHTML = `<span>⚡</span> <span class="font-bold text-amber-700 dark:text-amber-300">6:00: Разгон: +1 скорость каждую минуту до 9 скорости!</span>`;
+          if (sec === 360) playTimerChime([520, 780]);
+        } else if (sec >= 420 && sec < 530) {
+          cue.innerHTML = `<span>🍬</span> <span class="font-bold text-amber-800 dark:text-amber-200">7:00: Всыпьте весь сахар! Активное взбивание.</span>`;
+          if (sec === 420) playTimerChime([600, 900]);
+        } else if (sec >= 530 && sec < 540) {
+          cue.innerHTML = `<span>🛑</span> <span class="font-extrabold text-rose-700 dark:text-rose-300">8:50-9:00: ЧЕК-ПОИНТ! Стоп миксер! Проверьте венчик (стойкий клюв)!</span>`;
+          if (sec === 530) playTimerChime([880, 880, 880]);
+        } else if (sec >= 540 && sec < 600) {
+          cue.innerHTML = `<span>🌽</span> <span class="font-bold text-emerald-700 dark:text-emerald-300">9:00: Всыпьте крахмал! Довзбивайте ровно 1 минуту до 10:00.</span>`;
+          if (sec === 540) playTimerChime([700, 1000]);
+        } else {
+          cue.innerHTML = `<span>🎉</span> <span class="font-bold text-emerald-600">10:00: Меренга готова! Переходите к формовке.</span>`;
+          if (sec === 600) {
+            playTimerChime([523, 659, 784, 1046]);
+            showNotification('10 минут истекли! Меренга взбита идеально!', '🎉');
+          }
+        }
+      },
+
+      startTimer(seconds, label) {
+        clearInterval(this.timer.interval);
+        this.timer.remainingSeconds = seconds;
+        this.timer.isRunning = true;
+        this.timer.label = label || 'Таймер';
+
+        document.getElementById('floatingTimerWidget').classList.remove('hidden');
+        document.getElementById('floatTimerLabel').innerText = this.timer.label;
+
+        showNotification(`Таймер запущен: ${Math.floor(seconds / 60)} мин`, '⏳');
+        this.updateFloatingTimer();
+
+        this.timer.interval = setInterval(() => {
+          if (this.timer.remainingSeconds > 0) {
+            this.timer.remainingSeconds--;
+            this.updateFloatingTimer();
+          } else {
+            clearInterval(this.timer.interval);
+            this.timer.isRunning = false;
+            playTimerChime([587, 880, 587, 880]);
+            showNotification(`Время вышло: ${this.timer.label}!`, '🔔');
+            document.getElementById('floatTimerDigits').innerText = "ГОТОВО!";
+            document.getElementById('floatingTimerWidget').classList.add('alarm-active');
+          }
+        }, 1000);
+      },
+
+      pauseResumeTimer() {
+        const btn = document.getElementById('floatTimerPauseBtn');
+        if (this.timer.isRunning) {
+          clearInterval(this.timer.interval);
+          this.timer.isRunning = false;
+          btn.innerText = '▶';
+          showNotification('Таймер на паузе', '⏸');
+        } else if (this.timer.remainingSeconds > 0) {
+          this.timer.isRunning = true;
+          btn.innerText = '⏸';
+          this.timer.interval = setInterval(() => {
+            if (this.timer.remainingSeconds > 0) {
+              this.timer.remainingSeconds--;
+              this.updateFloatingTimer();
+            } else {
+              clearInterval(this.timer.interval);
+              this.timer.isRunning = false;
+              playTimerChime([587, 880]);
+              showNotification(`Время вышло: ${this.timer.label}!`, '🔔');
+            }
+          }, 1000);
+        }
+      },
+
+      stopTimer() {
+        clearInterval(this.timer.interval);
+        this.timer.isRunning = false;
+        this.timer.remainingSeconds = 0;
+        document.getElementById('floatingTimerWidget').classList.remove('alarm-active');
+        document.getElementById('floatingTimerWidget').classList.add('hidden');
+      },
+
+      updateFloatingTimer() {
+        const s = this.timer.remainingSeconds;
+        const minStr = String(Math.floor(s / 60)).padStart(2, '0');
+        const secStr = String(s % 60).padStart(2, '0');
+        document.getElementById('floatTimerDigits').innerText = `${minStr}:${secStr}`;
+      },
+
+      setQuickRollCreamQty(qty) {
+        this.quickRollCreamMultiplier = qty;
+        this.updateQuickRollCreamDisplay();
+      },
+
+      updateQuickRollCreamDisplay() {
+        const b1 = document.getElementById('tabRollCream1');
+        const b2 = document.getElementById('tabRollCream2');
+        const sugar = document.getElementById('qRollSugar');
+        const cream = document.getElementById('qRollCream');
+        const cheese = document.getElementById('qRollCheese');
+
+        const m = this.quickRollCreamMultiplier;
+        if (m === 1) {
+          if (b1) b1.className = "px-3 py-1.5 rounded-lg bg-amber-600 text-white shadow transition";
+          if (b2) b2.className = "px-3 py-1.5 rounded-lg text-slate-600 dark:text-slate-300 hover:text-amber-600 transition";
+          if (sugar) sugar.innerText = "50 г";
+          if (cream) cream.innerText = "100 г";
+          if (cheese) cheese.innerText = "200 г";
+        } else {
+          if (b2) b2.className = "px-3 py-1.5 rounded-lg bg-amber-600 text-white shadow transition";
+          if (b1) b1.className = "px-3 py-1.5 rounded-lg text-slate-600 dark:text-slate-300 hover:text-amber-600 transition";
+          if (sugar) sugar.innerText = "100 г";
+          if (cream) cream.innerText = "200 г";
+          if (cheese) cheese.innerText = "400 г";
+        }
+      },
+
+      renderCompletionScreen() {
+        const container = document.getElementById('dynamicStepContent');
+        const btnPrev = document.getElementById('btnPrevStep');
+        const btnNext = document.getElementById('btnNextStep');
+
+        btnPrev.disabled = true;
+        btnNext.classList.add('hidden');
+
+        container.innerHTML = `
+          <div class="text-center py-8 space-y-4">
+            <div class="text-6xl animate-bounce">🎉</div>
+            <h3 class="font-serif text-3xl font-bold text-pastry-900 dark:text-white">Десерт готов на витрину!</h3>
+            <p class="text-sm text-slate-600 dark:text-slate-300 max-w-md mx-auto">
+              Все технологические этапы выполнены в строгом соответствии с шеф-регламентом.
+            </p>
+            <div class="pt-4 flex flex-wrap items-center justify-center gap-3">
+              <button onclick="app.showCatalog()" class="px-6 py-3 rounded-2xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-sm shadow-lg transition">
+                Вернуться в каталог
+              </button>
+              <button onclick="app.currentStepIndex = 0; app.renderStep();" class="px-6 py-3 rounded-2xl border border-pastry-300 dark:border-zinc-700 font-semibold text-sm hover:bg-pastry-100 dark:hover:bg-zinc-800 transition">
+                Приготовить заново
+              </button>
+            </div>
+          </div>
+        `;
+      }
+    };
+
+    function toggleDarkMode() {
+      const isDark = document.documentElement.classList.toggle('dark');
+      document.getElementById('themeIcon').innerText = isDark ? '☀️' : '🌙';
+      try { localStorage.setItem('chefTheme', isDark ? 'dark' : 'light'); } catch(e){}
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      let savedTheme = 'light';
+      try {
+        savedTheme = localStorage.getItem('chefTheme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+      } catch(e){}
+      if (savedTheme === 'dark') {
+        document.documentElement.classList.add('dark');
+        document.getElementById('themeIcon').innerText = '☀️';
+      }
+      app.init();
+    });
+  </script>
+</body>
+</html>
