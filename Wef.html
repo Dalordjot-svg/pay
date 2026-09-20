@@ -116,12 +116,76 @@
       <!-- Order Top Control Bar -->
       <div class="bg-white p-2.5 sm:p-3 rounded-2xl border border-stone-200 shadow-xs flex items-center justify-between gap-2">
         <div class="flex items-center gap-2">
-          <button onclick="goToTablesView()" class="px-2.5 py-1.5 bg-stone-100 hover:bg-stone-200 text-stone-700 rounded-xl text-xs font-bold flex items-center gap-1 active:scale-95 transition">
+          <button onclick="goToTablesView()" class="px-3.5 py-2 bg-stone-100 hover:bg-stone-200 active:bg-stone-300 text-stone-800 rounded-xl text-xs sm:text-sm font-bold flex items-center gap-1.5 active:scale-95 transition">
             <span>←</span> <span>Столы</span>
           </button>
           <div>
             <h2 id="activeOrderTitle" class="font-extrabold text-sm sm:text-base text-stone-900 leading-tight">Стол 1</h2>
             <p id="activeOrderSubtitle" class="text-[11px] text-stone-500">2 персоны</p>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <!-- Guests Count Button -->
+          <button onclick="openGuestsModalForCurrentTable()" class="px-3.5 py-2 bg-amber-50 border border-amber-300 hover:bg-amber-100 active:bg-amber-200 rounded-xl text-xs sm:text-sm font-bold text-amber-950 flex items-center gap-1.5 active:scale-95 transition">
+            <span>👥</span> <span id="btnGuestsDisplay">2 чел.</span>
+          </button>
+
+          <!-- Clear Table Order Button -->
+          <button onclick="clearCurrentOrder()" title="Очистить стол" class="p-2.5 text-stone-400 hover:text-rose-600 hover:bg-rose-50 active:bg-rose-100 rounded-xl text-base font-bold transition active:scale-95">
+            🗑️
+          </button>
+        </div>
+      </div>
+
+      <!-- Mobile Tabs Switcher (Menu / Cart) -->
+      <div class="lg:hidden flex items-center bg-stone-200/70 p-1.5 rounded-2xl text-xs sm:text-sm font-bold gap-1">
+        <button id="mobileTabMenuBtn" onclick="switchOrderMobileTab('menu')" class="flex-1 py-2.5 rounded-xl bg-white text-stone-900 shadow-xs flex items-center justify-center gap-1.5 transition">
+          <span>🍽️</span> <span>Меню блюд</span>
+        </button>
+        <button id="mobileTabCartBtn" onclick="switchOrderMobileTab('cart')" class="flex-1 py-2.5 rounded-xl text-stone-600 hover:text-stone-900 flex items-center justify-center gap-1.5 transition">
+          <span>🧾</span> <span>Чек стола</span>
+          <span id="mobileCartCountBadge" class="bg-amber-600 text-white text-[11px] px-2 py-0.5 rounded-full font-mono font-bold">0</span>
+        </button>
+      </div>
+
+      <div class="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-3 min-h-0">
+        
+        <!-- LEFT: MENU DISHES & SEARCH -->
+        <div id="orderMenuColumn" class="lg:col-span-7 xl:col-span-8 flex flex-col bg-white rounded-2xl border border-stone-200 shadow-xs p-2.5 sm:p-3 space-y-2.5 min-h-0">
+          
+          <!-- Fast Search & Custom Item -->
+          <div class="flex items-center gap-2">
+            <div class="relative flex-1">
+              <input type="text" id="searchInput" oninput="onSearchChange()" placeholder="Поиск по названию или описанию..."
+                     class="w-full bg-stone-50 border border-stone-200 rounded-xl py-2 pl-8 pr-7 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-amber-600 focus:bg-white transition">
+              <span class="absolute left-2.5 top-2.5 text-stone-400 text-xs">🔍</span>
+              <button id="clearSearchBtn" onclick="clearSearchInput()" class="hidden absolute right-2.5 top-2 text-stone-400 hover:text-stone-700 font-bold text-xs bg-stone-200 w-4 h-4 rounded-full flex items-center justify-center">✕</button>
+            </div>
+            
+            <button onclick="openCustomDishModal()" class="px-3 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-bold flex items-center gap-1 shadow-xs active:scale-95 transition shrink-0">
+              <span>✨</span> <span class="hidden sm:inline">+ Своя позиция</span><span class="sm:hidden">+ Своя</span>
+            </button>
+          </div>
+
+          <!-- Category Pills -->
+          <div class="flex items-center gap-2 overflow-x-auto pb-1.5 scrollbar-hide text-xs sm:text-sm font-bold shrink-0">
+            <button onclick="selectCategory('all')" class="cat-pill px-3.5 py-2 rounded-xl bg-stone-100 text-stone-700 hover:bg-stone-200 shrink-0" data-cat="all">⚡ Все</button>
+            <button onclick="selectCategory('breakfast')" class="cat-pill px-3.5 py-2 rounded-xl bg-stone-100 text-stone-700 hover:bg-stone-200 shrink-0" data-cat="breakfast">🍳 Завтраки</button>
+            <button onclick="selectCategory('summer')" class="cat-pill px-3.5 py-2 rounded-xl bg-stone-100 text-stone-700 hover:bg-stone-200 shrink-0" data-cat="summer">☀️ Лето & Закуски</button>
+            <button onclick="selectCategory('salads')" class="cat-pill px-3.5 py-2 rounded-xl bg-amber-950 text-white shadow-xs shrink-0" data-cat="salads">🥗 Салаты</button>
+            <button onclick="selectCategory('soups')" class="cat-pill px-3.5 py-2 rounded-xl bg-stone-100 text-stone-700 hover:bg-stone-200 shrink-0" data-cat="soups">🍲 Супы</button>
+            <button onclick="selectCategory('sandwiches')" class="cat-pill px-3.5 py-2 rounded-xl bg-stone-100 text-stone-700 hover:bg-stone-200 shrink-0" data-cat="sandwiches">🥪 Сэндвичи</button>
+            <button onclick="selectCategory('hot')" class="cat-pill px-3.5 py-2 rounded-xl bg-stone-100 text-stone-700 hover:bg-stone-200 shrink-0" data-cat="hot">🥩 Горячее</button>
+            <button onclick="selectCategory('garnishes')" class="cat-pill px-3.5 py-2 rounded-xl bg-stone-100 text-stone-700 hover:bg-stone-200 shrink-0" data-cat="garnishes">🍟 Гарниры</button>
+            <button onclick="selectCategory('desserts')" class="cat-pill px-3.5 py-2 rounded-xl bg-stone-100 text-stone-700 hover:bg-stone-200 shrink-0" data-cat="desserts">🍰 Десерты</button>
+            <button onclick="selectCategory('coffee_classic')" class="cat-pill px-3.5 py-2 rounded-xl bg-stone-100 text-stone-700 hover:bg-stone-200 shrink-0" data-cat="coffee_classic">☕ Кофе классика</button>
+            <button onclick="selectCategory('coffee_author')" class="cat-pill px-3.5 py-2 rounded-xl bg-stone-100 text-stone-700 hover:bg-stone-200 shrink-0" data-cat="coffee_author">✨ Авторский кофе</button>
+            <button onclick="selectCategory('coffee_cold')" class="cat-pill px-3.5 py-2 rounded-xl bg-stone-100 text-stone-700 hover:bg-stone-200 shrink-0" data-cat="coffee_cold">🧊 Холодный кофе</button>
+            <button onclick="selectCategory('tea')" class="cat-pill px-3.5 py-2 rounded-xl bg-stone-100 text-stone-700 hover:bg-stone-200 shrink-0" data-cat="tea">🫖 Чай & Горячее</button>
+            <button onclick="selectCategory('smoothies')" class="cat-pill px-3.5 py-2 rounded-xl bg-stone-100 text-stone-700 hover:bg-stone-200 shrink-0" data-cat="smoothies">🥤 Смузи & Шейки</button>
+            <button onclick="selectCategory('drinks')" class="cat-pill px-3.5 py-2 rounded-xl bg-stone-100 text-stone-700 hover:bg-stone-200 shrink-0" data-cat="drinks">🍹 Лимонады & Соки</button>
+            <button onclick="selectCategory('extras')" class="cat-pill px-3.5 py-2 rounded-xl bg-stone-100 text-stone-700 hover:bg-stone-200 shrink-0" data-cat="extras">🥛 Сиропы & Молоко</button>
           </div>
         </div>
 
@@ -304,9 +368,9 @@
       <div class="flex items-center justify-between bg-stone-50 p-2.5 rounded-xl border border-stone-200">
         <span class="text-xs font-semibold text-stone-700">Точное количество:</span>
         <div class="flex items-center gap-2">
-          <button type="button" onclick="adjustTempGuests(-1)" class="w-8 h-8 rounded-lg bg-white border border-stone-300 font-bold hover:bg-stone-200 active:scale-95 text-stone-800 flex items-center justify-center">-</button>
-          <span id="guestDisplayVal" class="w-8 text-center font-mono font-bold text-base text-amber-950">2</span>
-          <button type="button" onclick="adjustTempGuests(1)" class="w-8 h-8 rounded-lg bg-white border border-stone-300 font-bold hover:bg-stone-200 active:scale-95 text-stone-800 flex items-center justify-center">+</button>
+          <button type="button" onclick="adjustTempGuests(-1)" class="w-10 h-10 rounded-xl bg-white border border-stone-300 font-black text-lg hover:bg-stone-200 active:scale-90 text-stone-800 flex items-center justify-center shadow-xs">-</button>
+          <span id="guestDisplayVal" class="w-10 text-center font-mono font-black text-lg text-amber-950">2</span>
+          <button type="button" onclick="adjustTempGuests(1)" class="w-10 h-10 rounded-xl bg-white border border-stone-300 font-black text-lg hover:bg-stone-200 active:scale-90 text-stone-800 flex items-center justify-center shadow-xs">+</button>
         </div>
       </div>
 
@@ -414,9 +478,9 @@
     </div>
   </div>
 
-  <!-- TOAST NOTIFICATION -->
-  <div id="toast" class="fixed bottom-5 right-4 left-4 sm:left-auto sm:right-5 z-50 transform translate-y-24 opacity-0 transition-all duration-300 pointer-events-none bg-stone-900 text-white text-xs font-medium px-4 py-2.5 rounded-2xl shadow-xl flex items-center justify-center sm:justify-start gap-2 border border-white/10">
-    <span id="toastIcon">🔔</span>
+  <!-- TOAST NOTIFICATION (MOVED TO TOP, POINTER-EVENTS-NONE) -->
+  <div id="toast" class="fixed top-14 sm:top-16 left-1/2 -translate-x-1/2 z-50 transform -translate-y-24 opacity-0 transition-all duration-300 pointer-events-none bg-stone-900/95 backdrop-blur-md text-white text-xs sm:text-sm font-semibold px-4 py-2.5 rounded-2xl shadow-2xl flex items-center justify-center gap-2 border border-white/15 max-w-[92vw] whitespace-nowrap">
+    <span id="toastIcon" class="text-base">🔔</span>
     <span id="toastMsg">Уведомление</span>
   </div>
 
@@ -684,10 +748,10 @@
       if (!toast) return;
       document.getElementById('toastMsg').textContent = text;
       document.getElementById('toastIcon').textContent = icon;
-      toast.classList.remove('translate-y-24', 'opacity-0');
+      toast.classList.remove('-translate-y-24', 'opacity-0');
       clearTimeout(window.__toastTimer);
       window.__toastTimer = setTimeout(() => {
-        toast.classList.add('translate-y-24', 'opacity-0');
+        toast.classList.add('-translate-y-24', 'opacity-0');
       }, 2000);
     }
 
@@ -900,7 +964,7 @@
 
       dishes.forEach(dish => {
         const card = document.createElement('div');
-        card.className = "bg-stone-50 hover:bg-amber-50/60 border border-stone-200/90 hover:border-amber-400 rounded-2xl p-2.5 sm:p-3 flex flex-col justify-between cursor-pointer transition active:scale-95 shadow-2xs";
+        card.className = "bg-stone-50 hover:bg-amber-50/60 border border-stone-200/90 hover:border-amber-400 rounded-2xl p-3 sm:p-3.5 flex flex-col justify-between cursor-pointer transition active:scale-95 shadow-2xs";
         card.onclick = () => onDishCardClicked(dish);
 
         const categoryBadge = (query || currentCategory === 'all')
@@ -915,7 +979,7 @@
           </div>
           <div class="mt-2.5 pt-2 border-t border-stone-200/70 flex items-center justify-between">
             <span class="font-mono font-bold text-xs sm:text-sm text-amber-950">${dish.price} ₽</span>
-            <span class="w-6 h-6 rounded-lg bg-white border border-stone-200 flex items-center justify-center text-xs text-amber-900 font-bold shadow-2xs">+</span>
+            <span class="w-8 h-8 rounded-xl bg-amber-600 text-white flex items-center justify-center text-sm font-black shadow-xs active:scale-90 transition">+</span>
           </div>
         `;
         grid.appendChild(card);
@@ -943,10 +1007,10 @@
 
       dish.mods.forEach(modText => {
         const label = document.createElement('label');
-        label.className = "flex items-center gap-2.5 p-2 bg-stone-50 rounded-xl border border-stone-200 hover:bg-stone-100 cursor-pointer";
+        label.className = "flex items-center gap-3 p-3 bg-stone-50 rounded-xl border border-stone-200 active:bg-amber-50 hover:bg-stone-100 cursor-pointer transition select-none";
         label.innerHTML = `
-          <input type="checkbox" name="dishModifier" value="${modText}" class="rounded text-amber-700 focus:ring-0">
-          <span class="text-stone-800 font-semibold text-xs">${modText}</span>
+          <input type="checkbox" name="dishModifier" value="${modText}" class="w-5 h-5 rounded text-amber-700 focus:ring-0">
+          <span class="text-stone-900 font-semibold text-xs sm:text-sm">${modText}</span>
         `;
         container.appendChild(label);
       });
@@ -1068,17 +1132,17 @@
 
         row.innerHTML = `
           <div class="flex-1 min-w-0 pr-1">
-            <div class="font-bold text-stone-900 truncate text-xs">${item.name}</div>
-            <div class="text-[10px] text-stone-400 font-mono">${item.price} ₽ × ${item.qty} = <b class="text-stone-800">${lineTotal} ₽</b></div>
+            <div class="font-bold text-stone-900 truncate text-xs sm:text-sm">${item.name}</div>
+            <div class="text-[11px] text-stone-400 font-mono">${item.price} ₽ × ${item.qty} = <b class="text-stone-800 font-bold">${lineTotal} ₽</b></div>
             ${modsHtml}
           </div>
 
-          <div class="flex items-center gap-1 shrink-0">
-            <button onclick="changeItemQty(${index}, -1)" class="w-7 h-7 rounded-lg bg-white hover:bg-stone-200 border border-stone-300 font-bold flex items-center justify-center text-stone-700 active:scale-95 text-xs">
+          <div class="flex items-center gap-1.5 shrink-0">
+            <button onclick="changeItemQty(${index}, -1)" class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-white active:bg-amber-100 border border-stone-300 font-black flex items-center justify-center text-stone-800 active:scale-90 text-sm sm:text-base shadow-xs">
               -
             </button>
-            <span class="font-bold font-mono px-1 text-xs text-amber-950">${item.qty}</span>
-            <button onclick="changeItemQty(${index}, 1)" class="w-7 h-7 rounded-lg bg-white hover:bg-stone-200 border border-stone-300 font-bold flex items-center justify-center text-stone-700 active:scale-95 text-xs">
+            <span class="font-black font-mono px-1 text-sm sm:text-base text-amber-950 min-w-[22px] text-center">${item.qty}</span>
+            <button onclick="changeItemQty(${index}, 1)" class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-amber-600 active:bg-amber-700 text-white font-black flex items-center justify-center active:scale-90 text-sm sm:text-base shadow-xs">
               +
             </button>
           </div>
