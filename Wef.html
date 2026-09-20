@@ -37,6 +37,13 @@
       -ms-overflow-style: none;
       scrollbar-width: none;
     }
+    /* Smooth active bounce */
+    .btn-press {
+      transition: transform 0.1s ease, filter 0.15s ease;
+    }
+    .btn-press:active {
+      transform: scale(0.96);
+    }
   </style>
 </head>
 <body class="bg-stone-100 text-stone-900 min-h-screen flex flex-col antialiased select-none overflow-x-hidden">
@@ -197,12 +204,21 @@
         <div id="orderCartColumn" class="hidden lg:flex lg:col-span-5 xl:col-span-4 flex-col bg-white rounded-2xl border border-stone-200 shadow-xs p-3 space-y-2 min-h-0">
           
           <div class="flex items-center justify-between pb-2 border-b border-stone-200">
-            <span class="font-extrabold text-sm text-stone-900">Позиции в чеке</span>
-            <span id="ticketPersonsBadge" class="text-xs font-bold text-stone-500 bg-stone-100 px-2 py-0.5 rounded-lg">2 персоны</span>
+            <div class="flex items-center gap-1.5">
+              <span class="font-extrabold text-sm text-stone-900">Чек стола</span>
+              <span id="ticketKitchenStatusBadge" class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-stone-100 text-stone-600">Пусто</span>
+            </div>
+            <span id="ticketPersonsBadge" class="text-xs font-bold text-amber-900 bg-amber-100/80 px-2.5 py-0.5 rounded-lg">2 персоны</span>
+          </div>
+
+          <!-- Group Filter Tabs for Ticket (Все / По курсам) -->
+          <div class="flex items-center gap-1 bg-stone-100 p-1 rounded-xl text-[11px] font-bold text-stone-600">
+            <button onclick="setTicketGrouping('all')" id="ticketGroupBtn-all" class="flex-1 py-1 rounded-lg bg-white text-stone-900 shadow-2xs transition">По порядку</button>
+            <button onclick="setTicketGrouping('courses')" id="ticketGroupBtn-courses" class="flex-1 py-1 rounded-lg text-stone-500 hover:text-stone-900 transition">По курсам & кухне</button>
           </div>
 
           <!-- Items list container -->
-          <div id="ticketItemsContainer" class="flex-1 overflow-y-auto space-y-1.5 pr-0.5 min-h-[140px]">
+          <div id="ticketItemsContainer" class="flex-1 overflow-y-auto space-y-2 pr-0.5 min-h-[160px]">
             <!-- Rendered by JS -->
           </div>
 
@@ -218,9 +234,15 @@
               <span id="ticketTotalPrice" class="text-xl sm:text-2xl font-black font-mono text-amber-950">0 ₽</span>
             </div>
 
-            <button onclick="goToTablesView()" class="w-full py-2.5 bg-amber-900 hover:bg-amber-950 active:scale-95 text-white font-bold rounded-xl text-xs flex items-center justify-center gap-1.5 shadow-xs transition">
-              <span>✓</span> <span>Сохранить и вернуться в зал</span>
-            </button>
+            <!-- Action buttons: Send to kitchen & back -->
+            <div class="grid grid-cols-2 gap-2">
+              <button id="sendToKitchenBtn" onclick="sendNewItemsToKitchen()" class="py-2.5 px-2 bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-bold rounded-xl text-xs flex items-center justify-center gap-1.5 shadow-xs transition btn-press">
+                <span>🚀</span> <span>Отправить в цех</span>
+              </button>
+              <button onclick="goToTablesView()" class="py-2.5 px-2 bg-amber-950 hover:bg-stone-900 active:bg-black text-white font-bold rounded-xl text-xs flex items-center justify-center gap-1.5 shadow-xs transition btn-press">
+                <span>✓</span> <span>В зал столов</span>
+              </button>
+            </div>
           </div>
         </div>
 
@@ -581,6 +603,7 @@
     let currentCategory = 'salads';
     let currentView = 'tables'; // 'tables' | 'order'
     let orderMobileTab = 'menu'; // 'menu' | 'cart'
+    let ticketGrouping = 'all'; // 'all' | 'courses'
     let pendingModalTableId = null;
     let tempGuestsCount = 2;
     let pendingDishForModifiers = null;
@@ -602,130 +625,28 @@
       } catch(e) {}
     }
 
-    function goToTablesView() {
-      currentView = 'tables';
-      document.getElementById('view-tables').classList.remove('hidden');
-      document.getElementById('view-order').classList.add('hidden');
-      
-      const badge = document.getElementById('headerTableBadge');
-      const label = document.getElementById('headerTableLabel');
-      label.textContent = "К столам";
-      badge.classList.add('hidden');
-      
-      renderTables();
-    }
-
-    function goToOrderView(tableId) {
-      currentTableId = tableId;
-      currentView = 'order';
-      document.getElementById('view-tables').classList.add('hidden');
-      document.getElementById('view-order').classList.remove('hidden');
-
-      const currentTable = tables.find(t => t.id === tableId);
-      const badge = document.getElementById('headerTableBadge');
-      const label = document.getElementById('headerTableLabel');
-
-      if (currentTable) {
-        label.textContent = currentTable.name;
-        badge.textContent = `👥 ${currentTable.guests}`;
-        badge.classList.remove('hidden');
-      }
-
-      // Responsive layout reset
-      if (window.innerWidth >= 1024) {
-        document.getElementById('orderMenuColumn').classList.remove('hidden');
-        document.getElementById('orderCartColumn').classList.remove('hidden');
-        document.getElementById('orderCartColumn').classList.add('flex');
+    function setTicketGrouping(type) {
+      ticketGrouping = type;
+      const btnAll = document.getElementById('ticketGroupBtn-all');
+      const btnCourses = document.getElementById('ticketGroupBtn-courses');
+      if (type === 'all') {
+        btnAll.className = "flex-1 py-1 rounded-lg bg-white text-stone-900 shadow-2xs font-bold transition";
+        btnCourses.className = "flex-1 py-1 rounded-lg text-stone-500 hover:text-stone-900 font-bold transition";
       } else {
-        switchOrderMobileTab(orderMobileTab);
+        btnCourses.className = "flex-1 py-1 rounded-lg bg-white text-stone-900 shadow-2xs font-bold transition";
+        btnAll.className = "flex-1 py-1 rounded-lg text-stone-500 hover:text-stone-900 font-bold transition";
       }
-
       renderOrderScreen();
-      renderDishes();
     }
 
-    function toggleViewFromHeader() {
-      if (currentView === 'tables') {
-        goToOrderView(currentTableId);
-      } else {
-        goToTablesView();
+    function getDishDepartment(cat) {
+      if (['coffee_classic', 'coffee_author', 'coffee_cold', 'tea', 'smoothies', 'drinks', 'extras'].includes(cat)) {
+        return 'Бар';
       }
-    }
-
-    function switchOrderMobileTab(tab) {
-      orderMobileTab = tab;
-      const menuCol = document.getElementById('orderMenuColumn');
-      const cartCol = document.getElementById('orderCartColumn');
-      const tabMenuBtn = document.getElementById('mobileTabMenuBtn');
-      const tabCartBtn = document.getElementById('mobileTabCartBtn');
-      const floatingBtn = document.getElementById('mobileCartFloatingBtn');
-
-      if (tab === 'menu') {
-        menuCol.classList.remove('hidden');
-        cartCol.classList.add('hidden');
-        cartCol.classList.remove('flex');
-
-        tabMenuBtn.className = "flex-1 py-2 rounded-lg bg-white text-stone-900 shadow-xs flex items-center justify-center gap-1.5 transition";
-        tabCartBtn.className = "flex-1 py-2 rounded-lg text-stone-600 hover:text-stone-900 flex items-center justify-center gap-1.5 transition";
-        updateMobileFloatingBar();
-      } else {
-        menuCol.classList.add('hidden');
-        cartCol.classList.remove('hidden');
-        cartCol.classList.add('flex');
-
-        tabCartBtn.className = "flex-1 py-2 rounded-lg bg-white text-stone-900 shadow-xs flex items-center justify-center gap-1.5 transition";
-        tabMenuBtn.className = "flex-1 py-2 rounded-lg text-stone-600 hover:text-stone-900 flex items-center justify-center gap-1.5 transition";
-        if (floatingBtn) floatingBtn.classList.add('hidden');
+      if (['desserts'].includes(cat)) {
+        return 'Десерты';
       }
-    }
-
-    function showToast(text, icon = '🔔') {
-      const toast = document.getElementById('toast');
-      if (!toast) return;
-      document.getElementById('toastMsg').textContent = text;
-      document.getElementById('toastIcon').textContent = icon;
-      toast.classList.remove('-translate-y-24', 'opacity-0');
-      clearTimeout(window.__toastTimer);
-      window.__toastTimer = setTimeout(() => {
-        toast.classList.add('-translate-y-24', 'opacity-0');
-      }, 2000);
-    }
-
-    /* Web Audio API simple beep */
-    let audioCtx = null;
-    function playBeep() {
-      try {
-        const AudioClass = window.AudioContext || window.webkitAudioContext;
-        if (!audioCtx && AudioClass) audioCtx = new AudioClass();
-        if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
-        if (!audioCtx) return;
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-        osc.frequency.setValueAtTime(540, audioCtx.currentTime);
-        gain.gain.setValueAtTime(0.05, audioCtx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.08);
-        osc.connect(gain);
-        gain.connect(audioCtx.destination);
-        osc.start();
-        osc.stop(audioCtx.currentTime + 0.08);
-      } catch(e) {}
-    }
-
-    function filterZone(zone) {
-      currentZone = zone;
-      document.querySelectorAll('.zone-btn').forEach(btn => {
-        btn.className = "zone-btn px-3.5 py-2 rounded-xl bg-stone-100 text-stone-700 hover:bg-stone-200 font-bold transition";
-      });
-      const activeBtn = document.getElementById(`zone-btn-${zone}`);
-      if (activeBtn) {
-        activeBtn.className = "zone-btn px-3.5 py-2 rounded-xl bg-amber-950 text-white shadow-xs font-bold transition";
-      }
-      renderTables();
-    }
-
-    function calcTableSum(table) {
-      if (!table || !table.items) return 0;
-      return table.items.reduce((sum, it) => sum + (it.price * it.qty), 0);
+      return 'Кухня';
     }
 
     function renderTables() {
@@ -743,14 +664,26 @@
         const card = document.createElement('div');
 
         const bgClass = hasItems 
-          ? 'bg-amber-50/90 border-amber-300 ring-2 ring-amber-400/20 shadow-xs' 
-          : 'bg-white border-stone-200 hover:border-amber-400';
+          ? 'bg-amber-50/90 border-amber-300 ring-2 ring-amber-400/25 shadow-sm' 
+          : 'bg-white border-stone-200 hover:border-amber-400 hover:shadow-xs';
 
+        // Check if any items are pending to be sent
+        const hasUnsent = hasItems && table.items.some(it => !it.sentToKitchen);
         const statusLabel = hasItems 
-          ? `<span class="text-[10px] font-bold px-2 py-0.5 rounded-md bg-amber-200 text-amber-950">Заказ</span>` 
-          : `<span class="text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-800">Свободен</span>`;
+          ? (hasUnsent 
+              ? `<span class="text-[10px] font-bold px-2 py-0.5 rounded-md bg-amber-200 text-amber-950 flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-amber-600 animate-pulse"></span>Дозаказ</span>` 
+              : `<span class="text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-900 flex items-center gap-1"><span>✓</span>Готовится</span>`)
+          : `<span class="text-[10px] font-bold px-2 py-0.5 rounded-md bg-stone-100 text-stone-600">Свободен</span>`;
 
-        card.className = `p-3.5 sm:p-4 rounded-2xl border transition-all duration-150 cursor-pointer flex flex-col justify-between active:scale-98 select-none ${bgClass}`;
+        // Preview snippet of items in the table
+        let itemsSnippet = '';
+        if (hasItems) {
+          const names = table.items.map(it => `${it.qty}× ${it.name}`).slice(0, 3).join(', ');
+          const extraCount = table.items.length > 3 ? ` +${table.items.length - 3}` : '';
+          itemsSnippet = `<div class="mt-2 text-[11px] text-stone-600 line-clamp-1 bg-white/70 p-1 rounded-md border border-amber-200/60 font-medium">📋 ${names}${extraCount}</div>`;
+        }
+
+        card.className = `p-3.5 sm:p-4 rounded-2xl border transition-all duration-150 cursor-pointer flex flex-col justify-between active:scale-[0.98] select-none ${bgClass}`;
         card.onclick = () => onTableClicked(table.id);
 
         card.innerHTML = `
@@ -760,14 +693,15 @@
               ${statusLabel}
             </div>
             <div class="flex items-center gap-1.5 text-xs text-stone-500 mt-1">
-              <span>👥 ${table.guests} персоны</span>
+              <span class="font-semibold text-stone-700">👥 ${table.guests} перс.</span>
               <span>•</span>
-              <span class="capitalize text-[11px]">${table.zone === 'terrace' ? 'Терраса' : 'Зал'}</span>
+              <span class="text-[11px] capitalize">${table.zone === 'terrace' ? 'Терраса' : 'Основной зал'}</span>
             </div>
+            ${itemsSnippet}
           </div>
 
           <div class="mt-3 pt-2.5 border-t border-stone-200/80 flex items-center justify-between">
-            <span class="text-[11px] text-stone-400">${hasItems ? table.items.length + ' поз.' : 'Пусто'}</span>
+            <span class="text-[11px] text-stone-500 font-medium">${hasItems ? table.items.reduce((s, it) => s + it.qty, 0) + ' шт.' : 'Заказ пуст'}</span>
             <span class="font-mono font-bold text-xs sm:text-sm ${total > 0 ? 'text-amber-950 font-black' : 'text-stone-400'}">${total} ₽</span>
           </div>
         `;
@@ -910,80 +844,327 @@
 
         const isAdded = inOrderQty > 0;
         const bgClass = isAdded 
-          ? 'bg-amber-50/80 border-amber-400 shadow-xs' 
-          : 'bg-stone-50 hover:bg-stone-100/90 border-stone-200 hover:border-amber-400';
+          ? 'bg-amber-50/90 border-amber-400 ring-2 ring-amber-400/20 shadow-xs' 
+          : 'bg-white hover:bg-stone-50 border-stone-200 hover:border-amber-300';
 
-        card.className = `${bgClass} border rounded-2xl p-3 sm:p-3.5 flex flex-col justify-between cursor-pointer transition active:scale-[0.98] select-none`;
-        card.onclick = () => onDishCardClicked(dish);
+        card.className = `${bgClass} border rounded-2xl p-3 sm:p-3.5 flex flex-col justify-between transition select-none`;
 
         const categoryBadge = (query || currentCategory === 'all')
           ? `<span class="text-[9px] uppercase font-bold text-amber-800 bg-amber-100 px-1.5 py-0.5 rounded mr-1">${dish.catTitle}</span>`
           : '';
 
-        const inOrderBadge = isAdded
-          ? `<span class="text-[10px] font-bold bg-amber-600 text-white px-2 py-0.5 rounded-full font-mono shadow-2xs">В чеке: ${inOrderQty}</span>`
+        const hasModsBadge = (dish.mods && dish.mods.length > 0)
+          ? `<span class="text-[9px] font-semibold text-stone-500 bg-stone-100 px-1.5 py-0.5 rounded border border-stone-200">⚙️ Добавки</span>`
           : '';
 
-        const hasModsBadge = (dish.mods && dish.mods.length > 0)
-          ? `<span class="text-[9px] font-semibold text-stone-500 bg-stone-200/80 px-1.5 py-0.5 rounded">⚙️ Добавки</span>`
-          : '';
+        // If item is already added, provide instant + / - stepper on the card itself!
+        let actionControls = '';
+        if (isAdded) {
+          actionControls = `
+            <div class="flex items-center bg-amber-100/80 rounded-xl p-0.5 border border-amber-300" onclick="event.stopPropagation()">
+              <button onclick="quickChangeDishQty(${dish.id}, -1)" class="w-8 h-8 rounded-lg bg-white active:bg-amber-200 text-stone-800 font-bold flex items-center justify-center text-sm shadow-2xs btn-press">
+                -
+              </button>
+              <span class="w-8 text-center font-mono font-black text-xs text-amber-950">${inOrderQty}</span>
+              <button onclick="quickChangeDishQty(${dish.id}, 1)" class="w-8 h-8 rounded-lg bg-amber-600 active:bg-amber-700 text-white font-bold flex items-center justify-center text-sm shadow-2xs btn-press">
+                +
+              </button>
+            </div>
+          `;
+        } else {
+          actionControls = `
+            <button onclick="onDishCardClickedById(${dish.id})" class="h-9 px-3.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white flex items-center justify-center text-xs font-bold shadow-xs gap-1 btn-press">
+              <span>+</span> <span>Добавить</span>
+            </button>
+          `;
+        }
 
         card.innerHTML = `
-          <div>
+          <div onclick="onDishCardClickedById(${dish.id})" class="cursor-pointer">
             <div class="flex items-center justify-between gap-1 mb-1">
               <div class="flex items-center gap-1 flex-wrap">
                 ${categoryBadge}
                 ${hasModsBadge}
               </div>
-              ${inOrderBadge}
+              ${isAdded ? `<span class="text-[10px] font-bold bg-amber-700 text-white px-2 py-0.2 rounded-full font-mono">В чеке: ${inOrderQty}</span>` : ''}
             </div>
             <h4 class="font-bold text-xs sm:text-sm text-stone-900 leading-snug">${dish.name}</h4>
             <p class="text-[11px] text-stone-500 leading-tight mt-1 line-clamp-2">${dish.desc || ''}</p>
           </div>
 
-          <div class="mt-3 pt-2 border-t border-stone-200/80 flex items-center justify-between">
+          <div class="mt-3 pt-2 border-t border-stone-200/80 flex items-center justify-between gap-2">
             <span class="font-mono font-black text-sm sm:text-base text-amber-950">${dish.price} ₽</span>
-            <div class="flex items-center gap-1">
-              <span class="h-9 px-3 rounded-xl bg-amber-600 hover:bg-amber-700 active:scale-95 text-white flex items-center justify-center text-xs font-bold shadow-xs transition gap-1">
-                <span>+</span> <span>Добавить</span>
-              </span>
-            </div>
+            ${actionControls}
           </div>
         `;
         grid.appendChild(card);
       });
     }
 
-    function onDishCardClicked(dish) {
-      playBeep();
-      if (dish.mods && dish.mods.length > 0) {
-        pendingDishForModifiers = dish;
-        openModifiersModal(dish);
-      } else {
-        addDishToCurrentOrder(dish, []);
-      }
+    function onDishCardClickedById(dishId) {
+      const dish = FULL_MENU.find(d => d.id === dishId);
+      if (!dish) return;
+      onDishCardClicked(dish);
     }
 
-    function openModifiersModal(dish) {
-      document.getElementById('modCategoryTag').textContent = dish.catTitle;
-      document.getElementById('modDishName').textContent = dish.name;
-      document.getElementById('modDishPrice').textContent = `${dish.price} ₽`;
-      document.getElementById('modCustomCommentInput').value = '';
+    function quickChangeDishQty(dishId, delta) {
+      playBeep();
+      const table = tables.find(t => t.id === currentTableId);
+      if (!table || !table.items) return;
 
-      const container = document.getElementById('modCheckboxesContainer');
-      container.innerHTML = '';
+      // Find first occurrence of this dish
+      const idx = table.items.findIndex(it => it.dishId === dishId);
+      if (idx !== -1) {
+        changeItemQty(idx, delta);
+      } else if (delta > 0) {
+        const dish = FULL_MENU.find(d => d.id === dishId);
+        if (dish) onDishCardClicked(dish);
+      }
+    }
+    function addDishToCurrentOrder(dish, modifiers = [], course = '1-й курс') {
+      const table = tables.find(t => t.id === currentTableId);
+      if (!table) return;
 
-      dish.mods.forEach(modText => {
-        const label = document.createElement('label');
-        label.className = "flex items-center gap-3 p-3 bg-stone-50 rounded-xl border border-stone-200 active:bg-amber-50 hover:bg-stone-100 cursor-pointer transition select-none";
-        label.innerHTML = `
-          <input type="checkbox" name="dishModifier" value="${modText}" class="w-5 h-5 rounded text-amber-700 focus:ring-0">
-          <span class="text-stone-900 font-semibold text-xs sm:text-sm">${modText}</span>
-        `;
-        container.appendChild(label);
+      if (!table.items) table.items = [];
+
+      // Auto assign course if drinks or desserts
+      let assignedCourse = course;
+      if (['coffee_classic', 'coffee_author', 'coffee_cold', 'tea', 'smoothies', 'drinks'].includes(dish.cat)) {
+        assignedCourse = 'Напитки';
+      } else if (dish.cat === 'desserts') {
+        assignedCourse = 'Десерт';
+      }
+
+      const modSig = modifiers.slice().sort().join(' | ');
+      // Search for item with same modifiers and course, not yet sent
+      const existing = table.items.find(it => it.dishId === dish.id && it.modSig === modSig && it.course === assignedCourse && !it.sentToKitchen);
+
+      if (existing) {
+        existing.qty += 1;
+      } else {
+        table.items.push({
+          dishId: dish.id,
+          name: dish.name,
+          category: dish.cat || 'other',
+          department: getDishDepartment(dish.cat || 'other'),
+          price: dish.price,
+          qty: 1,
+          modifiers: modifiers,
+          modSig: modSig,
+          course: assignedCourse,
+          sentToKitchen: false,
+          addedAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        });
+      }
+
+      saveState();
+      renderOrderScreen();
+      renderDishes();
+      showToast(`+ ${dish.name}`, '🍽️');
+    }
+
+    function setItemCourse(index, newCourse) {
+      playBeep();
+      const table = tables.find(t => t.id === currentTableId);
+      if (!table || !table.items || !table.items[index]) return;
+      table.items[index].course = newCourse;
+      saveState();
+      renderOrderScreen();
+    }
+
+    function sendNewItemsToKitchen() {
+      const table = tables.find(t => t.id === currentTableId);
+      if (!table || !table.items || table.items.length === 0) {
+        showToast('Заказ пуст', '⚠️');
+        return;
+      }
+
+      const unsent = table.items.filter(it => !it.sentToKitchen);
+      if (unsent.length === 0) {
+        showToast('Все позиции уже отправлены в цех', '✓');
+        return;
+      }
+
+      unsent.forEach(it => {
+        it.sentToKitchen = true;
       });
 
-      document.getElementById('modifiersModal').classList.remove('hidden');
+      playBeep();
+      saveState();
+      renderOrderScreen();
+      renderTables();
+      showToast(`Заказ стола ${table.name} отправлен на кухню!`, '🚀');
+    }
+
+    function renderOrderScreen() {
+      const table = tables.find(t => t.id === currentTableId);
+      if (!table) return;
+
+      document.getElementById('activeOrderTitle').textContent = table.name;
+      document.getElementById('activeOrderSubtitle').textContent = `${table.guests || 2} персоны`;
+      document.getElementById('btnGuestsDisplay').textContent = `${table.guests || 2} чел.`;
+      document.getElementById('ticketPersonsBadge').textContent = `${table.guests || 2} персоны`;
+
+      const container = document.getElementById('ticketItemsContainer');
+      container.innerHTML = '';
+
+      if (!table.items || table.items.length === 0) {
+        container.innerHTML = `
+          <div class="h-full py-12 flex flex-col items-center justify-center text-center text-stone-400">
+            <span class="text-4xl mb-1 opacity-50">🛒</span>
+            <p class="text-xs font-bold text-stone-700">Заказ пока пуст</p>
+            <p class="text-[11px] text-stone-400">Выберите блюда из меню слева</p>
+          </div>
+        `;
+        document.getElementById('ticketTotalQty').textContent = '0 шт.';
+        document.getElementById('ticketTotalPrice').textContent = '0 ₽';
+        document.getElementById('mobileCartCountBadge').textContent = '0';
+        document.getElementById('ticketKitchenStatusBadge').textContent = 'Пусто';
+        document.getElementById('ticketKitchenStatusBadge').className = 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-stone-100 text-stone-600';
+        updateMobileFloatingBar();
+        return;
+      }
+
+      let totalQty = 0;
+      let totalSum = 0;
+      let hasUnsent = false;
+
+      table.items.forEach(it => {
+        totalQty += it.qty;
+        totalSum += it.price * it.qty;
+        if (!it.sentToKitchen) hasUnsent = true;
+      });
+
+      // Update badge
+      const statusBadge = document.getElementById('ticketKitchenStatusBadge');
+      if (hasUnsent) {
+        statusBadge.textContent = 'Есть новые позиции';
+        statusBadge.className = 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 border border-amber-300';
+      } else {
+        statusBadge.textContent = 'Все в готовке';
+        statusBadge.className = 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-900 border border-emerald-300';
+      }
+
+      // Grouping logic
+      if (ticketGrouping === 'courses') {
+        // Group by course
+        const coursesOrder = ['Напитки', '1-й курс', '2-й курс', 'Десерт', 'Свободно'];
+        const grouped = {};
+        coursesOrder.forEach(c => grouped[c] = []);
+        table.items.forEach((item, originalIndex) => {
+          const c = item.course || '1-й курс';
+          if (!grouped[c]) grouped[c] = [];
+          grouped[c].push({ item, index: originalIndex });
+        });
+
+        coursesOrder.forEach(courseName => {
+          const list = grouped[courseName];
+          if (!list || list.length === 0) return;
+
+          const groupHeader = document.createElement('div');
+          groupHeader.className = "flex items-center justify-between text-[11px] font-bold text-amber-900 bg-amber-100/60 px-2.5 py-1 rounded-lg mt-2";
+          groupHeader.innerHTML = `
+            <span>📍 ${courseName}</span>
+            <span class="font-mono text-stone-500">${list.reduce((s, x) => s + x.item.qty, 0)} шт.</span>
+          `;
+          container.appendChild(groupHeader);
+
+          list.forEach(({ item, index }) => {
+            container.appendChild(buildTicketRow(item, index));
+          });
+        });
+      } else {
+        // Flat list separated by sent vs unsent
+        const unsentItems = [];
+        const sentItems = [];
+        table.items.forEach((item, index) => {
+          if (item.sentToKitchen) sentItems.push({ item, index });
+          else unsentItems.push({ item, index });
+        });
+
+        if (unsentItems.length > 0) {
+          const header = document.createElement('div');
+          header.className = "text-[10px] font-black uppercase tracking-wider text-amber-900 bg-amber-100 px-2 py-1 rounded-md flex items-center justify-between";
+          header.innerHTML = `<span>⏳ Новые позиции (не отправлены)</span> <span class="font-mono">${unsentItems.length} поз.</span>`;
+          container.appendChild(header);
+
+          unsentItems.forEach(({ item, index }) => {
+            container.appendChild(buildTicketRow(item, index));
+          });
+        }
+
+        if (sentItems.length > 0) {
+          const header = document.createElement('div');
+          header.className = "text-[10px] font-black uppercase tracking-wider text-emerald-900 bg-emerald-100 px-2 py-1 rounded-md flex items-center justify-between mt-2";
+          header.innerHTML = `<span>✓ Уже на кухне / в баре</span> <span class="font-mono">${sentItems.length} поз.</span>`;
+          container.appendChild(header);
+
+          sentItems.forEach(({ item, index }) => {
+            container.appendChild(buildTicketRow(item, index));
+          });
+        }
+      }
+
+      document.getElementById('ticketTotalQty').textContent = `${totalQty} шт.`;
+      document.getElementById('ticketTotalPrice').textContent = `${totalSum} ₽`;
+      document.getElementById('mobileCartCountBadge').textContent = totalQty;
+
+      updateMobileFloatingBar();
+    }
+
+    function buildTicketRow(item, index) {
+      const lineTotal = item.price * item.qty;
+      const row = document.createElement('div');
+      
+      const isSent = item.sentToKitchen;
+      const bgStyle = isSent 
+        ? "bg-white border-stone-200" 
+        : "bg-amber-50/70 border-amber-300 ring-1 ring-amber-300/50";
+
+      row.className = `${bgStyle} p-2.5 rounded-2xl border text-xs flex flex-col gap-1.5 transition`;
+
+      const modsHtml = item.modifiers && item.modifiers.length > 0 
+        ? `<div class="text-[10px] text-amber-900 font-medium flex flex-wrap gap-1 mt-0.5">
+            ${item.modifiers.map(m => `<span class="bg-amber-100/90 px-1.5 py-0.2 rounded">${m}</span>`).join('')}
+           </div>` 
+        : '';
+
+      const statusTag = isSent 
+        ? `<span class="text-[9px] font-bold text-emerald-800 bg-emerald-100 px-1.5 py-0.5 rounded flex items-center gap-0.5">✓ Цех ${item.addedAt || ''}</span>`
+        : `<span class="text-[9px] font-bold text-amber-800 bg-amber-200/80 px-1.5 py-0.5 rounded">Новое</span>`;
+
+      row.innerHTML = `
+        <div class="flex items-start justify-between gap-1">
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center gap-1.5 flex-wrap">
+              <span class="font-bold text-stone-900 text-xs sm:text-sm leading-tight">${item.name}</span>
+              ${statusTag}
+            </div>
+            <div class="text-[11px] text-stone-500 font-mono mt-0.5">${item.price} ₽ × ${item.qty} = <b class="text-stone-900 font-bold">${lineTotal} ₽</b></div>
+            ${modsHtml}
+          </div>
+
+          <div class="flex items-center gap-1.5 shrink-0">
+            <button onclick="changeItemQty(${index}, -1)" class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-stone-100 active:bg-stone-200 text-stone-800 font-black flex items-center justify-center text-sm sm:text-base border border-stone-200 btn-press">
+              -
+            </button>
+            <span class="font-black font-mono px-1 text-sm sm:text-base text-amber-950 min-w-[20px] text-center">${item.qty}</span>
+            <button onclick="changeItemQty(${index}, 1)" class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-amber-600 active:bg-amber-700 text-white font-black flex items-center justify-center text-sm sm:text-base shadow-2xs btn-press">
+              +
+            </button>
+          </div>
+        </div>
+
+        <!-- Quick Course Pill Switcher -->
+        <div class="flex items-center gap-1 pt-1 border-t border-stone-100 text-[10px] font-semibold text-stone-500">
+          <span class="text-stone-400 mr-0.5">Подача:</span>
+          <button onclick="setItemCourse(${index}, 'Сразу')" class="px-2 py-0.5 rounded-lg border ${item.course === 'Сразу' ? 'bg-amber-800 text-white border-amber-800 font-bold' : 'bg-stone-50 text-stone-600 border-stone-200'}">⚡ Сразу</button>
+          <button onclick="setItemCourse(${index}, '1-й курс')" class="px-2 py-0.5 rounded-lg border ${item.course === '1-й курс' ? 'bg-amber-800 text-white border-amber-800 font-bold' : 'bg-stone-50 text-stone-600 border-stone-200'}">1 курс</button>
+          <button onclick="setItemCourse(${index}, '2-й курс')" class="px-2 py-0.5 rounded-lg border ${item.course === '2-й курс' ? 'bg-amber-800 text-white border-amber-800 font-bold' : 'bg-stone-50 text-stone-600 border-stone-200'}">2 курс</button>
+          <button onclick="setItemCourse(${index}, 'Десерт')" class="px-2 py-0.5 rounded-lg border ${item.course === 'Десерт' ? 'bg-amber-800 text-white border-amber-800 font-bold' : 'bg-stone-50 text-stone-600 border-stone-200'}">Десерт</button>
+        </div>
+      `;
+      return row;
     }
 
     function confirmDishWithModifiers() {
