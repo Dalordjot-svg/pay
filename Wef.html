@@ -608,6 +608,31 @@
     let tempGuestsCount = 2;
     let pendingDishForModifiers = null;
 
+    /* Safe Audio Synthesizer */
+    let audioCtx = null;
+    function playBeep() {
+      try {
+        if (!audioCtx) {
+          const AudioContext = window.AudioContext || window.webkitAudioContext;
+          if (AudioContext) audioCtx = new AudioContext();
+        }
+        if (audioCtx && audioCtx.state === 'suspended') {
+          audioCtx.resume();
+        }
+        if (!audioCtx) return;
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(650, audioCtx.currentTime);
+        gain.gain.setValueAtTime(0.04, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.08);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.08);
+      } catch (e) {}
+    }
+
     /* Load saved state */
     try {
       const saved = localStorage.getItem('coffeeman_waiter_tables_v3');
@@ -625,18 +650,24 @@
       } catch(e) {}
     }
 
-    function setTicketGrouping(type) {
-      ticketGrouping = type;
-      const btnAll = document.getElementById('ticketGroupBtn-all');
-      const btnCourses = document.getElementById('ticketGroupBtn-courses');
-      if (type === 'all') {
-        btnAll.className = "flex-1 py-1 rounded-lg bg-white text-stone-900 shadow-2xs font-bold transition";
-        btnCourses.className = "flex-1 py-1 rounded-lg text-stone-500 hover:text-stone-900 font-bold transition";
-      } else {
-        btnCourses.className = "flex-1 py-1 rounded-lg bg-white text-stone-900 shadow-2xs font-bold transition";
-        btnAll.className = "flex-1 py-1 rounded-lg text-stone-500 hover:text-stone-900 font-bold transition";
-      }
-      renderOrderScreen();
+    function calcTableSum(table) {
+      if (!table || !table.items) return 0;
+      return table.items.reduce((sum, it) => sum + (it.price * it.qty), 0);
+    }
+
+    let toastTimer = null;
+    function showToast(msg, icon = '🔔') {
+      const toast = document.getElementById('toast');
+      if (!toast) return;
+      document.getElementById('toastMsg').textContent = msg;
+      document.getElementById('toastIcon').textContent = icon;
+      toast.classList.remove('opacity-0', '-translate-y-24');
+      toast.classList.add('opacity-100', 'translate-y-0');
+      if (toastTimer) clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => {
+        toast.classList.remove('opacity-100', 'translate-y-0');
+        toast.classList.add('opacity-0', '-translate-y-24');
+      }, 2000);
     }
 
     function getDishDepartment(cat) {
@@ -647,6 +678,117 @@
         return 'Десерты';
       }
       return 'Кухня';
+    }
+
+    function goToTablesView() {
+      playBeep();
+      currentView = 'tables';
+      document.getElementById('view-tables').classList.remove('hidden');
+      document.getElementById('view-order').classList.add('hidden');
+      
+      const headerIcon = document.getElementById('headerTableIcon');
+      const headerLabel = document.getElementById('headerTableLabel');
+      const headerBadge = document.getElementById('headerTableBadge');
+      if (headerIcon) headerIcon.textContent = '🪑';
+      if (headerLabel) headerLabel.textContent = 'К столам';
+      if (headerBadge) headerBadge.classList.add('hidden');
+
+      renderTables();
+    }
+
+    function goToOrderView(tableId) {
+      currentTableId = tableId;
+      currentView = 'order';
+      document.getElementById('view-tables').classList.add('hidden');
+      document.getElementById('view-order').classList.remove('hidden');
+
+      const table = tables.find(t => t.id === tableId);
+      const headerBadge = document.getElementById('headerTableBadge');
+      const headerIcon = document.getElementById('headerTableIcon');
+      const headerLabel = document.getElementById('headerTableLabel');
+
+      if (headerBadge) {
+        headerBadge.textContent = table ? `№${table.id}` : '';
+        headerBadge.classList.remove('hidden');
+      }
+      if (headerIcon) headerIcon.textContent = '🍽️';
+      if (headerLabel) headerLabel.textContent = 'Стол';
+
+      switchOrderMobileTab('menu');
+      renderOrderScreen();
+      renderDishes();
+    }
+
+    function toggleViewFromHeader() {
+      if (currentView === 'order') {
+        goToTablesView();
+      } else {
+        goToOrderView(currentTableId);
+      }
+    }
+
+    function filterZone(zone) {
+      playBeep();
+      currentZone = zone;
+      document.querySelectorAll('.zone-btn').forEach(btn => {
+        btn.className = "zone-btn px-3.5 py-2 rounded-xl bg-stone-100 text-stone-700 hover:bg-stone-200 transition font-bold";
+      });
+      const activeBtn = document.getElementById(`zone-btn-${zone}`);
+      if (activeBtn) {
+        activeBtn.className = "zone-btn px-3.5 py-2 rounded-xl bg-amber-950 text-white shadow-xs font-bold transition";
+      }
+      renderTables();
+    }
+
+    function switchOrderMobileTab(tab) {
+      orderMobileTab = tab;
+      const menuCol = document.getElementById('orderMenuColumn');
+      const cartCol = document.getElementById('orderCartColumn');
+      const menuBtn = document.getElementById('mobileTabMenuBtn');
+      const cartBtn = document.getElementById('mobileTabCartBtn');
+      const floatingBar = document.getElementById('mobileCartFloatingBtn');
+
+      if (window.innerWidth < 1024) {
+        if (tab === 'menu') {
+          if (menuCol) menuCol.classList.remove('hidden');
+          if (cartCol) {
+            cartCol.classList.add('hidden');
+            cartCol.classList.remove('flex');
+          }
+          if (menuBtn) menuBtn.className = "flex-1 py-2.5 rounded-xl bg-white text-stone-900 shadow-xs flex items-center justify-center gap-1.5 transition";
+          if (cartBtn) cartBtn.className = "flex-1 py-2.5 rounded-xl text-stone-600 hover:text-stone-900 flex items-center justify-center gap-1.5 transition";
+        } else {
+          if (menuCol) menuCol.classList.add('hidden');
+          if (cartCol) {
+            cartCol.classList.remove('hidden');
+            cartCol.classList.add('flex');
+          }
+          if (cartBtn) cartBtn.className = "flex-1 py-2.5 rounded-xl bg-white text-stone-900 shadow-xs flex items-center justify-center gap-1.5 transition";
+          if (menuBtn) menuBtn.className = "flex-1 py-2.5 rounded-xl text-stone-600 hover:text-stone-900 flex items-center justify-center gap-1.5 transition";
+          if (floatingBar) floatingBar.classList.add('hidden');
+        }
+      } else {
+        if (menuCol) menuCol.classList.remove('hidden');
+        if (cartCol) {
+          cartCol.classList.remove('hidden');
+          cartCol.classList.add('flex');
+        }
+      }
+      updateMobileFloatingBar();
+    }
+
+    function setTicketGrouping(type) {
+      ticketGrouping = type;
+      const btnAll = document.getElementById('ticketGroupBtn-all');
+      const btnCourses = document.getElementById('ticketGroupBtn-courses');
+      if (type === 'all') {
+        if (btnAll) btnAll.className = "flex-1 py-1 rounded-lg bg-white text-stone-900 shadow-2xs font-bold transition";
+        if (btnCourses) btnCourses.className = "flex-1 py-1 rounded-lg text-stone-500 hover:text-stone-900 font-bold transition";
+      } else {
+        if (btnCourses) btnCourses.className = "flex-1 py-1 rounded-lg bg-white text-stone-900 shadow-2xs font-bold transition";
+        if (btnAll) btnAll.className = "flex-1 py-1 rounded-lg text-stone-500 hover:text-stone-900 font-bold transition";
+      }
+      renderOrderScreen();
     }
 
     function renderTables() {
@@ -667,7 +809,6 @@
           ? 'bg-amber-50/90 border-amber-300 ring-2 ring-amber-400/25 shadow-sm' 
           : 'bg-white border-stone-200 hover:border-amber-400 hover:shadow-xs';
 
-        // Check if any items are pending to be sent
         const hasUnsent = hasItems && table.items.some(it => !it.sentToKitchen);
         const statusLabel = hasItems 
           ? (hasUnsent 
@@ -675,7 +816,6 @@
               : `<span class="text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-900 flex items-center gap-1"><span>✓</span>Готовится</span>`)
           : `<span class="text-[10px] font-bold px-2 py-0.5 rounded-md bg-stone-100 text-stone-600">Свободен</span>`;
 
-        // Preview snippet of items in the table
         let itemsSnippet = '';
         if (hasItems) {
           const names = table.items.map(it => `${it.qty}× ${it.name}`).slice(0, 3).join(', ');
@@ -714,11 +854,9 @@
       const table = tables.find(t => t.id === tableId);
       if (!table) return;
 
-      // If table is free (no items), first ask how many persons
       if (!table.items || table.items.length === 0) {
         openGuestsModal(tableId);
       } else {
-        // If table already has an active order, go straight to order
         goToOrderView(tableId);
       }
     }
@@ -728,9 +866,11 @@
       const table = tables.find(t => t.id === tableId);
       tempGuestsCount = table ? (table.guests || 2) : 2;
 
-      document.getElementById('guestModalTableTag').textContent = table ? table.name : "Стол";
+      const tag = document.getElementById('guestModalTableTag');
+      if (tag) tag.textContent = table ? table.name : "Стол";
       updateGuestsModalButtons();
-      document.getElementById('guestsModal').classList.remove('hidden');
+      const modal = document.getElementById('guestsModal');
+      if (modal) modal.classList.remove('hidden');
     }
 
     function openGuestsModalForCurrentTable() {
@@ -750,7 +890,8 @@
     }
 
     function updateGuestsModalButtons() {
-      document.getElementById('guestDisplayVal').textContent = tempGuestsCount;
+      const display = document.getElementById('guestDisplayVal');
+      if (display) display.textContent = tempGuestsCount;
       document.querySelectorAll('.guest-btn').forEach((btn, idx) => {
         const val = idx + 1;
         if (val === tempGuestsCount) {
@@ -789,18 +930,22 @@
     function onSearchChange() {
       const q = document.getElementById('searchInput').value.trim();
       const clearBtn = document.getElementById('clearSearchBtn');
-      if (q.length > 0) {
-        clearBtn.classList.remove('hidden');
-      } else {
-        clearBtn.classList.add('hidden');
+      if (clearBtn) {
+        if (q.length > 0) {
+          clearBtn.classList.remove('hidden');
+        } else {
+          clearBtn.classList.add('hidden');
+        }
       }
       renderDishes();
     }
 
     function clearSearchInput() {
       const inp = document.getElementById('searchInput');
-      inp.value = '';
-      inp.focus();
+      if (inp) {
+        inp.value = '';
+        inp.focus();
+      }
       onSearchChange();
     }
 
@@ -836,8 +981,6 @@
 
       dishes.forEach(dish => {
         const card = document.createElement('div');
-        
-        // Count how many of this dish are already in current table's order
         const inOrderQty = currentItems
           .filter(it => it.dishId === dish.id)
           .reduce((sum, it) => sum + it.qty, 0);
@@ -857,7 +1000,6 @@
           ? `<span class="text-[9px] font-semibold text-stone-500 bg-stone-100 px-1.5 py-0.5 rounded border border-stone-200">⚙️ Добавки</span>`
           : '';
 
-        // If item is already added, provide instant + / - stepper on the card itself!
         let actionControls = '';
         if (isAdded) {
           actionControls = `
@@ -907,12 +1049,60 @@
       onDishCardClicked(dish);
     }
 
+    function onDishCardClicked(dish) {
+      playBeep();
+      if (dish.mods && dish.mods.length > 0) {
+        pendingDishForModifiers = dish;
+        const nameEl = document.getElementById('modDishName');
+        const catEl = document.getElementById('modCategoryTag');
+        const priceEl = document.getElementById('modDishPrice');
+        const container = document.getElementById('modCheckboxesContainer');
+        const commentInput = document.getElementById('modCustomCommentInput');
+
+        if (nameEl) nameEl.textContent = dish.name;
+        if (catEl) catEl.textContent = dish.catTitle || 'Позиция';
+        if (priceEl) priceEl.textContent = `${dish.price} ₽`;
+        if (commentInput) commentInput.value = '';
+
+        if (container) {
+          container.innerHTML = '';
+          dish.mods.forEach(mod => {
+            const label = document.createElement('label');
+            label.className = "flex items-center gap-2.5 p-2 bg-stone-50 hover:bg-amber-50 rounded-xl border border-stone-200 cursor-pointer transition select-none";
+            label.innerHTML = `
+              <input type="checkbox" name="dishModifier" value="${mod}" class="w-4 h-4 rounded text-amber-600 focus:ring-amber-500 border-stone-300">
+              <span class="font-medium text-stone-800 text-xs">${mod}</span>
+            `;
+            container.appendChild(label);
+          });
+        }
+        const modal = document.getElementById('modifiersModal');
+        if (modal) modal.classList.remove('hidden');
+      } else {
+        addDishToCurrentOrder(dish);
+      }
+    }
+
+    function confirmDishWithModifiers() {
+      if (!pendingDishForModifiers) return;
+      const checkedBoxes = document.querySelectorAll('input[name="dishModifier"]:checked');
+      const selectedMods = Array.from(checkedBoxes).map(cb => cb.value);
+      const customComment = (document.getElementById('modCustomCommentInput').value || '').trim();
+      
+      if (customComment) {
+        selectedMods.push(customComment);
+      }
+
+      addDishToCurrentOrder(pendingDishForModifiers, selectedMods);
+      closeModal('modifiersModal');
+      pendingDishForModifiers = null;
+    }
+
     function quickChangeDishQty(dishId, delta) {
       playBeep();
       const table = tables.find(t => t.id === currentTableId);
       if (!table || !table.items) return;
 
-      // Find first occurrence of this dish
       const idx = table.items.findIndex(it => it.dishId === dishId);
       if (idx !== -1) {
         changeItemQty(idx, delta);
@@ -921,13 +1111,13 @@
         if (dish) onDishCardClicked(dish);
       }
     }
+
     function addDishToCurrentOrder(dish, modifiers = [], course = '1-й курс') {
       const table = tables.find(t => t.id === currentTableId);
       if (!table) return;
 
       if (!table.items) table.items = [];
 
-      // Auto assign course if drinks or desserts
       let assignedCourse = course;
       if (['coffee_classic', 'coffee_author', 'coffee_cold', 'tea', 'smoothies', 'drinks'].includes(dish.cat)) {
         assignedCourse = 'Напитки';
@@ -936,7 +1126,6 @@
       }
 
       const modSig = modifiers.slice().sort().join(' | ');
-      // Search for item with same modifiers and course, not yet sent
       const existing = table.items.find(it => it.dishId === dish.id && it.modSig === modSig && it.course === assignedCourse && !it.sentToKitchen);
 
       if (existing) {
@@ -961,6 +1150,21 @@
       renderOrderScreen();
       renderDishes();
       showToast(`+ ${dish.name}`, '🍽️');
+    }
+
+    function changeItemQty(index, delta) {
+      playBeep();
+      const table = tables.find(t => t.id === currentTableId);
+      if (!table || !table.items || !table.items[index]) return;
+
+      table.items[index].qty += delta;
+      if (table.items[index].qty <= 0) {
+        table.items.splice(index, 1);
+      }
+
+      saveState();
+      renderOrderScreen();
+      renderDishes();
     }
 
     function setItemCourse(index, newCourse) {
@@ -996,16 +1200,35 @@
       showToast(`Заказ стола ${table.name} отправлен на кухню!`, '🚀');
     }
 
+    function clearCurrentOrder() {
+      const table = tables.find(t => t.id === currentTableId);
+      if (!table || !table.items || table.items.length === 0) {
+        showToast('Заказ уже пуст', 'ℹ️');
+        return;
+      }
+      table.items = [];
+      saveState();
+      renderOrderScreen();
+      renderDishes();
+      showToast(`${table.name} очищен`, '🗑️');
+    }
+
     function renderOrderScreen() {
       const table = tables.find(t => t.id === currentTableId);
       if (!table) return;
 
-      document.getElementById('activeOrderTitle').textContent = table.name;
-      document.getElementById('activeOrderSubtitle').textContent = `${table.guests || 2} персоны`;
-      document.getElementById('btnGuestsDisplay').textContent = `${table.guests || 2} чел.`;
-      document.getElementById('ticketPersonsBadge').textContent = `${table.guests || 2} персоны`;
+      const titleEl = document.getElementById('activeOrderTitle');
+      const subtitleEl = document.getElementById('activeOrderSubtitle');
+      const btnGuests = document.getElementById('btnGuestsDisplay');
+      const ticketBadge = document.getElementById('ticketPersonsBadge');
+
+      if (titleEl) titleEl.textContent = table.name;
+      if (subtitleEl) subtitleEl.textContent = `${table.guests || 2} персоны`;
+      if (btnGuests) btnGuests.textContent = `${table.guests || 2} чел.`;
+      if (ticketBadge) ticketBadge.textContent = `${table.guests || 2} персоны`;
 
       const container = document.getElementById('ticketItemsContainer');
+      if (!container) return;
       container.innerHTML = '';
 
       if (!table.items || table.items.length === 0) {
@@ -1019,8 +1242,11 @@
         document.getElementById('ticketTotalQty').textContent = '0 шт.';
         document.getElementById('ticketTotalPrice').textContent = '0 ₽';
         document.getElementById('mobileCartCountBadge').textContent = '0';
-        document.getElementById('ticketKitchenStatusBadge').textContent = 'Пусто';
-        document.getElementById('ticketKitchenStatusBadge').className = 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-stone-100 text-stone-600';
+        const stBadge = document.getElementById('ticketKitchenStatusBadge');
+        if (stBadge) {
+          stBadge.textContent = 'Пусто';
+          stBadge.className = 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-stone-100 text-stone-600';
+        }
         updateMobileFloatingBar();
         return;
       }
@@ -1035,19 +1261,18 @@
         if (!it.sentToKitchen) hasUnsent = true;
       });
 
-      // Update badge
       const statusBadge = document.getElementById('ticketKitchenStatusBadge');
-      if (hasUnsent) {
-        statusBadge.textContent = 'Есть новые позиции';
-        statusBadge.className = 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 border border-amber-300';
-      } else {
-        statusBadge.textContent = 'Все в готовке';
-        statusBadge.className = 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-900 border border-emerald-300';
+      if (statusBadge) {
+        if (hasUnsent) {
+          statusBadge.textContent = 'Есть новые позиции';
+          statusBadge.className = 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 border border-amber-300';
+        } else {
+          statusBadge.textContent = 'Все в готовке';
+          statusBadge.className = 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-900 border border-emerald-300';
+        }
       }
 
-      // Grouping logic
       if (ticketGrouping === 'courses') {
-        // Group by course
         const coursesOrder = ['Напитки', '1-й курс', '2-й курс', 'Десерт', 'Свободно'];
         const grouped = {};
         coursesOrder.forEach(c => grouped[c] = []);
@@ -1074,7 +1299,6 @@
           });
         });
       } else {
-        // Flat list separated by sent vs unsent
         const unsentItems = [];
         const sentItems = [];
         table.items.forEach((item, index) => {
@@ -1155,7 +1379,6 @@
           </div>
         </div>
 
-        <!-- Quick Course Pill Switcher -->
         <div class="flex items-center gap-1 pt-1 border-t border-stone-100 text-[10px] font-semibold text-stone-500">
           <span class="text-stone-400 mr-0.5">Подача:</span>
           <button onclick="setItemCourse(${index}, 'Сразу')" class="px-2 py-0.5 rounded-lg border ${item.course === 'Сразу' ? 'bg-amber-800 text-white border-amber-800 font-bold' : 'bg-stone-50 text-stone-600 border-stone-200'}">⚡ Сразу</button>
@@ -1165,148 +1388,6 @@
         </div>
       `;
       return row;
-    }
-
-    function confirmDishWithModifiers() {
-      if (!pendingDishForModifiers) return;
-      const checkedBoxes = document.querySelectorAll('input[name="dishModifier"]:checked');
-      const selectedMods = Array.from(checkedBoxes).map(cb => cb.value);
-      const customComment = document.getElementById('modCustomCommentInput').value.trim();
-      
-      if (customComment) {
-        selectedMods.push(customComment);
-      }
-
-      addDishToCurrentOrder(pendingDishForModifiers, selectedMods);
-      closeModal('modifiersModal');
-      pendingDishForModifiers = null;
-    }
-
-    function addDishToCurrentOrder(dish, modifiers = []) {
-      const table = tables.find(t => t.id === currentTableId);
-      if (!table) return;
-
-      if (!table.items) table.items = [];
-
-      const modSig = modifiers.slice().sort().join(' | ');
-      const existing = table.items.find(it => it.dishId === dish.id && it.modSig === modSig);
-
-      if (existing) {
-        existing.qty += 1;
-      } else {
-        table.items.push({
-          dishId: dish.id,
-          name: dish.name,
-          price: dish.price,
-          qty: 1,
-          modifiers: modifiers,
-          modSig: modSig
-        });
-      }
-
-      saveState();
-      renderOrderScreen();
-      renderDishes(); // Re-render to update the "В чеке: X" badges on cards
-      showToast(`Добавлено: ${dish.name}`, '➕');
-    }
-
-    function changeItemQty(index, delta) {
-      playBeep();
-      const table = tables.find(t => t.id === currentTableId);
-      if (!table || !table.items) return;
-
-      table.items[index].qty += delta;
-      if (table.items[index].qty <= 0) {
-        table.items.splice(index, 1);
-      }
-
-      saveState();
-      renderOrderScreen();
-      renderDishes(); // Update quantity indicators on menu items
-    }
-
-    function clearCurrentOrder() {
-      const table = tables.find(t => t.id === currentTableId);
-      if (!table || !table.items || table.items.length === 0) {
-        showToast('Заказ уже пуст', 'ℹ️');
-        return;
-      }
-      table.items = [];
-      saveState();
-      renderOrderScreen();
-      renderDishes();
-      showToast(`${table.name} очищен`, '🗑️');
-    }
-
-    function renderOrderScreen() {
-      const table = tables.find(t => t.id === currentTableId);
-      if (!table) return;
-
-      document.getElementById('activeOrderTitle').textContent = table.name;
-      document.getElementById('activeOrderSubtitle').textContent = `${table.guests || 2} персоны`;
-      document.getElementById('btnGuestsDisplay').textContent = `${table.guests || 2} чел.`;
-      document.getElementById('ticketPersonsBadge').textContent = `${table.guests || 2} персоны`;
-
-      const container = document.getElementById('ticketItemsContainer');
-      container.innerHTML = '';
-
-      if (!table.items || table.items.length === 0) {
-        container.innerHTML = `
-          <div class="h-full py-12 flex flex-col items-center justify-center text-center text-stone-400">
-            <span class="text-4xl mb-1 opacity-50">🛒</span>
-            <p class="text-xs font-bold text-stone-700">Заказ пока пуст</p>
-            <p class="text-[11px] text-stone-400">Выберите блюда из меню слева</p>
-          </div>
-        `;
-        document.getElementById('ticketTotalQty').textContent = '0 шт.';
-        document.getElementById('ticketTotalPrice').textContent = '0 ₽';
-        document.getElementById('mobileCartCountBadge').textContent = '0';
-        updateMobileFloatingBar();
-        return;
-      }
-
-      let totalQty = 0;
-      let totalSum = 0;
-
-      table.items.forEach((item, index) => {
-        totalQty += item.qty;
-        const lineTotal = item.price * item.qty;
-        totalSum += lineTotal;
-
-        const row = document.createElement('div');
-        row.className = "bg-stone-50 p-2 sm:p-2.5 rounded-xl border border-stone-200/80 text-xs flex items-center justify-between gap-1.5";
-
-        const modsHtml = item.modifiers && item.modifiers.length > 0 
-          ? `<div class="text-[10px] text-amber-800 mt-0.5 font-medium flex flex-wrap gap-1">
-              ${item.modifiers.map(m => `<span class="bg-amber-100 px-1.5 py-0.2 rounded font-semibold">${m}</span>`).join('')}
-             </div>` 
-          : '';
-
-        row.innerHTML = `
-          <div class="flex-1 min-w-0 pr-1">
-            <div class="font-bold text-stone-900 truncate text-xs sm:text-sm">${item.name}</div>
-            <div class="text-[11px] text-stone-400 font-mono">${item.price} ₽ × ${item.qty} = <b class="text-stone-800 font-bold">${lineTotal} ₽</b></div>
-            ${modsHtml}
-          </div>
-
-          <div class="flex items-center gap-1.5 shrink-0">
-            <button onclick="changeItemQty(${index}, -1)" class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-white active:bg-amber-100 border border-stone-300 font-black flex items-center justify-center text-stone-800 active:scale-90 text-sm sm:text-base shadow-xs">
-              -
-            </button>
-            <span class="font-black font-mono px-1 text-sm sm:text-base text-amber-950 min-w-[22px] text-center">${item.qty}</span>
-            <button onclick="changeItemQty(${index}, 1)" class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-amber-600 active:bg-amber-700 text-white font-black flex items-center justify-center active:scale-90 text-sm sm:text-base shadow-xs">
-              +
-            </button>
-          </div>
-        `;
-        container.appendChild(row);
-      });
-
-      document.getElementById('ticketTotalQty').textContent = `${totalQty} шт.`;
-      document.getElementById('ticketTotalPrice').textContent = `${totalSum} ₽`;
-      document.getElementById('mobileCartCountBadge').textContent = totalQty;
-
-      updateMobileFloatingBar();
     }
 
     function updateMobileFloatingBar() {
@@ -1368,10 +1449,15 @@
       table.items.push({
         dishId: 'custom_' + Date.now(),
         name: `★ ${name}`,
+        category: 'custom',
+        department: 'Кухня',
         price: price,
         qty: qty,
         modifiers: modifiers,
-        modSig: modifiers.join(' | ')
+        modSig: modifiers.join(' | '),
+        course: '1-й курс',
+        sentToKitchen: false,
+        addedAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       });
 
       saveState();
@@ -1385,7 +1471,6 @@
       if (el) el.classList.add('hidden');
     }
 
-    /* Resize listener to preserve split screen on tablet/desktop */
     window.addEventListener('resize', () => {
       if (window.innerWidth >= 1024) {
         const menu = document.getElementById('orderMenuColumn');
@@ -1404,7 +1489,6 @@
       }
     });
 
-    /* App bootstrap */
     window.addEventListener('DOMContentLoaded', () => {
       renderTables();
       renderDishes();
