@@ -169,70 +169,6 @@
           </div>
 
           <!-- Category Pills -->
-          <div class="flex items-center gap-2 overflow-x-auto pb-1.5 scrollbar-hide text-xs sm:text-sm font-bold shrink-0">
-            <button onclick="selectCategory('all')" class="cat-pill px-3.5 py-2 rounded-xl bg-stone-100 text-stone-700 hover:bg-stone-200 shrink-0" data-cat="all">⚡ Все</button>
-            <button onclick="selectCategory('breakfast')" class="cat-pill px-3.5 py-2 rounded-xl bg-stone-100 text-stone-700 hover:bg-stone-200 shrink-0" data-cat="breakfast">🍳 Завтраки</button>
-            <button onclick="selectCategory('summer')" class="cat-pill px-3.5 py-2 rounded-xl bg-stone-100 text-stone-700 hover:bg-stone-200 shrink-0" data-cat="summer">☀️ Лето & Закуски</button>
-            <button onclick="selectCategory('salads')" class="cat-pill px-3.5 py-2 rounded-xl bg-amber-950 text-white shadow-xs shrink-0" data-cat="salads">🥗 Салаты</button>
-            <button onclick="selectCategory('soups')" class="cat-pill px-3.5 py-2 rounded-xl bg-stone-100 text-stone-700 hover:bg-stone-200 shrink-0" data-cat="soups">🍲 Супы</button>
-            <button onclick="selectCategory('sandwiches')" class="cat-pill px-3.5 py-2 rounded-xl bg-stone-100 text-stone-700 hover:bg-stone-200 shrink-0" data-cat="sandwiches">🥪 Сэндвичи</button>
-            <button onclick="selectCategory('hot')" class="cat-pill px-3.5 py-2 rounded-xl bg-stone-100 text-stone-700 hover:bg-stone-200 shrink-0" data-cat="hot">🥩 Горячее</button>
-            <button onclick="selectCategory('garnishes')" class="cat-pill px-3.5 py-2 rounded-xl bg-stone-100 text-stone-700 hover:bg-stone-200 shrink-0" data-cat="garnishes">🍟 Гарниры</button>
-            <button onclick="selectCategory('desserts')" class="cat-pill px-3.5 py-2 rounded-xl bg-stone-100 text-stone-700 hover:bg-stone-200 shrink-0" data-cat="desserts">🍰 Десерты</button>
-            <button onclick="selectCategory('coffee_classic')" class="cat-pill px-3.5 py-2 rounded-xl bg-stone-100 text-stone-700 hover:bg-stone-200 shrink-0" data-cat="coffee_classic">☕ Кофе классика</button>
-            <button onclick="selectCategory('coffee_author')" class="cat-pill px-3.5 py-2 rounded-xl bg-stone-100 text-stone-700 hover:bg-stone-200 shrink-0" data-cat="coffee_author">✨ Авторский кофе</button>
-            <button onclick="selectCategory('coffee_cold')" class="cat-pill px-3.5 py-2 rounded-xl bg-stone-100 text-stone-700 hover:bg-stone-200 shrink-0" data-cat="coffee_cold">🧊 Холодный кофе</button>
-            <button onclick="selectCategory('tea')" class="cat-pill px-3.5 py-2 rounded-xl bg-stone-100 text-stone-700 hover:bg-stone-200 shrink-0" data-cat="tea">🫖 Чай & Горячее</button>
-            <button onclick="selectCategory('smoothies')" class="cat-pill px-3.5 py-2 rounded-xl bg-stone-100 text-stone-700 hover:bg-stone-200 shrink-0" data-cat="smoothies">🥤 Смузи & Шейки</button>
-            <button onclick="selectCategory('drinks')" class="cat-pill px-3.5 py-2 rounded-xl bg-stone-100 text-stone-700 hover:bg-stone-200 shrink-0" data-cat="drinks">🍹 Лимонады & Соки</button>
-            <button onclick="selectCategory('extras')" class="cat-pill px-3.5 py-2 rounded-xl bg-stone-100 text-stone-700 hover:bg-stone-200 shrink-0" data-cat="extras">🥛 Сиропы & Молоко</button>
-          </div>
-        </div>
-
-        <div class="flex items-center gap-1.5">
-          <!-- Guests Count Button -->
-          <button onclick="openGuestsModalForCurrentTable()" class="px-3 py-1.5 bg-amber-50 border border-amber-300 hover:bg-amber-100 rounded-xl text-xs font-bold text-amber-950 flex items-center gap-1 active:scale-95 transition">
-            <span>👥</span> <span id="btnGuestsDisplay">2 чел.</span>
-          </button>
-
-          <!-- Clear Table Order Button -->
-          <button onclick="clearCurrentOrder()" title="Очистить стол" class="p-2 text-stone-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl text-xs font-bold transition active:scale-95">
-            🗑️
-          </button>
-        </div>
-      </div>
-
-      <!-- Mobile Tabs Switcher (Menu / Cart) -->
-      <div class="lg:hidden flex items-center bg-stone-200/70 p-1 rounded-xl text-xs font-bold">
-        <button id="mobileTabMenuBtn" onclick="switchOrderMobileTab('menu')" class="flex-1 py-2 rounded-lg bg-white text-stone-900 shadow-xs flex items-center justify-center gap-1.5 transition">
-          <span>🍽️</span> <span>Меню блюд</span>
-        </button>
-        <button id="mobileTabCartBtn" onclick="switchOrderMobileTab('cart')" class="flex-1 py-2 rounded-lg text-stone-600 hover:text-stone-900 flex items-center justify-center gap-1.5 transition">
-          <span>🧾</span> <span>Чек стола</span>
-          <span id="mobileCartCountBadge" class="bg-amber-600 text-white text-[10px] px-1.5 py-0.2 rounded-full font-mono font-bold">0</span>
-        </button>
-      </div>
-
-      <div class="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-3 min-h-0">
-        
-        <!-- LEFT: MENU DISHES & SEARCH -->
-        <div id="orderMenuColumn" class="lg:col-span-7 xl:col-span-8 flex flex-col bg-white rounded-2xl border border-stone-200 shadow-xs p-2.5 sm:p-3 space-y-2.5 min-h-0">
-          
-          <!-- Fast Search & Custom Item -->
-          <div class="flex items-center gap-2">
-            <div class="relative flex-1">
-              <input type="text" id="searchInput" oninput="onSearchChange()" placeholder="Поиск по названию или описанию..."
-                     class="w-full bg-stone-50 border border-stone-200 rounded-xl py-2 pl-8 pr-7 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-amber-600 focus:bg-white transition">
-              <span class="absolute left-2.5 top-2.5 text-stone-400 text-xs">🔍</span>
-              <button id="clearSearchBtn" onclick="clearSearchInput()" class="hidden absolute right-2.5 top-2 text-stone-400 hover:text-stone-700 font-bold text-xs bg-stone-200 w-4 h-4 rounded-full flex items-center justify-center">✕</button>
-            </div>
-            
-            <button onclick="openCustomDishModal()" class="px-3 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-bold flex items-center gap-1 shadow-xs active:scale-95 transition shrink-0">
-              <span>✨</span> <span class="hidden sm:inline">+ Своя позиция</span><span class="sm:hidden">+ Своя</span>
-            </button>
-          </div>
-
-          <!-- Category Pills -->
           <div class="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-hide text-xs font-bold shrink-0">
             <button onclick="selectCategory('all')" class="cat-pill px-3 py-1.5 rounded-xl bg-stone-100 text-stone-700 hover:bg-stone-200 shrink-0" data-cat="all">⚡ Все</button>
             <button onclick="selectCategory('breakfast')" class="cat-pill px-3 py-1.5 rounded-xl bg-stone-100 text-stone-700 hover:bg-stone-200 shrink-0" data-cat="breakfast">🍳 Завтраки</button>
@@ -520,7 +456,7 @@
       /* СУПЫ */
       { id: 41, name: "Крем-суп из тыквы", cat: "soups", catTitle: "Супы", price: 350, desc: "Нежный тыквенный крем-суп с обжаренными тыквенными семечками", mods: ["Без семечек", "Гренки +40₽", "Погорячее"] },
       { id: 42, name: "Домашняя лапша", cat: "soups", catTitle: "Супы", price: 380, desc: "Домашняя лапша, перепелиные яйца, кусочки курицы, наваристый бульон", mods: ["Без зелени", "Погорячее"] },
-      { id: 43, name: "Борщ", cat: "soups", catTitle: "Супы", price: 460, desc: "Подаём со сметаной и свежей сочной зеленью", mods: ["Сметана отдельно", "Без зелени", "Без сметаны"] },
+      { id: 43, name: "Борщ", cat: "soups", catTitle: "Супы", price: 460, desc: "Подаём со сметаной / майонезом и свежей сочной зеленью", mods: ["Со сметаной", "С майонезом", "Сметана отдельно", "Майонез отдельно", "Без сметаны", "Без майонеза", "Без зелени", "Погорячее"] },
 
       /* СЭНДВИЧИ И НЕ ТОЛЬКО */
       { id: 51, name: "Тост с лососем", cat: "sandwiches", catTitle: "Сэндвичи", price: 430, desc: "Зерновой хлеб, слабосоленый лосось, крем-сыр, красный лук", mods: ["Без лука", "Хрустящий тост", "С собой"] },
@@ -940,6 +876,8 @@
       grid.innerHTML = '';
 
       const query = (document.getElementById('searchInput').value || '').toLowerCase().trim();
+      const currentTable = tables.find(t => t.id === currentTableId);
+      const currentItems = (currentTable && currentTable.items) ? currentTable.items : [];
 
       const dishes = FULL_MENU.filter(d => {
         const matchesCategory = (currentCategory === 'all') || (d.cat === currentCategory);
@@ -964,22 +902,52 @@
 
       dishes.forEach(dish => {
         const card = document.createElement('div');
-        card.className = "bg-stone-50 hover:bg-amber-50/60 border border-stone-200/90 hover:border-amber-400 rounded-2xl p-3 sm:p-3.5 flex flex-col justify-between cursor-pointer transition active:scale-95 shadow-2xs";
+        
+        // Count how many of this dish are already in current table's order
+        const inOrderQty = currentItems
+          .filter(it => it.dishId === dish.id)
+          .reduce((sum, it) => sum + it.qty, 0);
+
+        const isAdded = inOrderQty > 0;
+        const bgClass = isAdded 
+          ? 'bg-amber-50/80 border-amber-400 shadow-xs' 
+          : 'bg-stone-50 hover:bg-stone-100/90 border-stone-200 hover:border-amber-400';
+
+        card.className = `${bgClass} border rounded-2xl p-3 sm:p-3.5 flex flex-col justify-between cursor-pointer transition active:scale-[0.98] select-none`;
         card.onclick = () => onDishCardClicked(dish);
 
         const categoryBadge = (query || currentCategory === 'all')
-          ? `<span class="text-[9px] uppercase font-bold text-amber-800 bg-amber-100 px-1.5 py-0.2 rounded mb-1 inline-block">${dish.catTitle}</span>`
+          ? `<span class="text-[9px] uppercase font-bold text-amber-800 bg-amber-100 px-1.5 py-0.5 rounded mr-1">${dish.catTitle}</span>`
+          : '';
+
+        const inOrderBadge = isAdded
+          ? `<span class="text-[10px] font-bold bg-amber-600 text-white px-2 py-0.5 rounded-full font-mono shadow-2xs">В чеке: ${inOrderQty}</span>`
+          : '';
+
+        const hasModsBadge = (dish.mods && dish.mods.length > 0)
+          ? `<span class="text-[9px] font-semibold text-stone-500 bg-stone-200/80 px-1.5 py-0.5 rounded">⚙️ Добавки</span>`
           : '';
 
         card.innerHTML = `
           <div>
-            ${categoryBadge}
+            <div class="flex items-center justify-between gap-1 mb-1">
+              <div class="flex items-center gap-1 flex-wrap">
+                ${categoryBadge}
+                ${hasModsBadge}
+              </div>
+              ${inOrderBadge}
+            </div>
             <h4 class="font-bold text-xs sm:text-sm text-stone-900 leading-snug">${dish.name}</h4>
             <p class="text-[11px] text-stone-500 leading-tight mt-1 line-clamp-2">${dish.desc || ''}</p>
           </div>
-          <div class="mt-2.5 pt-2 border-t border-stone-200/70 flex items-center justify-between">
-            <span class="font-mono font-bold text-xs sm:text-sm text-amber-950">${dish.price} ₽</span>
-            <span class="w-8 h-8 rounded-xl bg-amber-600 text-white flex items-center justify-center text-sm font-black shadow-xs active:scale-90 transition">+</span>
+
+          <div class="mt-3 pt-2 border-t border-stone-200/80 flex items-center justify-between">
+            <span class="font-mono font-black text-sm sm:text-base text-amber-950">${dish.price} ₽</span>
+            <div class="flex items-center gap-1">
+              <span class="h-9 px-3 rounded-xl bg-amber-600 hover:bg-amber-700 active:scale-95 text-white flex items-center justify-center text-xs font-bold shadow-xs transition gap-1">
+                <span>+</span> <span>Добавить</span>
+              </span>
+            </div>
           </div>
         `;
         grid.appendChild(card);
@@ -1057,6 +1025,7 @@
 
       saveState();
       renderOrderScreen();
+      renderDishes(); // Re-render to update the "В чеке: X" badges on cards
       showToast(`Добавлено: ${dish.name}`, '➕');
     }
 
@@ -1072,6 +1041,7 @@
 
       saveState();
       renderOrderScreen();
+      renderDishes(); // Update quantity indicators on menu items
     }
 
     function clearCurrentOrder() {
@@ -1083,6 +1053,7 @@
       table.items = [];
       saveState();
       renderOrderScreen();
+      renderDishes();
       showToast(`${table.name} очищен`, '🗑️');
     }
 
