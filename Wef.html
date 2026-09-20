@@ -3,58 +3,32 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>COFFEEMAN • POS Терминал Официанта и Кассира</title>
+  <title>COFFEEMAN • Заказ столов и меню</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          fontFamily: {
-            sans: ['Inter', 'sans-serif'],
-            mono: ['JetBrains Mono', 'monospace'],
-            serif: ['Playfair Display', 'serif'],
-          },
-          colors: {
-            brand: {
-              50: '#fbf8f5',
-              100: '#f5efe6',
-              200: '#e9dcce',
-              500: '#9b714b',
-              600: '#845834',
-              700: '#6d4323',
-              800: '#4e2d14',
-              900: '#341d0c',
-              950: '#221107'
-            }
-          }
-        }
-      }
-    }
-  </script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
   <style>
-    ::-webkit-scrollbar {
-      width: 5px;
-      height: 5px;
-    }
-    ::-webkit-scrollbar-track {
-      background: transparent;
-    }
-    ::-webkit-scrollbar-thumb {
-      background: #d4c5b9;
-      border-radius: 9999px;
-    }
-    ::-webkit-scrollbar-thumb:hover {
-      background: #a89485;
-    }
     * {
       -webkit-tap-highlight-color: transparent;
       touch-action: manipulation;
     }
+    body {
+      font-family: 'Inter', sans-serif;
+    }
+    .font-mono {
+      font-family: 'JetBrains Mono', monospace;
+    }
     .pb-safe {
       padding-bottom: max(env(safe-area-inset-bottom, 16px), 16px);
+    }
+    ::-webkit-scrollbar {
+      width: 4px;
+      height: 4px;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 9999px;
     }
     .scrollbar-hide::-webkit-scrollbar {
       display: none;
@@ -65,339 +39,204 @@
     }
   </style>
 </head>
-<body class="bg-stone-100 text-stone-800 min-h-screen flex flex-col font-sans select-none antialiased pb-20 lg:pb-0 overflow-x-hidden">
+<body class="bg-stone-100 text-stone-900 min-h-screen flex flex-col antialiased select-none overflow-x-hidden">
 
-  <!-- Top Navigation Header -->
-  <header class="bg-brand-900 text-stone-100 shadow-md border-b border-brand-800 z-30 sticky top-0">
-    <div class="max-w-7xl mx-auto px-3 sm:px-4 py-2 sm:py-2.5 flex items-center justify-between gap-2">
+  <header class="bg-amber-950 text-stone-100 sticky top-0 z-40 shadow-md border-b border-amber-900/60">
+    <div class="max-w-6xl mx-auto px-3 sm:px-4 py-2.5 flex items-center justify-between gap-2">
       
-      <!-- Brand & Waiter badge -->
-      <div class="flex items-center gap-2 sm:gap-3 cursor-pointer" onclick="setMainView('tables')">
-        <div class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-amber-500 text-brand-950 font-serif font-black flex items-center justify-center text-lg sm:text-xl shadow-inner">
+      <!-- Brand & Navigation to Tables -->
+      <button onclick="goToTablesView()" class="flex items-center gap-2.5 text-left active:opacity-80 transition">
+        <div class="w-9 h-9 rounded-xl bg-amber-500 text-amber-950 font-black flex items-center justify-center text-lg shadow-sm">
           ☕
         </div>
         <div>
           <div class="flex items-center gap-1.5">
-            <span class="font-serif font-bold tracking-wider text-sm sm:text-base">COFFEEMAN</span>
-            <span class="text-[9px] uppercase font-bold tracking-widest bg-brand-800 text-amber-300 px-1.5 py-0.5 rounded">POS</span>
+            <span class="font-extrabold tracking-wide text-sm sm:text-base">COFFEEMAN</span>
+            <span class="text-[10px] bg-amber-800 text-amber-200 px-1.5 py-0.2 rounded font-bold">ОФИЦИАНТ</span>
           </div>
-          <p class="text-[10px] sm:text-[11px] text-stone-300 truncate max-w-[130px] sm:max-w-none">Официант: <strong class="text-white">Алексей М.</strong></p>
+          <p class="text-[11px] text-amber-200/80">Заказ & Персоны</p>
         </div>
-      </div>
+      </button>
 
-      <!-- Desktop Mode Selector Tabs -->
-      <div class="hidden lg:flex items-center bg-brand-950/70 p-1 rounded-xl border border-white/10 text-xs font-semibold gap-1">
-        <button onclick="setMainView('tables')" id="nav-tables" class="nav-tab px-3.5 py-1.5 rounded-lg bg-amber-500 text-brand-950 shadow-xs flex items-center gap-1.5 transition font-bold">
-          <span>🪑</span> <span>Зал / Столы</span>
-        </button>
-        <button onclick="openOrderViewDirect()" id="nav-order" class="nav-tab px-3.5 py-1.5 rounded-lg text-stone-300 hover:text-white hover:bg-white/5 transition flex items-center gap-1.5">
-          <span>📝</span> <span>Заказ</span>
-          <span id="activeTableBadge" class="hidden text-[10px] bg-amber-400 text-brand-950 px-1.5 py-0.2 rounded-full font-bold">№1</span>
-        </button>
-        <button onclick="setMainView('kds')" id="nav-kds" class="nav-tab px-3.5 py-1.5 rounded-lg text-stone-300 hover:text-white hover:bg-white/5 transition flex items-center gap-1.5">
-          <span>🍳</span> <span>Кухня (КДС)</span>
-          <span id="kdsBadge" class="bg-rose-500 text-white text-[10px] px-1.5 rounded-full font-bold">0</span>
-        </button>
-        <button onclick="setMainView('cashier')" id="nav-cashier" class="nav-tab px-3.5 py-1.5 rounded-lg text-stone-300 hover:text-white hover:bg-white/5 transition flex items-center gap-1.5">
-          <span>💳</span> <span>Касса & Z-Отчет</span>
+      <!-- Active Table Indicator & Switcher -->
+      <div class="flex items-center gap-2">
+        <button id="headerTableBtn" onclick="toggleViewFromHeader()" class="px-3 py-1.5 rounded-xl bg-amber-900/80 hover:bg-amber-800 border border-amber-700/50 text-xs font-bold text-amber-200 flex items-center gap-1.5 transition">
+          <span id="headerTableIcon">🪑</span>
+          <span id="headerTableLabel">К столам</span>
+          <span id="headerTableBadge" class="hidden font-mono px-1.5 py-0.2 rounded-md bg-amber-400 text-amber-950 text-[11px]">№1</span>
         </button>
       </div>
 
-      <!-- Revenue Counter & Live Clock -->
-      <div class="flex items-center gap-2 sm:gap-3">
-        <div class="text-right">
-          <div class="text-[9px] uppercase font-bold text-amber-300/80">Выручка</div>
-          <div id="headerRevenue" class="font-mono font-bold text-amber-400 text-xs sm:text-sm">0 ₽</div>
-        </div>
-        <div id="liveClock" class="hidden sm:block font-mono text-xs text-stone-300 bg-brand-800/80 px-2 py-1 rounded-lg border border-white/10">
-          12:00
-        </div>
-      </div>
     </div>
   </header>
 
-  <!-- Mobile Bottom Navigation Bar -->
-  <nav class="lg:hidden fixed bottom-0 left-0 right-0 bg-brand-950 text-stone-300 border-t border-white/10 z-40 px-2 py-1.5 pb-safe flex items-center justify-around shadow-2xl backdrop-blur-md">
-    <button onclick="setMainView('tables')" id="bnav-tables" class="bnav-btn flex-1 py-1 flex flex-col items-center gap-0.5 text-amber-400 transition">
-      <span class="text-lg leading-none">🪑</span>
-      <span class="text-[10px] font-bold">Столы</span>
-    </button>
-    <button onclick="openOrderViewDirect()" id="bnav-order" class="bnav-btn relative flex-1 py-1 flex flex-col items-center gap-0.5 text-stone-400 hover:text-white transition">
-      <span class="text-lg leading-none">📝</span>
-      <span class="text-[10px] font-bold">Заказ</span>
-      <span id="bnavTableBadge" class="hidden absolute top-0.5 right-6 w-2 h-2 bg-amber-400 rounded-full ring-2 ring-brand-950"></span>
-    </button>
-    <button onclick="setMainView('kds')" id="bnav-kds" class="bnav-btn relative flex-1 py-1 flex flex-col items-center gap-0.5 text-stone-400 hover:text-white transition">
-      <span class="text-lg leading-none">🍳</span>
-      <span class="text-[10px] font-bold">Кухня</span>
-      <span id="bnavKdsBadge" class="hidden absolute top-0 right-4 bg-rose-500 text-white text-[8px] font-bold px-1 rounded-full">0</span>
-    </button>
-    <button onclick="setMainView('cashier')" id="bnav-cashier" class="bnav-btn flex-1 py-1 flex flex-col items-center gap-0.5 text-stone-400 hover:text-white transition">
-      <span class="text-lg leading-none">💳</span>
-      <span class="text-[10px] font-bold">Касса</span>
-    </button>
-  </nav>
+  <main class="flex-1 max-w-6xl w-full mx-auto p-2.5 sm:p-4 flex flex-col min-h-0">
 
-  <main class="flex-1 max-w-7xl w-full mx-auto p-2.5 sm:p-4 flex flex-col min-h-0 overflow-hidden">
-
-    <!-- ================= VIEW 1: TABLES FLOOR PLAN ================= -->
-    <section id="view-tables" class="flex-1 flex flex-col space-y-3 min-h-0">
+    <!-- ================================================================= -->
+    <!-- VIEW 1: TABLES FLOOR (11 HALL + 5 TERRACE = 16 TABLES)           -->
+    <!-- ================================================================= -->
+    <section id="view-tables" class="flex-1 flex flex-col space-y-3">
       
-      <!-- Floor Plan Filter Bar -->
-      <div class="bg-white p-2.5 sm:p-3.5 rounded-2xl border border-stone-200 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-        <div class="flex items-center gap-1.5 overflow-x-auto text-xs font-semibold pb-1 sm:pb-0 scrollbar-hide">
-          <span class="text-stone-400 mr-1 hidden sm:inline">Зоны:</span>
-          <button onclick="filterHall('all')" class="hall-btn shrink-0 px-3 py-1.5 rounded-xl bg-brand-800 text-white" data-zone="all">Все (18)</button>
-          <button onclick="filterHall('main')" class="hall-btn shrink-0 px-3 py-1.5 rounded-xl bg-stone-100 text-stone-600 hover:bg-stone-200" data-zone="main">Зал (11)</button>
-          <button onclick="filterHall('veranda')" class="hall-btn shrink-0 px-3 py-1.5 rounded-xl bg-stone-100 text-stone-600 hover:bg-stone-200" data-zone="veranda">Терраса (5)</button>
-          <button onclick="filterHall('bar')" class="hall-btn shrink-0 px-3 py-1.5 rounded-xl bg-stone-100 text-stone-600 hover:bg-stone-200" data-zone="bar">Бар (2)</button>
+      <!-- Zone selection and quick summary -->
+      <div class="bg-white p-3 rounded-2xl border border-stone-200 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+        <div class="flex items-center gap-1.5 overflow-x-auto scrollbar-hide text-xs font-bold">
+          <button onclick="filterZone('all')" id="zone-btn-all" class="zone-btn px-3.5 py-2 rounded-xl bg-amber-950 text-white shadow-xs">
+            Все столы (16)
+          </button>
+          <button onclick="filterZone('hall')" id="zone-btn-hall" class="zone-btn px-3.5 py-2 rounded-xl bg-stone-100 text-stone-700 hover:bg-stone-200">
+            Зал (11)
+          </button>
+          <button onclick="filterZone('terrace')" id="zone-btn-terrace" class="zone-btn px-3.5 py-2 rounded-xl bg-stone-100 text-stone-700 hover:bg-stone-200">
+            Терраса (5)
+          </button>
         </div>
 
-        <div class="flex items-center justify-between sm:justify-end gap-2 text-xs font-medium">
-          <div class="flex items-center gap-2 text-[11px]">
-            <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>Своб.</span>
-            <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span>Занят</span>
-            <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-indigo-500"></span>Пречек</span>
+        <div class="flex items-center gap-3 text-xs font-semibold text-stone-500">
+          <div class="flex items-center gap-1.5">
+            <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+            <span>Свободен</span>
           </div>
-          <button onclick="quickNewOrder()" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white rounded-xl font-bold flex items-center gap-1 shadow-xs transition text-xs">
-            <span>+</span> С собой
+          <div class="flex items-center gap-1.5">
+            <span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
+            <span>С заказом</span>
+          </div>
+        </div>
+      </div>
+
+      <div id="tablesGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 gap-2.5 sm:gap-3.5 overflow-y-auto pr-0.5">
+        <!-- Rendered by JS -->
+      </div>
+    </section>
+
+    <!-- ================================================================= -->
+    <!-- VIEW 2: ORDER & DISHES WITH DESCRIPTIONS AND ADDITIVES           -->
+    <!-- ================================================================= -->
+    <section id="view-order" class="hidden flex-1 flex flex-col min-h-0 space-y-2.5">
+
+      <!-- Order Top Control Bar -->
+      <div class="bg-white p-2.5 sm:p-3 rounded-2xl border border-stone-200 shadow-xs flex items-center justify-between gap-2">
+        <div class="flex items-center gap-2">
+          <button onclick="goToTablesView()" class="px-2.5 py-1.5 bg-stone-100 hover:bg-stone-200 text-stone-700 rounded-xl text-xs font-bold flex items-center gap-1 active:scale-95 transition">
+            <span>←</span> <span>Столы</span>
+          </button>
+          <div>
+            <h2 id="activeOrderTitle" class="font-extrabold text-sm sm:text-base text-stone-900 leading-tight">Стол 1</h2>
+            <p id="activeOrderSubtitle" class="text-[11px] text-stone-500">2 персоны</p>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-1.5">
+          <!-- Guests Count Button -->
+          <button onclick="openGuestsModalForCurrentTable()" class="px-3 py-1.5 bg-amber-50 border border-amber-300 hover:bg-amber-100 rounded-xl text-xs font-bold text-amber-950 flex items-center gap-1 active:scale-95 transition">
+            <span>👥</span> <span id="btnGuestsDisplay">2 чел.</span>
+          </button>
+
+          <!-- Clear Table Order Button -->
+          <button onclick="clearCurrentOrder()" title="Очистить стол" class="p-2 text-stone-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl text-xs font-bold transition active:scale-95">
+            🗑️
           </button>
         </div>
       </div>
 
-      <!-- Tables Grid Area -->
-      <div id="tablesGrid" class="flex-1 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2.5 sm:gap-3.5 overflow-y-auto pr-0.5 pb-2">
-        <!-- Rendered dynamically -->
-      </div>
-    </section>
-
-    <!-- ================= VIEW 2: ORDER & DISHES MENU ================= -->
-    <section id="view-order" class="hidden flex-1 flex flex-col min-h-0 relative">
-
-      <!-- Mobile sub-header tab selector (Menu / Cart) -->
-      <div class="lg:hidden flex items-center bg-stone-200/80 p-1 rounded-xl mb-2 text-xs font-bold shrink-0">
-        <button id="orderSubTabMenu" onclick="switchOrderSubTab('menu')" class="flex-1 py-2 rounded-lg bg-white text-stone-900 shadow-xs flex items-center justify-center gap-1.5 transition">
-          <span>🍽️</span> <span>Выбор блюд</span>
+      <!-- Mobile Tabs Switcher (Menu / Cart) -->
+      <div class="lg:hidden flex items-center bg-stone-200/70 p-1 rounded-xl text-xs font-bold">
+        <button id="mobileTabMenuBtn" onclick="switchOrderMobileTab('menu')" class="flex-1 py-2 rounded-lg bg-white text-stone-900 shadow-xs flex items-center justify-center gap-1.5 transition">
+          <span>🍽️</span> <span>Меню блюд</span>
         </button>
-        <button id="orderSubTabCart" onclick="switchOrderSubTab('cart')" class="flex-1 py-2 rounded-lg text-stone-600 hover:text-stone-900 flex items-center justify-center gap-1.5 transition">
+        <button id="mobileTabCartBtn" onclick="switchOrderMobileTab('cart')" class="flex-1 py-2 rounded-lg text-stone-600 hover:text-stone-900 flex items-center justify-center gap-1.5 transition">
           <span>🧾</span> <span>Чек стола</span>
-          <span id="mobileCartBadge" class="bg-amber-600 text-white text-[10px] px-1.5 py-0.2 rounded-full font-bold">0</span>
+          <span id="mobileCartCountBadge" class="bg-amber-600 text-white text-[10px] px-1.5 py-0.2 rounded-full font-mono font-bold">0</span>
         </button>
       </div>
 
-      <!-- Main Order Flex Grid -->
-      <div class="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-3 min-h-0 overflow-hidden">
+      <div class="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-3 min-h-0">
         
-        <!-- LEFT: MENU CATEGORIES & DISHES -->
-        <div id="orderMenuPanel" class="lg:col-span-7 xl:col-span-8 flex flex-col bg-white rounded-2xl border border-stone-200 shadow-xs p-2.5 sm:p-3 space-y-2 min-h-0 overflow-hidden">
+        <!-- LEFT: MENU DISHES & SEARCH -->
+        <div id="orderMenuColumn" class="lg:col-span-7 xl:col-span-8 flex flex-col bg-white rounded-2xl border border-stone-200 shadow-xs p-2.5 sm:p-3 space-y-2.5 min-h-0">
           
-          <!-- Category Pills -->
-          <div class="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-hide text-xs font-bold shrink-0">
-            <button onclick="filterMenu('all')" class="menu-cat-btn px-3 py-1.5 rounded-xl bg-stone-100 text-stone-700 hover:bg-stone-200 shrink-0" data-cat="all">⚡ Все</button>
-            <button onclick="filterMenu('breakfast')" class="menu-cat-btn px-3 py-1.5 rounded-xl bg-stone-100 text-stone-700 hover:bg-stone-200 shrink-0" data-cat="breakfast">🍳 Завтраки</button>
-            <button onclick="filterMenu('summer')" class="menu-cat-btn px-3 py-1.5 rounded-xl bg-stone-100 text-stone-700 hover:bg-stone-200 shrink-0" data-cat="summer">☀️ Лето & Закуски</button>
-            <button onclick="filterMenu('salads')" class="menu-cat-btn px-3 py-1.5 rounded-xl bg-brand-800 text-white shadow-xs shrink-0" data-cat="salads">🥗 Салаты</button>
-            <button onclick="filterMenu('soups')" class="menu-cat-btn px-3 py-1.5 rounded-xl bg-stone-100 text-stone-700 hover:bg-stone-200 shrink-0" data-cat="soups">🍲 Супы</button>
-            <button onclick="filterMenu('sandwiches')" class="menu-cat-btn px-3 py-1.5 rounded-xl bg-stone-100 text-stone-700 hover:bg-stone-200 shrink-0" data-cat="sandwiches">🥪 Сэндвичи</button>
-            <button onclick="filterMenu('hot')" class="menu-cat-btn px-3 py-1.5 rounded-xl bg-stone-100 text-stone-700 hover:bg-stone-200 shrink-0" data-cat="hot">🥩 Горячее</button>
-            <button onclick="filterMenu('garnishes')" class="menu-cat-btn px-3 py-1.5 rounded-xl bg-stone-100 text-stone-700 hover:bg-stone-200 shrink-0" data-cat="garnishes">🍟 Гарниры</button>
-            <button onclick="filterMenu('desserts')" class="menu-cat-btn px-3 py-1.5 rounded-xl bg-stone-100 text-stone-700 hover:bg-stone-200 shrink-0" data-cat="desserts">🍰 Десерты</button>
-            <button onclick="filterMenu('coffee_classic')" class="menu-cat-btn px-3 py-1.5 rounded-xl bg-stone-100 text-stone-700 hover:bg-stone-200 shrink-0" data-cat="coffee_classic">☕ Классич. кофе</button>
-            <button onclick="filterMenu('coffee_author')" class="menu-cat-btn px-3 py-1.5 rounded-xl bg-stone-100 text-stone-700 hover:bg-stone-200 shrink-0" data-cat="coffee_author">✨ Авторский кофе</button>
-            <button onclick="filterMenu('coffee_cold')" class="menu-cat-btn px-3 py-1.5 rounded-xl bg-stone-100 text-stone-700 hover:bg-stone-200 shrink-0" data-cat="coffee_cold">🧊 Холодный кофе</button>
-            <button onclick="filterMenu('tea')" class="menu-cat-btn px-3 py-1.5 rounded-xl bg-stone-100 text-stone-700 hover:bg-stone-200 shrink-0" data-cat="tea">🫖 Чай & Какао</button>
-            <button onclick="filterMenu('smoothies')" class="menu-cat-btn px-3 py-1.5 rounded-xl bg-stone-100 text-stone-700 hover:bg-stone-200 shrink-0" data-cat="smoothies">🥤 Смузи & Шейки</button>
-            <button onclick="filterMenu('drinks')" class="menu-cat-btn px-3 py-1.5 rounded-xl bg-stone-100 text-stone-700 hover:bg-stone-200 shrink-0" data-cat="drinks">🍹 Лимонады & Соки</button>
-            <button onclick="filterMenu('extras')" class="menu-cat-btn px-3 py-1.5 rounded-xl bg-stone-100 text-stone-700 hover:bg-stone-200 shrink-0" data-cat="extras">🥛 Сиропы & Молоко</button>
-          </div>
-
-          <!-- Search & Custom Dish Button -->
-          <div class="flex items-center gap-1.5 shrink-0">
+          <!-- Fast Search & Custom Item -->
+          <div class="flex items-center gap-2">
             <div class="relative flex-1">
-              <input type="text" id="posSearch" oninput="handleFastSearch()" placeholder="Быстрый поиск..." 
+              <input type="text" id="searchInput" oninput="onSearchChange()" placeholder="Поиск по названию или описанию..."
                      class="w-full bg-stone-50 border border-stone-200 rounded-xl py-2 pl-8 pr-7 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-amber-600 focus:bg-white transition">
               <span class="absolute left-2.5 top-2.5 text-stone-400 text-xs">🔍</span>
-              <button id="clearSearchBtn" onclick="clearSearch()" class="hidden absolute right-2 top-2 text-stone-400 hover:text-stone-700 font-bold text-xs bg-stone-200 w-4 h-4 rounded-full flex items-center justify-center">✕</button>
+              <button id="clearSearchBtn" onclick="clearSearchInput()" class="hidden absolute right-2.5 top-2 text-stone-400 hover:text-stone-700 font-bold text-xs bg-stone-200 w-4 h-4 rounded-full flex items-center justify-center">✕</button>
             </div>
-            <span id="searchResultBadge" class="hidden text-[11px] font-mono font-bold bg-amber-100 text-amber-900 px-2 py-1.5 rounded-xl shrink-0">0</span>
-            <button onclick="openCustomItemModal()" title="Своя позиция"
-                    class="px-2.5 sm:px-3 py-2 bg-amber-600 hover:bg-amber-700 active:scale-95 text-white rounded-xl text-xs font-bold flex items-center gap-1 shadow-xs transition shrink-0">
+            
+            <button onclick="openCustomDishModal()" class="px-3 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-bold flex items-center gap-1 shadow-xs active:scale-95 transition shrink-0">
               <span>✨</span> <span class="hidden sm:inline">+ Своя позиция</span><span class="sm:hidden">+ Своя</span>
             </button>
           </div>
 
-          <!-- Dishes Grid -->
-          <div id="dishesGrid" class="flex-1 grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-2 overflow-y-auto pr-0.5 pb-20 lg:pb-0">
-            <!-- Rendered dynamically -->
+          <!-- Category Pills -->
+          <div class="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-hide text-xs font-bold shrink-0">
+            <button onclick="selectCategory('all')" class="cat-pill px-3 py-1.5 rounded-xl bg-stone-100 text-stone-700 hover:bg-stone-200 shrink-0" data-cat="all">⚡ Все</button>
+            <button onclick="selectCategory('breakfast')" class="cat-pill px-3 py-1.5 rounded-xl bg-stone-100 text-stone-700 hover:bg-stone-200 shrink-0" data-cat="breakfast">🍳 Завтраки</button>
+            <button onclick="selectCategory('summer')" class="cat-pill px-3 py-1.5 rounded-xl bg-stone-100 text-stone-700 hover:bg-stone-200 shrink-0" data-cat="summer">☀️ Лето & Закуски</button>
+            <button onclick="selectCategory('salads')" class="cat-pill px-3 py-1.5 rounded-xl bg-amber-950 text-white shadow-xs shrink-0" data-cat="salads">🥗 Салаты</button>
+            <button onclick="selectCategory('soups')" class="cat-pill px-3 py-1.5 rounded-xl bg-stone-100 text-stone-700 hover:bg-stone-200 shrink-0" data-cat="soups">🍲 Супы</button>
+            <button onclick="selectCategory('sandwiches')" class="cat-pill px-3 py-1.5 rounded-xl bg-stone-100 text-stone-700 hover:bg-stone-200 shrink-0" data-cat="sandwiches">🥪 Сэндвичи</button>
+            <button onclick="selectCategory('hot')" class="cat-pill px-3 py-1.5 rounded-xl bg-stone-100 text-stone-700 hover:bg-stone-200 shrink-0" data-cat="hot">🥩 Горячее</button>
+            <button onclick="selectCategory('garnishes')" class="cat-pill px-3 py-1.5 rounded-xl bg-stone-100 text-stone-700 hover:bg-stone-200 shrink-0" data-cat="garnishes">🍟 Гарниры</button>
+            <button onclick="selectCategory('desserts')" class="cat-pill px-3 py-1.5 rounded-xl bg-stone-100 text-stone-700 hover:bg-stone-200 shrink-0" data-cat="desserts">🍰 Десерты</button>
+            <button onclick="selectCategory('coffee_classic')" class="cat-pill px-3 py-1.5 rounded-xl bg-stone-100 text-stone-700 hover:bg-stone-200 shrink-0" data-cat="coffee_classic">☕ Кофе классика</button>
+            <button onclick="selectCategory('coffee_author')" class="cat-pill px-3 py-1.5 rounded-xl bg-stone-100 text-stone-700 hover:bg-stone-200 shrink-0" data-cat="coffee_author">✨ Авторский кофе</button>
+            <button onclick="selectCategory('coffee_cold')" class="cat-pill px-3 py-1.5 rounded-xl bg-stone-100 text-stone-700 hover:bg-stone-200 shrink-0" data-cat="coffee_cold">🧊 Холодный кофе</button>
+            <button onclick="selectCategory('tea')" class="cat-pill px-3 py-1.5 rounded-xl bg-stone-100 text-stone-700 hover:bg-stone-200 shrink-0" data-cat="tea">🫖 Чай & Горячее</button>
+            <button onclick="selectCategory('smoothies')" class="cat-pill px-3 py-1.5 rounded-xl bg-stone-100 text-stone-700 hover:bg-stone-200 shrink-0" data-cat="smoothies">🥤 Смузи & Шейки</button>
+            <button onclick="selectCategory('drinks')" class="cat-pill px-3 py-1.5 rounded-xl bg-stone-100 text-stone-700 hover:bg-stone-200 shrink-0" data-cat="drinks">🍹 Лимонады & Соки</button>
+            <button onclick="selectCategory('extras')" class="cat-pill px-3 py-1.5 rounded-xl bg-stone-100 text-stone-700 hover:bg-stone-200 shrink-0" data-cat="extras">🥛 Сиропы & Молоко</button>
+          </div>
+
+          <div id="dishesList" class="flex-1 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-2 overflow-y-auto pr-0.5 pb-2">
+            <!-- Rendered by JS -->
           </div>
         </div>
 
-        <!-- RIGHT: ACTIVE ORDER TICKET -->
-        <div id="orderCartPanel" class="hidden lg:flex lg:col-span-5 xl:col-span-4 flex-col bg-white rounded-2xl border border-stone-200 shadow-xs p-3 space-y-2 min-h-0 overflow-hidden">
+        <!-- RIGHT: CURRENT ORDER TICKET -->
+        <div id="orderCartColumn" class="hidden lg:flex lg:col-span-5 xl:col-span-4 flex-col bg-white rounded-2xl border border-stone-200 shadow-xs p-3 space-y-2 min-h-0">
           
-          <!-- Order Header -->
-          <div class="flex items-center justify-between pb-2 border-b border-stone-200 shrink-0">
-            <div>
-              <div class="flex items-center gap-2">
-                <h2 id="orderTitle" class="font-bold text-base text-brand-950 font-serif">Стол № 1</h2>
-                <span id="orderStatusBadge" class="text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-800">Новый</span>
-              </div>
-              <p id="orderSubtitle" class="text-[11px] text-stone-400">Гостей: 2 • Официант: Алексей</p>
-            </div>
-            <div class="flex items-center gap-1.5">
-              <button onclick="changeGuestsCount()" title="Количество гостей" class="px-2.5 py-1.5 text-xs font-semibold bg-stone-100 hover:bg-stone-200 active:scale-95 rounded-lg text-stone-700">
-                👥 <span id="guestsCountText">2</span>
-              </button>
-              <button onclick="closeCurrentOrderScreen()" class="p-1.5 text-stone-400 hover:text-stone-700 rounded-lg hover:bg-stone-100" title="В зал">
-                ✕
-              </button>
-            </div>
+          <div class="flex items-center justify-between pb-2 border-b border-stone-200">
+            <span class="font-extrabold text-sm text-stone-900">Позиции в чеке</span>
+            <span id="ticketPersonsBadge" class="text-xs font-bold text-stone-500 bg-stone-100 px-2 py-0.5 rounded-lg">2 персоны</span>
           </div>
 
-          <!-- Items Container -->
-          <div id="orderItemsContainer" class="flex-1 overflow-y-auto space-y-1.5 pr-1 min-h-[140px]">
-            <!-- Injected by JS -->
+          <!-- Items list container -->
+          <div id="ticketItemsContainer" class="flex-1 overflow-y-auto space-y-1.5 pr-0.5 min-h-[140px]">
+            <!-- Rendered by JS -->
           </div>
 
-          <!-- Order Summary & Checkout -->
-          <div class="shrink-0 space-y-2 pt-2 border-t border-stone-200">
-            <div class="flex items-center justify-between text-xs text-stone-600">
-              <div class="flex items-center gap-1.5">
-                <span>Скидка:</span>
-                <button onclick="openDiscountModal()" id="btnDiscount" class="text-amber-700 hover:underline font-bold">
-                  0% (Добавить)
-                </button>
-              </div>
-              <div class="flex items-center gap-2">
-                <span>Позиций:</span>
-                <span id="orderTotalQty" class="font-bold font-mono">0</span>
-              </div>
+          <!-- Summary footer -->
+          <div class="pt-2 border-t border-stone-200 space-y-2 shrink-0">
+            <div class="flex items-center justify-between text-xs text-stone-500">
+              <span>Всего блюд:</span>
+              <span id="ticketTotalQty" class="font-mono font-bold text-stone-800">0 шт.</span>
             </div>
 
-            <div class="flex items-baseline justify-between bg-brand-50 p-2 rounded-xl border border-brand-200">
-              <span class="text-xs font-bold uppercase tracking-wider text-brand-800">К оплате:</span>
-              <span id="orderTotalPrice" class="text-xl sm:text-2xl font-bold font-mono text-brand-950">0 ₽</span>
+            <div class="flex items-baseline justify-between bg-amber-50 p-2.5 rounded-xl border border-amber-200">
+              <span class="text-xs font-bold uppercase tracking-wide text-amber-950">Сумма заказа:</span>
+              <span id="ticketTotalPrice" class="text-xl sm:text-2xl font-black font-mono text-amber-950">0 ₽</span>
             </div>
 
-            <div class="grid grid-cols-2 gap-2">
-              <button onclick="sendOrderToKitchen()" class="py-2.5 px-2 bg-amber-600 hover:bg-amber-700 active:scale-95 text-white font-bold rounded-xl text-xs flex items-center justify-center gap-1 shadow-xs transition">
-                <span>🔔</span> <span>В кухню</span>
-              </button>
-
-              <button onclick="openPaymentModal()" class="py-2.5 px-2 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-bold rounded-xl text-xs flex items-center justify-center gap-1 shadow-xs transition">
-                <span>💳</span> <span>Расчет</span>
-              </button>
-            </div>
-
-            <div class="flex items-center justify-between text-[11px] text-stone-400 pt-0.5">
-              <button onclick="printPrecheck()" class="hover:text-stone-700 font-semibold flex items-center gap-1 py-1">
-                <span>🖨️</span> Пречек
-              </button>
-              <button onclick="cancelActiveOrder()" class="hover:text-rose-600 font-semibold py-1">
-                Отменить
-              </button>
-            </div>
+            <button onclick="goToTablesView()" class="w-full py-2.5 bg-amber-900 hover:bg-amber-950 active:scale-95 text-white font-bold rounded-xl text-xs flex items-center justify-center gap-1.5 shadow-xs transition">
+              <span>✓</span> <span>Сохранить и вернуться в зал</span>
+            </button>
           </div>
         </div>
 
       </div>
 
-      <!-- Floating Mobile Cart Bar -->
-      <div id="mobileCartFloatingBar" onclick="switchOrderSubTab('cart')" class="lg:hidden hidden fixed bottom-16 left-3 right-3 bg-brand-900 text-white p-3 rounded-2xl shadow-2xl z-30 flex items-center justify-between border border-amber-500/30 cursor-pointer active:scale-98 transition">
+      <div id="mobileCartFloatingBtn" onclick="switchOrderMobileTab('cart')" class="lg:hidden hidden fixed bottom-4 left-3 right-3 bg-amber-950 text-white p-3 rounded-2xl shadow-xl z-30 flex items-center justify-between border border-amber-700/50 cursor-pointer active:scale-98 transition">
         <div class="flex items-center gap-2">
-          <div class="w-8 h-8 rounded-xl bg-amber-500 text-brand-950 flex items-center justify-center font-bold text-sm">🛒</div>
+          <div class="w-8 h-8 rounded-xl bg-amber-500 text-amber-950 flex items-center justify-center font-bold text-sm">🧾</div>
           <div>
-            <div id="mobileFloatingTable" class="text-xs font-bold">Стол № 1</div>
-            <div id="mobileFloatingQty" class="text-[10px] text-amber-200">0 позиций в чеке</div>
+            <div id="mobileFloatTable" class="text-xs font-bold">Стол 1</div>
+            <div id="mobileFloatQty" class="text-[10px] text-amber-200">0 блюд</div>
           </div>
         </div>
         <div class="flex items-center gap-2">
-          <span id="mobileFloatingTotal" class="font-mono font-bold text-amber-400 text-sm">0 ₽</span>
-          <span class="text-[11px] bg-amber-500 text-brand-950 font-bold px-2.5 py-1 rounded-lg">Чек ➔</span>
-        </div>
-      </div>
-
-    </section>
-
-    <!-- ================= VIEW 3: KITCHEN DISPLAY (КДС) ================= -->
-    <section id="view-kds" class="hidden flex-1 flex flex-col space-y-3 min-h-0">
-      <div class="bg-white p-3 sm:p-4 rounded-2xl border border-stone-200 shadow-xs flex items-center justify-between">
-        <div class="flex items-center gap-2">
-          <span class="text-2xl">🍳</span>
-          <div>
-            <h2 class="font-serif font-bold text-base sm:text-lg text-brand-950">Кухонный дисплей (КДС)</h2>
-            <p class="text-xs text-stone-400">Бегунки заказов для поваров и бариста</p>
-          </div>
-        </div>
-        <div class="flex items-center gap-3 text-xs font-semibold">
-          <span class="bg-amber-100 text-amber-900 px-2.5 py-1 rounded-xl">В готовке: <b id="kdsActiveCount" class="font-mono">0</b></span>
-          <span class="bg-emerald-100 text-emerald-900 px-2.5 py-1 rounded-xl">Готово: <b id="kdsDoneCount" class="font-mono">0</b></span>
-        </div>
-      </div>
-
-      <div id="kdsGrid" class="flex-1 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 overflow-y-auto pr-0.5 pb-2">
-        <!-- Rendered dynamically -->
-      </div>
-    </section>
-
-    <!-- ================= VIEW 4: CASHIER & Z-REPORT ================= -->
-    <section id="view-cashier" class="hidden flex-1 flex flex-col space-y-3 min-h-0">
-      
-      <!-- Summary Cards -->
-      <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 shrink-0">
-        <div class="bg-white p-3 rounded-2xl border border-stone-200 shadow-xs">
-          <div class="text-[10px] uppercase font-bold text-stone-400">Всего чеков</div>
-          <div id="statTotalChecks" class="font-mono font-bold text-xl text-stone-900 mt-1">0</div>
-        </div>
-        <div class="bg-white p-3 rounded-2xl border border-stone-200 shadow-xs">
-          <div class="text-[10px] uppercase font-bold text-stone-400">Безналичные (Карта/СБП)</div>
-          <div id="statCardTotal" class="font-mono font-bold text-xl text-blue-700 mt-1">0 ₽</div>
-        </div>
-        <div class="bg-white p-3 rounded-2xl border border-stone-200 shadow-xs">
-          <div class="text-[10px] uppercase font-bold text-stone-400">Наличные</div>
-          <div id="statCashTotal" class="font-mono font-bold text-xl text-emerald-700 mt-1">0 ₽</div>
-        </div>
-        <div class="bg-white p-3 rounded-2xl border border-stone-200 shadow-xs">
-          <div class="text-[10px] uppercase font-bold text-stone-400">Средний чек</div>
-          <div id="statAvgCheck" class="font-mono font-bold text-xl text-amber-700 mt-1">0 ₽</div>
-        </div>
-      </div>
-
-      <!-- Action Buttons -->
-      <div class="bg-white p-3 rounded-2xl border border-stone-200 shadow-xs flex flex-wrap items-center justify-between gap-2 shrink-0">
-        <div class="font-bold text-sm text-stone-900 font-serif">Журнал закрытых счетов</div>
-        <div class="flex items-center gap-2">
-          <button onclick="resetShiftData()" class="px-3 py-1.5 bg-stone-100 hover:bg-stone-200 text-stone-700 text-xs font-semibold rounded-xl transition">
-            Сброс смены
-          </button>
-          <button onclick="printZReport()" class="px-3.5 py-1.5 bg-brand-800 hover:bg-brand-900 text-white text-xs font-bold rounded-xl shadow-xs transition flex items-center gap-1.5">
-            <span>📑</span> <span>Снять Z-Отчет</span>
-          </button>
-        </div>
-      </div>
-
-      <!-- Paid Checks Table -->
-      <div class="flex-1 bg-white rounded-2xl border border-stone-200 shadow-xs overflow-hidden flex flex-col min-h-0">
-        <div class="flex-1 overflow-y-auto">
-          <table class="w-full text-left text-xs border-collapse">
-            <thead class="sticky top-0 bg-stone-50 text-stone-500 font-bold border-b border-stone-200 uppercase text-[10px]">
-              <tr>
-                <th class="py-2.5 px-3">Чек</th>
-                <th class="py-2.5 px-3">Время</th>
-                <th class="py-2.5 px-3">Стол</th>
-                <th class="py-2.5 px-3">Официант</th>
-                <th class="py-2.5 px-3">Оплата</th>
-                <th class="py-2.5 px-3 text-right">Сумма</th>
-                <th class="py-2.5 px-3 text-center">Действие</th>
-              </tr>
-            </thead>
-            <tbody id="paidOrdersTbody" class="divide-y divide-stone-100 font-sans">
-              <!-- Rendered dynamically -->
-            </tbody>
-          </table>
-          <div id="noChecksState" class="py-12 text-center text-stone-400 text-xs font-medium">
-            Счета за текущую смену еще не закрывались
-          </div>
+          <span id="mobileFloatSum" class="font-mono font-bold text-amber-400 text-sm">0 ₽</span>
+          <span class="text-[11px] bg-amber-500 text-amber-950 font-bold px-2.5 py-1 rounded-lg">Чек ➔</span>
         </div>
       </div>
 
@@ -405,557 +244,488 @@
 
   </main>
 
-  <!-- ================= MODALS & DIALOGS ================= -->
-
-  <!-- MODAL: GUESTS COUNT -->
+  <!-- ================================================================= -->
+  <!-- MODAL 1: SELECT PERSONS / GUESTS COUNT                            -->
+  <!-- ================================================================= -->
   <div id="guestsModal" class="hidden fixed inset-0 bg-stone-950/70 backdrop-blur-xs z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
     <div class="bg-white max-w-sm w-full rounded-t-3xl sm:rounded-3xl p-5 shadow-2xl space-y-3.5 border border-stone-200 max-h-[90vh] overflow-y-auto pb-safe">
-      <div class="flex items-center justify-between border-b border-stone-100 pb-2.5">
-        <div class="flex items-center gap-2.5">
-          <div class="w-9 h-9 rounded-xl bg-amber-100 text-amber-900 flex items-center justify-center text-lg font-bold">
+      <div class="flex items-center justify-between border-b border-stone-100 pb-2">
+        <div class="flex items-center gap-2">
+          <div class="w-8 h-8 rounded-xl bg-amber-100 text-amber-950 flex items-center justify-center text-base font-bold">
             👥
           </div>
           <div>
-            <span id="guestModalTableTag" class="text-[10px] uppercase font-bold tracking-wider text-amber-700 bg-amber-50 px-2 py-0.5 rounded-md">Стол</span>
-            <h3 id="guestModalTitle" class="font-bold text-base sm:text-lg text-brand-950 font-serif">Количество гостей</h3>
+            <span id="guestModalTableTag" class="text-[10px] uppercase font-bold tracking-wider text-amber-800 bg-amber-50 px-2 py-0.5 rounded-md">Стол 1</span>
+            <h3 class="font-extrabold text-base text-stone-900">Количество персон</h3>
           </div>
         </div>
-        <button onclick="closeModal('guestsModal')" class="text-stone-400 hover:text-stone-700 p-2 text-xl">✕</button>
+        <button onclick="closeModal('guestsModal')" class="text-stone-400 hover:text-stone-700 p-2 text-xl font-bold">✕</button>
       </div>
 
-      <p class="text-xs text-stone-500">Укажите, на сколько персон открывается заказ:</p>
+      <p class="text-xs text-stone-500">Укажите, сколько гостей за этим столом:</p>
 
+      <!-- Quick Person Number Buttons (1 to 8+) -->
       <div class="grid grid-cols-4 gap-2 text-sm font-mono font-bold">
-        <button type="button" onclick="selectGuestCount(1)" class="guest-btn p-2.5 rounded-xl border-2 border-stone-200 text-stone-800 transition flex flex-col items-center">
+        <button type="button" onclick="setTempGuests(1)" class="guest-btn p-2 rounded-xl border-2 border-stone-200 text-stone-800 flex flex-col items-center">
           <span>1</span>
           <span class="text-[9px] font-sans font-normal text-stone-400">персона</span>
         </button>
-        <button type="button" onclick="selectGuestCount(2)" class="guest-btn p-2.5 rounded-xl border-2 border-amber-600 bg-amber-50 text-amber-950 transition flex flex-col items-center">
+        <button type="button" onclick="setTempGuests(2)" class="guest-btn p-2 rounded-xl border-2 border-amber-600 bg-amber-50 text-amber-950 flex flex-col items-center">
           <span>2</span>
           <span class="text-[9px] font-sans font-normal text-stone-400">персоны</span>
         </button>
-        <button type="button" onclick="selectGuestCount(3)" class="guest-btn p-2.5 rounded-xl border-2 border-stone-200 text-stone-800 transition flex flex-col items-center">
+        <button type="button" onclick="setTempGuests(3)" class="guest-btn p-2 rounded-xl border-2 border-stone-200 text-stone-800 flex flex-col items-center">
           <span>3</span>
           <span class="text-[9px] font-sans font-normal text-stone-400">персоны</span>
         </button>
-        <button type="button" onclick="selectGuestCount(4)" class="guest-btn p-2.5 rounded-xl border-2 border-stone-200 text-stone-800 transition flex flex-col items-center">
+        <button type="button" onclick="setTempGuests(4)" class="guest-btn p-2 rounded-xl border-2 border-stone-200 text-stone-800 flex flex-col items-center">
           <span>4</span>
           <span class="text-[9px] font-sans font-normal text-stone-400">персоны</span>
         </button>
-        <button type="button" onclick="selectGuestCount(5)" class="guest-btn p-2.5 rounded-xl border-2 border-stone-200 text-stone-800 transition flex flex-col items-center">
+        <button type="button" onclick="setTempGuests(5)" class="guest-btn p-2 rounded-xl border-2 border-stone-200 text-stone-800 flex flex-col items-center">
           <span>5</span>
           <span class="text-[9px] font-sans font-normal text-stone-400">гостей</span>
         </button>
-        <button type="button" onclick="selectGuestCount(6)" class="guest-btn p-2.5 rounded-xl border-2 border-stone-200 text-stone-800 transition flex flex-col items-center">
+        <button type="button" onclick="setTempGuests(6)" class="guest-btn p-2 rounded-xl border-2 border-stone-200 text-stone-800 flex flex-col items-center">
           <span>6</span>
           <span class="text-[9px] font-sans font-normal text-stone-400">гостей</span>
         </button>
-        <button type="button" onclick="selectGuestCount(7)" class="guest-btn p-2.5 rounded-xl border-2 border-stone-200 text-stone-800 transition flex flex-col items-center">
+        <button type="button" onclick="setTempGuests(7)" class="guest-btn p-2 rounded-xl border-2 border-stone-200 text-stone-800 flex flex-col items-center">
           <span>7</span>
           <span class="text-[9px] font-sans font-normal text-stone-400">гостей</span>
         </button>
-        <button type="button" onclick="selectGuestCount(8)" class="guest-btn p-2.5 rounded-xl border-2 border-stone-200 text-stone-800 transition flex flex-col items-center">
+        <button type="button" onclick="setTempGuests(8)" class="guest-btn p-2 rounded-xl border-2 border-stone-200 text-stone-800 flex flex-col items-center">
           <span>8+</span>
           <span class="text-[9px] font-sans font-normal text-stone-400">гостей</span>
         </button>
       </div>
 
-      <div class="flex items-center justify-between bg-stone-50 p-2.5 rounded-2xl border border-stone-200">
+      <!-- Fine adjustment with +/- buttons -->
+      <div class="flex items-center justify-between bg-stone-50 p-2.5 rounded-xl border border-stone-200">
         <span class="text-xs font-semibold text-stone-700">Точное количество:</span>
         <div class="flex items-center gap-2">
-          <button type="button" onclick="adjustGuestModalCount(-1)" class="w-9 h-9 rounded-xl bg-white border border-stone-200 font-bold hover:bg-stone-200 active:scale-95 text-stone-800 flex items-center justify-center">-</button>
-          <span id="guestModalCountDisplay" class="w-8 text-center font-mono font-bold text-base text-brand-950">2</span>
-          <button type="button" onclick="adjustGuestModalCount(1)" class="w-9 h-9 rounded-xl bg-white border border-stone-200 font-bold hover:bg-stone-200 active:scale-95 text-stone-800 flex items-center justify-center">+</button>
+          <button type="button" onclick="adjustTempGuests(-1)" class="w-8 h-8 rounded-lg bg-white border border-stone-300 font-bold hover:bg-stone-200 active:scale-95 text-stone-800 flex items-center justify-center">-</button>
+          <span id="guestDisplayVal" class="w-8 text-center font-mono font-bold text-base text-amber-950">2</span>
+          <button type="button" onclick="adjustTempGuests(1)" class="w-8 h-8 rounded-lg bg-white border border-stone-300 font-bold hover:bg-stone-200 active:scale-95 text-stone-800 flex items-center justify-center">+</button>
         </div>
       </div>
 
       <div class="pt-1 flex gap-2">
-        <button onclick="closeModal('guestsModal')" class="py-3 px-4 bg-stone-100 hover:bg-stone-200 text-stone-700 text-xs font-semibold rounded-xl">
+        <button onclick="closeModal('guestsModal')" class="py-2.5 px-4 bg-stone-100 hover:bg-stone-200 text-stone-700 text-xs font-bold rounded-xl">
           Отмена
         </button>
-        <button onclick="confirmGuestSelectionAndOpenOrder()" class="flex-1 py-3 px-4 bg-amber-600 hover:bg-amber-700 active:scale-95 text-white text-xs font-bold rounded-xl shadow-xs flex items-center justify-center gap-1.5 transition">
-          <span>К выбору блюд</span> <span>➔</span>
+        <button onclick="confirmGuestSelection()" class="flex-1 py-2.5 px-4 bg-amber-600 hover:bg-amber-700 active:scale-95 text-white text-xs font-bold rounded-xl shadow-xs flex items-center justify-center gap-1.5 transition">
+          <span>К выбору позиций</span> <span>➔</span>
         </button>
       </div>
     </div>
   </div>
 
-  <!-- MODAL: CUSTOM ITEM -->
-  <div id="customItemModal" class="hidden fixed inset-0 bg-stone-950/70 backdrop-blur-xs z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
-    <div class="bg-white max-w-sm w-full rounded-t-3xl sm:rounded-3xl p-5 shadow-2xl space-y-3.5 border border-stone-200 max-h-[90vh] overflow-y-auto pb-safe">
-      <div class="flex items-start justify-between border-b border-stone-100 pb-2.5">
-        <div class="flex items-center gap-2">
-          <div class="w-9 h-9 rounded-xl bg-amber-500/10 text-amber-700 flex items-center justify-center text-lg font-bold">
-            ✍️
-          </div>
-          <div>
-            <span class="text-[10px] uppercase font-bold tracking-wider text-amber-700 bg-amber-50 px-2 py-0.5 rounded-md">Свободный чек</span>
-            <h3 class="font-bold text-base sm:text-lg text-brand-950 font-serif">Своя позиция</h3>
-          </div>
+  <!-- ================================================================= -->
+  <!-- MODAL 2: DISH ADDITIVES / MODIFIERS & COMMENTS                    -->
+  <!-- ================================================================= -->
+  <div id="modifiersModal" class="hidden fixed inset-0 bg-stone-950/70 backdrop-blur-xs z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
+    <div class="bg-white max-w-sm w-full rounded-t-3xl sm:rounded-3xl p-5 shadow-2xl space-y-3 border border-stone-200 max-h-[90vh] overflow-y-auto pb-safe">
+      <div class="flex items-start justify-between border-b border-stone-100 pb-2">
+        <div>
+          <span id="modCategoryTag" class="text-[10px] font-bold uppercase tracking-wider text-amber-800 bg-amber-100 px-2 py-0.5 rounded-md">Категория</span>
+          <h3 id="modDishName" class="font-extrabold text-base text-stone-900 mt-1">Название блюда</h3>
+          <p id="modDishPrice" class="text-xs text-stone-500 font-mono font-bold">0 ₽</p>
         </div>
-        <button onclick="closeModal('customItemModal')" class="text-stone-400 hover:text-stone-700 p-2 text-xl">✕</button>
+        <button onclick="closeModal('modifiersModal')" class="text-stone-400 hover:text-stone-700 p-2 text-xl font-bold">✕</button>
       </div>
 
-      <div class="space-y-2.5 text-xs">
+      <div class="text-xs font-bold text-stone-700">Добавки и особенности приготовления:</div>
+
+      <div id="modCheckboxesContainer" class="space-y-1.5 text-xs max-h-52 overflow-y-auto pr-1">
+        <!-- Injected dynamically -->
+      </div>
+
+      <div>
+        <label class="block text-[11px] font-bold text-stone-600 mb-1">Пожелание гостя (комментарий повару / бариста):</label>
+        <input type="text" id="modCustomCommentInput" placeholder="Напр: погорячее, соус отдельно, без соли..." 
+               class="w-full bg-stone-50 border border-stone-200 rounded-xl p-2 text-xs focus:ring-2 focus:ring-amber-600 focus:outline-none">
+      </div>
+
+      <div class="pt-1 flex gap-2">
+        <button onclick="closeModal('modifiersModal')" class="flex-1 py-2.5 bg-stone-100 hover:bg-stone-200 text-stone-700 text-xs font-bold rounded-xl">
+          Отмена
+        </button>
+        <button onclick="confirmDishWithModifiers()" class="flex-1 py-2.5 bg-amber-900 hover:bg-amber-950 active:scale-95 text-white text-xs font-bold rounded-xl shadow-xs transition">
+          + Добавить в чек
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================================================================= -->
+  <!-- MODAL 3: CUSTOM ITEM (+ СВОЯ ПОЗИЦИЯ)                            -->
+  <!-- ================================================================= -->
+  <div id="customDishModal" class="hidden fixed inset-0 bg-stone-950/70 backdrop-blur-xs z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
+    <div class="bg-white max-w-sm w-full rounded-t-3xl sm:rounded-3xl p-5 shadow-2xl space-y-3 border border-stone-200 max-h-[90vh] overflow-y-auto pb-safe">
+      <div class="flex items-start justify-between border-b border-stone-100 pb-2">
+        <div class="flex items-center gap-2">
+          <div class="w-8 h-8 rounded-xl bg-amber-500/10 text-amber-700 flex items-center justify-center text-lg font-bold">
+            ✨
+          </div>
+          <div>
+            <span class="text-[10px] uppercase font-bold tracking-wider text-amber-800 bg-amber-50 px-2 py-0.5 rounded-md">Свободная позиция</span>
+            <h3 class="font-extrabold text-base text-stone-900">Своя позиция</h3>
+          </div>
+        </div>
+        <button onclick="closeModal('customDishModal')" class="text-stone-400 hover:text-stone-700 p-2 text-xl font-bold">✕</button>
+      </div>
+
+      <div class="space-y-2 text-xs">
         <div>
-          <label class="block font-bold text-stone-700 mb-1">Название блюда / услуги *</label>
-          <input type="text" id="customItemName" placeholder="Напр: Торт на заказ, Добавка соуса..."
+          <label class="block font-bold text-stone-700 mb-1">Название блюда или услуги *</label>
+          <input type="text" id="customDishName" placeholder="Напр: Спецзаказ гостя, Экстра лосось..."
                  class="w-full bg-stone-50 border border-stone-200 rounded-xl p-2.5 text-xs focus:ring-2 focus:ring-amber-600 focus:bg-white focus:outline-none">
         </div>
 
         <div class="grid grid-cols-2 gap-2">
           <div>
-            <label class="block font-bold text-stone-700 mb-1">Цена за 1 шт (₽) *</label>
-            <input type="number" id="customItemPrice" placeholder="0" min="0" step="10"
+            <label class="block font-bold text-stone-700 mb-1">Цена (₽) *</label>
+            <input type="number" id="customDishPrice" placeholder="0" min="0" step="10"
                    class="w-full bg-stone-50 border border-stone-200 rounded-xl p-2.5 text-xs font-mono font-bold focus:ring-2 focus:ring-amber-600 focus:bg-white focus:outline-none">
           </div>
           <div>
             <label class="block font-bold text-stone-700 mb-1">Количество</label>
-            <input type="number" id="customItemQty" value="1" min="1" max="99"
+            <input type="number" id="customDishQty" value="1" min="1" max="99"
                    class="w-full bg-stone-50 border border-stone-200 rounded-xl p-2.5 text-xs font-mono font-bold focus:ring-2 focus:ring-amber-600 focus:bg-white focus:outline-none">
           </div>
         </div>
 
         <div>
-          <label class="block font-bold text-stone-700 mb-1">Категория / цех</label>
-          <select id="customItemCategory" class="w-full bg-stone-50 border border-stone-200 rounded-xl p-2.5 text-xs font-medium focus:ring-2 focus:ring-amber-600 focus:bg-white focus:outline-none">
-            <option value="hot">Кухня (Горячее / Салаты)</option>
-            <option value="coffee_classic">Бар (Кофе / Напитки)</option>
-            <option value="desserts">Кондитерская / Десерты</option>
-            <option value="extras">Услуги / Разное</option>
-          </select>
-        </div>
-
-        <div>
-          <label class="block font-bold text-stone-700 mb-1">Комментарий повару</label>
-          <input type="text" id="customItemNotes" placeholder="Напр: без сахара, упаковать с собой..."
+          <label class="block font-bold text-stone-700 mb-1">Добавки / пожелания к позиции</label>
+          <input type="text" id="customDishNote" placeholder="Напр: без лука, упаковать с собой..."
                  class="w-full bg-stone-50 border border-stone-200 rounded-xl p-2.5 text-xs focus:ring-2 focus:ring-amber-600 focus:bg-white focus:outline-none">
         </div>
       </div>
 
-      <div class="pt-2 flex gap-2">
-        <button onclick="closeModal('customItemModal')" class="flex-1 py-3 bg-stone-100 hover:bg-stone-200 text-stone-700 text-xs font-semibold rounded-xl">
-          Отмена
-        </button>
-        <button onclick="saveCustomItemToOrder()" class="flex-1 py-3 bg-brand-800 hover:bg-brand-900 active:scale-95 text-white text-xs font-bold rounded-xl shadow-xs flex items-center justify-center gap-1.5 transition">
-          <span>✓</span> <span>В чек</span>
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <!-- MODAL: MODIFIERS SELECTOR -->
-  <div id="modifierModal" class="hidden fixed inset-0 bg-stone-950/60 backdrop-blur-xs z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
-    <div class="bg-white max-w-sm w-full rounded-t-3xl sm:rounded-3xl p-5 shadow-2xl space-y-3.5 max-h-[90vh] overflow-y-auto pb-safe">
-      <div class="flex items-start justify-between">
-        <div>
-          <span id="modCategoryTag" class="text-[10px] font-bold uppercase tracking-wider text-amber-700 bg-amber-100 px-2 py-0.5 rounded-md">Кофе</span>
-          <h3 id="modDishName" class="font-bold text-base sm:text-lg text-brand-950 font-serif mt-1">Капучино</h3>
-          <p id="modDishPrice" class="text-xs text-stone-500 font-mono">260 ₽</p>
-        </div>
-        <button onclick="closeModal('modifierModal')" class="text-stone-400 hover:text-stone-700 p-2 text-xl">✕</button>
-      </div>
-
-      <div id="modOptionsList" class="space-y-1.5 text-xs max-h-52 overflow-y-auto pr-1">
-        <!-- Dynamic modifiers -->
-      </div>
-
-      <div>
-        <label class="block text-[11px] font-bold text-stone-500 mb-1">Комментарий повару / бариста:</label>
-        <input type="text" id="modCustomComment" placeholder="Напр: погорячее, без соли, 1-й курс..." class="w-full bg-stone-50 border border-stone-200 rounded-xl p-2.5 text-xs focus:ring-2 focus:ring-amber-600 focus:outline-none">
-      </div>
-
-      <div class="pt-2 flex gap-2">
-        <button onclick="closeModal('modifierModal')" class="flex-1 py-3 bg-stone-100 hover:bg-stone-200 text-stone-700 text-xs font-semibold rounded-xl">
-          Отмена
-        </button>
-        <button onclick="confirmDishWithModifiers()" class="flex-1 py-3 bg-brand-800 hover:bg-brand-900 active:scale-95 text-white text-xs font-bold rounded-xl shadow-xs">
-          Добавить в чек
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <!-- MODAL: PAYMENT -->
-  <div id="paymentModal" class="hidden fixed inset-0 bg-stone-950/60 backdrop-blur-xs z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
-    <div class="bg-white max-w-md w-full rounded-t-3xl sm:rounded-3xl p-5 sm:p-6 shadow-2xl space-y-3.5 max-h-[92vh] overflow-y-auto pb-safe">
-      <div class="flex items-center justify-between border-b border-stone-100 pb-2.5">
-        <div class="flex items-center gap-2">
-          <span class="text-2xl">💳</span>
-          <div>
-            <h3 class="font-bold text-base sm:text-lg text-stone-900 font-serif">Оплата заказа</h3>
-            <p id="payTableInfo" class="text-xs text-stone-400">Стол № 1</p>
-          </div>
-        </div>
-        <button onclick="closeModal('paymentModal')" class="text-stone-400 hover:text-stone-700 p-2 text-xl">✕</button>
-      </div>
-
-      <div class="bg-stone-50 p-3.5 rounded-2xl border border-stone-200/80 space-y-1.5 text-xs">
-        <div class="flex justify-between text-stone-600">
-          <span>Сумма по меню:</span>
-          <span id="paySubtotal" class="font-mono">0 ₽</span>
-        </div>
-        <div class="flex justify-between text-stone-600">
-          <span>Скидка:</span>
-          <span id="payDiscountAmount" class="font-mono text-emerald-600">-0 ₽</span>
-        </div>
-        <div class="flex justify-between text-base font-bold text-brand-950 pt-2 border-t border-stone-200">
-          <span>ИТОГО К ОПЛАТЕ:</span>
-          <span id="payTotalFinal" class="font-mono text-xl text-brand-900">0 ₽</span>
-        </div>
-      </div>
-
-      <div>
-        <label class="block text-xs font-bold text-stone-700 mb-2">Способ оплаты:</label>
-        <div class="grid grid-cols-3 gap-2">
-          <button type="button" onclick="selectPayMethod('card')" id="payBtn-card" class="pay-method-btn p-3 rounded-xl border-2 border-brand-800 bg-brand-50 text-brand-900 font-bold text-xs flex flex-col items-center gap-1 transition">
-            <span class="text-lg">💳</span>
-            <span>Карта</span>
-          </button>
-          <button type="button" onclick="selectPayMethod('sbp')" id="payBtn-sbp" class="pay-method-btn p-3 rounded-xl border-2 border-stone-200 bg-white text-stone-700 font-medium text-xs flex flex-col items-center gap-1 transition hover:bg-stone-50">
-            <span class="text-lg">📱</span>
-            <span>СБП / QR</span>
-          </button>
-          <button type="button" onclick="selectPayMethod('cash')" id="payBtn-cash" class="pay-method-btn p-3 rounded-xl border-2 border-stone-200 bg-white text-stone-700 font-medium text-xs flex flex-col items-center gap-1 transition hover:bg-stone-50">
-            <span class="text-lg">💵</span>
-            <span>Наличные</span>
-          </button>
-        </div>
-      </div>
-
-      <div id="cashCalcBlock" class="hidden space-y-2 bg-amber-50/70 p-3 rounded-2xl border border-amber-200">
-        <div class="flex items-center justify-between text-xs">
-          <span class="font-semibold text-amber-950">Внесено клиентом:</span>
-          <input type="number" id="cashGivenInput" oninput="recalcChange()" placeholder="0" class="w-28 bg-white border border-amber-300 rounded-lg py-1.5 px-2 text-right font-mono font-bold text-sm focus:outline-none">
-        </div>
-        <div class="flex items-center justify-between text-xs font-bold text-amber-900 pt-1">
-          <span>Сдача:</span>
-          <span id="cashChangeOutput" class="font-mono text-sm text-emerald-700">0 ₽</span>
-        </div>
-      </div>
-
       <div class="pt-1 flex gap-2">
-        <button onclick="printPrecheck()" class="py-3 px-3 bg-stone-100 hover:bg-stone-200 text-stone-700 font-semibold rounded-xl text-xs flex items-center justify-center gap-1 transition">
-          <span>🖨️</span> Пречек
+        <button onclick="closeModal('customDishModal')" class="flex-1 py-2.5 bg-stone-100 hover:bg-stone-200 text-stone-700 text-xs font-bold rounded-xl">
+          Отмена
         </button>
-        <button onclick="finalizePayment()" class="flex-1 py-3 px-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs flex items-center justify-center gap-1.5 shadow-xs transition active:scale-95">
-          <span>✓</span> <span>Закрыть чек</span>
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <!-- MODAL: RECEIPT PREVIEW -->
-  <div id="receiptModal" class="hidden fixed inset-0 bg-stone-950/70 backdrop-blur-xs z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
-    <div class="bg-white max-w-sm w-full rounded-t-3xl sm:rounded-3xl p-5 shadow-2xl space-y-3 max-h-[92vh] flex flex-col pb-safe">
-      <div class="flex items-center justify-between pb-2 border-b border-stone-200">
-        <span class="text-xs font-bold uppercase tracking-wider text-stone-500">Чек терминала</span>
-        <button onclick="closeModal('receiptModal')" class="text-stone-400 hover:text-stone-700 p-2 text-xl">✕</button>
-      </div>
-
-      <div id="receiptContent" class="flex-1 overflow-y-auto bg-stone-50 border border-stone-200 p-4 rounded-xl font-mono text-[11px] leading-relaxed text-stone-900 shadow-inner">
-        <!-- Rendered dynamically -->
-      </div>
-
-      <div class="flex gap-2 pt-1">
-        <button onclick="simulateReceiptPrintSound()" class="flex-1 py-3 bg-brand-800 hover:bg-brand-900 text-white font-bold text-xs rounded-xl shadow-xs flex items-center justify-center gap-1.5 active:scale-95">
-          <span>🖨️</span> Печать
-        </button>
-        <button onclick="closeModal('receiptModal')" class="py-3 px-4 bg-stone-100 hover:bg-stone-200 text-stone-700 font-semibold text-xs rounded-xl">
-          Закрыть
+        <button onclick="saveCustomDishToOrder()" class="flex-1 py-2.5 bg-amber-900 hover:bg-amber-950 active:scale-95 text-white text-xs font-bold rounded-xl shadow-xs transition">
+          + В чек стола
         </button>
       </div>
-    </div>
-  </div>
-
-  <!-- MODAL: DISCOUNT -->
-  <div id="discountModal" class="hidden fixed inset-0 bg-stone-950/60 backdrop-blur-xs z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
-    <div class="bg-white max-w-xs w-full rounded-t-3xl sm:rounded-3xl p-5 shadow-2xl space-y-3 pb-safe">
-      <h3 class="font-bold text-stone-900 text-base font-serif">Применить скидку</h3>
-      <div class="space-y-2 text-xs">
-        <button onclick="applyDiscount(0)" class="w-full text-left p-3 rounded-xl border border-stone-200 hover:bg-stone-50 font-medium">Без скидки (0%)</button>
-        <button onclick="applyDiscount(5)" class="w-full text-left p-3 rounded-xl border border-stone-200 hover:bg-stone-50 font-medium">Постоянный гость (5%)</button>
-        <button onclick="applyDiscount(10)" class="w-full text-left p-3 rounded-xl border border-stone-200 hover:bg-stone-50 font-medium">Скидка персонала / ланч (10%)</button>
-        <button onclick="applyDiscount(20)" class="w-full text-left p-3 rounded-xl border border-stone-200 hover:bg-stone-50 font-medium">Счастливые часы / ДР (20%)</button>
-      </div>
-      <button onclick="closeModal('discountModal')" class="w-full py-2.5 bg-stone-100 text-stone-700 rounded-xl text-xs font-semibold">Отмена</button>
     </div>
   </div>
 
   <!-- TOAST NOTIFICATION -->
-  <div id="toastNotification" class="fixed bottom-16 lg:bottom-5 right-4 left-4 sm:left-auto sm:right-5 z-50 transform translate-y-24 opacity-0 transition-all duration-300 pointer-events-none bg-stone-900 text-white text-xs font-medium px-4 py-3 rounded-2xl shadow-2xl flex items-center justify-center sm:justify-start gap-2.5 border border-white/10">
+  <div id="toast" class="fixed bottom-5 right-4 left-4 sm:left-auto sm:right-5 z-50 transform translate-y-24 opacity-0 transition-all duration-300 pointer-events-none bg-stone-900 text-white text-xs font-medium px-4 py-2.5 rounded-2xl shadow-xl flex items-center justify-center sm:justify-start gap-2 border border-white/10">
     <span id="toastIcon">🔔</span>
-    <span id="toastMessage">Уведомление</span>
+    <span id="toastMsg">Уведомление</span>
   </div>
 
+  <!-- ================================================================= -->
+  <!-- JAVASCRIPT LOGIC                                                  -->
+  <!-- ================================================================= -->
   <script>
-    /* Audio Engine using robust Web Audio API */
-    let audioCtx = null;
-    function getAudioContext() {
-      try {
-        const AudioCtxClass = window.AudioContext || window.webkitAudioContext;
-        if (!audioCtx && AudioCtxClass) {
-          audioCtx = new AudioCtxClass();
-        }
-        if (audioCtx && audioCtx.state === 'suspended') {
-          audioCtx.resume().catch(() => {});
-        }
-        return audioCtx;
-      } catch (e) {
-        return null;
-      }
-    }
-
-    function playTone(freq = 440, duration = 0.08, type = 'sine') {
-      try {
-        const ctx = getAudioContext();
-        if (!ctx) return;
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.type = type;
-        osc.frequency.setValueAtTime(freq, ctx.currentTime);
-        gain.gain.setValueAtTime(0.08, ctx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + duration);
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-        osc.start();
-        osc.stop(ctx.currentTime + duration);
-      } catch (e) {}
-    }
-
-    function playBeep(note = 'C5') {
-      const notes = { 'C4': 261.6, 'D4': 293.6, 'E4': 329.6, 'G4': 392.0, 'A4': 440.0, 'C5': 523.25, 'D5': 587.3, 'E5': 659.25, 'F5': 698.46, 'G5': 783.99, 'A5': 880.0 };
-      playTone(notes[note] || 523.25, 0.06, 'sine');
-    }
-
-    function playSuccessSound() {
-      playTone(523.25, 0.08, 'sine');
-      setTimeout(() => playTone(783.99, 0.12, 'sine'), 90);
-    }
-
-    /* COMPLETE COFFEEMAN POS MENU */
-    const POS_MENU = [
-      /* ЗАВТРАКИ «УТРО В КОФЕМАНЕ» */
-      { id: 51, name: "Каша с фруктами и орехом", category: "breakfast", catTitle: "Завтраки", price: 360, desc: "Пшённая / овсяная / рисовая на выбор, подаётся с фруктами и орехом", mods: ["Овсяная", "Пшённая", "Рисовая", "Обычное молоко", "Кокосовое", "Миндальное", "Овсяное", "Без орехов"] },
-      { id: 52, name: "Блин с говядиной и яйцом", category: "breakfast", catTitle: "Завтраки", price: 390, desc: "Блин с сочным фаршем из говядины, подаётся со сметаной", mods: ["Сметана отдельно", "Без сметаны", "Погреть"] },
-      { id: 53, name: "Блин с лососем и крем-сыром", category: "breakfast", catTitle: "Завтраки", price: 420, desc: "Слабосоленый лосось и сливочный крем-сыр", mods: ["С собой", "Холодный", "Тёплый"] },
-      { id: 54, name: "Блин с творогом и ягодным муссом", category: "breakfast", catTitle: "Завтраки", price: 380, desc: "Нежный творог и натуральный ягодный мусс", mods: ["Мусс отдельно"] },
-      { id: 55, name: "Блин с ягодным муссом", category: "breakfast", catTitle: "Завтраки", price: 370, desc: "Нежный творог со сметаной и ягодным муссом", mods: ["Мусс отдельно"] },
-      { id: 56, name: "Ванильные сырники", category: "breakfast", catTitle: "Завтраки", price: 310, desc: "Домашние пышные сырники по классическому рецепту", mods: ["Со сметаной", "Со сгущенкой", "С ягодным муссом"] },
-      { id: 57, name: "Круассан с лососем", category: "breakfast", catTitle: "Завтраки", price: 430, desc: "Лосось, сливочный крем-сыр с зеленью, огурец, салат айсберг", mods: ["Без зелени", "Без огурца", "С собой"] },
-      { id: 58, name: "Круассан с цыпленком", category: "breakfast", catTitle: "Завтраки", price: 390, desc: "Филе цыпленка, крем-сыр с зеленью, свежий салат айсберг", mods: ["Без зелени", "Погреть", "С собой"] },
-      { id: 59, name: "Круассан классический", category: "breakfast", catTitle: "Завтраки", price: 250, desc: "Хрустящий сливочный круассан", mods: ["Погреть", "С собой"] },
-      { id: 60, name: "Круассан в ассортименте", category: "breakfast", catTitle: "Завтраки", price: 350, desc: "Круассан со сладкой начинкой с витрины", mods: ["Шоколадный", "Миндальный", "С собой"] },
-      { id: 61, name: "Омлет «зелёный»", category: "breakfast", catTitle: "Завтраки", price: 400, desc: "Пышный омлет, подаётся со свежим салатом, авокадо и зерновым хлебом", mods: ["Без лука", "Хлеб отдельно"] },
-      { id: 62, name: "«Большой» завтрак", category: "breakfast", catTitle: "Завтраки", price: 470, desc: "Глазунья из двух яиц, куриные колбаски, салат, творожный сыр, фасоль, хлеб", mods: ["Яйца вкрутую", "Без фасоли"] },
+    /* Full complete dishes catalog with descriptions, additives (mods) and prices */
+    const FULL_MENU = [
+      /* УТРО В КОФЕМАНЕ (ЗАВТРАКИ) */
+      { id: 1, name: "Каша с фруктами и орехом", cat: "breakfast", catTitle: "Завтраки", price: 360, desc: "Пшённая / овсяная / рисовая на выбор, подаётся с фруктами и орехом", mods: ["Овсяная", "Пшённая", "Рисовая", "Обычное молоко", "Кокосовое молоко", "Миндальное молоко", "Овсяное молоко", "Без орехов"] },
+      { id: 2, name: "Блин с говядиной и яйцом", cat: "breakfast", catTitle: "Завтраки", price: 390, desc: "Блин с сочным фаршем из говядины, подаётся со сметаной", mods: ["Сметана отдельно", "Без сметаны", "Погреть"] },
+      { id: 3, name: "Блин с лососем и крем-сыром", cat: "breakfast", catTitle: "Завтраки", price: 420, desc: "Слабосоленый лосось и сливочный крем-сыр", mods: ["С собой", "Холодный", "Тёплый"] },
+      { id: 4, name: "Блин с творогом и ягодным муссом", cat: "breakfast", catTitle: "Завтраки", price: 380, desc: "Нежный творог и натуральный ягодный мусс", mods: ["Мусс отдельно"] },
+      { id: 5, name: "Блин с ягодным муссом", cat: "breakfast", catTitle: "Завтраки", price: 370, desc: "Нежный творог со сметаной и ягодным муссом", mods: ["Мусс отдельно"] },
+      { id: 6, name: "Ванильные сырники", cat: "breakfast", catTitle: "Завтраки", price: 310, desc: "Домашние пышные сырники по классическому рецепту", mods: ["Со сметаной", "Со сгущенкой", "С ягодным муссом"] },
+      { id: 7, name: "Круассан с лососем", cat: "breakfast", catTitle: "Завтраки", price: 430, desc: "Лосось, сливочный крем-сыр с зеленью, огурец, салат айсберг", mods: ["Без зелени", "Без огурца", "С собой"] },
+      { id: 8, name: "Круассан с цыпленком", cat: "breakfast", catTitle: "Завтраки", price: 390, desc: "Филе цыпленка, крем-сыр с зеленью, свежий салат айсберг", mods: ["Без зелени", "Погреть", "С собой"] },
+      { id: 9, name: "Круассан классический", cat: "breakfast", catTitle: "Завтраки", price: 250, desc: "Хрустящий сливочный круассан", mods: ["Погреть", "С собой"] },
+      { id: 10, name: "Круассан в ассортименте", cat: "breakfast", catTitle: "Завтраки", price: 350, desc: "Круассан со сладкой начинкой с витрины", mods: ["Шоколадный", "Миндальный", "С собой"] },
+      { id: 11, name: "Омлет «зелёный»", cat: "breakfast", catTitle: "Завтраки", price: 400, desc: "Пышный омлет, подаётся со свежим салатом, авокадо и зерновым хлебом", mods: ["Без лука", "Хлеб отдельно"] },
+      { id: 12, name: "«Большой» завтрак", cat: "breakfast", catTitle: "Завтраки", price: 470, desc: "Глазунья из двух яиц, куриные колбаски, салат, творожный сыр, фасоль, хлеб", mods: ["Яйца вкрутую", "Без фасоли"] },
 
       /* ЛЕТО & ЗАКУСКИ */
-      { id: 71, name: "Салат свекольный (ЛЕТО)", category: "summer", catTitle: "Лето & Закуски", price: 480, desc: "Свекла, листья салата, сыр фета, апельсин, микс семечек", mods: ["Без сыра", "Без семечек", "Без апельсина"] },
-      { id: 72, name: "Зелёный салат", category: "summer", catTitle: "Лето & Закуски", price: 480, desc: "Свежие огурцы, куриное филе, кунжут, микс листьев салата", mods: ["Без кунжута", "Масло отдельно"] },
-      { id: 73, name: "Окрошка на кефире/рассоле", category: "summer", catTitle: "Лето & Закуски", price: 380, desc: "Освежающая летняя окрошка с курицей и овощами", mods: ["На кефире", "На рассоле/квасе", "Сметана отдельно", "Горчица"] },
-      { id: 74, name: "Мясной лаваш", category: "summer", catTitle: "Лето & Закуски", price: 510, desc: "Сочное мясо, расплавленный сыр, свежие овощи, соус в лаваше", mods: ["Поострее", "Без соуса", "С собой"] },
-      { id: 75, name: "Кесадилья с курицей", category: "summer", catTitle: "Лето & Закуски", price: 410, desc: "Хрустящая тортилья с филе курицы, тянущимся сыром и овощами", mods: ["Соус отдельно", "Поострее", "С собой"] },
+      { id: 21, name: "Салат свекольный (ЛЕТО)", cat: "summer", catTitle: "Лето & Закуски", price: 480, desc: "Свекла, листья салата, сыр фета, апельсин, микс семечек", mods: ["Без сыра", "Без семечек", "Без апельсина"] },
+      { id: 22, name: "Зелёный салат", cat: "summer", catTitle: "Лето & Закуски", price: 480, desc: "Свежие огурцы, куриное филе, кунжут, микс листьев салата", mods: ["Без кунжута", "Масло отдельно"] },
+      { id: 23, name: "Окрошка на кефире/рассоле", cat: "summer", catTitle: "Лето & Закуски", price: 380, desc: "Освежающая летняя окрошка с курицей и овощами", mods: ["На кефире", "На рассоле/квасе", "Сметана отдельно", "Горчица"] },
+      { id: 24, name: "Мясной лаваш", cat: "summer", catTitle: "Лето & Закуски", price: 510, desc: "Сочное мясо, расплавленный сыр, свежие овощи, фирменный соус в лаваше", mods: ["Поострее", "Без соуса", "С собой"] },
+      { id: 25, name: "Кесадилья с курицей", cat: "summer", catTitle: "Лето & Закуски", price: 410, desc: "Хрустящая тортилья с филе курицы, тянущимся сыром и овощами", mods: ["Соус отдельно", "Поострее", "С собой"] },
 
       /* САЛАТЫ */
-      { id: 101, name: "Греко салат", category: "salads", catTitle: "Салаты", price: 470, desc: "Листья салата, помидоры, огурцы, болгарский перец, оливки, красный лук, сыр фета", mods: ["Без лука", "Масло отдельно", "Без сыра фета"] },
-      { id: 102, name: "Цезарь с глазуньей", category: "salads", catTitle: "Салаты", price: 480, desc: "Куриное филе, листья салата, пармезан, соус цезарь, яйцо глазунья", mods: ["Яйцо вкрутую", "Соус отдельно", "Без гренок"] },
-      { id: 103, name: "Оливье", category: "salads", catTitle: "Салаты", price: 410, desc: "Куриное филе, яблоки, перепелиные яйца, майонез", mods: ["Без майонеза", "Без лука"] },
-      { id: 104, name: "Салат с моцареллой", category: "salads", catTitle: "Салаты", price: 530, desc: "Сыр моцарелла, сочные помидоры, авокадо, соус песто", mods: ["Песто отдельно"] },
+      { id: 31, name: "Греко салат", cat: "salads", catTitle: "Салаты", price: 470, desc: "Листья салата, помидоры, огурцы, болгарский перец, оливки, красный лук, греческий сыр фета", mods: ["Без лука", "Масло отдельно", "Без сыра фета"] },
+      { id: 32, name: "Цезарь с глазуньей", cat: "salads", catTitle: "Салаты", price: 480, desc: "Нежное куриное филе, листья салата, пармезан, соус цезарь, яйцо глазунья", mods: ["Яйцо вкрутую", "Соус отдельно", "Без гренок"] },
+      { id: 33, name: "Оливье", cat: "salads", catTitle: "Салаты", price: 410, desc: "Обжаренное куриное филе, яблоки, перепелиные яйца, майонез", mods: ["Без майонеза", "Без лука"] },
+      { id: 34, name: "Салат с моцареллой", cat: "salads", catTitle: "Салаты", price: 530, desc: "Сыр моцарелла, сочные помидоры, авокадо, соус песто", mods: ["Песто отдельно"] },
 
       /* СУПЫ */
-      { id: 201, name: "Крем-суп из тыквы", category: "soups", catTitle: "Супы", price: 350, desc: "Тыквенный крем-суп с обжаренными семечками", mods: ["Без семечек", "Гренки +40₽", "Погорячее"] },
-      { id: 202, name: "Домашняя лапша", category: "soups", catTitle: "Супы", price: 380, desc: "Домашняя лапша, перепелиные яйца, курица, наваристый бульон", mods: ["Без зелени", "Погорячее"] },
-      { id: 203, name: "Борщ", category: "soups", catTitle: "Супы", price: 460, desc: "Подаём со сметаной и свежей зеленью", mods: ["Сметана отдельно", "Без зелени", "Без сметаны"] },
+      { id: 41, name: "Крем-суп из тыквы", cat: "soups", catTitle: "Супы", price: 350, desc: "Нежный тыквенный крем-суп с обжаренными тыквенными семечками", mods: ["Без семечек", "Гренки +40₽", "Погорячее"] },
+      { id: 42, name: "Домашняя лапша", cat: "soups", catTitle: "Супы", price: 380, desc: "Домашняя лапша, перепелиные яйца, кусочки курицы, наваристый бульон", mods: ["Без зелени", "Погорячее"] },
+      { id: 43, name: "Борщ", cat: "soups", catTitle: "Супы", price: 460, desc: "Подаём со сметаной и свежей сочной зеленью", mods: ["Сметана отдельно", "Без зелени", "Без сметаны"] },
 
-      /* СЭНДВИЧИ */
-      { id: 301, name: "Тост с лососем", category: "sandwiches", catTitle: "Сэндвичи", price: 430, desc: "Зерновой хлеб, слабосоленый лосось, крем-сыр, красный лук", mods: ["Без лука", "Хрустящий тост", "С собой"] },
-      { id: 302, name: "Бургер «Кофеман»", category: "sandwiches", catTitle: "Сэндвичи", price: 640, desc: "Котлета из говядины, сыр чеддер, томаты, красный лук, картофель фри", mods: ["Well Done", "Medium", "Без лука", "Соус отдельно"] },
-      { id: 303, name: "Сэндвич чиабатта", category: "sandwiches", catTitle: "Сэндвичи", price: 410, desc: "Листья салата, куриное филе, томаты, сливочный крем-сыр, чиабатта", mods: ["Без томатов", "С собой", "Погреть"] },
-      { id: 304, name: "Сэндвич на бейгле", category: "sandwiches", catTitle: "Сэндвичи", price: 420, desc: "Булочка собственного приготовления, глазунья, микс салата, куриное филе", mods: ["Хорошо поджарить", "Яйцо вкрутую"] },
-      { id: 305, name: "Японский сэндвич с тунцом", category: "sandwiches", catTitle: "Сэндвичи", price: 420, desc: "Обжаренный тостовый хлеб с начинкой из сочного тунца", mods: ["С собой", "Хрустящий"] },
-      { id: 306, name: "Сэндвич с курицей", category: "sandwiches", catTitle: "Сэндвичи", price: 390, desc: "Тостовый хлеб, листья салата, куриное филе, томаты", mods: ["С собой", "Без томатов"] },
+      /* СЭНДВИЧИ И НЕ ТОЛЬКО */
+      { id: 51, name: "Тост с лососем", cat: "sandwiches", catTitle: "Сэндвичи", price: 430, desc: "Зерновой хлеб, слабосоленый лосось, крем-сыр, красный лук", mods: ["Без лука", "Хрустящий тост", "С собой"] },
+      { id: 52, name: "Бургер «Кофеман»", cat: "sandwiches", catTitle: "Сэндвичи", price: 640, desc: "Котлета из говядины, сыр чеддер, томаты, красный лук, картофель фри", mods: ["Well Done", "Medium", "Без лука", "Соус отдельно"] },
+      { id: 53, name: "Сэндвич чиабатта", cat: "sandwiches", catTitle: "Сэндвичи", price: 410, desc: "Листья салата, куриное филе, томаты, сливочный крем-сыр, чиабатта", mods: ["Без томатов", "С собой", "Погреть"] },
+      { id: 54, name: "Сэндвич на бейгле", cat: "sandwiches", catTitle: "Сэндвичи", price: 420, desc: "Булочка собственного приготовления, глазунья, микс салата, куриное филе", mods: ["Хорошо поджарить", "Яйцо вкрутую"] },
+      { id: 55, name: "Японский сэндвич с тунцом", cat: "sandwiches", catTitle: "Сэндвичи", price: 420, desc: "Обжаренный тостовый хлеб с начинкой из тунца", mods: ["С собой", "Хрустящий"] },
+      { id: 56, name: "Сэндвич с курицей", cat: "sandwiches", catTitle: "Сэндвичи", price: 390, desc: "Тостовый хлеб, листья салата, куриное филе, томаты", mods: ["С собой", "Без томатов"] },
 
-      /* ГОРЯЧЕЕ */
-      { id: 401, name: "Котлета из говядины с брусничным соусом", category: "hot", catTitle: "Горячее", price: 720, desc: "Подаём с нежным картофельным пюре и чипсами", mods: ["1-й курс", "2-й курс", "Соус отдельно"] },
-      { id: 402, name: "Бефстроганов с картофельным пюре", category: "hot", catTitle: "Горячее", price: 740, desc: "Подаём с огурцами собственного посола и нежным пюре", mods: ["1-й курс", "2-й курс"] },
-      { id: 403, name: "Телятина на косточке", category: "hot", catTitle: "Горячее", price: 790, desc: "Нежная телятина в сочном маринаде, подаём с пылу с жару", mods: ["Medium", "Well Done", "Соус отдельно"] },
-      { id: 404, name: "Шницель куриный", category: "hot", catTitle: "Горячее", price: 690, desc: "Куриный шницель с зелёным салатом", mods: ["Лимон отдельно", "1-й курс", "2-й курс"] },
-      { id: 405, name: "Гречневая лапша с курицей", category: "hot", catTitle: "Горячее", price: 610, desc: "Лапша соба, овощной микс, кунжут, курица", mods: ["Острее", "Не острая", "Без кунжута"] },
-      { id: 406, name: "Гречневая лапша с телятиной", category: "hot", catTitle: "Горячее", price: 680, desc: "Лапша соба, овощной микс, кунжут, телятина", mods: ["Острее", "Не острая", "Без кунжута"] },
-      { id: 407, name: "Лосось терияки", category: "hot", catTitle: "Горячее", price: 820, desc: "Филе лосося с соусом терияки, кунжут, лимон", mods: ["Соус отдельно", "Без кунжута"] },
-      { id: 408, name: "Пибимпаб", category: "hot", catTitle: "Горячее", price: 780, desc: "Рис, овощи, сочный говяжий фарш, соус чили", mods: ["Менее острый", "Соус чили отдельно", "Поострее"] },
-      { id: 409, name: "Томлёная говядина с фри", category: "hot", catTitle: "Горячее", price: 810, desc: "Нежная томлёная говядина, картофель фри", mods: ["1-й курс", "2-й курс", "Кетчуп"] },
+      /* ГОРЯЧИЕ БЛЮДА */
+      { id: 61, name: "Котлета из говядины с брусничным соусом", cat: "hot", catTitle: "Горячее", price: 720, desc: "Подаём с нежным картофельным пюре и картофельными чипсами", mods: ["Соус отдельно", "1-й курс", "2-й курс"] },
+      { id: 62, name: "Бефстроганов с картофельным пюре", cat: "hot", catTitle: "Горячее", price: 740, desc: "Подаём с огурцами собственного посола и нежным пюре", mods: ["1-й курс", "2-й курс"] },
+      { id: 63, name: "Телятина на косточке", cat: "hot", catTitle: "Горячее", price: 790, desc: "Нежная телятина в сочном маринаде, подаём с миксом из зелени с пылу с жару", mods: ["Medium", "Well Done", "Соус отдельно"] },
+      { id: 64, name: "Шницель куриный", cat: "hot", catTitle: "Горячее", price: 690, desc: "Куриный шницель с зелёным салатом", mods: ["Лимон отдельно", "1-й курс", "2-й курс"] },
+      { id: 65, name: "Гречневая лапша с телятиной", cat: "hot", catTitle: "Горячее", price: 680, desc: "Гречневая лапша соба, овощной микс, кунжут, сочная телятина", mods: ["Острее", "Не острая", "Без кунжута"] },
+      { id: 66, name: "Гречневая лапша с курицей", cat: "hot", catTitle: "Горячее", price: 610, desc: "Гречневая лапша соба, овощной микс, кунжут, курица", mods: ["Острее", "Не острая", "Без кунжута"] },
+      { id: 67, name: "Лосось терияки", cat: "hot", catTitle: "Горячее", price: 820, desc: "Филе лосося с соусом терияки, кунжут, лимон", mods: ["Соус отдельно", "Без кунжута"] },
+      { id: 68, name: "Пибимпаб", cat: "hot", catTitle: "Горячее", price: 780, desc: "Рис, овощи, говяжий фарш, пикантный соус чили", mods: ["Менее острый", "Соус чили отдельно", "Поострее"] },
+      { id: 69, name: "Томлёная говядина с картофелем фри", cat: "hot", catTitle: "Горячее", price: 810, desc: "Нежная томлёная говядина и золотистый картофель фри", mods: ["1-й курс", "2-й курс", "Кетчуп"] },
 
       /* ГАРНИРЫ */
-      { id: 501, name: "Картофель фри", category: "garnishes", catTitle: "Гарниры", price: 270, desc: "Золотистый картофель с солью", mods: ["Кетчуп +50₽", "Сырный соус +50₽", "Без соли"] },
-      { id: 502, name: "Японский рис", category: "garnishes", catTitle: "Гарниры", price: 230, desc: "Рассыпчатый отварной рис по-японски", mods: ["С маслом", "Без масла"] },
-      { id: 503, name: "Картофельное пюре", category: "garnishes", catTitle: "Гарниры", price: 230, desc: "Нежное сливочное пюре", mods: ["Погорячее"] },
-      { id: 504, name: "Зелёная гречка", category: "garnishes", catTitle: "Гарниры", price: 230, desc: "Отварная полезная зеленая гречка", mods: ["С маслом", "Без масла"] },
+      { id: 71, name: "Картофель фри", cat: "garnishes", catTitle: "Гарниры", price: 270, desc: "Золотистый картофель с солью", mods: ["Кетчуп +50₽", "Сырный соус +50₽", "Без соли"] },
+      { id: 72, name: "Японский рис", cat: "garnishes", catTitle: "Гарниры", price: 230, desc: "Рассыпчатый отварной рис по-японски", mods: ["С маслом", "Без масла"] },
+      { id: 73, name: "Картофельное пюре", cat: "garnishes", catTitle: "Гарниры", price: 230, desc: "Нежное сливочное пюре", mods: ["Погорячее"] },
+      { id: 74, name: "Зелёная гречка", cat: "garnishes", catTitle: "Гарниры", price: 230, desc: "Отварная полезная зеленая гречка", mods: ["С маслом", "Без масла"] },
 
       /* ДЕСЕРТЫ */
-      { id: 601, name: "Шоколадный брауни с мороженым", category: "desserts", catTitle: "Десерты", price: 370, desc: "Шоколадный брауни + шарик ванильного пломбира", mods: ["Погреть брауни", "Пломбир отдельно"] },
-      { id: 602, name: "Яблочный пирог с мороженым", category: "desserts", catTitle: "Десерты", price: 370, desc: "Теплый яблочный пай + шарик ванильного мороженого", mods: ["Погреть пирог", "Пломбир отдельно"] },
-      { id: 603, name: "Торты в ассортименте", category: "desserts", catTitle: "Десерты", price: 350, desc: "Свежий кусочек торта с витрины", mods: ["Уточнить на витрине"] },
+      { id: 81, name: "Шоколадный брауни с мороженым", cat: "desserts", catTitle: "Десерты", price: 370, desc: "Теплый шоколадный брауни с шариком мороженого", mods: ["Погреть брауни", "Пломбир отдельно"] },
+      { id: 82, name: "Яблочный пирог с мороженым", cat: "desserts", catTitle: "Десерты", price: 370, desc: "Нежный яблочный пирог с шариком мороженого", mods: ["Погреть пирог", "Пломбир отдельно"] },
+      { id: 83, name: "Торты в ассортименте", cat: "desserts", catTitle: "Десерты", price: 350, desc: "Свежий кусочек торта с кондитерской витрины", mods: ["С витрины"] },
 
       /* КЛАССИЧЕСКИЙ КОФЕ */
-      { id: 701, name: "Эспрессо", category: "coffee_classic", catTitle: "Классич. кофе", price: 140, desc: "Классический шот 30 мл", mods: ["Стакан воды", "С собой"] },
-      { id: 702, name: "Американо 200мл", category: "coffee_classic", catTitle: "Классич. кофе", price: 180, desc: "Двойной эспрессо с горячей водой", mods: ["Молоко отдельно +50₽", "С собой"] },
-      { id: 703, name: "Американо Большой 300мл", category: "coffee_classic", catTitle: "Классич. кофе", price: 220, desc: "Большой американо", mods: ["Молоко отдельно +50₽", "С собой"] },
-      { id: 704, name: "Капучино 250мл", category: "coffee_classic", catTitle: "Классич. кофе", price: 260, desc: "Эспрессо с молочной пенкой", mods: ["Корица", "Без сахара", "С собой"] },
-      { id: 705, name: "Капучино Большой 350мл", category: "coffee_classic", catTitle: "Классич. кофе", price: 300, desc: "Большой капучино на двойном эспрессо", mods: ["Корица", "Без сахара", "С собой"] },
-      { id: 706, name: "Латте классический 300мл", category: "coffee_classic", catTitle: "Классич. кофе", price: 260, desc: "Нежный молочный кофейный напиток", mods: ["Без сахара", "С собой"] },
-      { id: 707, name: "Латте Большой 400мл", category: "coffee_classic", catTitle: "Классич. кофе", price: 300, desc: "Большая порция латте", mods: ["Без сахара", "С собой"] },
-      { id: 708, name: "Флэт Уайт", category: "coffee_classic", catTitle: "Классич. кофе", price: 270, desc: "Двойной шот эспрессо и тонкий слой бархатистого молока", mods: ["Погорячее", "С собой"] },
+      { id: 91, name: "Эспрессо", cat: "coffee_classic", catTitle: "Классич. кофе", price: 140, desc: "Шот классического насыщенного кофе 30мл", mods: ["Стакан воды", "С собой"] },
+      { id: 92, name: "Американо 200мл", cat: "coffee_classic", catTitle: "Классич. кофе", price: 180, desc: "Двойной эспрессо с горячей водой 200мл", mods: ["Молоко отдельно +50₽", "С собой"] },
+      { id: 93, name: "Американо Большой 300мл", cat: "coffee_classic", catTitle: "Классич. кофе", price: 220, desc: "Большой американо 300мл", mods: ["Молоко отдельно +50₽", "С собой"] },
+      { id: 94, name: "Капучино 250мл", cat: "coffee_classic", catTitle: "Классич. кофе", price: 260, desc: "Эспрессо с воздушной молочной пенкой", mods: ["Корица", "Без сахара", "С собой"] },
+      { id: 95, name: "Капучино Большой 350мл", cat: "coffee_classic", catTitle: "Классич. кофе", price: 300, desc: "Большой капучино на двойном эспрессо", mods: ["Корица", "Без сахара", "С собой"] },
+      { id: 96, name: "Латте 300мл", cat: "coffee_classic", catTitle: "Классич. кофе", price: 260, desc: "Нежный молочный кофейный напиток", mods: ["Без сахара", "С собой"] },
+      { id: 97, name: "Латте Большой 400мл", cat: "coffee_classic", catTitle: "Классич. кофе", price: 300, desc: "Большая порция нежного латте", mods: ["Без сахара", "С собой"] },
+      { id: 98, name: "Флэт Уайт", cat: "coffee_classic", catTitle: "Классич. кофе", price: 270, desc: "Двойной эспрессо с тонким слоем бархатистого молока", mods: ["Погорячее", "С собой"] },
 
       /* АВТОРСКИЙ КОФЕ */
-      { id: 711, name: "Латте малина", category: "coffee_author", catTitle: "Авторский кофе", price: 360, desc: "Классический латте с ярким натуральным акцентом малины", mods: ["Без сахара", "Погорячее", "С собой"] },
-      { id: 712, name: "Капучино соленая карамель", category: "coffee_author", catTitle: "Авторский кофе", price: 360, desc: "Фирменный капучино с соленой карамелью", mods: ["С собой", "Меньше сахара"] },
-      { id: 713, name: "Раф миндальный", category: "coffee_author", catTitle: "Авторский кофе", price: 360, desc: "Сливки, эспрессо и натуральный миндальный вкус", mods: ["Погорячее", "С собой"] },
-      { id: 714, name: "Раф ореховый", category: "coffee_author", catTitle: "Авторский кофе", price: 360, desc: "Сливочный раф с богатым фундучно-ореховым ароматом", mods: ["Погорячее", "С собой"] },
-      { id: 715, name: "Раф цитрусовый", category: "coffee_author", catTitle: "Авторский кофе", price: 360, desc: "Ароматный раф с цитрусовой цедрой и сливками", mods: ["С собой"] },
+      { id: 101, name: "Латте малина", cat: "coffee_author", catTitle: "Авторский кофе", price: 360, desc: "Классический латте с ярким акцентом малины", mods: ["Без сахара", "Погорячее", "С собой"] },
+      { id: 102, name: "Капучино соленая карамель", cat: "coffee_author", catTitle: "Авторский кофе", price: 360, desc: "Фирменный капучино со сливочной соленой карамелью", mods: ["С собой", "Меньше сахара"] },
+      { id: 103, name: "Раф миндальный", cat: "coffee_author", catTitle: "Авторский кофе", price: 360, desc: "Сливки, эспрессо и натуральный миндальный вкус", mods: ["Погорячее", "С собой"] },
+      { id: 104, name: "Раф ореховый", cat: "coffee_author", catTitle: "Авторский кофе", price: 360, desc: "Сливочный раф с богатым фундучно-ореховым ароматом", mods: ["Погорячее", "С собой"] },
+      { id: 105, name: "Раф цитрусовый", cat: "coffee_author", catTitle: "Авторский кофе", price: 360, desc: "Нежный раф со свежей цитрусовой цедрой", mods: ["С собой"] },
 
       /* ХОЛОДНЫЙ КОФЕ */
-      { id: 721, name: "Айс капучино", category: "coffee_cold", catTitle: "Холодный кофе", price: 300, desc: "Освежающий капучино со льдом", mods: ["Без сахара", "Меньше льда", "С собой"] },
-      { id: 722, name: "Айс латте", category: "coffee_cold", catTitle: "Холодный кофе", price: 300, desc: "Холодный латте со льдом", mods: ["Без сахара", "Меньше льда", "С собой"] },
-      { id: 723, name: "Фраппе кофейный", category: "coffee_cold", catTitle: "Холодный кофе", price: 360, desc: "Эспрессо, молоко и мороженое", mods: ["С собой"] },
-      { id: 724, name: "Бамбл", category: "coffee_cold", catTitle: "Холодный кофе", price: 390, desc: "Апельсиновый сок, эспрессо и лед", mods: ["Меньше льда", "Без льда", "С собой"] },
-      { id: 725, name: "Глясе", category: "coffee_cold", catTitle: "Холодный кофе", price: 250, desc: "Эспрессо с шариком нежного мороженого", mods: ["Мороженое отдельно"] },
-      { id: 726, name: "Айс матча латте", category: "coffee_cold", catTitle: "Холодный кофе", price: 300, desc: "Чай матча, молоко и кубики льда", mods: ["Меньше льда", "С собой"] },
-      { id: 727, name: "Айс-матча малина", category: "coffee_cold", catTitle: "Холодный кофе", price: 360, desc: "Матча, спелая малина, молоко и лёд", mods: ["Меньше льда", "Без сахара", "С собой"] },
-      { id: 728, name: "Айс грин-ти мёд", category: "coffee_cold", catTitle: "Холодный кофе", price: 320, desc: "Зеленый чай, мед и лед", mods: ["Меньше льда", "С собой"] },
+      { id: 111, name: "Айс капучино", cat: "coffee_cold", catTitle: "Холодный кофе", price: 300, desc: "Освежающий капучино со льдом", mods: ["Без сахара", "Меньше льда", "С собой"] },
+      { id: 112, name: "Айс латте", cat: "coffee_cold", catTitle: "Холодный кофе", price: 300, desc: "Холодный латте со льдом", mods: ["Без сахара", "Меньше льда", "С собой"] },
+      { id: 113, name: "Фраппе кофейный", cat: "coffee_cold", catTitle: "Холодный кофе", price: 360, desc: "Холодный напиток на основе эспрессо, молока и мороженого", mods: ["С собой"] },
+      { id: 114, name: "Бамбл", cat: "coffee_cold", catTitle: "Холодный кофе", price: 390, desc: "Свежевыжатый апельсиновый сок, эспрессо и лед", mods: ["Меньше льда", "Без льда", "С собой"] },
+      { id: 115, name: "Глясе", cat: "coffee_cold", catTitle: "Холодный кофе", price: 250, desc: "Эспрессо с шариком нежного мороженого", mods: ["Мороженое отдельно"] },
+      { id: 116, name: "Айс матча латте", cat: "coffee_cold", catTitle: "Холодный кофе", price: 300, desc: "Зеленый чай матча, молоко и кубики льда", mods: ["Меньше льда", "С собой"] },
+      { id: 117, name: "Айс-матча малина", cat: "coffee_cold", catTitle: "Холодный кофе", price: 360, desc: "Матча, спелая малина, молоко и лёд", mods: ["Меньше льда", "Без сахара", "С собой"] },
+      { id: 118, name: "Айс грин-ти мёд", cat: "coffee_cold", catTitle: "Холодный кофе", price: 320, desc: "Зеленый чай, мед и охлаждающий лед", mods: ["Меньше льда", "С собой"] },
 
-      /* ЧАЙ & ГОРЯЧИЕ НАПИТКИ */
-      { id: 731, name: "Матча Латте (горячий)", category: "tea", catTitle: "Чай & Какао", price: 270, desc: "Зеленый чай матча со взбитым молоком", mods: ["Без сахара", "С собой"] },
-      { id: 732, name: "Какао", category: "tea", catTitle: "Чай & Какао", price: 260, desc: "Классический шоколадный напиток", mods: ["Маршмеллоу", "С собой"] },
-      { id: 733, name: "Чай черный (чашка 300мл)", category: "tea", catTitle: "Чай & Какао", price: 140, desc: "Черный листовой чай", mods: ["С лимоном", "С собой"] },
-      { id: 734, name: "Чай черный (чайник 600мл)", category: "tea", catTitle: "Чай & Какао", price: 240, desc: "Чайник черного чая", mods: ["С лимоном", "Чашки на 2", "Чашки на 4"] },
-      { id: 735, name: "Чай зелёный (чашка 300мл)", category: "tea", catTitle: "Чай & Какао", price: 140, desc: "Зеленый китайский листовой чай", mods: ["С лимоном", "С собой"] },
-      { id: 736, name: "Чай зелёный (чайник 600мл)", category: "tea", catTitle: "Чай & Какао", price: 240, desc: "Чайник зеленого листового чая", mods: ["Чашки на 2", "Чашки на 4"] },
-      { id: 737, name: "Чай с жасмином (чашка 300мл)", category: "tea", catTitle: "Чай & Какао", price: 160, desc: "Зеленый чай с цветами жасмина", mods: ["С собой"] },
-      { id: 738, name: "Чай с жасмином (чайник 600мл)", category: "tea", catTitle: "Чай & Какао", price: 270, desc: "Ароматный жасминовый чайник", mods: ["Чашки на 2", "Чашки на 4"] },
-      { id: 739, name: "Чай гречишный (чашка 300мл)", category: "tea", catTitle: "Чай & Какао", price: 160, desc: "Гречишный чай Ку Цяо", mods: ["С собой"] },
-      { id: 740, name: "Чай гречишный (чайник 600мл)", category: "tea", catTitle: "Чай & Какао", price: 270, desc: "Чайник гречишного чая", mods: ["Чашки на 2", "Чашки на 4"] },
-      { id: 741, name: "Чай облепиховый с апельсином", category: "tea", catTitle: "Чай & Какао", price: 360, desc: "Авторский чайник (горячий/холодный)", mods: ["Горячий", "Холодный со льдом"] },
-      { id: 742, name: "Чай черная смородина с мятой", category: "tea", catTitle: "Чай & Какао", price: 360, desc: "Авторский чайник с ягодами и мятой", mods: ["Горячий", "Холодный со льдом"] },
+      /* ЧАЙ И ГОРЯЧИЕ НАПИТКИ */
+      { id: 121, name: "Матча Латте (горячий)", cat: "tea", catTitle: "Чай & Горячее", price: 270, desc: "Зеленый чай матча со взбитым молоком", mods: ["Без сахара", "С собой"] },
+      { id: 122, name: "Какао", cat: "tea", catTitle: "Чай & Горячее", price: 260, desc: "Классический бархатистый шоколадный напиток", mods: ["Маршмеллоу", "С собой"] },
+      { id: 123, name: "Чай черный (чашка 300мл)", cat: "tea", catTitle: "Чай & Горячее", price: 140, desc: "Черный листовой чай в чашке", mods: ["С лимоном", "С собой"] },
+      { id: 124, name: "Чай черный (чайник 600мл)", cat: "tea", catTitle: "Чай & Горячее", price: 240, desc: "Чайник черного листового чая", mods: ["С лимоном", "Чашки на 2", "Чашки на 4"] },
+      { id: 125, name: "Чай зелёный (чашка 300мл)", cat: "tea", catTitle: "Чай & Горячее", price: 140, desc: "Зеленый листовой чай в чашке", mods: ["С лимоном", "С собой"] },
+      { id: 126, name: "Чай зелёный (чайник 600мл)", cat: "tea", catTitle: "Чай & Горячее", price: 240, desc: "Чайник зеленого листового чая", mods: ["Чашки на 2", "Чашки на 4"] },
+      { id: 127, name: "Чай с жасмином (чашка 300мл)", cat: "tea", catTitle: "Чай & Горячее", price: 160, desc: "Зеленый чай с цветами жасмина в чашке", mods: ["С собой"] },
+      { id: 128, name: "Чай с жасмином (чайник 600мл)", cat: "tea", catTitle: "Чай & Горячее", price: 270, desc: "Ароматный жасминовый чайник", mods: ["Чашки на 2", "Чашки на 4"] },
+      { id: 129, name: "Чай гречишный (чашка 300мл)", cat: "tea", catTitle: "Чай & Горячее", price: 160, desc: "Гречишный чай Ку Цяо в чашке", mods: ["С собой"] },
+      { id: 130, name: "Чай гречишный (чайник 600мл)", cat: "tea", catTitle: "Чай & Горячее", price: 270, desc: "Чайник полезного гречишного чая", mods: ["Чашки на 2", "Чашки на 4"] },
+      { id: 131, name: "Чай облепиховый с апельсином", cat: "tea", catTitle: "Чай & Горячее", price: 360, desc: "Авторский чайник (холодный или горячий)", mods: ["Горячий", "Холодный со льдом"] },
+      { id: 132, name: "Чай черносмородиновый с мятой", cat: "tea", catTitle: "Чай & Горячее", price: 360, desc: "Авторский чайник с ягодами черной смородины и мятой", mods: ["Горячий", "Холодный со льдом"] },
 
-      /* СМУЗИ & МИЛКШЕЙКИ */
-      { id: 801, name: "Смузи груша банан", category: "smoothies", catTitle: "Смузи & Шейки", price: 360, desc: "Груша, банан, безлактозное молоко", mods: ["С собой"] },
-      { id: 802, name: "Смузи манго (на кокосовом)", category: "smoothies", catTitle: "Смузи & Шейки", price: 360, desc: "Пюре манго на кокосовом молоке", mods: ["С собой"] },
-      { id: 803, name: "Смузи ягодный", category: "smoothies", catTitle: "Смузи & Шейки", price: 360, desc: "Микс ягод, вишневый сок", mods: ["С собой"] },
-      { id: 804, name: "Милкшейк ванильный", category: "smoothies", catTitle: "Смузи & Шейки", price: 360, desc: "Пломбир, молоко, ваниль", mods: ["С собой", "Без трубочки"] },
-      { id: 805, name: "Милкшейк шоколадный", category: "smoothies", catTitle: "Смузи & Шейки", price: 360, desc: "Шоколадный пломбир, молоко, какао", mods: ["С собой", "Без трубочки"] },
+      /* СМУЗИ И МИЛКШЕЙКИ */
+      { id: 141, name: "Смузи груша банан", cat: "smoothies", catTitle: "Смузи & Шейки", price: 360, desc: "Свежая груша, банан, безлактозное молоко", mods: ["С собой"] },
+      { id: 142, name: "Смузи манго", cat: "smoothies", catTitle: "Смузи & Шейки", price: 360, desc: "Нежный манго на кокосовом молоке", mods: ["С собой"] },
+      { id: 143, name: "Смузи ягодный", cat: "smoothies", catTitle: "Смузи & Шейки", price: 360, desc: "Микс ягод и натуральный вишневый сок", mods: ["С собой"] },
+      { id: 144, name: "Милкшейк ванильный", cat: "smoothies", catTitle: "Смузи & Шейки", price: 360, desc: "Классический молочный коктейль с ванильным пломбиром", mods: ["С собой", "Без трубочки"] },
+      { id: 145, name: "Милкшейк шоколадный", cat: "smoothies", catTitle: "Смузи & Шейки", price: 360, desc: "Молочный коктейль с шоколадом и пломбиром", mods: ["С собой", "Без трубочки"] },
 
-      /* ЛИМОНАДЫ & СОКИ */
-      { id: 811, name: "Лимонад малина-лайм", category: "drinks", catTitle: "Напитки", price: 360, desc: "Освежающий лимонад малина и лайм", mods: ["Меньше льда", "Без трубочки", "С собой"] },
-      { id: 812, name: "Лимонад «Кофеман»", category: "drinks", catTitle: "Напитки", price: 360, desc: "Фирменный ванильный лимонад с цитрусом", mods: ["Меньше льда", "Без трубочки", "С собой"] },
-      { id: 813, name: "Лимонад облепиха-апельсин", category: "drinks", catTitle: "Напитки", price: 360, desc: "Витаминный лимонад облепиха и апельсин", mods: ["Меньше льда", "Без трубочки", "С собой"] },
-      { id: 814, name: "Лимонад медовая вишня", category: "drinks", catTitle: "Напитки", price: 360, desc: "Сочная вишня с медовой ноткой", mods: ["Меньше льда", "Без трубочки", "С собой"] },
-      { id: 815, name: "Морс брусничный", category: "drinks", catTitle: "Напитки", price: 140, desc: "Натуральный брусничный морс", mods: ["Без льда", "С собой"] },
-      { id: 816, name: "Морс облепиховый", category: "drinks", catTitle: "Напитки", price: 140, desc: "Натуральный облепиховый морс", mods: ["Без льда", "С собой"] },
-      { id: 817, name: "Соки в ассортименте", category: "drinks", catTitle: "Напитки", price: 140, desc: "Апельсин, яблоко, вишня, томат (200 мл)", mods: ["Апельсин", "Яблоко", "Вишня", "Томат"] },
-      { id: 818, name: "Газиров. напитки 330мл", category: "drinks", catTitle: "Напитки", price: 220, desc: "Кола, тоник, содовая в стекле", mods: ["Со льдом", "Без льда", "Лимон"] },
-      { id: 819, name: "Газиров. напитки 500мл", category: "drinks", catTitle: "Напитки", price: 260, desc: "Освежающие напитки в бутылке", mods: ["Со льдом", "Без льда"] },
-      { id: 820, name: "Вода питьевая", category: "drinks", catTitle: "Напитки", price: 120, desc: "Минеральная негазированная / газированная", mods: ["Без газа", "С газом", "Со льдом", "С лимоном"] },
+      /* ЛИМОНАДЫ И НАПИТКИ */
+      { id: 151, name: "Лимонад малина-лайм", cat: "drinks", catTitle: "Лимонады & Соки", price: 360, desc: "Освежающий лимонад с добавлением малины и лайма", mods: ["Меньше льда", "Без трубочки", "С собой"] },
+      { id: 152, name: "Лимонад «Кофеман»", cat: "drinks", catTitle: "Лимонады & Соки", price: 360, desc: "Ванильный лимонад с цитрусовой свежестью", mods: ["Меньше льда", "Без трубочки", "С собой"] },
+      { id: 153, name: "Лимонад облепиха-апельсин", cat: "drinks", catTitle: "Лимонады & Соки", price: 360, desc: "Яркий витаминный лимонад с облепихой и цитрусом", mods: ["Меньше льда", "Без трубочки", "С собой"] },
+      { id: 154, name: "Лимонад медовая вишня", cat: "drinks", catTitle: "Лимонады & Соки", price: 360, desc: "Спелая вишня с нежной медовой ноткой", mods: ["Меньше льда", "Без трубочки", "С собой"] },
+      { id: 155, name: "Морс брусничный", cat: "drinks", catTitle: "Лимонады & Соки", price: 140, desc: "Натуральный охлаждающий брусничный морс", mods: ["Без льда", "С собой"] },
+      { id: 156, name: "Морс облепиховый", cat: "drinks", catTitle: "Лимонады & Соки", price: 140, desc: "Натуральный облепиховый морс", mods: ["Без льда", "С собой"] },
+      { id: 157, name: "Соки в ассортименте", cat: "drinks", catTitle: "Лимонады & Соки", price: 140, desc: "Апельсин, яблоко, вишня, томат (200мл)", mods: ["Апельсин", "Яблоко", "Вишня", "Томат"] },
+      { id: 158, name: "Газиров. напитки 330мл", cat: "drinks", catTitle: "Лимонады & Соки", price: 220, desc: "Кола, тоник в стекле", mods: ["Со льдом", "Без льда", "С лимоном"] },
+      { id: 159, name: "Газиров. напитки 500мл", cat: "drinks", catTitle: "Лимонады & Соки", price: 260, desc: "Освежающие напитки в бутылке", mods: ["Со льдом", "Без льда"] },
+      { id: 160, name: "Вода питьевая", cat: "drinks", catTitle: "Лимонады & Соки", price: 120, desc: "Минеральная вода с газом или без газа", mods: ["Без газа", "С газом", "Со льдом", "С лимоном"] },
 
-      /* СИРОПЫ & МОЛОКО */
-      { id: 901, name: "Сиропы в ассортименте", category: "extras", catTitle: "Добавки", price: 80, desc: "Карамель, ваниль, лесной орех, кокос, лаванда", mods: ["Карамель", "Ваниль", "Орех", "Кокос", "Лаванда", "Соленая карамель"] },
-      { id: 902, name: "Молоко альтернативное (стакан)", category: "extras", catTitle: "Добавки", price: 50, desc: "Добавка в стандартную чашку", mods: ["Кокосовое", "Миндальное", "Овсяное", "Безлактозное"] },
-      { id: 903, name: "Молоко альтернативное (300мл)", category: "extras", catTitle: "Добавки", price: 120, desc: "Большая порция растительного молока", mods: ["Кокосовое", "Миндальное", "Овсяное", "Безлактозное"] }
+      /* СИРОПЫ И МОЛОКО */
+      { id: 171, name: "Сиропы в ассортименте", cat: "extras", catTitle: "Добавки", price: 80, desc: "Карамель, ваниль, лесной орех, кокос, лаванда, соленая карамель", mods: ["Карамель", "Ваниль", "Орех", "Кокос", "Лаванда", "Соленая карамель"] },
+      { id: 172, name: "Молоко альтерн./безлактозное", cat: "extras", catTitle: "Добавки", price: 50, desc: "Добавка в чашку кофе или чай", mods: ["Кокосовое", "Миндальное", "Овсяное", "Безлактозное"] },
+      { id: 173, name: "Молоко альтерн./безлактозное 300мл", cat: "extras", catTitle: "Добавки", price: 120, desc: "Большая порция альтернативного молока", mods: ["Кокосовое", "Миндальное", "Овсяное", "Безлактозное"] }
     ];
 
-    /* TABLES SCHEMA: 11 Main Hall, 5 Terrace, 2 Bar */
-    const INITIAL_TABLES = [
-      { id: 1, name: "Стол 1", zone: "main", capacity: 2, status: "free", guests: 2, order: null, openedAt: null },
-      { id: 2, name: "Стол 2", zone: "main", capacity: 2, status: "free", guests: 2, order: null, openedAt: null },
-      { id: 3, name: "Стол 3", zone: "main", capacity: 4, status: "free", guests: 2, order: null, openedAt: null },
-      { id: 4, name: "Стол 4", zone: "main", capacity: 4, status: "free", guests: 4, order: null, openedAt: null },
-      { id: 5, name: "Стол 5", zone: "main", capacity: 4, status: "free", guests: 4, order: null, openedAt: null },
-      { id: 6, name: "Стол 6", zone: "main", capacity: 4, status: "free", guests: 4, order: null, openedAt: null },
-      { id: 7, name: "Стол 7", zone: "main", capacity: 6, status: "free", guests: 4, order: null, openedAt: null },
-      { id: 8, name: "Стол 8", zone: "main", capacity: 6, status: "free", guests: 4, order: null, openedAt: null },
-      { id: 9, name: "Стол 9", zone: "main", capacity: 4, status: "free", guests: 2, order: null, openedAt: null },
-      { id: 10, name: "Стол 10", zone: "main", capacity: 4, status: "free", guests: 2, order: null, openedAt: null },
-      { id: 11, name: "Стол 11 (VIP)", zone: "main", capacity: 8, status: "free", guests: 6, order: null, openedAt: null },
-      { id: 12, name: "Терраса 1", zone: "veranda", capacity: 2, status: "free", guests: 2, order: null, openedAt: null },
-      { id: 13, name: "Терраса 2", zone: "veranda", capacity: 2, status: "free", guests: 2, order: null, openedAt: null },
-      { id: 14, name: "Терраса 3", zone: "veranda", capacity: 4, status: "free", guests: 3, order: null, openedAt: null },
-      { id: 15, name: "Терраса 4", zone: "veranda", capacity: 4, status: "free", guests: 4, order: null, openedAt: null },
-      { id: 16, name: "Терраса 5", zone: "veranda", capacity: 6, status: "free", guests: 4, order: null, openedAt: null },
-      { id: 17, name: "Бар 1", zone: "bar", capacity: 1, status: "free", guests: 1, order: null, openedAt: null },
-      { id: 18, name: "Бар 2", zone: "bar", capacity: 2, status: "free", guests: 1, order: null, openedAt: null }
+    /* 11 tables in main hall, 5 tables on terrace = 16 tables total */
+    const TABLES_INITIAL = [
+      { id: 1, name: "Стол 1", zone: "hall", guests: 2, items: [] },
+      { id: 2, name: "Стол 2", zone: "hall", guests: 2, items: [] },
+      { id: 3, name: "Стол 3", zone: "hall", guests: 4, items: [] },
+      { id: 4, name: "Стол 4", zone: "hall", guests: 4, items: [] },
+      { id: 5, name: "Стол 5", zone: "hall", guests: 4, items: [] },
+      { id: 6, name: "Стол 6", zone: "hall", guests: 4, items: [] },
+      { id: 7, name: "Стол 7", zone: "hall", guests: 6, items: [] },
+      { id: 8, name: "Стол 8", zone: "hall", guests: 6, items: [] },
+      { id: 9, name: "Стол 9", zone: "hall", guests: 2, items: [] },
+      { id: 10, name: "Стол 10", zone: "hall", guests: 4, items: [] },
+      { id: 11, name: "Стол 11 (VIP)", zone: "hall", guests: 8, items: [] },
+      { id: 12, name: "Терраса 1", zone: "terrace", guests: 2, items: [] },
+      { id: 13, name: "Терраса 2", zone: "terrace", guests: 2, items: [] },
+      { id: 14, name: "Терраса 3", zone: "terrace", guests: 4, items: [] },
+      { id: 15, name: "Терраса 4", zone: "terrace", guests: 4, items: [] },
+      { id: 16, name: "Терраса 5", zone: "terrace", guests: 6, items: [] }
     ];
 
-    /* APP RUNTIME STATE */
-    let tables = INITIAL_TABLES;
-    let paidHistory = [];
-    let kitchenTickets = [];
+    /* State */
+    let tables = TABLES_INITIAL;
     let currentTableId = 1;
-    let selectedMenuCategory = 'salads';
-    let currentDiscount = 0;
-    let selectedPayMethodType = 'card';
-    let pendingDishToAdd = null;
-    let activeHallZone = 'all';
-    let activeOrderSubTab = 'menu';
-    let pendingTableSelectionId = null;
-    let tempGuestCount = 2;
+    let currentZone = 'all';
+    let currentCategory = 'salads';
+    let currentView = 'tables'; // 'tables' | 'order'
+    let orderMobileTab = 'menu'; // 'menu' | 'cart'
+    let pendingModalTableId = null;
+    let tempGuestsCount = 2;
+    let pendingDishForModifiers = null;
 
-    /* Load from LocalStorage safely */
+    /* Load saved state */
     try {
-      const stored = localStorage.getItem('cm_tables_state_v2');
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        if (Array.isArray(parsed) && parsed.length === INITIAL_TABLES.length) {
+      const saved = localStorage.getItem('coffeeman_waiter_tables_v3');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length === TABLES_INITIAL.length) {
           tables = parsed;
         }
       }
-      const paid = localStorage.getItem('cm_paid_history_v2');
-      if (paid) paidHistory = JSON.parse(paid);
-      const kds = localStorage.getItem('cm_kds_tickets_v2');
-      if (kds) kitchenTickets = JSON.parse(kds);
-    } catch (e) {
-      console.warn('Storage read fallback', e);
-    }
-  </script>
+    } catch(e) {}
 
-  <script>
     function saveState() {
       try {
-        localStorage.setItem('cm_tables_state_v2', JSON.stringify(tables));
-        localStorage.setItem('cm_paid_history_v2', JSON.stringify(paidHistory));
-        localStorage.setItem('cm_kds_tickets_v2', JSON.stringify(kitchenTickets));
-      } catch (e) {}
-      updateShiftSummary();
+        localStorage.setItem('coffeeman_waiter_tables_v3', JSON.stringify(tables));
+      } catch(e) {}
     }
 
-    function showToast(msg, icon = '🔔') {
-      const toast = document.getElementById('toastNotification');
+    function goToTablesView() {
+      currentView = 'tables';
+      document.getElementById('view-tables').classList.remove('hidden');
+      document.getElementById('view-order').classList.add('hidden');
+      
+      const badge = document.getElementById('headerTableBadge');
+      const label = document.getElementById('headerTableLabel');
+      label.textContent = "К столам";
+      badge.classList.add('hidden');
+      
+      renderTables();
+    }
+
+    function goToOrderView(tableId) {
+      currentTableId = tableId;
+      currentView = 'order';
+      document.getElementById('view-tables').classList.add('hidden');
+      document.getElementById('view-order').classList.remove('hidden');
+
+      const currentTable = tables.find(t => t.id === tableId);
+      const badge = document.getElementById('headerTableBadge');
+      const label = document.getElementById('headerTableLabel');
+
+      if (currentTable) {
+        label.textContent = currentTable.name;
+        badge.textContent = `👥 ${currentTable.guests}`;
+        badge.classList.remove('hidden');
+      }
+
+      // Responsive layout reset
+      if (window.innerWidth >= 1024) {
+        document.getElementById('orderMenuColumn').classList.remove('hidden');
+        document.getElementById('orderCartColumn').classList.remove('hidden');
+        document.getElementById('orderCartColumn').classList.add('flex');
+      } else {
+        switchOrderMobileTab(orderMobileTab);
+      }
+
+      renderOrderScreen();
+      renderDishes();
+    }
+
+    function toggleViewFromHeader() {
+      if (currentView === 'tables') {
+        goToOrderView(currentTableId);
+      } else {
+        goToTablesView();
+      }
+    }
+
+    function switchOrderMobileTab(tab) {
+      orderMobileTab = tab;
+      const menuCol = document.getElementById('orderMenuColumn');
+      const cartCol = document.getElementById('orderCartColumn');
+      const tabMenuBtn = document.getElementById('mobileTabMenuBtn');
+      const tabCartBtn = document.getElementById('mobileTabCartBtn');
+      const floatingBtn = document.getElementById('mobileCartFloatingBtn');
+
+      if (tab === 'menu') {
+        menuCol.classList.remove('hidden');
+        cartCol.classList.add('hidden');
+        cartCol.classList.remove('flex');
+
+        tabMenuBtn.className = "flex-1 py-2 rounded-lg bg-white text-stone-900 shadow-xs flex items-center justify-center gap-1.5 transition";
+        tabCartBtn.className = "flex-1 py-2 rounded-lg text-stone-600 hover:text-stone-900 flex items-center justify-center gap-1.5 transition";
+        updateMobileFloatingBar();
+      } else {
+        menuCol.classList.add('hidden');
+        cartCol.classList.remove('hidden');
+        cartCol.classList.add('flex');
+
+        tabCartBtn.className = "flex-1 py-2 rounded-lg bg-white text-stone-900 shadow-xs flex items-center justify-center gap-1.5 transition";
+        tabMenuBtn.className = "flex-1 py-2 rounded-lg text-stone-600 hover:text-stone-900 flex items-center justify-center gap-1.5 transition";
+        if (floatingBtn) floatingBtn.classList.add('hidden');
+      }
+    }
+
+    function showToast(text, icon = '🔔') {
+      const toast = document.getElementById('toast');
       if (!toast) return;
-      document.getElementById('toastMessage').textContent = msg;
+      document.getElementById('toastMsg').textContent = text;
       document.getElementById('toastIcon').textContent = icon;
       toast.classList.remove('translate-y-24', 'opacity-0');
       clearTimeout(window.__toastTimer);
       window.__toastTimer = setTimeout(() => {
         toast.classList.add('translate-y-24', 'opacity-0');
-      }, 2500);
+      }, 2000);
     }
 
-    function filterHall(zone) {
-      activeHallZone = zone;
-      document.querySelectorAll('.hall-btn').forEach(b => {
-        if (b.dataset.zone === zone) {
-          b.className = "hall-btn shrink-0 px-3 py-1.5 rounded-xl bg-brand-800 text-white font-semibold";
-        } else {
-          b.className = "hall-btn shrink-0 px-3 py-1.5 rounded-xl bg-stone-100 text-stone-600 hover:bg-stone-200 font-semibold";
-        }
+    /* Web Audio API simple beep */
+    let audioCtx = null;
+    function playBeep() {
+      try {
+        const AudioClass = window.AudioContext || window.webkitAudioContext;
+        if (!audioCtx && AudioClass) audioCtx = new AudioClass();
+        if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+        if (!audioCtx) return;
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.frequency.setValueAtTime(540, audioCtx.currentTime);
+        gain.gain.setValueAtTime(0.05, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.08);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.08);
+      } catch(e) {}
+    }
+
+    function filterZone(zone) {
+      currentZone = zone;
+      document.querySelectorAll('.zone-btn').forEach(btn => {
+        btn.className = "zone-btn px-3.5 py-2 rounded-xl bg-stone-100 text-stone-700 hover:bg-stone-200 font-bold transition";
       });
+      const activeBtn = document.getElementById(`zone-btn-${zone}`);
+      if (activeBtn) {
+        activeBtn.className = "zone-btn px-3.5 py-2 rounded-xl bg-amber-950 text-white shadow-xs font-bold transition";
+      }
       renderTables();
     }
 
-    function calcTableTotal(table) {
-      if (!table || !table.order || !table.order.items) return 0;
-      const subtotal = table.order.items.reduce((sum, it) => sum + (it.price * it.qty), 0);
-      const discount = table.order.discount || 0;
-      return Math.max(0, Math.round(subtotal * (1 - discount / 100)));
+    function calcTableSum(table) {
+      if (!table || !table.items) return 0;
+      return table.items.reduce((sum, it) => sum + (it.price * it.qty), 0);
     }
 
     function renderTables() {
@@ -963,365 +733,261 @@
       if (!grid) return;
       grid.innerHTML = '';
 
-      const list = activeHallZone === 'all' ? tables : tables.filter(t => t.zone === activeHallZone);
+      const filtered = currentZone === 'all' 
+        ? tables 
+        : tables.filter(t => t.zone === currentZone);
 
-      list.forEach(table => {
+      filtered.forEach(table => {
+        const hasItems = table.items && table.items.length > 0;
+        const total = calcTableSum(table);
         const card = document.createElement('div');
-        const hasOrder = table.order && table.order.items && table.order.items.length > 0;
-        const total = hasOrder ? calcTableTotal(table) : 0;
-        
-        let statusBg = 'bg-white border-stone-200 hover:border-amber-400';
-        let badgeColor = 'bg-emerald-100 text-emerald-800 border-emerald-200';
-        let statusLabel = 'Свободен';
 
-        if (table.status === 'precheck') {
-          statusBg = 'bg-indigo-50/80 border-indigo-300 shadow-md ring-2 ring-indigo-400/20';
-          badgeColor = 'bg-indigo-100 text-indigo-800 border-indigo-300';
-          statusLabel = 'Пречек';
-        } else if (hasOrder || table.status === 'occupied') {
-          statusBg = 'bg-amber-50/80 border-amber-300 shadow-xs ring-1 ring-amber-400/20';
-          badgeColor = 'bg-amber-100 text-amber-900 border-amber-300';
-          statusLabel = 'Занят';
-        }
+        const bgClass = hasItems 
+          ? 'bg-amber-50/90 border-amber-300 ring-2 ring-amber-400/20 shadow-xs' 
+          : 'bg-white border-stone-200 hover:border-amber-400';
 
-        card.className = `p-3.5 sm:p-4 rounded-2xl border transition-all duration-150 cursor-pointer flex flex-col justify-between select-none relative group ${statusBg}`;
-        card.onclick = () => onTableCardClicked(table.id);
+        const statusLabel = hasItems 
+          ? `<span class="text-[10px] font-bold px-2 py-0.5 rounded-md bg-amber-200 text-amber-950">Заказ</span>` 
+          : `<span class="text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-800">Свободен</span>`;
+
+        card.className = `p-3.5 sm:p-4 rounded-2xl border transition-all duration-150 cursor-pointer flex flex-col justify-between active:scale-98 select-none ${bgClass}`;
+        card.onclick = () => onTableClicked(table.id);
 
         card.innerHTML = `
           <div>
-            <div class="flex items-center justify-between mb-1.5">
-              <span class="font-bold text-sm text-stone-900 font-serif">${table.name}</span>
-              <span class="text-[9px] font-bold px-1.5 py-0.5 rounded-full border ${badgeColor}">${statusLabel}</span>
+            <div class="flex items-center justify-between mb-1">
+              <span class="font-extrabold text-sm sm:text-base text-stone-900">${table.name}</span>
+              ${statusLabel}
             </div>
-            <div class="flex items-center gap-1.5 text-xs text-stone-500">
-              <span>👥 ${table.guests || table.capacity} чел.</span>
+            <div class="flex items-center gap-1.5 text-xs text-stone-500 mt-1">
+              <span>👥 ${table.guests} персоны</span>
               <span>•</span>
-              <span class="capitalize text-[11px]">${table.zone === 'veranda' ? 'Терраса' : table.zone === 'bar' ? 'Бар' : 'Зал'}</span>
+              <span class="capitalize text-[11px]">${table.zone === 'terrace' ? 'Терраса' : 'Зал'}</span>
             </div>
           </div>
 
-          <div class="mt-3 pt-2.5 border-t border-stone-200/60 flex items-center justify-between">
-            <span class="text-[10px] text-stone-400 font-mono">${table.openedAt ? table.openedAt : '—'}</span>
-            <span class="font-bold font-mono text-xs sm:text-sm ${total > 0 ? 'text-brand-900' : 'text-stone-400'}">${total > 0 ? total + ' ₽' : '0 ₽'}</span>
+          <div class="mt-3 pt-2.5 border-t border-stone-200/80 flex items-center justify-between">
+            <span class="text-[11px] text-stone-400">${hasItems ? table.items.length + ' поз.' : 'Пусто'}</span>
+            <span class="font-mono font-bold text-xs sm:text-sm ${total > 0 ? 'text-amber-950 font-black' : 'text-stone-400'}">${total} ₽</span>
           </div>
         `;
-
         grid.appendChild(card);
       });
     }
 
-    function onTableCardClicked(tableId) {
-      playBeep('D5');
+    function onTableClicked(tableId) {
+      playBeep();
       const table = tables.find(t => t.id === tableId);
       if (!table) return;
 
-      pendingTableSelectionId = tableId;
-      tempGuestCount = table.guests || table.capacity || 2;
+      // If table is free (no items), first ask how many persons
+      if (!table.items || table.items.length === 0) {
+        openGuestsModal(tableId);
+      } else {
+        // If table already has an active order, go straight to order
+        goToOrderView(tableId);
+      }
+    }
 
-      document.getElementById('guestModalTableTag').textContent = `${table.name}`;
-      document.getElementById('guestModalTitle').textContent = `Количество гостей`;
-      updateGuestModalUI(tempGuestCount);
+    function openGuestsModal(tableId) {
+      pendingModalTableId = tableId;
+      const table = tables.find(t => t.id === tableId);
+      tempGuestsCount = table ? (table.guests || 2) : 2;
 
+      document.getElementById('guestModalTableTag').textContent = table ? table.name : "Стол";
+      updateGuestsModalButtons();
       document.getElementById('guestsModal').classList.remove('hidden');
     }
 
-    function selectGuestCount(count) {
-      playBeep('E5');
-      tempGuestCount = count;
-      updateGuestModalUI(tempGuestCount);
+    function openGuestsModalForCurrentTable() {
+      openGuestsModal(currentTableId);
     }
 
-    function adjustGuestModalCount(delta) {
-      playBeep('F5');
-      tempGuestCount = Math.max(1, Math.min(25, tempGuestCount + delta));
-      updateGuestModalUI(tempGuestCount);
+    function setTempGuests(num) {
+      playBeep();
+      tempGuestsCount = num;
+      updateGuestsModalButtons();
     }
 
-    function updateGuestModalUI(count) {
-      document.getElementById('guestModalCountDisplay').textContent = count;
+    function adjustTempGuests(delta) {
+      playBeep();
+      tempGuestsCount = Math.max(1, Math.min(25, tempGuestsCount + delta));
+      updateGuestsModalButtons();
+    }
+
+    function updateGuestsModalButtons() {
+      document.getElementById('guestDisplayVal').textContent = tempGuestsCount;
       document.querySelectorAll('.guest-btn').forEach((btn, idx) => {
-        const num = idx + 1;
-        if (num === count) {
-          btn.className = "guest-btn p-2.5 rounded-xl border-2 border-amber-600 bg-amber-50 text-amber-950 font-bold transition flex flex-col items-center shadow-xs";
+        const val = idx + 1;
+        if (val === tempGuestsCount) {
+          btn.className = "guest-btn p-2 rounded-xl border-2 border-amber-600 bg-amber-50 text-amber-950 font-bold flex flex-col items-center shadow-xs";
         } else {
-          btn.className = "guest-btn p-2.5 rounded-xl border-2 border-stone-200 hover:border-amber-500 hover:bg-stone-50 text-stone-800 transition flex flex-col items-center";
+          btn.className = "guest-btn p-2 rounded-xl border-2 border-stone-200 text-stone-800 flex flex-col items-center hover:bg-stone-50";
         }
       });
     }
 
-    function confirmGuestSelectionAndOpenOrder() {
-      if (!pendingTableSelectionId) return;
-      const table = tables.find(t => t.id === pendingTableSelectionId);
-      if (!table) return;
-
-      table.guests = tempGuestCount;
-      if (table.status === 'free') {
-        table.status = 'occupied';
-        const now = new Date();
-        table.openedAt = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+    function confirmGuestSelection() {
+      if (!pendingModalTableId) return;
+      const table = tables.find(t => t.id === pendingModalTableId);
+      if (table) {
+        table.guests = tempGuestsCount;
+        saveState();
       }
-
       closeModal('guestsModal');
-      openTableOrder(pendingTableSelectionId);
-      showToast(`${table.name}: ${tempGuestCount} гостей`, '👥');
+      goToOrderView(pendingModalTableId);
+      showToast(`${table.name}: ${tempGuestsCount} персоны`, '👥');
     }
 
-    function openTableOrder(tableId) {
-      playBeep('E5');
-      currentTableId = tableId;
-      const table = tables.find(t => t.id === tableId);
-      if (!table) return;
-
-      if (!table.order) {
-        table.order = { items: [], discount: 0, notes: '' };
-      }
-
-      currentDiscount = table.order.discount || 0;
-      document.getElementById('activeTableBadge').textContent = `№${table.id}`;
-      document.getElementById('activeTableBadge').classList.remove('hidden');
-      document.getElementById('bnavTableBadge').classList.remove('hidden');
-
-      setMainView('order');
-      switchOrderSubTab('menu');
-      renderOrderScreen();
-      renderDishes();
-    }
-
-    function openOrderViewDirect() {
-      openTableOrder(currentTableId);
-    }
-
-    function quickNewOrder() {
-      const free = tables.find(t => t.status === 'free') || tables[0];
-      if (free) {
-        onTableCardClicked(free.id);
-      }
-    }
-  </script>
-
-  <script>
-    function switchOrderSubTab(tab) {
-      activeOrderSubTab = tab;
-      const menuPanel = document.getElementById('orderMenuPanel');
-      const cartPanel = document.getElementById('orderCartPanel');
-      const tabMenuBtn = document.getElementById('orderSubTabMenu');
-      const tabCartBtn = document.getElementById('orderSubTabCart');
-      const floatingBar = document.getElementById('mobileCartFloatingBar');
-
-      if (tab === 'menu') {
-        menuPanel.classList.remove('hidden');
-        cartPanel.classList.add('hidden');
-        cartPanel.classList.remove('flex');
-
-        tabMenuBtn.className = "flex-1 py-2 rounded-lg bg-white text-stone-900 shadow-xs flex items-center justify-center gap-1.5 transition";
-        tabCartBtn.className = "flex-1 py-2 rounded-lg text-stone-600 hover:text-stone-900 flex items-center justify-center gap-1.5 transition";
-
-        syncFloatingMobileBar();
-      } else {
-        menuPanel.classList.add('hidden');
-        cartPanel.classList.remove('hidden');
-        cartPanel.classList.add('flex');
-
-        tabCartBtn.className = "flex-1 py-2 rounded-lg bg-white text-stone-900 shadow-xs flex items-center justify-center gap-1.5 transition";
-        tabMenuBtn.className = "flex-1 py-2 rounded-lg text-stone-600 hover:text-stone-900 flex items-center justify-center gap-1.5 transition";
-
-        if (floatingBar) floatingBar.classList.add('hidden');
-      }
-    }
-
-    function syncFloatingMobileBar() {
-      const floatingBar = document.getElementById('mobileCartFloatingBar');
-      if (!floatingBar) return;
-
-      const table = tables.find(t => t.id === currentTableId);
-      const isMobile = window.innerWidth < 1024;
-
-      if (!isMobile || activeOrderSubTab !== 'menu' || !table || !table.order || !table.order.items || table.order.items.length === 0) {
-        floatingBar.classList.add('hidden');
-        return;
-      }
-
-      const totalQty = table.order.items.reduce((s, it) => s + it.qty, 0);
-      const total = calcTableTotal(table);
-
-      document.getElementById('mobileFloatingTable').textContent = `${table.name}`;
-      document.getElementById('mobileFloatingQty').textContent = `${totalQty} поз. в чеке`;
-      document.getElementById('mobileFloatingTotal').textContent = `${total} ₽`;
-      floatingBar.classList.remove('hidden');
-    }
-
-    function filterMenu(cat) {
-      playBeep('G4');
-      selectedMenuCategory = cat;
-      document.querySelectorAll('.menu-cat-btn').forEach(b => {
-        if (b.dataset.cat === cat) {
-          b.className = "menu-cat-btn px-3 py-1.5 rounded-xl bg-brand-800 text-white shadow-xs shrink-0 font-bold";
+    function selectCategory(cat) {
+      playBeep();
+      currentCategory = cat;
+      document.querySelectorAll('.cat-pill').forEach(btn => {
+        if (btn.dataset.cat === cat) {
+          btn.className = "cat-pill px-3 py-1.5 rounded-xl bg-amber-950 text-white shadow-xs shrink-0 font-bold";
         } else {
-          b.className = "menu-cat-btn px-3 py-1.5 rounded-xl bg-stone-100 text-stone-700 hover:bg-stone-200 shrink-0 font-bold";
+          btn.className = "cat-pill px-3 py-1.5 rounded-xl bg-stone-100 text-stone-700 hover:bg-stone-200 shrink-0 font-bold";
         }
       });
       renderDishes();
     }
 
-    function handleFastSearch() {
-      const q = (document.getElementById('posSearch').value || '').trim();
+    function onSearchChange() {
+      const q = document.getElementById('searchInput').value.trim();
       const clearBtn = document.getElementById('clearSearchBtn');
-      const badge = document.getElementById('searchResultBadge');
-
       if (q.length > 0) {
         clearBtn.classList.remove('hidden');
       } else {
         clearBtn.classList.add('hidden');
-        badge.classList.add('hidden');
       }
       renderDishes();
     }
 
-    function clearSearch() {
-      const input = document.getElementById('posSearch');
-      input.value = '';
-      input.focus();
-      handleFastSearch();
+    function clearSearchInput() {
+      const inp = document.getElementById('searchInput');
+      inp.value = '';
+      inp.focus();
+      onSearchChange();
     }
 
     function renderDishes() {
-      const q = (document.getElementById('posSearch').value || '').toLowerCase().trim();
-      const grid = document.getElementById('dishesGrid');
-      const badge = document.getElementById('searchResultBadge');
+      const grid = document.getElementById('dishesList');
       if (!grid) return;
       grid.innerHTML = '';
 
-      const dishes = POS_MENU.filter(d => {
-        const matchesCategory = (selectedMenuCategory === 'all') || (d.category === selectedMenuCategory);
-        if (!q) return matchesCategory;
+      const query = (document.getElementById('searchInput').value || '').toLowerCase().trim();
 
-        const inName = d.name.toLowerCase().includes(q);
-        const inDesc = d.desc ? d.desc.toLowerCase().includes(q) : false;
-        const inCat = d.catTitle ? d.catTitle.toLowerCase().includes(q) : false;
-        const inMods = d.mods ? d.mods.some(m => m.toLowerCase().includes(q)) : false;
+      const dishes = FULL_MENU.filter(d => {
+        const matchesCategory = (currentCategory === 'all') || (d.cat === currentCategory);
+        if (!query) return matchesCategory;
 
-        return inName || inDesc || inCat || inMods;
+        const nameMatch = d.name.toLowerCase().includes(query);
+        const descMatch = d.desc ? d.desc.toLowerCase().includes(query) : false;
+        const catMatch = d.catTitle ? d.catTitle.toLowerCase().includes(query) : false;
+        return nameMatch || descMatch || catMatch;
       });
-
-      if (q && badge) {
-        badge.textContent = `${dishes.length} найдено`;
-        badge.classList.remove('hidden');
-      } else if (badge) {
-        badge.classList.add('hidden');
-      }
 
       if (dishes.length === 0) {
         grid.innerHTML = `
-          <div class="col-span-full py-12 flex flex-col items-center justify-center text-stone-400 text-center">
-            <span class="text-3xl mb-2">🔍</span>
+          <div class="col-span-full py-10 flex flex-col items-center justify-center text-center text-stone-400">
+            <span class="text-3xl mb-1">🔍</span>
             <p class="text-xs font-bold text-stone-700">Ничего не найдено</p>
-            <p class="text-[11px] text-stone-400 mt-0.5">Попробуйте другой запрос или используйте «+ Своя позиция»</p>
+            <p class="text-[11px] text-stone-400">Попробуйте другой запрос или используйте «+ Своя позиция»</p>
           </div>
         `;
         return;
       }
 
       dishes.forEach(dish => {
-        const btn = document.createElement('div');
-        btn.className = "bg-stone-50 hover:bg-amber-50/70 border border-stone-200/90 rounded-2xl p-2.5 sm:p-3 flex flex-col justify-between cursor-pointer transition active:scale-95 shadow-2xs hover:border-amber-400";
-        btn.onclick = () => onDishClicked(dish);
+        const card = document.createElement('div');
+        card.className = "bg-stone-50 hover:bg-amber-50/60 border border-stone-200/90 hover:border-amber-400 rounded-2xl p-2.5 sm:p-3 flex flex-col justify-between cursor-pointer transition active:scale-95 shadow-2xs";
+        card.onclick = () => onDishCardClicked(dish);
 
-        const categoryTag = (q || selectedMenuCategory === 'all')
-          ? `<span class="text-[9px] uppercase font-bold text-amber-700 bg-amber-100/80 px-1.5 py-0.5 rounded">${dish.catTitle}</span>`
+        const categoryBadge = (query || currentCategory === 'all')
+          ? `<span class="text-[9px] uppercase font-bold text-amber-800 bg-amber-100 px-1.5 py-0.2 rounded mb-1 inline-block">${dish.catTitle}</span>`
           : '';
 
-        btn.innerHTML = `
+        card.innerHTML = `
           <div>
-            <div class="flex items-start justify-between gap-1 mb-1">
-              <span class="font-bold text-xs sm:text-sm text-stone-900 leading-snug">${dish.name}</span>
-            </div>
-            ${categoryTag ? `<div class="mb-1">${categoryTag}</div>` : ''}
-            <p class="text-[10px] text-stone-400 line-clamp-2 leading-tight">${dish.desc || ''}</p>
+            ${categoryBadge}
+            <h4 class="font-bold text-xs sm:text-sm text-stone-900 leading-snug">${dish.name}</h4>
+            <p class="text-[11px] text-stone-500 leading-tight mt-1 line-clamp-2">${dish.desc || ''}</p>
           </div>
-          <div class="mt-2.5 pt-2 border-t border-stone-200/60 flex items-center justify-between">
-            <span class="text-xs font-mono font-bold text-brand-900">${dish.price} ₽</span>
-            <span class="w-6 h-6 rounded-lg bg-white border border-stone-200 flex items-center justify-center text-xs text-brand-800 font-bold shadow-2xs hover:bg-amber-500 hover:text-brand-950 transition">+</span>
+          <div class="mt-2.5 pt-2 border-t border-stone-200/70 flex items-center justify-between">
+            <span class="font-mono font-bold text-xs sm:text-sm text-amber-950">${dish.price} ₽</span>
+            <span class="w-6 h-6 rounded-lg bg-white border border-stone-200 flex items-center justify-center text-xs text-amber-900 font-bold shadow-2xs">+</span>
           </div>
         `;
-        grid.appendChild(btn);
+        grid.appendChild(card);
       });
     }
 
-    function onDishClicked(dish) {
-      playBeep('A5');
+    function onDishCardClicked(dish) {
+      playBeep();
       if (dish.mods && dish.mods.length > 0) {
-        pendingDishToAdd = dish;
-        openModifierModal(dish);
+        pendingDishForModifiers = dish;
+        openModifiersModal(dish);
       } else {
-        addDishToActiveOrder(dish, []);
+        addDishToCurrentOrder(dish, []);
       }
     }
 
-    function openModifierModal(dish) {
+    function openModifiersModal(dish) {
       document.getElementById('modCategoryTag').textContent = dish.catTitle;
       document.getElementById('modDishName').textContent = dish.name;
       document.getElementById('modDishPrice').textContent = `${dish.price} ₽`;
-      document.getElementById('modCustomComment').value = '';
+      document.getElementById('modCustomCommentInput').value = '';
 
-      const listEl = document.getElementById('modOptionsList');
-      listEl.innerHTML = '';
+      const container = document.getElementById('modCheckboxesContainer');
+      container.innerHTML = '';
 
       dish.mods.forEach(modText => {
         const label = document.createElement('label');
         label.className = "flex items-center gap-2.5 p-2 bg-stone-50 rounded-xl border border-stone-200 hover:bg-stone-100 cursor-pointer";
         label.innerHTML = `
-          <input type="checkbox" name="dishMod" value="${modText}" class="rounded text-brand-800 focus:ring-0">
-          <span class="text-stone-800 font-medium text-xs">${modText}</span>
+          <input type="checkbox" name="dishModifier" value="${modText}" class="rounded text-amber-700 focus:ring-0">
+          <span class="text-stone-800 font-semibold text-xs">${modText}</span>
         `;
-        listEl.appendChild(label);
+        container.appendChild(label);
       });
 
-      document.getElementById('modifierModal').classList.remove('hidden');
+      document.getElementById('modifiersModal').classList.remove('hidden');
     }
 
     function confirmDishWithModifiers() {
-      if (!pendingDishToAdd) return;
-      const checkedBoxes = document.querySelectorAll('input[name="dishMod"]:checked');
+      if (!pendingDishForModifiers) return;
+      const checkedBoxes = document.querySelectorAll('input[name="dishModifier"]:checked');
       const selectedMods = Array.from(checkedBoxes).map(cb => cb.value);
-      const customComment = document.getElementById('modCustomComment').value.trim();
+      const customComment = document.getElementById('modCustomCommentInput').value.trim();
+      
       if (customComment) {
         selectedMods.push(customComment);
       }
 
-      addDishToActiveOrder(pendingDishToAdd, selectedMods);
-      closeModal('modifierModal');
-      pendingDishToAdd = null;
+      addDishToCurrentOrder(pendingDishForModifiers, selectedMods);
+      closeModal('modifiersModal');
+      pendingDishForModifiers = null;
     }
 
-    function addDishToActiveOrder(dish, modifiers = []) {
+    function addDishToCurrentOrder(dish, modifiers = []) {
       const table = tables.find(t => t.id === currentTableId);
       if (!table) return;
 
-      if (table.status === 'free') {
-        table.status = 'occupied';
-        const now = new Date();
-        table.openedAt = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
-      }
+      if (!table.items) table.items = [];
 
-      if (!table.order) {
-        table.order = { items: [], discount: 0 };
-      }
-
-      const modSignature = modifiers.sort().join(' | ');
-      const existing = table.order.items.find(it => it.dishId === dish.id && it.modSignature === modSignature);
+      const modSig = modifiers.slice().sort().join(' | ');
+      const existing = table.items.find(it => it.dishId === dish.id && it.modSig === modSig);
 
       if (existing) {
         existing.qty += 1;
       } else {
-        table.order.items.push({
+        table.items.push({
           dishId: dish.id,
           name: dish.name,
           price: dish.price,
           qty: 1,
-          category: dish.category,
           modifiers: modifiers,
-          modSignature: modSignature,
-          sentToKitchen: false
+          modSig: modSig
         });
       }
 
@@ -1330,100 +996,89 @@
       showToast(`Добавлено: ${dish.name}`, '➕');
     }
 
-    function changeQty(index, delta) {
-      playBeep('C5');
+    function changeItemQty(index, delta) {
+      playBeep();
       const table = tables.find(t => t.id === currentTableId);
-      if (!table || !table.order) return;
+      if (!table || !table.items) return;
 
-      table.order.items[index].qty += delta;
-      if (table.order.items[index].qty <= 0) {
-        table.order.items.splice(index, 1);
-      }
-
-      if (table.order.items.length === 0) {
-        table.status = 'free';
-        table.openedAt = null;
+      table.items[index].qty += delta;
+      if (table.items[index].qty <= 0) {
+        table.items.splice(index, 1);
       }
 
       saveState();
       renderOrderScreen();
     }
 
+    function clearCurrentOrder() {
+      const table = tables.find(t => t.id === currentTableId);
+      if (!table || !table.items || table.items.length === 0) {
+        showToast('Заказ уже пуст', 'ℹ️');
+        return;
+      }
+      table.items = [];
+      saveState();
+      renderOrderScreen();
+      showToast(`${table.name} очищен`, '🗑️');
+    }
+
     function renderOrderScreen() {
       const table = tables.find(t => t.id === currentTableId);
       if (!table) return;
 
-      document.getElementById('orderTitle').textContent = `${table.name}`;
-      document.getElementById('orderSubtitle').textContent = `Гостей: ${table.guests || 2} • Открыт: ${table.openedAt || 'Сейчас'}`;
-      document.getElementById('guestsCountText').textContent = table.guests || 2;
+      document.getElementById('activeOrderTitle').textContent = table.name;
+      document.getElementById('activeOrderSubtitle').textContent = `${table.guests || 2} персоны`;
+      document.getElementById('btnGuestsDisplay').textContent = `${table.guests || 2} чел.`;
+      document.getElementById('ticketPersonsBadge').textContent = `${table.guests || 2} персоны`;
 
-      const badge = document.getElementById('orderStatusBadge');
-      if (table.status === 'precheck') {
-        badge.textContent = 'Пречек';
-        badge.className = 'text-[10px] font-bold px-2 py-0.5 rounded-md bg-indigo-100 text-indigo-800';
-      } else if (table.order && table.order.items.length > 0) {
-        badge.textContent = 'В работе';
-        badge.className = 'text-[10px] font-bold px-2 py-0.5 rounded-md bg-amber-100 text-amber-900';
-      } else {
-        badge.textContent = 'Новый';
-        badge.className = 'text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-800';
-      }
-
-      const container = document.getElementById('orderItemsContainer');
+      const container = document.getElementById('ticketItemsContainer');
       container.innerHTML = '';
 
-      if (!table.order || table.order.items.length === 0) {
+      if (!table.items || table.items.length === 0) {
         container.innerHTML = `
-          <div class="h-full flex flex-col items-center justify-center text-center p-6 text-stone-400">
-            <span class="text-4xl mb-2 opacity-50">🛒</span>
-            <p class="text-xs font-semibold">Заказ пока пуст</p>
-            <p class="text-[11px] text-stone-400 mt-0.5">Выберите блюда из меню</p>
+          <div class="h-full py-12 flex flex-col items-center justify-center text-center text-stone-400">
+            <span class="text-4xl mb-1 opacity-50">🛒</span>
+            <p class="text-xs font-bold text-stone-700">Заказ пока пуст</p>
+            <p class="text-[11px] text-stone-400">Выберите блюда из меню слева</p>
           </div>
         `;
-        document.getElementById('orderTotalQty').textContent = '0';
-        document.getElementById('orderTotalPrice').textContent = '0 ₽';
-        document.getElementById('mobileCartBadge').textContent = '0';
-        syncFloatingMobileBar();
+        document.getElementById('ticketTotalQty').textContent = '0 шт.';
+        document.getElementById('ticketTotalPrice').textContent = '0 ₽';
+        document.getElementById('mobileCartCountBadge').textContent = '0';
+        updateMobileFloatingBar();
         return;
       }
 
       let totalQty = 0;
-      let subtotal = 0;
+      let totalSum = 0;
 
-      table.order.items.forEach((item, index) => {
+      table.items.forEach((item, index) => {
         totalQty += item.qty;
         const lineTotal = item.price * item.qty;
-        subtotal += lineTotal;
+        totalSum += lineTotal;
 
         const row = document.createElement('div');
         row.className = "bg-stone-50 p-2 sm:p-2.5 rounded-xl border border-stone-200/80 text-xs flex items-center justify-between gap-1.5";
 
         const modsHtml = item.modifiers && item.modifiers.length > 0 
-          ? `<div class="text-[10px] text-amber-700 mt-0.5 font-medium flex flex-wrap gap-1">
-              ${item.modifiers.map(m => `<span class="bg-amber-100/80 px-1.5 py-0.2 rounded">${m}</span>`).join('')}
+          ? `<div class="text-[10px] text-amber-800 mt-0.5 font-medium flex flex-wrap gap-1">
+              ${item.modifiers.map(m => `<span class="bg-amber-100 px-1.5 py-0.2 rounded font-semibold">${m}</span>`).join('')}
              </div>` 
           : '';
 
-        const kitchenTag = item.sentToKitchen 
-          ? `<span class="text-[9px] font-bold text-emerald-700 bg-emerald-100 px-1 py-0.2 rounded">В кухне ✓</span>` 
-          : `<span class="text-[9px] font-bold text-amber-600 bg-amber-100 px-1 py-0.2 rounded">Черновик</span>`;
-
         row.innerHTML = `
           <div class="flex-1 min-w-0 pr-1">
-            <div class="flex items-center gap-1">
-              <span class="font-bold text-stone-900 truncate text-[11px] sm:text-xs">${item.name}</span>
-              ${kitchenTag}
-            </div>
-            <div class="text-[10px] sm:text-[11px] text-stone-400 font-mono">${item.price} ₽ × ${item.qty} = <b class="text-stone-700">${lineTotal} ₽</b></div>
+            <div class="font-bold text-stone-900 truncate text-xs">${item.name}</div>
+            <div class="text-[10px] text-stone-400 font-mono">${item.price} ₽ × ${item.qty} = <b class="text-stone-800">${lineTotal} ₽</b></div>
             ${modsHtml}
           </div>
 
           <div class="flex items-center gap-1 shrink-0">
-            <button onclick="changeQty(${index}, -1)" class="w-7 h-7 sm:w-6 sm:h-6 rounded-lg bg-white hover:bg-stone-200 border border-stone-200 font-bold flex items-center justify-center text-stone-700 active:scale-95 text-xs">
+            <button onclick="changeItemQty(${index}, -1)" class="w-7 h-7 rounded-lg bg-white hover:bg-stone-200 border border-stone-300 font-bold flex items-center justify-center text-stone-700 active:scale-95 text-xs">
               -
             </button>
-            <span class="font-bold font-mono px-1 sm:px-1.5 text-xs">${item.qty}</span>
-            <button onclick="changeQty(${index}, 1)" class="w-7 h-7 sm:w-6 sm:h-6 rounded-lg bg-white hover:bg-stone-200 border border-stone-200 font-bold flex items-center justify-center text-stone-700 active:scale-95 text-xs">
+            <span class="font-bold font-mono px-1 text-xs text-amber-950">${item.qty}</span>
+            <button onclick="changeItemQty(${index}, 1)" class="w-7 h-7 rounded-lg bg-white hover:bg-stone-200 border border-stone-300 font-bold flex items-center justify-center text-stone-700 active:scale-95 text-xs">
               +
             </button>
           </div>
@@ -1431,67 +1086,52 @@
         container.appendChild(row);
       });
 
-      const discountPercent = table.order.discount || 0;
-      const discountVal = Math.round(subtotal * (discountPercent / 100));
-      const finalPrice = Math.max(0, subtotal - discountVal);
+      document.getElementById('ticketTotalQty').textContent = `${totalQty} шт.`;
+      document.getElementById('ticketTotalPrice').textContent = `${totalSum} ₽`;
+      document.getElementById('mobileCartCountBadge').textContent = totalQty;
 
-      document.getElementById('orderTotalQty').textContent = totalQty;
-      document.getElementById('mobileCartBadge').textContent = totalQty;
-      document.getElementById('btnDiscount').textContent = discountPercent > 0 ? `${discountPercent}% (-${discountVal} ₽)` : '0% (Добавить)';
-      document.getElementById('orderTotalPrice').textContent = `${finalPrice} ₽`;
-
-      syncFloatingMobileBar();
+      updateMobileFloatingBar();
     }
 
-    function changeGuestsCount() {
+    function updateMobileFloatingBar() {
+      const bar = document.getElementById('mobileCartFloatingBtn');
+      if (!bar) return;
+
       const table = tables.find(t => t.id === currentTableId);
-      if (!table) return;
-      let count = (table.guests || 2) + 1;
-      if (count > 12) count = 1;
-      table.guests = count;
-      saveState();
-      renderOrderScreen();
-      showToast(`Гостей: ${count}`, '👥');
-    }
+      const isMobile = window.innerWidth < 1024;
 
-    function closeCurrentOrderScreen() {
-      setMainView('tables');
-    }
-
-    function cancelActiveOrder() {
-      const table = tables.find(t => t.id === currentTableId);
-      if (!table || !table.order || table.order.items.length === 0) {
-        showToast('Заказ уже пуст', 'ℹ️');
+      if (!isMobile || orderMobileTab !== 'menu' || !table || !table.items || table.items.length === 0) {
+        bar.classList.add('hidden');
         return;
       }
-      table.order = { items: [], discount: 0 };
-      table.status = 'free';
-      table.openedAt = null;
-      saveState();
-      renderOrderScreen();
-      renderTables();
-      showToast('Заказ очищен', '🗑️');
+
+      const totalQty = table.items.reduce((s, it) => s + it.qty, 0);
+      const totalSum = calcTableSum(table);
+
+      document.getElementById('mobileFloatTable').textContent = table.name;
+      document.getElementById('mobileFloatQty').textContent = `${totalQty} блюд в чеке`;
+      document.getElementById('mobileFloatSum').textContent = `${totalSum} ₽`;
+      bar.classList.remove('hidden');
     }
 
-    function openCustomItemModal() {
-      playBeep('C5');
-      document.getElementById('customItemName').value = '';
-      document.getElementById('customItemPrice').value = '';
-      document.getElementById('customItemQty').value = '1';
-      document.getElementById('customItemNotes').value = '';
-      document.getElementById('customItemModal').classList.remove('hidden');
+    function openCustomDishModal() {
+      playBeep();
+      document.getElementById('customDishName').value = '';
+      document.getElementById('customDishPrice').value = '';
+      document.getElementById('customDishQty').value = '1';
+      document.getElementById('customDishNote').value = '';
+      document.getElementById('customDishModal').classList.remove('hidden');
       setTimeout(() => {
-        const inp = document.getElementById('customItemName');
+        const inp = document.getElementById('customDishName');
         if (inp) inp.focus();
       }, 150);
     }
 
-    function saveCustomItemToOrder() {
-      const name = document.getElementById('customItemName').value.trim();
-      const price = parseFloat(document.getElementById('customItemPrice').value);
-      const qty = parseInt(document.getElementById('customItemQty').value) || 1;
-      const category = document.getElementById('customItemCategory').value;
-      const note = document.getElementById('customItemNotes').value.trim();
+    function saveCustomDishToOrder() {
+      const name = document.getElementById('customDishName').value.trim();
+      const price = parseFloat(document.getElementById('customDishPrice').value);
+      const qty = parseInt(document.getElementById('customDishQty').value) || 1;
+      const note = document.getElementById('customDishNote').value.trim();
 
       if (!name) {
         showToast('Введите название позиции!', '⚠️');
@@ -1505,357 +1145,23 @@
       const table = tables.find(t => t.id === currentTableId);
       if (!table) return;
 
-      if (table.status === 'free') {
-        table.status = 'occupied';
-        const now = new Date();
-        table.openedAt = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
-      }
-
-      if (!table.order) {
-        table.order = { items: [], discount: 0 };
-      }
+      if (!table.items) table.items = [];
 
       const modifiers = note ? [note] : [];
 
-      table.order.items.push({
+      table.items.push({
         dishId: 'custom_' + Date.now(),
         name: `★ ${name}`,
         price: price,
         qty: qty,
-        category: category,
         modifiers: modifiers,
-        modSignature: modifiers.join(' | '),
-        sentToKitchen: false,
-        isCustom: true
+        modSig: modifiers.join(' | ')
       });
 
-      playSuccessSound();
       saveState();
       renderOrderScreen();
-      closeModal('customItemModal');
-      showToast(`Добавлено: ${name} (${price} ₽)`, '✨');
-    }
-  </script>
-
-  <script>
-    function sendOrderToKitchen() {
-      const table = tables.find(t => t.id === currentTableId);
-      if (!table || !table.order || table.order.items.length === 0) {
-        showToast('Добавьте блюда перед отправкой', '⚠️');
-        return;
-      }
-
-      const unprinted = table.order.items.filter(it => !it.sentToKitchen);
-      if (unprinted.length === 0) {
-        showToast('Все позиции уже переданы на кухню!', 'ℹ️');
-        return;
-      }
-
-      playSuccessSound();
-      unprinted.forEach(it => it.sentToKitchen = true);
-
-      const ticket = {
-        id: 'T-' + Math.floor(1000 + Math.random() * 9000),
-        table: table.name,
-        tableId: table.id,
-        time: new Date().toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' }),
-        items: unprinted.map(i => ({ name: i.name, qty: i.qty, mods: i.modifiers })),
-        status: 'cooking'
-      };
-
-      kitchenTickets.unshift(ticket);
-      saveState();
-      renderOrderScreen();
-      renderTables();
-      renderKds();
-
-      showToast(`Бегунок отправлен на кухню (${table.name})!`, '🔔');
-    }
-
-    function renderKds() {
-      const grid = document.getElementById('kdsGrid');
-      if (!grid) return;
-      grid.innerHTML = '';
-
-      let activeCount = 0;
-      let doneCount = 0;
-
-      kitchenTickets.forEach((ticket, tIdx) => {
-        if (ticket.status === 'cooking') activeCount++;
-        if (ticket.status === 'ready') doneCount++;
-
-        const card = document.createElement('div');
-        const isReady = ticket.status === 'ready';
-
-        card.className = `p-3.5 rounded-2xl border transition shadow-xs flex flex-col justify-between ${
-          isReady ? 'bg-emerald-50/70 border-emerald-300' : 'bg-white border-amber-300 ring-2 ring-amber-400/20'
-        }`;
-
-        const itemsHtml = ticket.items.map(it => `
-          <div class="py-1 border-b border-stone-100 flex items-start justify-between text-xs">
-            <div>
-              <span class="font-bold text-stone-900">${it.name}</span>
-              ${it.mods && it.mods.length ? `<div class="text-[10px] text-rose-600 font-semibold">${it.mods.join(', ')}</div>` : ''}
-            </div>
-            <span class="font-bold font-mono text-xs px-1.5 py-0.5 bg-stone-100 rounded-lg">×${it.qty}</span>
-          </div>
-        `).join('');
-
-        card.innerHTML = `
-          <div>
-            <div class="flex items-center justify-between pb-1.5 border-b border-stone-200">
-              <span class="font-bold text-sm text-stone-950">${ticket.table}</span>
-              <span class="font-mono text-xs text-stone-400">⏱️ ${ticket.time}</span>
-            </div>
-            <div class="py-2 space-y-1">
-              ${itemsHtml}
-            </div>
-          </div>
-
-          <div class="pt-2.5">
-            ${
-              isReady 
-                ? `<button onclick="archiveKdsTicket(${tIdx})" class="w-full py-2 bg-stone-200 hover:bg-stone-300 text-stone-700 text-xs font-bold rounded-xl active:scale-95 transition">В архив (Отдано)</button>`
-                : `<button onclick="markKdsReady(${tIdx})" class="w-full py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-xs active:scale-95 transition">Готово к выдаче ✓</button>`
-            }
-          </div>
-        `;
-
-        grid.appendChild(card);
-      });
-
-      const activeEl = document.getElementById('kdsActiveCount');
-      const doneEl = document.getElementById('kdsDoneCount');
-      const badgeEl = document.getElementById('kdsBadge');
-      const bnavBadge = document.getElementById('bnavKdsBadge');
-
-      if (activeEl) activeEl.textContent = activeCount;
-      if (doneEl) doneEl.textContent = doneCount;
-      if (badgeEl) badgeEl.textContent = activeCount;
-
-      if (bnavBadge) {
-        bnavBadge.textContent = activeCount;
-        if (activeCount > 0) {
-          bnavBadge.classList.remove('hidden');
-        } else {
-          bnavBadge.classList.add('hidden');
-        }
-      }
-    }
-
-    function markKdsReady(idx) {
-      playSuccessSound();
-      if (kitchenTickets[idx]) {
-        kitchenTickets[idx].status = 'ready';
-        saveState();
-        renderKds();
-        showToast(`Блюда для ${kitchenTickets[idx].table} готовы!`, '🛎️');
-      }
-    }
-
-    function archiveKdsTicket(idx) {
-      kitchenTickets.splice(idx, 1);
-      saveState();
-      renderKds();
-    }
-
-    function openDiscountModal() {
-      document.getElementById('discountModal').classList.remove('hidden');
-    }
-
-    function applyDiscount(percent) {
-      const table = tables.find(t => t.id === currentTableId);
-      if (table && table.order) {
-        table.order.discount = percent;
-        currentDiscount = percent;
-      }
-      closeModal('discountModal');
-      saveState();
-      renderOrderScreen();
-      showToast(`Применена скидка ${percent}%`, '🏷️');
-    }
-
-    function openPaymentModal() {
-      const table = tables.find(t => t.id === currentTableId);
-      if (!table || !table.order || table.order.items.length === 0) {
-        showToast('В заказе нет блюд для расчета', '⚠️');
-        return;
-      }
-
-      const subtotal = table.order.items.reduce((sum, it) => sum + (it.price * it.qty), 0);
-      const discount = table.order.discount || 0;
-      const discountVal = Math.round(subtotal * (discount / 100));
-      const total = Math.max(0, subtotal - discountVal);
-
-      document.getElementById('payTableInfo').textContent = `${table.name} • ${table.order.items.length} поз.`;
-      document.getElementById('paySubtotal').textContent = `${subtotal} ₽`;
-      document.getElementById('payDiscountAmount').textContent = `-${discountVal} ₽ (${discount}%)`;
-      document.getElementById('payTotalFinal').textContent = `${total} ₽`;
-
-      selectPayMethod('card');
-      document.getElementById('paymentModal').classList.remove('hidden');
-    }
-
-    function selectPayMethod(method) {
-      selectedPayMethodType = method;
-      document.querySelectorAll('.pay-method-btn').forEach(btn => {
-        btn.classList.remove('border-brand-800', 'bg-brand-50', 'text-brand-900');
-        btn.classList.add('border-stone-200', 'bg-white', 'text-stone-700');
-      });
-
-      const activeBtn = document.getElementById(`payBtn-${method}`);
-      if (activeBtn) {
-        activeBtn.classList.remove('border-stone-200', 'bg-white', 'text-stone-700');
-        activeBtn.classList.add('border-brand-800', 'bg-brand-50', 'text-brand-900');
-      }
-
-      const cashBlock = document.getElementById('cashCalcBlock');
-      if (method === 'cash') {
-        cashBlock.classList.remove('hidden');
-        document.getElementById('cashGivenInput').value = '';
-        document.getElementById('cashChangeOutput').textContent = '0 ₽';
-      } else {
-        cashBlock.classList.add('hidden');
-      }
-    }
-
-    function recalcChange() {
-      const table = tables.find(t => t.id === currentTableId);
-      if (!table) return;
-      const total = calcTableTotal(table);
-      const given = parseFloat(document.getElementById('cashGivenInput').value) || 0;
-      const change = given - total;
-      document.getElementById('cashChangeOutput').textContent = change >= 0 ? `${change} ₽` : 'Недостаточно';
-    }
-
-    function printPrecheck() {
-      const table = tables.find(t => t.id === currentTableId);
-      if (!table || !table.order || table.order.items.length === 0) {
-        showToast('Заказ пуст', '⚠️');
-        return;
-      }
-
-      table.status = 'precheck';
-      saveState();
-      renderTables();
-      renderOrderScreen();
-
-      renderReceiptSlip(table, false);
-      document.getElementById('receiptModal').classList.remove('hidden');
-      showToast('Пречек сформирован', '🖨️');
-    }
-
-    function finalizePayment() {
-      const table = tables.find(t => t.id === currentTableId);
-      if (!table || !table.order || table.order.items.length === 0) return;
-
-      playSuccessSound();
-
-      const total = calcTableTotal(table);
-      const checkNumber = Math.floor(1000 + Math.random() * 9000);
-      const now = new Date();
-
-      const paidRecord = {
-        checkNo: checkNumber,
-        table: table.name,
-        time: now.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' }),
-        date: now.toLocaleDateString('ru-RU'),
-        waiter: "Алексей М.",
-        payMethod: selectedPayMethodType === 'card' ? 'Карта' : selectedPayMethodType === 'sbp' ? 'СБП' : 'Наличные',
-        items: JSON.parse(JSON.stringify(table.order.items)),
-        discount: table.order.discount || 0,
-        total: total
-      };
-
-      paidHistory.unshift(paidRecord);
-
-      table.status = 'free';
-      table.openedAt = null;
-      table.order = null;
-
-      saveState();
-      closeModal('paymentModal');
-
-      renderReceiptSlip(paidRecord, true);
-      document.getElementById('receiptModal').classList.remove('hidden');
-
-      renderTables();
-      renderOrderScreen();
-      updateShiftSummary();
-      showToast(`Чек №${checkNumber} оплачен!`, '💰');
-    }
-
-    function renderReceiptSlip(data, isFiscal = false) {
-      const container = document.getElementById('receiptContent');
-      if (!container) return;
-      const now = new Date();
-
-      const items = data.items || (data.order && data.order.items) || [];
-      const subtotal = items.reduce((s, it) => s + (it.price * it.qty), 0);
-      const discount = data.discount !== undefined ? data.discount : (data.order ? data.order.discount : 0);
-      const discountVal = Math.round(subtotal * (discount / 100));
-      const total = Math.max(0, subtotal - discountVal);
-
-      const itemsRows = items.map(it => `
-        <div class="flex justify-between items-start py-0.5">
-          <div class="pr-2">
-            <div>${it.name}</div>
-            <div class="text-[9px] text-stone-500">${it.qty} × ${it.price} ₽</div>
-          </div>
-          <div class="font-bold">${it.qty * it.price} ₽</div>
-        </div>
-      `).join('');
-
-      container.innerHTML = `
-        <div class="text-center space-y-0.5 mb-2">
-          <div class="font-bold text-sm tracking-wider">COFFEEMAN</div>
-          <div class="text-[9px] text-stone-500">ООО «КОФЕМАН РИТЕЙЛ» • SINCE 2008</div>
-          <div class="text-[9px] text-stone-500">ИНН 7701984210 • Касса №1</div>
-          <div class="text-[10px] font-bold mt-1 text-stone-700">${isFiscal ? '*** КАССОВЫЙ ЧЕК ***' : '*** ПРЕЧЕК / СЧЕТ ***'}</div>
-        </div>
-
-        <div class="border-t border-b border-dashed border-stone-300 py-1 my-1.5 space-y-0.5 text-[9px]">
-          <div class="flex justify-between"><span>Стол: ${data.name || data.table}</span> <span>Официант: Алексей</span></div>
-          <div class="flex justify-between"><span>Дата: ${now.toLocaleDateString('ru-RU')}</span> <span>Время: ${now.toLocaleTimeString('ru-RU', {hour: '2-digit', minute:'2-digit'})}</span></div>
-        </div>
-
-        <div class="py-1">
-          ${itemsRows}
-        </div>
-
-        <div class="border-t border-dashed border-stone-300 pt-1.5 mt-1.5 space-y-0.5 text-xs">
-          <div class="flex justify-between text-[11px]">
-            <span>Подытог:</span>
-            <span>${subtotal} ₽</span>
-          </div>
-          ${discount > 0 ? `
-          <div class="flex justify-between text-emerald-700 font-medium text-[11px]">
-            <span>Скидка (${discount}%):</span>
-            <span>-${discountVal} ₽</span>
-          </div>` : ''}
-          <div class="flex justify-between text-sm font-bold pt-1 border-t border-stone-200">
-            <span>ИТОГО К ОПЛАТЕ:</span>
-            <span>${total} ₽</span>
-          </div>
-          ${isFiscal ? `
-          <div class="flex justify-between text-[10px] text-stone-500 pt-0.5">
-            <span>Оплачено (${data.payMethod || 'Карта'}):</span>
-            <span>${total} ₽</span>
-          </div>` : ''}
-        </div>
-
-        <div class="text-center pt-3 text-[9px] text-stone-400 space-y-0.5">
-          <div>Приятного аппетита и хорошего дня!</div>
-          <div class="font-mono text-[8px] text-stone-300">ФД: 00049281 • ФП: 9283749102</div>
-          <div>QR-код фискализации сформирован</div>
-        </div>
-      `;
-    }
-
-    function simulateReceiptPrintSound() {
-      playSuccessSound();
-      showToast('Печать отправлена на фискальный принтер', '🖨️');
-      closeModal('receiptModal');
+      closeModal('customDishModal');
+      showToast(`Добавлено: ${name}`, '✨');
     }
 
     function closeModal(modalId) {
@@ -1863,209 +1169,29 @@
       if (el) el.classList.add('hidden');
     }
 
-    function updateShiftSummary() {
-      const totalChecks = paidHistory.length;
-      let cardSum = 0;
-      let cashSum = 0;
-      let grandTotal = 0;
-
-      paidHistory.forEach(r => {
-        grandTotal += r.total;
-        if (r.payMethod === 'Наличные') {
-          cashSum += r.total;
-        } else {
-          cardSum += r.total;
-        }
-      });
-
-      const avgCheck = totalChecks > 0 ? Math.round(grandTotal / totalChecks) : 0;
-
-      const headerRev = document.getElementById('headerRevenue');
-      const statChecks = document.getElementById('statTotalChecks');
-      const statCard = document.getElementById('statCardTotal');
-      const statCash = document.getElementById('statCashTotal');
-      const statAvg = document.getElementById('statAvgCheck');
-
-      if (headerRev) headerRev.textContent = `${grandTotal} ₽`;
-      if (statChecks) statChecks.textContent = totalChecks;
-      if (statCard) statCard.textContent = `${cardSum} ₽`;
-      if (statCash) statCash.textContent = `${cashSum} ₽`;
-      if (statAvg) statAvg.textContent = `${avgCheck} ₽`;
-
-      renderPaidHistoryTable();
-    }
-
-    function renderPaidHistoryTable() {
-      const tbody = document.getElementById('paidOrdersTbody');
-      const emptyState = document.getElementById('noChecksState');
-      if (!tbody) return;
-      tbody.innerHTML = '';
-
-      if (paidHistory.length === 0) {
-        if (emptyState) emptyState.classList.remove('hidden');
-        return;
-      }
-      if (emptyState) emptyState.classList.add('hidden');
-
-      paidHistory.forEach((item, index) => {
-        const tr = document.createElement('tr');
-        tr.className = "hover:bg-stone-50 transition";
-        tr.innerHTML = `
-          <td class="py-2.5 px-3 font-mono font-bold text-stone-900">#${item.checkNo}</td>
-          <td class="py-2.5 px-3 font-mono text-stone-500">${item.time}</td>
-          <td class="py-2.5 px-3 font-medium">${item.table}</td>
-          <td class="py-2.5 px-3 text-stone-600">${item.waiter}</td>
-          <td class="py-2.5 px-3">
-            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${
-              item.payMethod === 'Наличные' ? 'bg-emerald-100 text-emerald-800' : 'bg-blue-100 text-blue-800'
-            }">${item.payMethod}</span>
-          </td>
-          <td class="py-2.5 px-3 text-right font-mono font-bold text-stone-900">${item.total} ₽</td>
-          <td class="py-2.5 px-3 text-center">
-            <button onclick="reprintCheck(${index})" class="text-xs text-brand-800 hover:underline font-bold">
-              Повтор чека
-            </button>
-          </td>
-        `;
-        tbody.appendChild(tr);
-      });
-    }
-
-    function reprintCheck(index) {
-      const record = paidHistory[index];
-      if (record) {
-        renderReceiptSlip(record, true);
-        document.getElementById('receiptModal').classList.remove('hidden');
-      }
-    }
-
-    function printZReport() {
-      playSuccessSound();
-      let grandTotal = paidHistory.reduce((s, r) => s + r.total, 0);
-      let cashTotal = paidHistory.filter(r => r.payMethod === 'Наличные').reduce((s, r) => s + r.total, 0);
-      let cardTotal = grandTotal - cashTotal;
-
-      const container = document.getElementById('receiptContent');
-      const now = new Date();
-
-      container.innerHTML = `
-        <div class="text-center space-y-0.5 mb-2">
-          <div class="font-bold text-sm tracking-wider">COFFEEMAN</div>
-          <div class="text-[10px] font-bold text-stone-700">*** СУТОЧНЫЙ Z-ОТЧЕТ С ГАШЕНИЕМ ***</div>
-          <div class="text-[9px] text-stone-400">Закрыт: ${now.toLocaleDateString()} ${now.toLocaleTimeString()}</div>
-        </div>
-
-        <div class="border-t border-b border-dashed border-stone-300 py-2 my-2 text-xs space-y-1 font-mono">
-          <div class="flex justify-between"><span>Количество чеков:</span> <span>${paidHistory.length}</span></div>
-          <div class="flex justify-between"><span>Оплата картой / СБП:</span> <span>${cardTotal} ₽</span></div>
-          <div class="flex justify-between"><span>Оплата наличными:</span> <span>${cashTotal} ₽</span></div>
-          <div class="flex justify-between font-bold text-stone-900 pt-1 border-t border-stone-200">
-            <span>ОБЩАЯ ВЫРУЧКА:</span> <span>${grandTotal} ₽</span>
-          </div>
-        </div>
-
-        <div class="text-center pt-2 text-[9px] text-stone-400">
-          Смена сохранена в фискальный накопитель.<br>Денежный ящик инкассирован.
-        </div>
-      `;
-
-      document.getElementById('receiptModal').classList.remove('hidden');
-      showToast('Z-Отчет сформирован', '📑');
-    }
-
-    function resetShiftData() {
-      if (paidHistory.length === 0) {
-        showToast('В смене еще нет данных', 'ℹ️');
-        return;
-      }
-      paidHistory = [];
-      saveState();
-      updateShiftSummary();
-      showToast('Данные смены сброшены', '🔄');
-    }
-  </script>
-
-  <script>
-    function setMainView(viewName) {
-      const views = ['tables', 'order', 'kds', 'cashier'];
-      views.forEach(v => {
-        const el = document.getElementById(`view-${v}`);
-        if (el) el.classList.add('hidden');
-      });
-
-      // Update Desktop tabs
-      document.querySelectorAll('.nav-tab').forEach(b => {
-        b.className = "nav-tab px-3.5 py-1.5 rounded-lg text-stone-300 hover:text-white hover:bg-white/5 transition flex items-center gap-1.5 font-semibold";
-      });
-      const activeBtn = document.getElementById(`nav-${viewName}`);
-      if (activeBtn) {
-        activeBtn.className = "nav-tab px-3.5 py-1.5 rounded-lg bg-amber-500 text-brand-950 shadow-xs flex items-center gap-1.5 transition font-bold";
-      }
-
-      // Update Mobile Bottom Nav
-      document.querySelectorAll('.bnav-btn').forEach(b => {
-        b.classList.remove('text-amber-400');
-        b.classList.add('text-stone-400');
-      });
-      const activeBnav = document.getElementById(`bnav-${viewName}`);
-      if (activeBnav) {
-        activeBnav.classList.remove('text-stone-400');
-        activeBnav.classList.add('text-amber-400');
-      }
-
-      const currentViewEl = document.getElementById(`view-${viewName}`);
-      if (currentViewEl) currentViewEl.classList.remove('hidden');
-
-      if (viewName === 'tables') renderTables();
-      if (viewName === 'kds') renderKds();
-      if (viewName === 'cashier') updateShiftSummary();
-      if (viewName === 'order') {
-        renderOrderScreen();
-        if (window.innerWidth < 1024) {
-          switchOrderSubTab(activeOrderSubTab || 'menu');
-        } else {
-          document.getElementById('orderMenuPanel').classList.remove('hidden');
-          const cart = document.getElementById('orderCartPanel');
-          cart.classList.remove('hidden');
-          cart.classList.add('flex');
-        }
-      }
-    }
-
-    function startClock() {
-      const clockEl = document.getElementById('liveClock');
-      if (!clockEl) return;
-      setInterval(() => {
-        const d = new Date();
-        clockEl.textContent = d.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
-      }, 1000);
-    }
-
+    /* Resize listener to preserve split screen on tablet/desktop */
     window.addEventListener('resize', () => {
       if (window.innerWidth >= 1024) {
-        const menu = document.getElementById('orderMenuPanel');
-        const cart = document.getElementById('orderCartPanel');
+        const menu = document.getElementById('orderMenuColumn');
+        const cart = document.getElementById('orderCartColumn');
         if (menu) menu.classList.remove('hidden');
         if (cart) {
           cart.classList.remove('hidden');
           cart.classList.add('flex');
         }
-        const floatBar = document.getElementById('mobileCartFloatingBar');
-        if (floatBar) floatBar.classList.add('hidden');
+        const bar = document.getElementById('mobileCartFloatingBtn');
+        if (bar) bar.classList.add('hidden');
       } else {
-        const orderView = document.getElementById('view-order');
-        if (orderView && !orderView.classList.contains('hidden')) {
-          switchOrderSubTab(activeOrderSubTab);
+        if (currentView === 'order') {
+          switchOrderMobileTab(orderMobileTab);
         }
       }
     });
 
+    /* App bootstrap */
     window.addEventListener('DOMContentLoaded', () => {
-      startClock();
       renderTables();
       renderDishes();
-      updateShiftSummary();
-      renderKds();
     });
   </script>
 </body>
