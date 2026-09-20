@@ -1,480 +1,2073 @@
 <!DOCTYPE html>
-<html lang="ru" class="dark">
+<html lang="ru">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>ChefOS • Цех Кондитера</title>
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🍰</text></svg>">
-
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>COFFEEMAN • POS Терминал Официанта и Кассира</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
-
-  <!-- Firebase Modular Scripts -->
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-    import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-database.js";
-
-    const firebaseConfig = {
-      apiKey: "AIzaSyCT2aJ8rF5KRCIFS3W6r4wbQeyBzkhmqnc",
-      authDomain: "lte-bank.firebaseapp.com",
-      databaseURL: "https://lte-bank-default-rtdb.firebaseio.com",
-      projectId: "lte-bank",
-      storageBucket: "lte-bank.firebasestorage.app",
-      messagingSenderId: "286397543738",
-      appId: "1:286397543738:web:c3ef297e6b6666620c4c03",
-      measurementId: "G-Q9BM100F5P"
-    };
-
-    const fbApp = initializeApp(firebaseConfig);
-    const fbDb = getDatabase(fbApp);
-
-    window.fbDb = fbDb;
-    window.fbRef = ref;
-    window.fbOnValue = onValue;
-
-    window.dispatchEvent(new Event('firebase-ready'));
-  </script>
-
-  <style>
-    * { 
-      -webkit-tap-highlight-color: transparent; 
-      outline: none; 
-      box-sizing: border-box;
-    }
-    
-    body {
-      background-color: #08080c;
-      color: #f1f5f9;
-      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
-      text-rendering: optimizeLegibility;
-      -webkit-font-smoothing: antialiased;
-    }
-
-    .bento-card {
-      background: #121218;
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      border-radius: 22px;
-      transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
-    }
-
-    /* --- Адаптивное отображение текста на экранах телефонов и планшетов --- */
-    .rich-display {
-      font-size: 15px; /* Крупный читаемый шрифт на телефоне */
-      line-height: 1.75;
-      color: #e2e8f0;
-      word-break: normal;
-      overflow-wrap: anywhere; /* Не рвёт слова на куски, переносит естественно */
-      hyphens: manual;
-    }
-
-    @media (min-width: 640px) {
-      .rich-display {
-        font-size: 15.5px;
-        line-height: 1.8;
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+            serif: ['Playfair Display', 'serif'],
+          },
+          colors: {
+            brand: {
+              50: '#fbf8f5',
+              100: '#f5efe6',
+              200: '#e9dcce',
+              500: '#9b714b',
+              600: '#845834',
+              700: '#6d4323',
+              800: '#4e2d14',
+              900: '#341d0c',
+            }
+          }
+        }
       }
     }
-
-    /* Маркер-хайлайтер с защитой от разрыва строки внутри тега */
-    .rich-display mark {
-      background: rgba(245, 158, 11, 0.28);
-      color: #fde68a;
-      padding: 2px 6px;
-      border-radius: 6px;
-      border: 1px solid rgba(245, 158, 11, 0.45);
-      font-weight: 700;
-      box-decoration-break: clone;
-      -webkit-box-decoration-break: clone;
-      display: inline;
+  </script>
+  <style>
+    /* Custom scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
     }
-
-    .rich-display b, 
-    .rich-display strong {
-      font-weight: 700;
-      color: #ffffff;
+    ::-webkit-scrollbar-track {
+      background: #f1f1f1;
     }
-
-    .rich-display u {
-      text-decoration-color: #f59e0b;
-      text-underline-offset: 3px;
+    ::-webkit-scrollbar-thumb {
+      background: #d4c5b9;
+      border-radius: 9999px;
     }
-
-    .rich-display s {
-      color: #64748b;
+    ::-webkit-scrollbar-thumb:hover {
+      background: #a89485;
     }
-
-    .rich-display .chef-color-danger {
-      color: #fda4af !important;
-      font-weight: 700;
+    .receipt-paper {
+      background-image: radial-gradient(#e5e7eb 1px, transparent 0);
+      background-size: 16px 16px;
     }
-
-    .rich-display .chef-color-gold {
-      color: #fde047 !important;
-      font-weight: 700;
+    /* Touch optimization */
+    * {
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
     }
-
-    .rich-display .chef-color-emerald {
-      color: #6ee7b7 !important;
-      font-weight: 700;
-    }
-
-    /* Блок подсказок шефа */
-    .rich-display .chef-callout {
-      display: block;
-      margin: 12px 0;
-      padding: 12px 14px;
-      background: rgba(245, 158, 11, 0.12);
-      border-left: 3.5px solid #f59e0b;
-      border-radius: 4px 14px 14px 4px;
-      color: #fef3c7;
-      font-size: 14.5px;
-      line-height: 1.65;
-    }
-
-    /* Адаптивные списки: компактные отступы на смартфонах */
-    .rich-display ul {
-      list-style-type: disc;
-      padding-left: 18px;
-      margin: 8px 0;
-    }
-
-    .rich-display ol {
-      list-style-type: decimal;
-      padding-left: 20px;
-      margin: 8px 0;
-    }
-
-    .rich-display li {
-      margin-bottom: 8px;
-      padding-left: 4px;
-    }
-
-    .rich-display li::marker {
-      color: #f59e0b;
-      font-weight: bold;
+    .pb-safe {
+      padding-bottom: env(safe-area-inset-bottom, 16px);
     }
   </style>
 </head>
-<body class="min-h-screen pb-28 select-none">
+<body class="bg-stone-100 text-stone-800 min-h-screen flex flex-col font-sans select-none antialiased pb-20 lg:pb-0">
 
-  <!-- Header -->
-  <header class="sticky top-0 z-30 bg-[#08080c]/95 backdrop-blur-xl border-b border-white/10 px-4 sm:px-6 py-3">
-    <div class="max-w-4xl mx-auto flex items-center justify-between">
-      <div class="flex items-center gap-2.5">
-        <span class="text-2xl drop-shadow">🍰</span>
+  <!-- Top Navigation Bar -->
+  <header class="bg-brand-900 text-stone-100 shadow-md border-b border-brand-800 z-30 sticky top-0">
+    <div class="max-w-7xl mx-auto px-3 sm:px-4 py-2 sm:py-2.5 flex items-center justify-between gap-2">
+      
+      <!-- Brand & Waiter badge -->
+      <div class="flex items-center gap-2 sm:gap-3">
+        <div class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-amber-500 text-brand-950 font-serif font-black flex items-center justify-center text-lg sm:text-xl shadow-inner">
+          ☕
+        </div>
         <div>
-          <h1 class="text-base font-extrabold text-white tracking-tight leading-none">ChefOS • Цех</h1>
-          <p id="cloudStatus" class="text-[10px] font-mono text-emerald-400 mt-1 flex items-center gap-1">
-            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> База онлайн
-          </p>
+          <div class="flex items-center gap-1.5">
+            <span class="font-serif font-bold tracking-wider text-sm sm:text-base">COFFEEMAN</span>
+            <span class="text-[9px] sm:text-[10px] uppercase font-bold tracking-widest bg-brand-800 text-amber-300 px-1.5 py-0.2 rounded-md">POS</span>
+          </div>
+          <p class="text-[10px] sm:text-[11px] text-stone-300 truncate max-w-[140px] sm:max-w-none">Официант: <strong class="text-white">Алексей М.</strong></p>
         </div>
       </div>
 
-      <a href="admin.html" class="px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 active:scale-95 text-white text-xs font-semibold transition flex items-center gap-1.5 border border-white/10">
-        <i class="fa-solid fa-user-gear text-amber-400"></i>
-        <span>Шеф</span>
-      </a>
+      <!-- Desktop/Tablet Mode Selector Tabs (Hidden on phone, replaced by Bottom Nav) -->
+      <div class="hidden lg:flex items-center bg-brand-950/60 p-1 rounded-xl border border-white/10 text-xs font-semibold gap-1">
+        <button onclick="setMainView('tables')" id="nav-tables" class="nav-tab px-3.5 py-1.5 rounded-lg bg-amber-500 text-brand-950 shadow-xs flex items-center gap-1.5 transition">
+          <span>🪑</span> <span>Зал / Столы</span>
+        </button>
+        <button onclick="openOrderViewDirect()" id="nav-order" class="nav-tab px-3.5 py-1.5 rounded-lg text-stone-300 hover:text-white hover:bg-white/5 transition flex items-center gap-1.5">
+          <span>📝</span> <span>Заказ</span>
+          <span id="activeTableBadge" class="hidden text-[10px] bg-amber-400 text-brand-950 px-1.5 py-0.2 rounded-full font-bold">№1</span>
+        </button>
+        <button onclick="setMainView('kds')" id="nav-kds" class="nav-tab px-3.5 py-1.5 rounded-lg text-stone-300 hover:text-white hover:bg-white/5 transition flex items-center gap-1.5">
+          <span>🍳</span> <span>Кухня (КДС)</span>
+          <span id="kdsBadge" class="bg-rose-500 text-white text-[10px] px-1.5 rounded-full font-bold">0</span>
+        </button>
+        <button onclick="setMainView('cashier')" id="nav-cashier" class="nav-tab px-3.5 py-1.5 rounded-lg text-stone-300 hover:text-white hover:bg-white/5 transition flex items-center gap-1.5">
+          <span>💳</span> <span>Касса & Z-Отчет</span>
+        </button>
+      </div>
+
+      <!-- Revenue Counter / Clock -->
+      <div class="flex items-center gap-2 sm:gap-3">
+        <div class="text-right">
+          <div class="text-[9px] uppercase font-bold text-amber-300/80">Выручка</div>
+          <div id="headerRevenue" class="font-mono font-bold text-amber-400 text-xs sm:text-sm">0 ₽</div>
+        </div>
+        <div id="liveClock" class="hidden sm:block font-mono text-xs text-stone-300 bg-brand-800/80 px-2 py-1 rounded-lg border border-white/10">
+          12:00
+        </div>
+      </div>
     </div>
   </header>
 
-  <!-- Active Oven Timer -->
-  <div class="max-w-4xl mx-auto px-3.5 sm:px-6 pt-3">
-    <div id="activeTimerWidget" class="hidden p-3.5 sm:p-4 rounded-2xl bento-card border-amber-500/40 bg-gradient-to-r from-amber-950/30 to-[#121218] flex items-center justify-between shadow-2xl">
-      <div class="flex items-center gap-3">
-        <span class="text-2xl animate-pulse">🔥</span>
-        <div>
-          <div id="activeTimerTitle" class="text-xs sm:text-sm font-bold text-white uppercase tracking-wider line-clamp-1">Печь в работе</div>
-          <div id="activeTimerSub" class="text-[11px] text-amber-400/80 font-mono">50 минут</div>
+  <!-- BOTTOM NAVIGATION BAR (Strictly for mobile & small tablets) -->
+  <nav class="lg:hidden fixed bottom-0 left-0 right-0 bg-brand-950 text-stone-300 border-t border-white/10 z-40 px-2 py-1.5 pb-safe flex items-center justify-around shadow-2xl">
+    <button onclick="setMainView('tables')" id="bnav-tables" class="bnav-btn flex-1 py-1 flex flex-col items-center gap-0.5 text-amber-400 transition">
+      <span class="text-lg leading-none">🪑</span>
+      <span class="text-[10px] font-bold">Столы</span>
+    </button>
+    <button onclick="openOrderViewDirect()" id="bnav-order" class="bnav-btn relative flex-1 py-1 flex flex-col items-center gap-0.5 text-stone-400 hover:text-white transition">
+      <span class="text-lg leading-none">📝</span>
+      <span class="text-[10px] font-bold">Заказ</span>
+      <span id="bnavTableBadge" class="hidden absolute top-0 right-4 w-2 h-2 bg-amber-400 rounded-full"></span>
+    </button>
+    <button onclick="setMainView('kds')" id="bnav-kds" class="bnav-btn relative flex-1 py-1 flex flex-col items-center gap-0.5 text-stone-400 hover:text-white transition">
+      <span class="text-lg leading-none">🍳</span>
+      <span class="text-[10px] font-bold">Кухня</span>
+      <span id="bnavKdsBadge" class="hidden absolute top-0 right-4 bg-rose-500 text-white text-[8px] font-bold px-1 rounded-full">0</span>
+    </button>
+    <button onclick="setMainView('cashier')" id="bnav-cashier" class="bnav-btn flex-1 py-1 flex flex-col items-center gap-0.5 text-stone-400 hover:text-white transition">
+      <span class="text-lg leading-none">💳</span>
+      <span class="text-[10px] font-bold">Касса</span>
+    </button>
+  </nav>
+
+  <!-- MAIN CONTAINER -->
+  <main class="flex-1 max-w-7xl w-full mx-auto p-2.5 sm:p-4 flex flex-col min-h-0 overflow-hidden">
+
+    <!-- ================= VIEW 1: TABLES FLOOR PLAN ================= -->
+    <section id="view-tables" class="flex-1 flex flex-col space-y-3 sm:space-y-4 min-h-0">
+      
+      <!-- Top Floor Plan Bar: Filter & Summary -->
+      <div class="bg-white p-3 sm:p-3.5 rounded-2xl border border-stone-200 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+        <div class="flex items-center gap-1.5 overflow-x-auto text-xs font-semibold pb-1 sm:pb-0 scrollbar-hide">
+          <span class="text-stone-400 mr-1 hidden md:inline">Зоны:</span>
+          <button onclick="filterHall('all')" class="hall-btn shrink-0 px-3 py-1.5 rounded-xl bg-brand-800 text-white" data-zone="all">Все (18)</button>
+          <button onclick="filterHall('main')" class="hall-btn shrink-0 px-3 py-1.5 rounded-xl bg-stone-100 text-stone-600 hover:bg-stone-200" data-zone="main">Зал (11)</button>
+          <button onclick="filterHall('veranda')" class="hall-btn shrink-0 px-3 py-1.5 rounded-xl bg-stone-100 text-stone-600 hover:bg-stone-200" data-zone="veranda">Терраса (5)</button>
+          <button onclick="filterHall('bar')" class="hall-btn shrink-0 px-3 py-1.5 rounded-xl bg-stone-100 text-stone-600 hover:bg-stone-200" data-zone="bar">Бар (2)</button>
+        </div>
+
+        <div class="flex items-center justify-between sm:justify-end gap-2 text-xs font-medium">
+          <div class="flex items-center gap-2 text-[11px]">
+            <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>Своб.</span>
+            <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span>Занят</span>
+            <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-indigo-500"></span>Пречек</span>
+          </div>
+          <button onclick="quickNewOrder()" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white rounded-xl font-bold flex items-center gap-1 shadow-xs transition text-xs">
+            <span>+</span> С собой
+          </button>
         </div>
       </div>
-      <div class="flex items-center gap-3">
-        <span id="activeTimerDigits" class="font-mono text-xl sm:text-2xl font-black text-amber-400">50:00</span>
-        <button onclick="stopTimer()" class="w-8 h-8 rounded-lg bg-white/10 text-white hover:bg-rose-500/20 hover:text-rose-400 active:scale-90 transition flex items-center justify-center text-xs">✕</button>
+
+      <!-- Tables Grid Area -->
+      <div id="tablesGrid" class="flex-1 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2.5 sm:gap-3.5 overflow-y-auto pr-0.5">
+        <!-- Rendered dynamically by JS -->
+      </div>
+    </section>
+
+    <!-- ================= VIEW 2: ORDER & CASHIER MENU ================= -->
+    <section id="view-order" class="hidden flex-1 flex flex-col min-h-0 relative">
+
+      <!-- Mobile sub-header tab selector (Visible only on phone/tablet) -->
+      <div class="lg:hidden flex items-center bg-stone-200/90 p-1 rounded-xl mb-2 text-xs font-bold shrink-0">
+        <button id="orderSubTabMenu" onclick="switchOrderSubTab('menu')" class="flex-1 py-2 rounded-lg bg-white text-stone-900 shadow-xs flex items-center justify-center gap-1.5 transition">
+          <span>🍽️</span> <span>Выбор блюд</span>
+        </button>
+        <button id="orderSubTabCart" onclick="switchOrderSubTab('cart')" class="flex-1 py-2 rounded-lg text-stone-600 hover:text-stone-900 flex items-center justify-center gap-1.5 transition">
+          <span>🧾</span> <span>Чек стола</span>
+          <span id="mobileCartBadge" class="bg-amber-600 text-white text-[10px] px-1.5 py-0.2 rounded-full font-bold">0</span>
+        </button>
+      </div>
+
+      <!-- Main Order Flex Grid -->
+      <div class="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-3 min-h-0 overflow-hidden">
+        
+        <!-- LEFT / CENTER: MENU CATEGORIES AND DISHES -->
+        <div id="orderMenuPanel" class="lg:col-span-7 xl:col-span-8 flex flex-col bg-white rounded-2xl border border-stone-200 shadow-xs p-3 space-y-2.5 min-h-0 overflow-hidden">
+          
+          <!-- Category Pill Selector -->
+          <div class="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-hide text-xs font-bold shrink-0">
+            <button onclick="filterMenu('all')" class="menu-cat-btn px-3 py-1.5 rounded-xl bg-stone-100 text-stone-700 hover:bg-stone-200 shrink-0" data-cat="all">⚡ Все</button>
+            <button onclick="filterMenu('breakfast')" class="menu-cat-btn px-3 py-1.5 rounded-xl bg-stone-100 text-stone-700 hover:bg-stone-200 shrink-0" data-cat="breakfast">🍳 Завтраки</button>
+            <button onclick="filterMenu('summer')" class="menu-cat-btn px-3 py-1.5 rounded-xl bg-stone-100 text-stone-700 hover:bg-stone-200 shrink-0" data-cat="summer">☀️ Лето & Закуски</button>
+            <button onclick="filterMenu('salads')" class="menu-cat-btn px-3 py-1.5 rounded-xl bg-brand-800 text-white shadow-xs shrink-0" data-cat="salads">🥗 Салаты</button>
+            <button onclick="filterMenu('soups')" class="menu-cat-btn px-3 py-1.5 rounded-xl bg-stone-100 text-stone-700 hover:bg-stone-200 shrink-0" data-cat="soups">🍲 Супы</button>
+            <button onclick="filterMenu('sandwiches')" class="menu-cat-btn px-3 py-1.5 rounded-xl bg-stone-100 text-stone-700 hover:bg-stone-200 shrink-0" data-cat="sandwiches">🥪 Сэндвичи</button>
+            <button onclick="filterMenu('hot')" class="menu-cat-btn px-3 py-1.5 rounded-xl bg-stone-100 text-stone-700 hover:bg-stone-200 shrink-0" data-cat="hot">🥩 Горячее</button>
+            <button onclick="filterMenu('garnishes')" class="menu-cat-btn px-3 py-1.5 rounded-xl bg-stone-100 text-stone-700 hover:bg-stone-200 shrink-0" data-cat="garnishes">🍟 Гарниры</button>
+            <button onclick="filterMenu('desserts')" class="menu-cat-btn px-3 py-1.5 rounded-xl bg-stone-100 text-stone-700 hover:bg-stone-200 shrink-0" data-cat="desserts">🍰 Десерты</button>
+            <button onclick="filterMenu('coffee_classic')" class="menu-cat-btn px-3 py-1.5 rounded-xl bg-stone-100 text-stone-700 hover:bg-stone-200 shrink-0" data-cat="coffee_classic">☕ Классич. кофе</button>
+            <button onclick="filterMenu('coffee_author')" class="menu-cat-btn px-3 py-1.5 rounded-xl bg-stone-100 text-stone-700 hover:bg-stone-200 shrink-0" data-cat="coffee_author">✨ Авторский кофе</button>
+            <button onclick="filterMenu('coffee_cold')" class="menu-cat-btn px-3 py-1.5 rounded-xl bg-stone-100 text-stone-700 hover:bg-stone-200 shrink-0" data-cat="coffee_cold">🧊 Холодный кофе</button>
+            <button onclick="filterMenu('tea')" class="menu-cat-btn px-3 py-1.5 rounded-xl bg-stone-100 text-stone-700 hover:bg-stone-200 shrink-0" data-cat="tea">🫖 Чай & Какао</button>
+            <button onclick="filterMenu('smoothies')" class="menu-cat-btn px-3 py-1.5 rounded-xl bg-stone-100 text-stone-700 hover:bg-stone-200 shrink-0" data-cat="smoothies">🥤 Смузи & Шейки</button>
+            <button onclick="filterMenu('drinks')" class="menu-cat-btn px-3 py-1.5 rounded-xl bg-stone-100 text-stone-700 hover:bg-stone-200 shrink-0" data-cat="drinks">🍹 Лимонады & Соки</button>
+            <button onclick="filterMenu('extras')" class="menu-cat-btn px-3 py-1.5 rounded-xl bg-stone-100 text-stone-700 hover:bg-stone-200 shrink-0" data-cat="extras">🥛 Сиропы & Молоко</button>
+          </div>
+
+          <!-- Search Box & Smart Instant Counter -->
+          <div class="flex items-center gap-1.5 shrink-0">
+            <div class="relative flex-1">
+              <input type="text" id="posSearch" oninput="handleFastSearch()" placeholder="Быстрый поиск..." 
+                     class="w-full bg-stone-50 border border-stone-200 rounded-xl py-2 pl-8 pr-7 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-amber-600 focus:bg-white transition">
+              <span class="absolute left-2.5 top-2.5 text-stone-400 text-xs">🔍</span>
+              <button id="clearSearchBtn" onclick="clearSearch()" class="hidden absolute right-2 top-2 text-stone-400 hover:text-stone-700 font-bold text-xs bg-stone-200 w-4 h-4 rounded-full flex items-center justify-center">✕</button>
+            </div>
+            <span id="searchResultBadge" class="hidden text-[11px] font-mono font-bold bg-amber-100 text-amber-900 px-2 py-1.5 rounded-xl shrink-0">0</span>
+            <button onclick="openCustomItemModal()" title="Своя позиция"
+                    class="px-3 py-2 bg-amber-600 hover:bg-amber-700 active:scale-95 text-white rounded-xl text-xs font-bold flex items-center gap-1 shadow-xs transition shrink-0">
+              <span>✨</span> <span class="hidden sm:inline">+ Своя позиция</span><span class="sm:hidden">+ Своя</span>
+            </button>
+          </div>
+
+          <!-- Dish Grid List -->
+          <div id="dishesGrid" class="flex-1 grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-2 overflow-y-auto pr-0.5 pb-16 lg:pb-0">
+            <!-- Rendered dynamically -->
+          </div>
+        </div>
+
+        <!-- RIGHT: ACTIVE ORDER TICKET / RECEIPT DRAFT -->
+        <div id="orderCartPanel" class="hidden lg:flex lg:col-span-5 xl:col-span-4 flex-col bg-white rounded-2xl border border-stone-200 shadow-xs p-3 space-y-2.5 min-h-0 overflow-hidden">
+          
+          <!-- Order Header info -->
+          <div class="flex items-center justify-between pb-2 border-b border-stone-200 shrink-0">
+            <div>
+              <div class="flex items-center gap-2">
+                <h2 id="orderTitle" class="font-bold text-base text-brand-950 font-serif">Стол № 1</h2>
+                <span id="orderStatusBadge" class="text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-800">Новый</span>
+              </div>
+              <p id="orderSubtitle" class="text-[11px] text-stone-400">Гостей: 2 • Официант: Алексей</p>
+            </div>
+            <div class="flex items-center gap-1.5">
+              <button onclick="changeGuestsCount()" title="Количество гостей" class="px-2.5 py-1.5 text-xs font-semibold bg-stone-100 hover:bg-stone-200 active:scale-95 rounded-lg text-stone-700">
+                👥 <span id="guestsCountText">2</span>
+              </button>
+              <button onclick="closeCurrentOrderScreen()" class="p-1.5 text-stone-400 hover:text-stone-700 rounded-lg hover:bg-stone-100" title="В зал">
+                ✕
+              </button>
+            </div>
+          </div>
+
+          <!-- Order Items List (Scrollable) -->
+          <div id="orderItemsContainer" class="flex-1 overflow-y-auto space-y-2 pr-1 min-h-[140px]">
+            <!-- Dynamic Items -->
+          </div>
+
+          <!-- Order Totals & Fast Actions -->
+          <div class="shrink-0 space-y-2 pt-2 border-t border-stone-200">
+            
+            <!-- Discount and Extras -->
+            <div class="flex items-center justify-between text-xs text-stone-600">
+              <div class="flex items-center gap-1.5">
+                <span>Скидка:</span>
+                <button onclick="openDiscountModal()" id="btnDiscount" class="text-amber-700 hover:underline font-bold">
+                  0% (Добавить)
+                </button>
+              </div>
+              <div class="flex items-center gap-2">
+                <span>Позиций:</span>
+                <span id="orderTotalQty" class="font-bold font-mono">0</span>
+              </div>
+            </div>
+
+            <!-- Total Amount -->
+            <div class="flex items-baseline justify-between bg-brand-50 p-2 rounded-xl border border-brand-200">
+              <span class="text-xs font-bold uppercase tracking-wider text-brand-800">К оплате:</span>
+              <span id="orderTotalPrice" class="text-xl sm:text-2xl font-bold font-mono text-brand-950">0 ₽</span>
+            </div>
+
+            <!-- Action Buttons Bar -->
+            <div class="grid grid-cols-2 gap-2">
+              <button onclick="sendOrderToKitchen()" class="py-2.5 px-2.5 bg-amber-600 hover:bg-amber-700 active:scale-95 text-white font-bold rounded-xl text-xs flex items-center justify-center gap-1 shadow-xs transition">
+                <span>🔔</span> <span>В кухню</span>
+              </button>
+
+              <button onclick="openPaymentModal()" class="py-2.5 px-2.5 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-bold rounded-xl text-xs flex items-center justify-center gap-1 shadow-xs transition">
+                <span>💳</span> <span>Расчет</span>
+              </button>
+            </div>
+
+            <!-- Clear or Transfer Table -->
+            <div class="flex items-center justify-between text-[11px] text-stone-400 pt-0.5">
+              <button onclick="printPrecheck()" class="hover:text-stone-700 font-semibold flex items-center gap-1 py-1">
+                <span>🖨️</span> Пречек
+              </button>
+              <button onclick="cancelActiveOrder()" class="hover:text-rose-600 font-semibold py-1">
+                Отменить
+              </button>
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+      <!-- FLOATING MOBILE CART BAR (Visible only on mobile when on Menu tab) -->
+      <div id="mobileCartFloatingBar" onclick="switchOrderSubTab('cart')" class="lg:hidden hidden fixed bottom-14 left-3 right-3 bg-brand-900 text-white p-3 rounded-2xl shadow-2xl z-30 flex items-center justify-between border border-amber-500/30 cursor-pointer active:scale-98 transition">
+        <div class="flex items-center gap-2">
+          <div class="w-8 h-8 rounded-xl bg-amber-500 text-brand-950 flex items-center justify-center font-bold text-sm">🛒</div>
+          <div>
+            <div id="mobileFloatingTable" class="text-xs font-bold">Стол № 1</div>
+            <div id="mobileFloatingQty" class="text-[10px] text-amber-200">0 позиций в чеке</div>
+          </div>
+        </div>
+        <div class="flex items-center gap-2">
+          <span id="mobileFloatingTotal" class="font-mono font-bold text-amber-400 text-sm">0 ₽</span>
+          <span class="text-[11px] bg-amber-500 text-brand-950 font-bold px-2 py-1 rounded-lg">Чек ➔</span>
+        </div>
+      </div>
+
+    </section>
+
+  </main>
+
+  <!-- ================= MODALS & DIALOGS ================= -->
+
+  <!-- MODAL: GUESTS COUNT STEP (ШАГ: ВЫБОР ПЕРСОН) -->
+  <div id="guestsModal" class="hidden fixed inset-0 bg-stone-950/70 backdrop-blur-xs z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
+    <div class="bg-white max-w-sm w-full rounded-t-3xl sm:rounded-3xl p-5 shadow-2xl space-y-3.5 animate-scale-up border border-stone-200 max-h-[90vh] overflow-y-auto pb-safe">
+      <div class="flex items-center justify-between border-b border-stone-100 pb-2.5">
+        <div class="flex items-center gap-2.5">
+          <div class="w-9 h-9 rounded-xl bg-amber-100 text-amber-900 flex items-center justify-center text-lg font-bold">
+            👥
+          </div>
+          <div>
+            <span id="guestModalTableTag" class="text-[10px] uppercase font-bold tracking-wider text-amber-700 bg-amber-50 px-2 py-0.5 rounded-md">Стол</span>
+            <h3 id="guestModalTitle" class="font-bold text-base sm:text-lg text-brand-950 font-serif">Количество гостей</h3>
+          </div>
+        </div>
+        <button onclick="closeModal('guestsModal')" class="text-stone-400 hover:text-stone-700 p-2 text-xl">✕</button>
+      </div>
+
+      <p class="text-xs text-stone-500">Укажите, на сколько персон открывается стол:</p>
+
+      <!-- Quick count selector (1-8) -->
+      <div class="grid grid-cols-4 gap-2 text-sm font-mono font-bold">
+        <button type="button" onclick="selectGuestCount(1)" class="guest-btn p-2.5 rounded-xl border-2 border-stone-200 text-stone-800 transition flex flex-col items-center">
+          <span>1</span>
+          <span class="text-[9px] font-sans font-normal text-stone-400">персона</span>
+        </button>
+        <button type="button" onclick="selectGuestCount(2)" class="guest-btn p-2.5 rounded-xl border-2 border-amber-600 bg-amber-50 text-amber-950 transition flex flex-col items-center">
+          <span>2</span>
+          <span class="text-[9px] font-sans font-normal text-stone-400">персоны</span>
+        </button>
+        <button type="button" onclick="selectGuestCount(3)" class="guest-btn p-2.5 rounded-xl border-2 border-stone-200 text-stone-800 transition flex flex-col items-center">
+          <span>3</span>
+          <span class="text-[9px] font-sans font-normal text-stone-400">персоны</span>
+        </button>
+        <button type="button" onclick="selectGuestCount(4)" class="guest-btn p-2.5 rounded-xl border-2 border-stone-200 text-stone-800 transition flex flex-col items-center">
+          <span>4</span>
+          <span class="text-[9px] font-sans font-normal text-stone-400">персоны</span>
+        </button>
+        <button type="button" onclick="selectGuestCount(5)" class="guest-btn p-2.5 rounded-xl border-2 border-stone-200 text-stone-800 transition flex flex-col items-center">
+          <span>5</span>
+          <span class="text-[9px] font-sans font-normal text-stone-400">гостей</span>
+        </button>
+        <button type="button" onclick="selectGuestCount(6)" class="guest-btn p-2.5 rounded-xl border-2 border-stone-200 text-stone-800 transition flex flex-col items-center">
+          <span>6</span>
+          <span class="text-[9px] font-sans font-normal text-stone-400">гостей</span>
+        </button>
+        <button type="button" onclick="selectGuestCount(7)" class="guest-btn p-2.5 rounded-xl border-2 border-stone-200 text-stone-800 transition flex flex-col items-center">
+          <span>7</span>
+          <span class="text-[9px] font-sans font-normal text-stone-400">гостей</span>
+        </button>
+        <button type="button" onclick="selectGuestCount(8)" class="guest-btn p-2.5 rounded-xl border-2 border-stone-200 text-stone-800 transition flex flex-col items-center">
+          <span>8+</span>
+          <span class="text-[9px] font-sans font-normal text-stone-400">гостей</span>
+        </button>
+      </div>
+
+      <!-- Counter adjustment -->
+      <div class="flex items-center justify-between bg-stone-50 p-2.5 rounded-2xl border border-stone-200">
+        <span class="text-xs font-semibold text-stone-700">Точное количество:</span>
+        <div class="flex items-center gap-2">
+          <button type="button" onclick="adjustGuestModalCount(-1)" class="w-9 h-9 rounded-xl bg-white border border-stone-200 font-bold hover:bg-stone-200 active:scale-95 text-stone-800 flex items-center justify-center">-</button>
+          <span id="guestModalCountDisplay" class="w-8 text-center font-mono font-bold text-base text-brand-950">2</span>
+          <button type="button" onclick="adjustGuestModalCount(1)" class="w-9 h-9 rounded-xl bg-white border border-stone-200 font-bold hover:bg-stone-200 active:scale-95 text-stone-800 flex items-center justify-center">+</button>
+        </div>
+      </div>
+
+      <div class="pt-1 flex gap-2">
+        <button onclick="closeModal('guestsModal')" class="py-3 px-4 bg-stone-100 hover:bg-stone-200 text-stone-700 text-xs font-semibold rounded-xl">
+          Отмена
+        </button>
+        <button onclick="confirmGuestSelectionAndOpenOrder()" class="flex-1 py-3 px-4 bg-amber-600 hover:bg-amber-700 active:scale-95 text-white text-xs font-bold rounded-xl shadow-xs flex items-center justify-center gap-1.5 transition">
+          <span>К выбору блюд</span> <span>➔</span>
+        </button>
       </div>
     </div>
   </div>
 
-  <!-- Main Content -->
-  <main class="max-w-4xl mx-auto px-3.5 sm:px-6 pt-3 space-y-4">
-
-    <!-- Filters & Search -->
-    <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5">
-      <div class="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 no-scrollbar">
-        <button onclick="setFilter('all')" id="f-all" class="px-3.5 py-1.5 rounded-xl bg-amber-500 text-black text-xs font-bold whitespace-nowrap transition">Все</button>
-        <button onclick="setFilter('popular')" id="f-popular" class="px-3.5 py-1.5 rounded-xl bg-white/5 text-slate-300 hover:text-white text-xs font-bold border border-white/10 whitespace-nowrap transition">🔥 Популярные</button>
-        <button onclick="setFilter('regular')" id="f-regular" class="px-3.5 py-1.5 rounded-xl bg-white/5 text-slate-300 hover:text-white text-xs font-bold border border-white/10 whitespace-nowrap transition">Остальные</button>
+  <!-- MODAL: CUSTOM POSITION (ВВОД СВОЕЙ ПОЗИЦИИ) -->
+  <div id="customItemModal" class="hidden fixed inset-0 bg-stone-950/70 backdrop-blur-xs z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
+    <div class="bg-white max-w-sm w-full rounded-t-3xl sm:rounded-3xl p-5 shadow-2xl space-y-3.5 animate-scale-up border border-stone-200 max-h-[90vh] overflow-y-auto pb-safe">
+      <div class="flex items-start justify-between border-b border-stone-100 pb-2.5">
+        <div class="flex items-center gap-2">
+          <div class="w-9 h-9 rounded-xl bg-amber-500/10 text-amber-700 flex items-center justify-center text-lg font-bold">
+            ✍️
+          </div>
+          <div>
+            <span class="text-[10px] uppercase font-bold tracking-wider text-amber-700 bg-amber-50 px-2 py-0.5 rounded-md">Свободный чек</span>
+            <h3 class="font-bold text-base sm:text-lg text-brand-950 font-serif">Своя позиция</h3>
+          </div>
+        </div>
+        <button onclick="closeModal('customItemModal')" class="text-stone-400 hover:text-stone-700 p-2 text-xl">✕</button>
       </div>
-      <div class="relative w-full sm:w-64">
-        <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-xs"></i>
-        <input id="searchInput" type="text" oninput="renderRecipes()" placeholder="Поиск десерта..."
-               class="w-full pl-8 pr-3 py-2 rounded-xl bg-white/5 border border-white/10 text-xs text-white placeholder-slate-500 focus:border-amber-400">
+
+      <div class="space-y-2.5 text-xs">
+        <div>
+          <label class="block font-bold text-stone-700 mb-1">Название блюда / услуги *</label>
+          <input type="text" id="customItemName" placeholder="Напр: Торт на заказ, Добавка соуса..."
+                 class="w-full bg-stone-50 border border-stone-200 rounded-xl p-2.5 text-xs focus:ring-2 focus:ring-amber-600 focus:bg-white focus:outline-none">
+        </div>
+
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block font-bold text-stone-700 mb-1">Цена за 1 шт (₽) *</label>
+            <input type="number" id="customItemPrice" placeholder="0" min="0" step="10"
+                   class="w-full bg-stone-50 border border-stone-200 rounded-xl p-2.5 text-xs font-mono font-bold focus:ring-2 focus:ring-amber-600 focus:bg-white focus:outline-none">
+          </div>
+          <div>
+            <label class="block font-bold text-stone-700 mb-1">Количество</label>
+            <input type="number" id="customItemQty" value="1" min="1" max="99"
+                   class="w-full bg-stone-50 border border-stone-200 rounded-xl p-2.5 text-xs font-mono font-bold focus:ring-2 focus:ring-amber-600 focus:bg-white focus:outline-none">
+          </div>
+        </div>
+
+        <div>
+          <label class="block font-bold text-stone-700 mb-1">Категория / цех</label>
+          <select id="customItemCategory" class="w-full bg-stone-50 border border-stone-200 rounded-xl p-2.5 text-xs font-medium focus:ring-2 focus:ring-amber-600 focus:bg-white focus:outline-none">
+            <option value="hot">Кухня (Горячее / Салаты)</option>
+            <option value="coffee">Бар (Кофе / Напитки)</option>
+            <option value="desserts">Кондитерская / Десерты</option>
+            <option value="service">Услуги / Разное</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block font-bold text-stone-700 mb-1">Комментарий повару</label>
+          <input type="text" id="customItemNotes" placeholder="Напр: без сахара, упаковать с собой..."
+                 class="w-full bg-stone-50 border border-stone-200 rounded-xl p-2.5 text-xs focus:ring-2 focus:ring-amber-600 focus:bg-white focus:outline-none">
+        </div>
+      </div>
+
+      <div class="pt-2 flex gap-2">
+        <button onclick="closeModal('customItemModal')" class="flex-1 py-3 bg-stone-100 hover:bg-stone-200 text-stone-700 text-xs font-semibold rounded-xl">
+          Отмена
+        </button>
+        <button onclick="saveCustomItemToOrder()" class="flex-1 py-3 bg-brand-800 hover:bg-brand-900 active:scale-95 text-white text-xs font-bold rounded-xl shadow-xs flex items-center justify-center gap-1.5 transition">
+          <span>✓</span> <span>В чек</span>
+        </button>
       </div>
     </div>
+  </div>
 
-    <!-- Recipes List -->
-    <div id="recipesContainer" class="space-y-3.5">
-      <!-- Injected via JavaScript -->
+  <!-- MODAL: MODIFIERS SELECTOR -->
+  <div id="modifierModal" class="hidden fixed inset-0 bg-stone-950/60 backdrop-blur-xs z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
+    <div class="bg-white max-w-sm w-full rounded-t-3xl sm:rounded-3xl p-5 shadow-2xl space-y-3.5 animate-scale-up max-h-[90vh] overflow-y-auto pb-safe">
+      <div class="flex items-start justify-between">
+        <div>
+          <span id="modCategoryTag" class="text-[10px] font-bold uppercase tracking-wider text-amber-700 bg-amber-100 px-2 py-0.5 rounded-md">Кофе</span>
+          <h3 id="modDishName" class="font-bold text-base sm:text-lg text-brand-950 font-serif mt-1">Капучино</h3>
+          <p id="modDishPrice" class="text-xs text-stone-500 font-mono">260 ₽</p>
+        </div>
+        <button onclick="closeModal('modifierModal')" class="text-stone-400 hover:text-stone-700 p-2 text-xl">✕</button>
+      </div>
+
+      <!-- Modifiers options -->
+      <div id="modOptionsList" class="space-y-1.5 text-xs max-h-52 overflow-y-auto pr-1">
+        <!-- Injected dynamically -->
+      </div>
+
+      <!-- Custom comment for kitchen -->
+      <div>
+        <label class="block text-[11px] font-bold text-stone-500 mb-1">Комментарий повару / бариста:</label>
+        <input type="text" id="modCustomComment" placeholder="Напр: погорячее, без соли, 1-й курс..." class="w-full bg-stone-50 border border-stone-200 rounded-xl p-2.5 text-xs focus:ring-2 focus:ring-amber-600 focus:outline-none">
+      </div>
+
+      <div class="pt-2 flex gap-2">
+        <button onclick="closeModal('modifierModal')" class="flex-1 py-3 bg-stone-100 hover:bg-stone-200 text-stone-700 text-xs font-semibold rounded-xl">
+          Отмена
+        </button>
+        <button onclick="confirmDishWithModifiers()" class="flex-1 py-3 bg-brand-800 hover:bg-brand-900 active:scale-95 text-white text-xs font-bold rounded-xl shadow-xs">
+          Добавить в чек
+        </button>
+      </div>
     </div>
-  </main>
+  </div>
+
+  <!-- MODAL: PAYMENT / CHECKOUT -->
+  <div id="paymentModal" class="hidden fixed inset-0 bg-stone-950/60 backdrop-blur-xs z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
+    <div class="bg-white max-w-md w-full rounded-t-3xl sm:rounded-3xl p-5 sm:p-6 shadow-2xl space-y-3.5 max-h-[92vh] overflow-y-auto pb-safe">
+      <div class="flex items-center justify-between border-b border-stone-100 pb-2.5">
+        <div class="flex items-center gap-2">
+          <span class="text-2xl">💳</span>
+          <div>
+            <h3 class="font-bold text-base sm:text-lg text-stone-900 font-serif">Оплата заказа</h3>
+            <p id="payTableInfo" class="text-xs text-stone-400">Стол № 1 • 4 позиции</p>
+          </div>
+        </div>
+        <button onclick="closeModal('paymentModal')" class="text-stone-400 hover:text-stone-700 p-2 text-xl">✕</button>
+      </div>
+
+      <!-- Amount Breakdown -->
+      <div class="bg-stone-50 p-3.5 rounded-2xl border border-stone-200/80 space-y-1.5 text-xs">
+        <div class="flex justify-between text-stone-600">
+          <span>Сумма по меню:</span>
+          <span id="paySubtotal" class="font-mono">0 ₽</span>
+        </div>
+        <div class="flex justify-between text-stone-600">
+          <span>Скидка:</span>
+          <span id="payDiscountAmount" class="font-mono text-emerald-600">-0 ₽</span>
+        </div>
+        <div class="flex justify-between text-base font-bold text-brand-950 pt-2 border-t border-stone-200">
+          <span>ИТОГО К ОПЛАТЕ:</span>
+          <span id="payTotalFinal" class="font-mono text-xl text-brand-900">0 ₽</span>
+        </div>
+      </div>
+
+      <!-- Payment Method Radios -->
+      <div>
+        <label class="block text-xs font-bold text-stone-700 mb-2">Способ оплаты:</label>
+        <div class="grid grid-cols-3 gap-2">
+          <button type="button" onclick="selectPayMethod('card')" id="payBtn-card" class="pay-method-btn p-3 rounded-xl border-2 border-brand-800 bg-brand-50 text-brand-900 font-bold text-xs flex flex-col items-center gap-1 transition">
+            <span class="text-lg">💳</span>
+            <span>Карта</span>
+          </button>
+          <button type="button" onclick="selectPayMethod('sbp')" id="payBtn-sbp" class="pay-method-btn p-3 rounded-xl border-2 border-stone-200 bg-white text-stone-700 font-medium text-xs flex flex-col items-center gap-1 transition hover:bg-stone-50">
+            <span class="text-lg">📱</span>
+            <span>СБП / QR</span>
+          </button>
+          <button type="button" onclick="selectPayMethod('cash')" id="payBtn-cash" class="pay-method-btn p-3 rounded-xl border-2 border-stone-200 bg-white text-stone-700 font-medium text-xs flex flex-col items-center gap-1 transition hover:bg-stone-50">
+            <span class="text-lg">💵</span>
+            <span>Наличные</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Cash Change Calculator -->
+      <div id="cashCalcBlock" class="hidden space-y-2 bg-amber-50/70 p-3 rounded-2xl border border-amber-200">
+        <div class="flex items-center justify-between text-xs">
+          <span class="font-semibold text-amber-950">Внесено клиентом:</span>
+          <input type="number" id="cashGivenInput" oninput="recalcChange()" placeholder="0" class="w-28 bg-white border border-amber-300 rounded-lg py-1.5 px-2 text-right font-mono font-bold text-sm focus:outline-none">
+        </div>
+        <div class="flex items-center justify-between text-xs font-bold text-amber-900 pt-1">
+          <span>Сдача:</span>
+          <span id="cashChangeOutput" class="font-mono text-sm text-emerald-700">0 ₽</span>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="pt-1 flex gap-2">
+        <button onclick="printPrecheck()" class="py-3 px-3 bg-stone-100 hover:bg-stone-200 text-stone-700 font-semibold rounded-xl text-xs flex items-center justify-center gap-1 transition">
+          <span>🖨️</span> Пречек
+        </button>
+        <button onclick="finalizePayment()" class="flex-1 py-3 px-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs flex items-center justify-center gap-1.5 shadow-xs transition active:scale-95">
+          <span>✓</span> <span>Закрыть чек</span>
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- MODAL: RECEIPT PREVIEW -->
+  <div id="receiptModal" class="hidden fixed inset-0 bg-stone-950/70 backdrop-blur-xs z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
+    <div class="bg-white max-w-sm w-full rounded-t-3xl sm:rounded-3xl p-5 shadow-2xl space-y-3 max-h-[92vh] flex flex-col pb-safe">
+      <div class="flex items-center justify-between pb-2 border-b border-stone-200">
+        <span class="text-xs font-bold uppercase tracking-wider text-stone-500">Чек терминала</span>
+        <button onclick="closeModal('receiptModal')" class="text-stone-400 hover:text-stone-700 p-2 text-xl">✕</button>
+      </div>
+
+      <!-- Paper slip container -->
+      <div id="receiptContent" class="flex-1 overflow-y-auto bg-stone-50 border border-stone-200 p-4 rounded-xl font-mono text-[11px] leading-relaxed text-stone-900 shadow-inner">
+        <!-- Rendered dynamically -->
+      </div>
+
+      <div class="flex gap-2 pt-1">
+        <button onclick="simulateReceiptPrintSound()" class="flex-1 py-3 bg-brand-800 hover:bg-brand-900 text-white font-bold text-xs rounded-xl shadow-xs flex items-center justify-center gap-1.5 active:scale-95">
+          <span>🖨️</span> Печать
+        </button>
+        <button onclick="closeModal('receiptModal')" class="py-3 px-4 bg-stone-100 hover:bg-stone-200 text-stone-700 font-semibold text-xs rounded-xl">
+          Закрыть
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: DISCOUNT -->
+  <div id="discountModal" class="hidden fixed inset-0 bg-stone-950/60 backdrop-blur-xs z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
+    <div class="bg-white max-w-xs w-full rounded-t-3xl sm:rounded-3xl p-5 shadow-2xl space-y-3 pb-safe">
+      <h3 class="font-bold text-stone-900 text-base font-serif">Применить скидку</h3>
+      <div class="space-y-2 text-xs">
+        <button onclick="applyDiscount(0)" class="w-full text-left p-3 rounded-xl border border-stone-200 hover:bg-stone-50 font-medium">Без скидки (0%)</button>
+        <button onclick="applyDiscount(5)" class="w-full text-left p-3 rounded-xl border border-stone-200 hover:bg-stone-50 font-medium">Постоянный гость (5%)</button>
+        <button onclick="applyDiscount(10)" class="w-full text-left p-3 rounded-xl border border-stone-200 hover:bg-stone-50 font-medium">Скидка персонала / ланч (10%)</button>
+        <button onclick="applyDiscount(20)" class="w-full text-left p-3 rounded-xl border border-stone-200 hover:bg-stone-50 font-medium">Счастливые часы / ДР (20%)</button>
+      </div>
+      <button onclick="closeModal('discountModal')" class="w-full py-2.5 bg-stone-100 text-stone-700 rounded-xl text-xs font-semibold">Отмена</button>
+    </div>
+  </div>
+
+  <!-- GENERIC CUSTOM NOTIFICATION / TOAST (No native alert) -->
+  <div id="toastNotification" class="fixed bottom-16 lg:bottom-5 right-4 left-4 sm:left-auto sm:right-5 z-50 transform translate-y-20 opacity-0 transition-all duration-300 pointer-events-none bg-stone-900 text-white text-xs font-medium px-4 py-3 rounded-2xl shadow-2xl flex items-center justify-center sm:justify-start gap-2.5 border border-white/10">
+    <span id="toastIcon">🔔</span>
+    <span id="toastMessage">Уведомление</span>
+  </div>
 
   <script>
-    const BASELINE_RECIPES = {
-      meringue: {
-        id: 'meringue',
-        title: 'Меренговый рулет',
-        emoji: '🍓',
-        isPopular: true,
-        ovenTemp: '150°C',
-        bakeMinutes: 50,
-        ingredients: `<ul>
-<li><b>Белки яичные</b> (в сухую чашу) — 6 шт. (200–220 г)</li>
-<li>Сахар (в меренгу) — <b>280 г</b></li>
-<li>Лимонный сок — 8 мл</li>
-<li>Крахмал кукурузный — 8 г</li>
-<li>Клубника замороженная — 100 г</li>
-<li>Творожный сыр (крем) — 200 г</li>
-<li>Сливки 33% (крем) — 100 г</li>
-<li>Сахар (в крем) — 50 г</li>
-</ul>`,
-        instructions: `<ol>
-<li><mark>Тщательно обезжирить</mark> и вытереть насухо чашу миксера и венчик. Разбить 6 яиц. <span class="chef-color-danger">Духовку заранее НЕ включать (холодный старт!)</span>.</li>
-<li><b>0:00–5:00</b> — включить 1-ю скорость, плавно довести до устойчивой белой пены.</li>
-<li>На отметке <b>5:00</b> влить 8 мл лимонного сока.</li>
-<li>С 6-й минуты разгон: строго <u>+1 скорость в минуту</u>.</li>
-<li>На отметке <b>7:00</b> тонкой струйкой всыпать весь сахар (280 г).</li>
-<li>На 8:50–9:00 остановить миксер: масса держит плотный клюв.</li>
-<li>На 9:00 всыпать кукурузный крахмал (8 г) и довзбивать ровно 1 минуту.</li>
-<li>Выложить готовую меренгу на силиконовый коврик ровным прямоугольником.</li>
-<li><div class="chef-callout">🔥 Поставить противень в ХОЛОДНУЮ духовку, включить 150°C ровно на 50 минут!</div></li>
-<li>Остывшую меренгу перевернуть, смазать кремом и свернуть рулет.</li>
-</ol>`
-      },
-      cheesecake: {
-        id: 'cheesecake',
-        title: 'Классический чизкейк',
-        emoji: '🧀',
-        isPopular: true,
-        ovenTemp: '175°C',
-        bakeMinutes: 50,
-        ingredients: `<ul>
-<li>Печенье («Юбилейное») — 16 шт. (~180 г)</li>
-<li>Сливочное масло (растопить) — 150 г</li>
-<li><b>Творожный сыр</b> — 550 г</li>
-<li>Сливки 33% — 150 г</li>
-<li>Сахар — 120 г</li>
-<li>Крахмал кукурузный — 10 г</li>
-<li>Яйца куриные — 2 шт.</li>
-<li>Сметана 20% — 2 ст. л.</li>
-</ul>`,
-        instructions: `<ol>
-<li>Печенье измельчить в крошку со 150 г масла, утрамбовать основу и убрать в морозилку на 30 мин.</li>
-<li>Смешать сыр, сливки, сахар и крахмал. По одному ввести яйца и сметану.</li>
-<li><mark>Вымешивать на минимальной скорости</mark>, чтобы не насыщать воздухом.</li>
-<li><div class="chef-callout">Обязательно оставить массу на 30–60 минут на столе, чтобы вышли микропузыри!</div></li>
-<li>Залить на замороженную основу и выпекать при <span class="chef-color-gold">175°C ровно 50 минут</span>.</li>
-</ol>`
-      },
-      banana: {
-        id: 'banana',
-        title: 'Банановый хлеб',
-        emoji: '🍌',
-        isPopular: false,
-        ovenTemp: '175°C',
-        bakeMinutes: 50,
-        ingredients: `<ul>
-<li>Бананы спелые — 2 шт.</li>
-<li>Яйца куриные — 2 шт.</li>
-<li>Масло сливочное растопленное — 130 г</li>
-<li>Сахар — 150 г (тесто) + 25 г (крем)</li>
-<li>Мука пшеничная — 250 г</li>
-<li>Соль мелкая — 1 ч. л. без горки</li>
-<li><span class="chef-color-danger">Сода пищевая — 1 ч. л. С ГОРКОЙ</span></li>
-</ul>`,
-        instructions: `<ol>
-<li>Разогреть духовку заранее до <span class="chef-color-gold">175°C</span>.</li>
-<li>В блендере взбить бананы с яйцами в шелковистую эмульсию.</li>
-<li>Соединить с растопленным маслом, сахаром и мукой.</li>
-<li>Всыпать соль и соду с горкой, вымешивать <u>не дольше 15 секунд</u>!</li>
-<li><span class="chef-color-danger">МОМЕНТАЛЬНО</span> перелить в форму и поставить в печь на 50 минут.</li>
-</ol>`
-      }
-    };
-
-    window.recipes = {};
-    window.currentFilter = 'all';
-    window.expandedId = null;
-    let timerInterval = null;
-    let timerSeconds = 0;
-
-    function initData() {
+    // Audio engine using Web Audio API / Tone.js safe synth
+    let audioSynth = null;
+    function initSynth() {
       try {
-        const raw = localStorage.getItem('pastry_recipes_simple');
-        if (raw) window.recipes = JSON.parse(raw);
-        else window.recipes = BASELINE_RECIPES;
+        if (!audioSynth && window.Tone) {
+          audioSynth = new Tone.Synth({
+            oscillator: { type: 'sine' },
+            envelope: { attack: 0.005, decay: 0.08, sustain: 0.01, release: 0.08 }
+          }).toDestination();
+          audioSynth.volume.value = -14;
+        }
+        return audioSynth;
       } catch (e) {
-        window.recipes = BASELINE_RECIPES;
+        return null;
       }
-      renderRecipes();
+    }
 
-      function connect() {
-        if (!window.fbDb || !window.fbRef || !window.fbOnValue) return;
-        const recRef = window.fbRef(window.fbDb, 'pastry_handbook/recipes_simple');
-        window.fbOnValue(recRef, (snap) => {
-          const val = snap.val();
-          if (val && Object.keys(val).length > 0) {
-            window.recipes = val;
-            localStorage.setItem('pastry_recipes_simple', JSON.stringify(val));
+    function playBeep(note = 'C5') {
+      try {
+        if (window.Tone) {
+          if (Tone.context && Tone.context.state !== 'running') {
+            Tone.start().catch(() => {});
           }
-          renderRecipes();
-        });
+          const s = initSynth();
+          if (s) s.triggerAttackRelease(note, '16n');
+        }
+      } catch (e) {}
+    }
+
+    function playSuccessSound() {
+      try {
+        if (window.Tone) {
+          if (Tone.context && Tone.context.state !== 'running') {
+            Tone.start().catch(() => {});
+          }
+          const s = initSynth();
+          if (s) {
+            const now = Tone.now();
+            s.triggerAttackRelease('C5', '16n', now);
+            s.triggerAttackRelease('G5', '16n', now + 0.09);
+          }
+        }
+      } catch (e) {}
+    }
+
+    // Complete Coffeeman restaurant & bar menu
+    const POS_MENU = [
+      // ================= ЗАВТРАКИ «УТРО В КОФЕМАНЕ» =================
+      { id: 51, name: "Каша с фруктами и грецким орехом", category: "breakfast", catTitle: "Завтраки", price: 360, desc: "Пшённая / овсяная / рисовая на выбор, подаётся с фруктами и орехом", mods: ["Овсяная", "Пшённая", "Рисовая", "На обычном молоке", "На кокосовом", "На миндальном", "На овсяном", "Без орехов"] },
+      { id: 52, name: "Блин с фаршем из говядины и яйцом", category: "breakfast", catTitle: "Завтраки", price: 390, desc: "Блин с сочным фаршем из говядины, подаётся со сметаной", mods: ["Сметана отдельно", "Без сметаны", "Погреть"] },
+      { id: 53, name: "Блин с лососем и крем-сыром", category: "breakfast", catTitle: "Завтраки", price: 420, desc: "Начинка из слабосоленого лосося и нежного сливочного крем-сыра", mods: ["С собой", "Холодный", "Тёплый"] },
+      { id: 54, name: "Блин с творогом и ягодным муссом", category: "breakfast", catTitle: "Завтраки", price: 380, desc: "Сладкий блинчик с начинкой из творога и натуральным ягодным муссом", mods: ["Мусс отдельно"] },
+      { id: 55, name: "Блин с ягодным муссом", category: "breakfast", catTitle: "Завтраки", price: 370, desc: "Нежный творог со сметаной и ягодным муссом", mods: ["Мусс отдельно"] },
+      { id: 56, name: "Ванильные сырники", category: "breakfast", catTitle: "Завтраки", price: 310, desc: "Домашние пышные сырники по классическому рецепту", mods: ["Со сметаной", "Со сгущенкой", "С ягодным муссом"] },
+      { id: 57, name: "Круассан с лососем", category: "breakfast", catTitle: "Завтраки", price: 430, desc: "Лосось, сливочный крем-сыр с зеленью, огурец, салат айсберг", mods: ["Без зелени", "Без огурца", "С собой"] },
+      { id: 58, name: "Круассан с цыпленком", category: "breakfast", catTitle: "Завтраки", price: 390, desc: "Филе цыпленка, крем-сыр с зеленью, свежий салат айсберг", mods: ["Без зелени", "Погреть", "С собой"] },
+      { id: 59, name: "Круассан классический", category: "breakfast", catTitle: "Завтраки", price: 250, desc: "Хрустящий сливочный круассан", mods: ["Погреть", "С собой"] },
+      { id: 60, name: "Круассан в ассортименте", category: "breakfast", catTitle: "Завтраки", price: 350, desc: "Круассан со сладкой начинкой с витрины", mods: ["Шоколадный", "Миндальный", "С собой"] },
+      { id: 61, name: "Омлет «зелёный»", category: "breakfast", catTitle: "Завтраки", price: 400, desc: "Пышный омлет, подаётся со свежим салатом, спелым авокадо и зерновым хлебом", mods: ["Без лука", "Хлеб отдельно", "Посолить"] },
+      { id: 62, name: "«Большой» завтрак", category: "breakfast", catTitle: "Завтраки", price: 470, desc: "Глазунья из двух яиц, сочные куриные колбаски, салат, творожный сыр, фасоль, зерновой хлеб", mods: ["Яйца вкрутую", "Без фасоли", "Колбаски поджарить"] },
+
+      // ================= ЛЕТО & ЗАКУСКИ =================
+      { id: 71, name: "Салат свекольный (ЛЕТО)", category: "summer", catTitle: "Лето & Закуски", price: 480, desc: "Свекла, листья салата, сыр фета, апельсин, микс семечек", mods: ["Без сыра", "Без семечек", "Без апельсина"] },
+      { id: 72, name: "Зелёный салат", category: "summer", catTitle: "Лето & Закуски", price: 480, desc: "Свежие огурцы, куриное филе, кунжут, микс листьев салата", mods: ["Без кунжута", "Масло отдельно"] },
+      { id: 73, name: "Окрошка на кефире / рассоле", category: "summer", catTitle: "Лето & Закуски", price: 380, desc: "Освежающая летняя окрошка с курицей и овощами", mods: ["На кефире", "На рассоле/квасе", "Сметана отдельно", "Горчица"] },
+      { id: 74, name: "Мясной лаваш", category: "summer", catTitle: "Лето & Закуски", price: 510, desc: "Сочное мясо, расплавленный сыр, свежие овощи, фирменный соус в тонком лаваше", mods: ["Поострее", "Без соуса", "С собой"] },
+      { id: 75, name: "Кесадилья с курицей", category: "summer", catTitle: "Лето & Закуски", price: 410, desc: "Хрустящая тортилья с филе курицы, тянущимся сыром и овощами", mods: ["Соус отдельно", "Поострее", "С собой"] },
+
+      // ================= САЛАТЫ =================
+      { id: 101, name: "Греко салат", category: "salads", catTitle: "Салаты", price: 470, desc: "Листья салата, помидоры, огурцы, болгарский перец, оливки, красный лук, греческий сыр фета", mods: ["Без лука", "Масло отдельно", "Без сыра фета"] },
+      { id: 102, name: "Цезарь с глазуньей", category: "salads", catTitle: "Салаты", price: 480, desc: "Нежное куриное филе, листья салата, пармезан, соус цезарь, яйцо глазунья", mods: ["Яйцо вкрутую", "Соус отдельно", "Без гренок"] },
+      { id: 103, name: "Оливье", category: "salads", catTitle: "Салаты", price: 410, desc: "Обжаренное куриное филе, яблоки, перепелиные яйца, майонез", mods: ["Без майонеза", "Без лука"] },
+      { id: 104, name: "Салат с моцареллой", category: "salads", catTitle: "Салаты", price: 530, desc: "Сыр моцарелла, сочные помидоры, авокадо, соус песто", mods: ["Соус песто отдельно"] },
+
+      // ================= СУПЫ =================
+      { id: 201, name: "Крем-суп из тыквы", category: "soups", catTitle: "Супы", price: 350, desc: "Нежный тыквенный крем-суп с обжаренными тыквенными семечками", mods: ["Без семечек", "Гренки +40₽", "Погорячее"] },
+      { id: 202, name: "Домашняя лапша", category: "soups", catTitle: "Супы", price: 380, desc: "Домашняя лапша, перепелиные яйца, кусочки курицы, наваристый бульон", mods: ["Без зелени", "Погорячее"] },
+      { id: 203, name: "Борщ", category: "soups", catTitle: "Супы", price: 460, desc: "Подаём со сметаной и свежей зеленью", mods: ["Сметана отдельно", "Без зелени", "Без сметаны"] },
+
+      // ================= СЭНДВИЧИ И НЕ ТОЛЬКО =================
+      { id: 301, name: "Тост с лососем", category: "sandwiches", catTitle: "Сэндвичи", price: 430, desc: "Зерновой хлеб, слабосоленый лосось, крем-сыр, красный лук", mods: ["Без лука", "Хрустящий тост", "С собой"] },
+      { id: 302, name: "Бургер «Кофеман»", category: "sandwiches", catTitle: "Сэндвичи", price: 640, desc: "Котлета из говядины, сыр чеддер, томаты, красный лук, картофель фри", mods: ["Прожарка Well Done", "Прожарка Medium", "Без лука", "Соус отдельно"] },
+      { id: 303, name: "Сэндвич чиабатта", category: "sandwiches", catTitle: "Сэндвичи", price: 410, desc: "Листья салата, куриное филе, томаты, сливочный крем-сыр, чиабатта", mods: ["Без томатов", "С собой", "Погреть"] },
+      { id: 304, name: "Сэндвич на бейгле", category: "sandwiches", catTitle: "Сэндвичи", price: 420, desc: "Нежная булочка собственного приготовления, глазунья, микс салата, куриное филе", mods: ["Хорошо поджарить", "Яйцо вкрутую"] },
+      { id: 305, name: "Японский сэндвич с тунцом", category: "sandwiches", catTitle: "Сэндвичи", price: 420, desc: "Обжаренный тостовый хлеб с начинкой из сочного тунца", mods: ["С собой", "Хрустящий"] },
+      { id: 306, name: "Сэндвич с курицей", category: "sandwiches", catTitle: "Сэндвичи", price: 390, desc: "Тостовый хлеб, листья салата, куриное филе, томаты", mods: ["С собой", "Без томатов"] },
+
+      // ================= ГОРЯЧИЕ БЛЮДА =================
+      { id: 401, name: "Котлета из говядины с брусничным соусом", category: "hot", catTitle: "Горячее", price: 720, desc: "Подаём с нежным картофельным пюре и картофельными чипсами", mods: ["1-й курс", "2-й курс", "Соус отдельно"] },
+      { id: 402, name: "Бефстроганов с картофельным пюре", category: "hot", catTitle: "Горячее", price: 740, desc: "Подаём с огурцами собственного посола и нежным пюре", mods: ["1-й курс", "2-й курс"] },
+      { id: 403, name: "Телятина на косточке", category: "hot", catTitle: "Горячее", price: 790, desc: "Нежная телятина в сочном маринаде, подаём с пылу с жару", mods: ["Medium", "Well Done", "Соус отдельно"] },
+      { id: 404, name: "Шницель куриный", category: "hot", catTitle: "Горячее", price: 690, desc: "Куриный шницель с зелёным салатом", mods: ["Лимон отдельно", "1-й курс", "2-й курс"] },
+      { id: 405, name: "Гречневая лапша с курицей", category: "hot", catTitle: "Горячее", price: 610, desc: "Гречневая лапша соба, овощной микс, кунжут, сочная курица", mods: ["Острее", "Не острая", "Без кунжута"] },
+      { id: 406, name: "Гречневая лапша с телятиной", category: "hot", catTitle: "Горячее", price: 680, desc: "Гречневая лапша соба, овощной микс, кунжут, нежная телятина", mods: ["Острее", "Не острая", "Без кунжута"] },
+      { id: 407, name: "Лосось терияки", category: "hot", catTitle: "Горячее", price: 820, desc: "Филе лосося с соусом терияки, кунжут, лимон", mods: ["Соус отдельно", "Без кунжута"] },
+      { id: 408, name: "Пибимпаб", category: "hot", catTitle: "Горячее", price: 780, desc: "Рис, овощи, сочный говяжий фарш, пикантный соус чили", mods: ["Менее острый", "Соус чили отдельно", "Поострее"] },
+      { id: 409, name: "Томлёная говядина с картофелем фри", category: "hot", catTitle: "Горячее", price: 810, desc: "Нежная томлёная говядина, хрустящий картофель фри", mods: ["1-й курс", "2-й курс", "Кетчуп"] },
+
+      // ================= ГАРНИРЫ =================
+      { id: 501, name: "Картофель фри", category: "garnishes", catTitle: "Гарниры", price: 270, desc: "Хрустящий золотистый картофель с солью", mods: ["Кетчуп +50₽", "Сырный соус +50₽", "Без соли"] },
+      { id: 502, name: "Японский рис", category: "garnishes", catTitle: "Гарниры", price: 230, desc: "Рассыпчатый отварной рис по-японски", mods: ["С маслом", "Без масла"] },
+      { id: 503, name: "Картофельное пюре", category: "garnishes", catTitle: "Гарниры", price: 230, desc: "Нежное сливочное картофельное пюре", mods: ["Погорячее"] },
+      { id: 504, name: "Зелёная гречка", category: "garnishes", catTitle: "Гарниры", price: 230, desc: "Отварная полезная зеленая гречневая крупа", mods: ["С маслом", "Без масла"] },
+
+      // ================= ДЕСЕРТЫ =================
+      { id: 601, name: "Шоколадный брауни с шариком мороженого", category: "desserts", catTitle: "Десерты", price: 370, desc: "Шоколадный брауни + шарик ванильного пломбира", mods: ["Погреть брауни", "Пломбир отдельно"] },
+      { id: 602, name: "Яблочный пирог с шариком мороженого", category: "desserts", catTitle: "Десерты", price: 370, desc: "Теплый яблочный пай + шарик ванильного мороженого", mods: ["Погреть пирог", "Пломбир отдельно"] },
+      { id: 603, name: "Торты в ассортименте", category: "desserts", catTitle: "Десерты", price: 350, desc: "Свежий кусочек торта с витрины кондитерской", mods: ["Уточнить на витрине"] },
+
+      // ================= КЛАССИЧЕСКИЙ КОФЕ =================
+      { id: 701, name: "Эспрессо", category: "coffee_classic", catTitle: "Классич. кофе", price: 140, desc: "Классический шот 30 мл", mods: ["Стакан воды", "С собой"] },
+      { id: 702, name: "Американо 200мл", category: "coffee_classic", catTitle: "Классич. кофе", price: 180, desc: "Двойной эспрессо с горячей водой (стандарт)", mods: ["Молоко отдельно +50₽", "С собой"] },
+      { id: 703, name: "Американо Большой 300мл", category: "coffee_classic", catTitle: "Классич. кофе", price: 220, desc: "Увеличенный американо с горячей водой", mods: ["Молоко отдельно +50₽", "С собой"] },
+      { id: 704, name: "Капучино 250мл", category: "coffee_classic", catTitle: "Классич. кофе", price: 260, desc: "Эспрессо с шелковистой молочной пенкой (стандарт)", mods: ["Корица", "Без сахара", "С собой"] },
+      { id: 705, name: "Капучино Большой 350мл", category: "coffee_classic", catTitle: "Классич. кофе", price: 300, desc: "Большой капучино на двойном эспрессо", mods: ["Корица", "Без сахара", "С собой"] },
+      { id: 706, name: "Латте классический 300мл", category: "coffee_classic", catTitle: "Классич. кофе", price: 260, desc: "Нежный молочный кофейный напиток", mods: ["Без сахара", "С собой"] },
+      { id: 707, name: "Латте Большой 400мл", category: "coffee_classic", catTitle: "Классич. кофе", price: 300, desc: "Большая порция латте с воздушной пенкой", mods: ["Без сахара", "С собой"] },
+      { id: 708, name: "Флэт Уайт", category: "coffee_classic", catTitle: "Классич. кофе", price: 270, desc: "Двойной шот эспрессо и тонкий слой бархатистого молока", mods: ["Погорячее", "С собой"] },
+
+      // ================= АВТОРСКИЙ КОФЕ =================
+      { id: 711, name: "Латте малина", category: "coffee_author", catTitle: "Авторский кофе", price: 360, desc: "Классический латте с ярким натуральным акцентом малины", mods: ["Без сахара", "Погорячее", "С собой"] },
+      { id: 712, name: "Капучино соленая карамель", category: "coffee_author", catTitle: "Авторский кофе", price: 360, desc: "Фирменный капучино с соленой карамелью", mods: ["С собой", "Меньше сахара"] },
+      { id: 713, name: "Раф миндальный", category: "coffee_author", catTitle: "Авторский кофе", price: 360, desc: "Взбитые сливки, эспрессо и натуральный миндальный вкус", mods: ["Погорячее", "С собой"] },
+      { id: 714, name: "Раф ореховый", category: "coffee_author", catTitle: "Авторский кофе", price: 360, desc: "Сливочный раф с богатым фундучно-ореховым ароматом", mods: ["Погорячее", "С собой"] },
+      { id: 715, name: "Раф цитрусовый", category: "coffee_author", catTitle: "Авторский кофе", price: 360, desc: "Ароматный раф с цитрусовой цедрой и сливками", mods: ["С собой"] },
+
+      // ================= ХОЛОДНЫЙ КОФЕ & АЙС ЧАЙ =================
+      { id: 721, name: "Айс капучино", category: "coffee_cold", catTitle: "Холодный кофе", price: 300, desc: "Освежающий капучино со льдом", mods: ["Без сахара", "Меньше льда", "С собой"] },
+      { id: 722, name: "Айс латте", category: "coffee_cold", catTitle: "Холодный кофе", price: 300, desc: "Холодный латте с кубиками льда", mods: ["Без сахара", "Меньше льда", "С собой"] },
+      { id: 723, name: "Фраппе кофейный", category: "coffee_cold", catTitle: "Холодный кофе", price: 360, desc: "Холодный напиток на основе эспрессо, молока и мороженого", mods: ["С собой"] },
+      { id: 724, name: "Бамбл", category: "coffee_cold", catTitle: "Холодный кофе", price: 390, desc: "Свежевыжатый апельсиновый сок, эспрессо и лед", mods: ["Меньше льда", "Без льда", "С собой"] },
+      { id: 725, name: "Глясе", category: "coffee_cold", catTitle: "Холодный кофе", price: 250, desc: "Эспрессо с шариком нежного мороженого", mods: ["Мороженое отдельно"] },
+      { id: 726, name: "Айс матча латте", category: "coffee_cold", catTitle: "Холодный кофе", price: 300, desc: "Японский чай матча, молоко и кубики льда", mods: ["Меньше льда", "С собой"] },
+      { id: 727, name: "Айс-матча малина", category: "coffee_cold", catTitle: "Холодный кофе", price: 360, desc: "Японская матча, спелая малина, молоко и лёд", mods: ["Меньше льда", "Без сахара", "С собой"] },
+      { id: 728, name: "Айс грин-ти мёд", category: "coffee_cold", catTitle: "Холодный кофе", price: 320, desc: "Освежающий зеленый чай, натуральный мед и кубики льда", mods: ["Меньше льда", "С собой"] },
+
+      // ================= ЧАЙ & ГОРЯЧИЕ НАПИТКИ =================
+      { id: 731, name: "Матча Латте (горячий)", category: "tea", catTitle: "Чай & Какао", price: 270, desc: "Зеленый чай матча со взбитым молоком", mods: ["Без сахара", "С собой"] },
+      { id: 732, name: "Какао", category: "tea", catTitle: "Чай & Какао", price: 260, desc: "Согревающий классический шоколадный напиток", mods: ["Маршмеллоу", "С собой"] },
+      { id: 733, name: "Чай черный (чашка 300мл)", category: "tea", catTitle: "Чай & Какао", price: 140, desc: "Классический черный листовой чай", mods: ["С лимоном", "С собой"] },
+      { id: 734, name: "Чай черный (чайник 600мл)", category: "tea", catTitle: "Чай & Какао", price: 240, desc: "Чайник черного листового чая для компании", mods: ["С лимоном", "Чашки на 2", "Чашки на 4"] },
+      { id: 735, name: "Чай зелёный (чашка 300мл)", category: "tea", catTitle: "Чай & Какао", price: 140, desc: "Зеленый китайский листовой чай", mods: ["С лимоном", "С собой"] },
+      { id: 736, name: "Чай зелёный (чайник 600мл)", category: "tea", catTitle: "Чай & Какао", price: 240, desc: "Чайник зеленого листового чая", mods: ["Чашки на 2", "Чашки на 4"] },
+      { id: 737, name: "Чай зелёный жасмин (чашка 300мл)", category: "tea", catTitle: "Чай & Какао", price: 160, desc: "Зеленый чай с цветами жасмина", mods: ["С собой"] },
+      { id: 738, name: "Чай зелёный жасмин (чайник 600мл)", category: "tea", catTitle: "Чай & Какао", price: 270, desc: "Ароматный жасминовый чайник", mods: ["Чашки на 2", "Чашки на 4"] },
+      { id: 739, name: "Чай гречишный (чашка 300мл)", category: "tea", catTitle: "Чай & Какао", price: 160, desc: "Натуральный гречишный чай Ку Цяо", mods: ["С собой"] },
+      { id: 740, name: "Чай гречишный (чайник 600мл)", category: "tea", catTitle: "Чай & Какао", price: 270, desc: "Чайник гречишного чая с медово-бисквитными нотками", mods: ["Чашки на 2", "Чашки на 4"] },
+      { id: 741, name: "Чай облепиховый с апельсином", category: "tea", catTitle: "Чай & Какао", price: 360, desc: "Авторский чайник (холодный / горячий на выбор)", mods: ["Горячий", "Холодный со льдом"] },
+      { id: 742, name: "Чай черносмородиновый с мятой", category: "tea", catTitle: "Чай & Какао", price: 360, desc: "Авторский чайник с ягодами черной смородины и мятой", mods: ["Горячий", "Холодный со льдом"] },
+
+      // ================= СМУЗИ & МИЛКШЕЙКИ =================
+      { id: 801, name: "Смузи груша банан", category: "smoothies", catTitle: "Смузи & Шейки", price: 360, desc: "Свежая груша, банан, безлактозное молоко", mods: ["С собой"] },
+      { id: 802, name: "Смузи манго (на кокосовом)", category: "smoothies", catTitle: "Смузи & Шейки", price: 360, desc: "Нежное пюре манго на кокосовом молоке", mods: ["С собой"] },
+      { id: 803, name: "Смузи ягодный", category: "smoothies", catTitle: "Смузи & Шейки", price: 360, desc: "Микс лесных ягод, вишневый натуральный сок", mods: ["С собой"] },
+      { id: 804, name: "Милкшейк ванильный", category: "smoothies", catTitle: "Смузи & Шейки", price: 360, desc: "Пломбир, молоко, натуральный ванильный экстракт", mods: ["С собой", "Без трубочки"] },
+      { id: 805, name: "Милкшейк шоколадный", category: "smoothies", catTitle: "Смузи & Шейки", price: 360, desc: "Шоколадный пломбир, молоко, какао", mods: ["С собой", "Без трубочки"] },
+
+      // ================= ЛИМОНАДЫ, МОРС & СОКИ =================
+      { id: 811, name: "Лимонад малина-лайм", category: "drinks", catTitle: "Напитки", price: 360, desc: "Освежающий лимонад с добавлением малины и лайма", mods: ["Меньше льда", "Без трубочки", "С собой"] },
+      { id: 812, name: "Лимонад «Кофеман»", category: "drinks", catTitle: "Напитки", price: 360, desc: "Ванильный фирменный лимонад с цитрусовой свежестью", mods: ["Меньше льда", "Без трубочки", "С собой"] },
+      { id: 813, name: "Лимонад облепиха-апельсин", category: "drinks", catTitle: "Напитки", price: 360, desc: "Яркий витаминный лимонад из облепихи и спелого апельсина", mods: ["Меньше льда", "Без трубочки", "С собой"] },
+      { id: 814, name: "Лимонад медовая вишня", category: "drinks", catTitle: "Напитки", price: 360, desc: "Натуральная сочная вишня с медовой ноткой", mods: ["Меньше льда", "Без трубочки", "С собой"] },
+      { id: 815, name: "Морс брусничный", category: "drinks", catTitle: "Напитки", price: 140, desc: "Натуральный ягодный морс собственного приготовления", mods: ["Без льда", "С собой"] },
+      { id: 816, name: "Морс облепиховый", category: "drinks", catTitle: "Напитки", price: 140, desc: "Натуральный солнечный облепиховый морс", mods: ["Без льда", "С собой"] },
+      { id: 817, name: "Соки в ассортименте", category: "drinks", catTitle: "Напитки", price: 140, desc: "Апельсин, яблоко, вишня, томат (200 мл)", mods: ["Апельсин", "Яблоко", "Вишня", "Томат"] },
+      { id: 818, name: "Газиров. напитки 330мл", category: "drinks", catTitle: "Напитки", price: 220, desc: "Кола, тоник, содовая в стекле", mods: ["Со льдом", "Без льда", "Лимон"] },
+      { id: 819, name: "Газиров. напитки 500мл", category: "drinks", catTitle: "Напитки", price: 260, desc: "Освежающие напитки в бутылке", mods: ["Со льдом", "Без льда"] },
+      { id: 820, name: "Вода питьевая", category: "drinks", catTitle: "Напитки", price: 120, desc: "Минеральная негазированная / газированная", mods: ["Без газа", "С газом", "Со льдом", "С лимоном"] },
+
+      // ================= СИРОПЫ & МОЛОКО =================
+      { id: 901, name: "Сиропы в ассортименте", category: "extras", catTitle: "Добавки", price: 80, desc: "Карамель, ваниль, лесной орех, кокос, лаванда, мята", mods: ["Карамель", "Ваниль", "Орех", "Кокос", "Лаванда", "Соленая карамель"] },
+      { id: 902, name: "Молоко альтернативное/безлактозное (стакан)", category: "extras", catTitle: "Добавки", price: 50, desc: "Добавка в стандартную чашку", mods: ["Кокосовое", "Миндальное", "Овсяное", "Безлактозное"] },
+      { id: 903, name: "Молоко альтернативное/безлактозное (порция 300мл)", category: "extras", catTitle: "Добавки", price: 120, desc: "Большая порция растительного молока", mods: ["Кокосовое", "Миндальное", "Овсяное", "Безлактозное"] }
+    ];
+
+    // TABLES DATA (11 столов в основном зале, 5 на террасе, 2 за баром)
+    const INITIAL_TABLES = [
+      // Основной зал (11 столов)
+      { id: 1, name: "Стол 1", zone: "main", capacity: 2, status: "free", guests: 2, order: null, openedAt: null },
+      { id: 2, name: "Стол 2", zone: "main", capacity: 2, status: "free", guests: 2, order: null, openedAt: null },
+      { id: 3, name: "Стол 3", zone: "main", capacity: 4, status: "free", guests: 2, order: null, openedAt: null },
+      { id: 4, name: "Стол 4", zone: "main", capacity: 4, status: "free", guests: 4, order: null, openedAt: null },
+      { id: 5, name: "Стол 5", zone: "main", capacity: 4, status: "free", guests: 4, order: null, openedAt: null },
+      { id: 6, name: "Стол 6", zone: "main", capacity: 4, status: "free", guests: 4, order: null, openedAt: null },
+      { id: 7, name: "Стол 7", zone: "main", capacity: 6, status: "free", guests: 4, order: null, openedAt: null },
+      { id: 8, name: "Стол 8", zone: "main", capacity: 6, status: "free", guests: 4, order: null, openedAt: null },
+      { id: 9, name: "Стол 9", zone: "main", capacity: 4, status: "free", guests: 2, order: null, openedAt: null },
+      { id: 10, name: "Стол 10", zone: "main", capacity: 4, status: "free", guests: 2, order: null, openedAt: null },
+      { id: 11, name: "Стол 11 (VIP)", zone: "main", capacity: 8, status: "free", guests: 6, order: null, openedAt: null },
+
+      // Терраса (5 столов)
+      { id: 12, name: "Терраса 1", zone: "veranda", capacity: 2, status: "free", guests: 2, order: null, openedAt: null },
+      { id: 13, name: "Терраса 2", zone: "veranda", capacity: 2, status: "free", guests: 2, order: null, openedAt: null },
+      { id: 14, name: "Терраса 3", zone: "veranda", capacity: 4, status: "free", guests: 3, order: null, openedAt: null },
+      { id: 15, name: "Терраса 4", zone: "veranda", capacity: 4, status: "free", guests: 4, order: null, openedAt: null },
+      { id: 16, name: "Терраса 5", zone: "veranda", capacity: 6, status: "free", guests: 4, order: null, openedAt: null },
+
+      // Барная стойка (2 посадочных места)
+      { id: 17, name: "Бар 1", zone: "bar", capacity: 1, status: "free", guests: 1, order: null, openedAt: null },
+      { id: 18, name: "Бар 2", zone: "bar", capacity: 2, status: "free", guests: 1, order: null, openedAt: null }
+    ];
+
+    // APPLICATION STATE
+    const LAYOUT_SCHEMA_VERSION = 'layout_11_hall_5_terrace_v1';
+    let storedVersion = localStorage.getItem('cm_layout_version');
+    let storedTables = JSON.parse(localStorage.getItem('cm_tables_state') || 'null');
+
+    let tables;
+    if (!storedTables || storedVersion !== LAYOUT_SCHEMA_VERSION || storedTables.length !== INITIAL_TABLES.length) {
+      tables = INITIAL_TABLES;
+      localStorage.setItem('cm_tables_state', JSON.stringify(tables));
+      localStorage.setItem('cm_layout_version', LAYOUT_SCHEMA_VERSION);
+    } else {
+      tables = storedTables;
+    }
+
+    let paidHistory = JSON.parse(localStorage.getItem('cm_paid_history') || '[]');
+    let currentTableId = 1;
+    let selectedMenuCategory = 'salads';
+    let currentDiscount = 0; // percentage
+    let selectedPayMethodType = 'card';
+    let pendingDishToAdd = null;
+    let activeHallZone = 'all';
+    let activeOrderSubTab = 'menu'; // 'menu' or 'cart' (for mobile phones)
+
+    // KDS tickets
+    let kitchenTickets = JSON.parse(localStorage.getItem('cm_kds_tickets') || '[]');
+
+    let pendingTableSelectionId = null;
+    let tempGuestCount = 2;
+  </script>
+
+  <script>
+    function switchOrderSubTab(tab) {
+      activeOrderSubTab = tab;
+      const menuPanel = document.getElementById('orderMenuPanel');
+      const cartPanel = document.getElementById('orderCartPanel');
+      const tabMenuBtn = document.getElementById('orderSubTabMenu');
+      const tabCartBtn = document.getElementById('orderSubTabCart');
+      const floatingBar = document.getElementById('mobileCartFloatingBar');
+
+      if (tab === 'menu') {
+        menuPanel.classList.remove('hidden');
+        cartPanel.classList.add('hidden');
+        cartPanel.classList.remove('flex');
+
+        tabMenuBtn.className = "flex-1 py-2 rounded-lg bg-white text-stone-900 shadow-xs flex items-center justify-center gap-1.5 transition";
+        tabCartBtn.className = "flex-1 py-2 rounded-lg text-stone-600 hover:text-stone-900 flex items-center justify-center gap-1.5 transition";
+
+        // Show floating bottom cart bar on phones if items exist
+        syncFloatingMobileBar();
+      } else {
+        menuPanel.classList.add('hidden');
+        cartPanel.classList.remove('hidden');
+        cartPanel.classList.add('flex');
+
+        tabCartBtn.className = "flex-1 py-2 rounded-lg bg-white text-stone-900 shadow-xs flex items-center justify-center gap-1.5 transition";
+        tabMenuBtn.className = "flex-1 py-2 rounded-lg text-stone-600 hover:text-stone-900 flex items-center justify-center gap-1.5 transition";
+
+        if (floatingBar) floatingBar.classList.add('hidden');
       }
-
-      if (window.fbDb) connect();
-      else window.addEventListener('firebase-ready', connect);
     }
 
-    function setFilter(f) {
-      window.currentFilter = f;
-      ['all', 'popular', 'regular'].forEach(t => {
-        const b = document.getElementById(`f-${t}`);
-        if (t === f) b.className = "px-3.5 py-1.5 rounded-xl bg-amber-500 text-black text-xs font-bold whitespace-nowrap transition";
-        else b.className = "px-3.5 py-1.5 rounded-xl bg-white/5 text-slate-300 hover:text-white text-xs font-bold border border-white/10 whitespace-nowrap transition";
-      });
-      renderRecipes();
-    }
+    function syncFloatingMobileBar() {
+      const floatingBar = document.getElementById('mobileCartFloatingBar');
+      if (!floatingBar) return;
 
-    function toggleExpand(id) {
-      window.expandedId = window.expandedId === id ? null : id;
-      renderRecipes();
-    }
+      const table = tables.find(t => t.id === currentTableId);
+      const isMobile = window.innerWidth < 1024;
 
-    function renderRecipes() {
-      const container = document.getElementById('recipesContainer');
-      const q = (document.getElementById('searchInput').value || '').toLowerCase().trim();
-      container.innerHTML = '';
-
-      let list = Object.values(window.recipes);
-
-      if (q) {
-        list = list.filter(r => 
-          (r.title || '').toLowerCase().includes(q) ||
-          (r.ingredients || '').toLowerCase().includes(q) ||
-          (r.instructions || '').toLowerCase().includes(q)
-        );
-      }
-
-      if (window.currentFilter === 'popular') list = list.filter(r => r.isPopular);
-      else if (window.currentFilter === 'regular') list = list.filter(r => !r.isPopular);
-      else list.sort((a, b) => (b.isPopular ? 1 : 0) - (a.isPopular ? 1 : 0));
-
-      if (list.length === 0) {
-        container.innerHTML = `<div class="p-8 text-center text-slate-500 bento-card text-sm">Рецепты не найдены</div>`;
+      if (!isMobile || activeOrderSubTab !== 'menu' || !table || !table.order || !table.order.items || table.order.items.length === 0) {
+        floatingBar.classList.add('hidden');
         return;
       }
 
-      list.forEach(r => {
-        const isExp = window.expandedId === r.id;
+      const totalQty = table.order.items.reduce((s, it) => s + it.qty, 0);
+      const total = calcTableTotal(table);
+
+      document.getElementById('mobileFloatingTable').textContent = `${table.name}`;
+      document.getElementById('mobileFloatingQty').textContent = `${totalQty} поз. в чеке`;
+      document.getElementById('mobileFloatingTotal').textContent = `${total} ₽`;
+      floatingBar.classList.remove('hidden');
+    }
+
+    function saveState() {
+      localStorage.setItem('cm_tables_state', JSON.stringify(tables));
+      localStorage.setItem('cm_paid_history', JSON.stringify(paidHistory));
+      localStorage.setItem('cm_kds_tickets', JSON.stringify(kitchenTickets));
+      updateShiftSummary();
+    }
+
+    function showToast(msg, icon = '🔔') {
+      const toast = document.getElementById('toastNotification');
+      document.getElementById('toastMessage').textContent = msg;
+      document.getElementById('toastIcon').textContent = icon;
+      toast.classList.remove('translate-y-20', 'opacity-0');
+      setTimeout(() => {
+        toast.classList.add('translate-y-20', 'opacity-0');
+      }, 2600);
+    }
+
+    function filterHall(zone) {
+      activeHallZone = zone;
+      document.querySelectorAll('.hall-btn').forEach(b => {
+        if (b.dataset.zone === zone) {
+          b.className = "hall-btn px-3 py-1.5 rounded-xl bg-brand-800 text-white font-semibold";
+        } else {
+          b.className = "hall-btn px-3 py-1.5 rounded-xl bg-stone-100 text-stone-600 hover:bg-stone-200 font-semibold";
+        }
+      });
+      renderTables();
+    }
+
+    function renderTables() {
+      const grid = document.getElementById('tablesGrid');
+      grid.innerHTML = '';
+
+      const list = activeHallZone === 'all' ? tables : tables.filter(t => t.zone === activeHallZone);
+
+      list.forEach(table => {
         const card = document.createElement('div');
-        card.className = `bento-card overflow-hidden transition ${isExp ? 'border-amber-500/40 shadow-xl' : 'hover:border-white/20'}`;
+        const hasOrder = table.order && table.order.items && table.order.items.length > 0;
+        const total = hasOrder ? calcTableTotal(table) : 0;
+        
+        let statusBg = 'bg-white border-stone-200 hover:border-amber-400';
+        let badgeColor = 'bg-emerald-100 text-emerald-800 border-emerald-200';
+        let statusLabel = 'Свободен';
+
+        if (table.status === 'precheck') {
+          statusBg = 'bg-indigo-50/70 border-indigo-300 shadow-md ring-2 ring-indigo-400/20';
+          badgeColor = 'bg-indigo-100 text-indigo-800 border-indigo-300';
+          statusLabel = 'Пречек';
+        } else if (hasOrder || table.status === 'occupied') {
+          statusBg = 'bg-amber-50/80 border-amber-300 shadow-sm ring-1 ring-amber-400/20';
+          badgeColor = 'bg-amber-100 text-amber-900 border-amber-300';
+          statusLabel = 'Занят';
+        }
+
+        card.className = `p-4 rounded-2xl border transition-all duration-150 cursor-pointer flex flex-col justify-between select-none relative group ${statusBg}`;
+        card.onclick = () => onTableCardClicked(table.id);
 
         card.innerHTML = `
-          <!-- Header Card (Крупные кликабельные зоны для пальцев) -->
-          <div onclick="toggleExpand('${r.id}')" class="p-4 sm:p-5 flex items-center justify-between cursor-pointer select-none gap-2">
-            <div class="flex items-center gap-3 min-w-0">
-              <span class="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-xl sm:text-2xl shrink-0">
-                ${r.emoji || '🧁'}
-              </span>
-              <div class="min-w-0">
-                <div class="flex items-center gap-1.5 flex-wrap">
-                  <h3 class="text-base sm:text-lg font-bold text-white tracking-tight truncate">${r.title}</h3>
-                  ${r.isPopular ? `<span class="px-1.5 py-0.5 rounded text-[9px] font-mono font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30 shrink-0">🔥 ТОП</span>` : ''}
-                </div>
-                <div class="text-xs text-slate-400 font-mono mt-0.5">
-                  🔥 ${r.ovenTemp} • ⏱ ${r.bakeMinutes} мин
-                </div>
-              </div>
+          <div>
+            <div class="flex items-center justify-between mb-2">
+              <span class="font-bold text-sm text-stone-900 font-serif">${table.name}</span>
+              <span class="text-[10px] font-bold px-2 py-0.5 rounded-full border ${badgeColor}">${statusLabel}</span>
             </div>
-
-            <div class="flex items-center gap-2 shrink-0">
-              <button onclick="event.stopPropagation(); startTimer('${r.title}', ${r.bakeMinutes})" 
-                      class="px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 active:scale-95 text-black text-xs font-bold transition flex items-center gap-1.5 shadow">
-                <i class="fa-solid fa-play text-[9px]"></i>
-                <span class="hidden xs:inline">Таймер</span>
-              </button>
-              <div class="w-7 h-7 rounded-lg bg-white/5 flex items-center justify-center text-slate-400">
-                <i class="fa-solid fa-chevron-down text-xs transition-transform duration-200 ${isExp ? 'rotate-180 text-amber-400' : ''}"></i>
-              </div>
+            <div class="flex items-center gap-2 text-xs text-stone-500">
+              <span>👥 ${table.guests || table.capacity} чел.</span>
+              <span>•</span>
+              <span class="capitalize text-[11px]">${table.zone === 'veranda' ? 'Терраса' : table.zone === 'bar' ? 'Барная стойка' : 'Основной зал'}</span>
             </div>
           </div>
 
-          <!-- Развернутый текст, адаптированный под экраны смартфонов -->
-          ${isExp ? `
-            <div class="px-3.5 sm:px-5 pb-5 pt-1 border-t border-white/5 space-y-3.5">
-              
-              <!-- Ингредиенты -->
-              <div class="p-3.5 sm:p-4 rounded-2xl bg-black/50 border border-white/5 space-y-2">
-                <h4 class="text-[11px] sm:text-xs font-mono font-bold text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
-                  <i class="fa-solid fa-scale-balanced"></i> Ингредиенты:
-                </h4>
-                <div class="rich-display">
-                  ${r.ingredients || '<span class="text-slate-500">Ингредиенты не указаны.</span>'}
-                </div>
-              </div>
-
-              <!-- Инструкция -->
-              <div class="p-3.5 sm:p-4 rounded-2xl bg-black/50 border border-white/5 space-y-2">
-                <h4 class="text-[11px] sm:text-xs font-mono font-bold text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
-                  <i class="fa-solid fa-list-check"></i> Пошаговый процесс:
-                </h4>
-                <div class="rich-display">
-                  ${r.instructions || '<span class="text-slate-500">Инструкция не указана.</span>'}
-                </div>
-              </div>
-
-            </div>
-          ` : ''}
+          <div class="mt-4 pt-3 border-t border-stone-200/60 flex items-center justify-between">
+            <span class="text-[11px] text-stone-400 font-mono">${table.openedAt ? table.openedAt : '—'}</span>
+            <span class="font-bold font-mono text-sm ${total > 0 ? 'text-brand-900' : 'text-stone-400'}">${total > 0 ? total + ' ₽' : '0 ₽'}</span>
+          </div>
         `;
-        container.appendChild(card);
+
+        grid.appendChild(card);
       });
     }
 
-    function startTimer(title, minutes) {
-      if (timerInterval) clearInterval(timerInterval);
-      timerSeconds = minutes * 60;
+    function calcTableTotal(table) {
+      if (!table.order || !table.order.items) return 0;
+      const subtotal = table.order.items.reduce((sum, it) => sum + (it.price * it.qty), 0);
+      const discount = table.order.discount || 0;
+      return Math.round(subtotal * (1 - discount / 100));
+    }
 
-      const w = document.getElementById('activeTimerWidget');
-      w.classList.remove('hidden');
-      document.getElementById('activeTimerTitle').innerText = title;
-      document.getElementById('activeTimerSub').innerText = `${minutes} минут`;
+    function onTableCardClicked(tableId) {
+      playBeep('D5');
+      const table = tables.find(t => t.id === tableId);
+      if (!table) return;
 
-      updateTimerDisplay();
+      pendingTableSelectionId = tableId;
+      tempGuestCount = table.guests || table.capacity || 2;
 
-      timerInterval = setInterval(() => {
-        timerSeconds--;
-        if (timerSeconds <= 0) {
-          clearInterval(timerInterval);
-          alert(`⏰ Время вышло! ${title} готов!`);
-          stopTimer();
+      // Update guests modal UI
+      document.getElementById('guestModalTableTag').textContent = `${table.name}`;
+      document.getElementById('guestModalTitle').textContent = `Сколько гостей за столом?`;
+      updateGuestModalUI(tempGuestCount);
+
+      // Open guest selector modal (Step 2)
+      document.getElementById('guestsModal').classList.remove('hidden');
+    }
+
+    function selectGuestCount(count) {
+      playBeep('E5');
+      tempGuestCount = count;
+      updateGuestModalUI(tempGuestCount);
+    }
+
+    function adjustGuestModalCount(delta) {
+      playBeep('F5');
+      tempGuestCount = Math.max(1, Math.min(25, tempGuestCount + delta));
+      updateGuestModalUI(tempGuestCount);
+    }
+
+    function updateGuestModalUI(count) {
+      document.getElementById('guestModalCountDisplay').textContent = count;
+      document.querySelectorAll('.guest-btn').forEach((btn, idx) => {
+        const num = idx + 1;
+        if (num === count) {
+          btn.className = "guest-btn p-3 rounded-xl border-2 border-amber-600 bg-amber-50 text-amber-950 font-bold transition flex flex-col items-center shadow-xs";
         } else {
-          updateTimerDisplay();
+          btn.className = "guest-btn p-3 rounded-xl border-2 border-stone-200 hover:border-amber-500 hover:bg-stone-50 text-stone-800 transition flex flex-col items-center";
         }
+      });
+    }
+
+    function confirmGuestSelectionAndOpenOrder() {
+      if (!pendingTableSelectionId) return;
+      const table = tables.find(t => t.id === pendingTableSelectionId);
+      if (!table) return;
+
+      table.guests = tempGuestCount;
+      if (table.status === 'free') {
+        table.status = 'occupied';
+        const now = new Date();
+        table.openedAt = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+      }
+
+      closeModal('guestsModal');
+      openTableOrder(pendingTableSelectionId);
+      showToast(`${table.name}: ${tempGuestCount} гостей`, '👥');
+    }
+
+    function openTableOrder(tableId) {
+      playBeep('E5');
+      currentTableId = tableId;
+      const table = tables.find(t => t.id === tableId);
+      if (!table) return;
+
+      if (!table.order) {
+        table.order = {
+          items: [],
+          discount: 0,
+          notes: ''
+        };
+      }
+
+      currentDiscount = table.order.discount || 0;
+      document.getElementById('activeTableBadge').textContent = `№${table.id}`;
+      document.getElementById('activeTableBadge').classList.remove('hidden');
+      document.getElementById('bnavTableBadge').classList.remove('hidden');
+
+      setMainView('order');
+      switchOrderSubTab('menu');
+      renderOrderScreen();
+      renderDishes();
+    }
+
+    function openOrderViewDirect() {
+      openTableOrder(currentTableId);
+    }
+
+    function quickNewOrder() {
+      // Find first free table or fallback to Table 1
+      const free = tables.find(t => t.status === 'free') || tables[0];
+      if (free) {
+        onTableCardClicked(free.id);
+      }
+    }
+
+    function openCustomItemModal() {
+      playBeep('C5');
+      document.getElementById('customItemName').value = '';
+      document.getElementById('customItemPrice').value = '';
+      document.getElementById('customItemQty').value = '1';
+      document.getElementById('customItemNotes').value = '';
+      document.getElementById('customItemModal').classList.remove('hidden');
+      setTimeout(() => {
+        document.getElementById('customItemName').focus();
+      }, 150);
+    }
+
+    function saveCustomItemToOrder() {
+      const name = document.getElementById('customItemName').value.trim();
+      const price = parseFloat(document.getElementById('customItemPrice').value);
+      const qty = parseInt(document.getElementById('customItemQty').value) || 1;
+      const category = document.getElementById('customItemCategory').value;
+      const note = document.getElementById('customItemNotes').value.trim();
+
+      if (!name) {
+        showToast('Введите название позиции!', '⚠️');
+        return;
+      }
+      if (isNaN(price) || price < 0) {
+        showToast('Укажите корректную цену!', '⚠️');
+        return;
+      }
+
+      const table = tables.find(t => t.id === currentTableId);
+      if (!table) return;
+
+      if (table.status === 'free') {
+        table.status = 'occupied';
+        const now = new Date();
+        table.openedAt = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+      }
+
+      if (!table.order) {
+        table.order = { items: [], discount: 0 };
+      }
+
+      const modifiers = note ? [note] : [];
+
+      table.order.items.push({
+        dishId: 'custom_' + Date.now(),
+        name: `★ ${name}`,
+        price: price,
+        qty: qty,
+        category: category,
+        modifiers: modifiers,
+        modSignature: modifiers.join(' | '),
+        sentToKitchen: false,
+        isCustom: true
+      });
+
+      playSuccessSound();
+      saveState();
+      renderOrderScreen();
+      closeModal('customItemModal');
+      showToast(`Добавлена позиция: ${name} (${price} ₽)`, '✨');
+    }
+  </script>
+
+  <script>
+    function filterMenu(cat) {
+      playBeep('G4');
+      selectedMenuCategory = cat;
+      document.querySelectorAll('.menu-cat-btn').forEach(b => {
+        if (b.dataset.cat === cat) {
+          b.className = "menu-cat-btn px-3 py-1.5 rounded-xl bg-brand-800 text-white shadow-xs shrink-0 font-bold";
+        } else {
+          b.className = "menu-cat-btn px-3 py-1.5 rounded-xl bg-stone-100 text-stone-700 hover:bg-stone-200 shrink-0 font-bold";
+        }
+      });
+      renderDishes();
+    }
+
+    function handleFastSearch() {
+      const q = (document.getElementById('posSearch').value || '').trim();
+      const clearBtn = document.getElementById('clearSearchBtn');
+      const badge = document.getElementById('searchResultBadge');
+
+      if (q.length > 0) {
+        clearBtn.classList.remove('hidden');
+      } else {
+        clearBtn.classList.add('hidden');
+        badge.classList.add('hidden');
+      }
+      renderDishes();
+    }
+
+    function clearSearch() {
+      const input = document.getElementById('posSearch');
+      input.value = '';
+      input.focus();
+      handleFastSearch();
+    }
+
+    function renderDishes() {
+      const q = (document.getElementById('posSearch').value || '').toLowerCase().trim();
+      const grid = document.getElementById('dishesGrid');
+      const badge = document.getElementById('searchResultBadge');
+      grid.innerHTML = '';
+
+      const dishes = POS_MENU.filter(d => {
+        const matchesCategory = (selectedMenuCategory === 'all') || (d.category === selectedMenuCategory);
+        if (!q) return matchesCategory;
+
+        // Smart instant search across name, category title, description and modifiers
+        const inName = d.name.toLowerCase().includes(q);
+        const inDesc = d.desc ? d.desc.toLowerCase().includes(q) : false;
+        const inCat = d.catTitle.toLowerCase().includes(q);
+        const inMods = d.mods ? d.mods.some(m => m.toLowerCase().includes(q)) : false;
+
+        return inName || inDesc || inCat || inMods;
+      });
+
+      if (q) {
+        badge.textContent = `${dishes.length} найдено`;
+        badge.classList.remove('hidden');
+      } else {
+        badge.classList.add('hidden');
+      }
+
+      if (dishes.length === 0) {
+        grid.innerHTML = `
+          <div class="col-span-full py-12 flex flex-col items-center justify-center text-stone-400 text-center">
+            <span class="text-3xl mb-2">🔍</span>
+            <p class="text-xs font-bold text-stone-700">Ничего не найдено</p>
+            <p class="text-[11px] text-stone-400 mt-0.5">Попробуйте ввести «кофе», «борщ», «чай», «молоко» или используйте «+ Своя позиция»</p>
+          </div>
+        `;
+        return;
+      }
+
+      dishes.forEach(dish => {
+        const btn = document.createElement('div');
+        btn.className = "bg-stone-50 hover:bg-amber-50/70 border border-stone-200/90 rounded-2xl p-3 flex flex-col justify-between cursor-pointer transition active:scale-95 shadow-2xs hover:border-amber-400";
+        btn.onclick = () => onDishClicked(dish);
+
+        // Highlight category tag in search mode
+        const categoryTag = q || selectedMenuCategory === 'all'
+          ? `<span class="text-[9px] uppercase font-bold text-amber-700 bg-amber-100/80 px-1.5 py-0.5 rounded">${dish.catTitle}</span>`
+          : '';
+
+        btn.innerHTML = `
+          <div>
+            <div class="flex items-start justify-between gap-1 mb-1">
+              <span class="font-bold text-xs sm:text-sm text-stone-900 leading-snug">${dish.name}</span>
+            </div>
+            ${categoryTag ? `<div class="mb-1">${categoryTag}</div>` : ''}
+            <p class="text-[10px] text-stone-400 line-clamp-2">${dish.desc}</p>
+          </div>
+          <div class="mt-2.5 pt-2 border-t border-stone-200/60 flex items-center justify-between">
+            <span class="text-xs font-mono font-bold text-brand-900">${dish.price} ₽</span>
+            <span class="w-6 h-6 rounded-lg bg-white border border-stone-200 flex items-center justify-center text-xs text-brand-800 font-bold shadow-2xs hover:bg-amber-500 hover:text-brand-950 transition">+</span>
+          </div>
+        `;
+        grid.appendChild(btn);
+      });
+    }
+
+    function onDishClicked(dish) {
+      playBeep('A5');
+      // If dish has modifiers or options, show modifier modal
+      if (dish.mods && dish.mods.length > 0) {
+        pendingDishToAdd = dish;
+        openModifierModal(dish);
+      } else {
+        addDishToActiveOrder(dish, []);
+      }
+    }
+
+    function openModifierModal(dish) {
+      document.getElementById('modCategoryTag').textContent = dish.catTitle;
+      document.getElementById('modDishName').textContent = dish.name;
+      document.getElementById('modDishPrice').textContent = `${dish.price} ₽`;
+      document.getElementById('modCustomComment').value = '';
+
+      const listEl = document.getElementById('modOptionsList');
+      listEl.innerHTML = '';
+
+      dish.mods.forEach((modText, idx) => {
+        const label = document.createElement('label');
+        label.className = "flex items-center gap-2.5 p-2 bg-stone-50 rounded-xl border border-stone-200 hover:bg-stone-100 cursor-pointer";
+        label.innerHTML = `
+          <input type="checkbox" name="dishMod" value="${modText}" class="rounded text-brand-800 focus:ring-0">
+          <span class="text-stone-800 font-medium">${modText}</span>
+        `;
+        listEl.appendChild(label);
+      });
+
+      document.getElementById('modifierModal').classList.remove('hidden');
+    }
+
+    function confirmDishWithModifiers() {
+      if (!pendingDishToAdd) return;
+      const checkedBoxes = document.querySelectorAll('input[name="dishMod"]:checked');
+      const selectedMods = Array.from(checkedBoxes).map(cb => cb.value);
+      const customComment = document.getElementById('modCustomComment').value.trim();
+      if (customComment) {
+        selectedMods.push(customComment);
+      }
+
+      addDishToActiveOrder(pendingDishToAdd, selectedMods);
+      closeModal('modifierModal');
+      pendingDishToAdd = null;
+    }
+
+    function addDishToActiveOrder(dish, modifiers = []) {
+      const table = tables.find(t => t.id === currentTableId);
+      if (!table) return;
+
+      if (table.status === 'free') {
+        table.status = 'occupied';
+        const now = new Date();
+        table.openedAt = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+      }
+
+      if (!table.order) {
+        table.order = { items: [], discount: 0 };
+      }
+
+      const modSignature = modifiers.sort().join(' | ');
+
+      // Check if identical item with exact modifiers exists
+      const existing = table.order.items.find(it => it.dishId === dish.id && it.modSignature === modSignature);
+
+      if (existing) {
+        existing.qty += 1;
+      } else {
+        table.order.items.push({
+          dishId: dish.id,
+          name: dish.name,
+          price: dish.price,
+          qty: 1,
+          category: dish.category,
+          modifiers: modifiers,
+          modSignature: modSignature,
+          sentToKitchen: false
+        });
+      }
+
+      saveState();
+      renderOrderScreen();
+      showToast(`Добавлено: ${dish.name}`, '➕');
+    }
+
+    function changeQty(index, delta) {
+      playBeep('C5');
+      const table = tables.find(t => t.id === currentTableId);
+      if (!table || !table.order) return;
+
+      table.order.items[index].qty += delta;
+      if (table.order.items[index].qty <= 0) {
+        table.order.items.splice(index, 1);
+      }
+
+      if (table.order.items.length === 0) {
+        table.status = 'free';
+        table.openedAt = null;
+      }
+
+      saveState();
+      renderOrderScreen();
+    }
+
+    function renderOrderScreen() {
+      const table = tables.find(t => t.id === currentTableId);
+      if (!table) return;
+
+      document.getElementById('orderTitle').textContent = `${table.name}`;
+      document.getElementById('orderSubtitle').textContent = `Гостей: ${table.guests || 2} • Открыт: ${table.openedAt || 'Сейчас'}`;
+      document.getElementById('guestsCountText').textContent = table.guests || 2;
+
+      const badge = document.getElementById('orderStatusBadge');
+      if (table.status === 'precheck') {
+        badge.textContent = 'Пречек';
+        badge.className = 'text-[10px] font-bold px-2 py-0.5 rounded-md bg-indigo-100 text-indigo-800';
+      } else if (table.order && table.order.items.length > 0) {
+        badge.textContent = 'В работе';
+        badge.className = 'text-[10px] font-bold px-2 py-0.5 rounded-md bg-amber-100 text-amber-900';
+      } else {
+        badge.textContent = 'Новый';
+        badge.className = 'text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-800';
+      }
+
+      const container = document.getElementById('orderItemsContainer');
+      container.innerHTML = '';
+
+      if (!table.order || table.order.items.length === 0) {
+        container.innerHTML = `
+          <div class="h-full flex flex-col items-center justify-center text-center p-6 text-stone-400">
+            <span class="text-4xl mb-2 opacity-50">🛒</span>
+            <p class="text-xs font-semibold">Заказ пока пуст</p>
+            <p class="text-[11px] text-stone-400 mt-0.5">Выберите блюда из меню</p>
+          </div>
+        `;
+        document.getElementById('orderTotalQty').textContent = '0';
+        document.getElementById('orderTotalPrice').textContent = '0 ₽';
+        document.getElementById('mobileCartBadge').textContent = '0';
+        syncFloatingMobileBar();
+        return;
+      }
+
+      let totalQty = 0;
+      let subtotal = 0;
+
+      table.order.items.forEach((item, index) => {
+        totalQty += item.qty;
+        const lineTotal = item.price * item.qty;
+        subtotal += lineTotal;
+
+        const row = document.createElement('div');
+        row.className = "bg-stone-50 p-2 sm:p-2.5 rounded-xl border border-stone-200/80 text-xs flex items-center justify-between gap-1.5";
+
+        const modsHtml = item.modifiers && item.modifiers.length > 0 
+          ? `<div class="text-[10px] text-amber-700 mt-0.5 font-medium flex flex-wrap gap-1">
+              ${item.modifiers.map(m => `<span class="bg-amber-100/80 px-1.5 py-0.2 rounded">${m}</span>`).join('')}
+             </div>` 
+          : '';
+
+        const kitchenTag = item.sentToKitchen 
+          ? `<span class="text-[9px] font-bold text-emerald-700 bg-emerald-100 px-1 py-0.2 rounded">В кухне ✓</span>` 
+          : `<span class="text-[9px] font-bold text-amber-600 bg-amber-100 px-1 py-0.2 rounded">Черновик</span>`;
+
+        row.innerHTML = `
+          <div class="flex-1 min-w-0 pr-1">
+            <div class="flex items-center gap-1">
+              <span class="font-bold text-stone-900 truncate text-[11px] sm:text-xs">${item.name}</span>
+              ${kitchenTag}
+            </div>
+            <div class="text-[10px] sm:text-[11px] text-stone-400 font-mono">${item.price} ₽ × ${item.qty} = <b class="text-stone-700">${lineTotal} ₽</b></div>
+            ${modsHtml}
+          </div>
+
+          <div class="flex items-center gap-1 shrink-0">
+            <button onclick="changeQty(${index}, -1)" class="w-7 h-7 sm:w-6 sm:h-6 rounded-lg bg-white hover:bg-stone-200 border border-stone-200 font-bold flex items-center justify-center text-stone-700 active:scale-95 text-xs">
+              -
+            </button>
+            <span class="font-bold font-mono px-1 sm:px-1.5 text-xs">${item.qty}</span>
+            <button onclick="changeQty(${index}, 1)" class="w-7 h-7 sm:w-6 sm:h-6 rounded-lg bg-white hover:bg-stone-200 border border-stone-200 font-bold flex items-center justify-center text-stone-700 active:scale-95 text-xs">
+              +
+            </button>
+          </div>
+        `;
+        container.appendChild(row);
+      });
+
+      const discountPercent = table.order.discount || 0;
+      const discountVal = Math.round(subtotal * (discountPercent / 100));
+      const finalPrice = subtotal - discountVal;
+
+      document.getElementById('orderTotalQty').textContent = totalQty;
+      document.getElementById('mobileCartBadge').textContent = totalQty;
+      document.getElementById('btnDiscount').textContent = discountPercent > 0 ? `${discountPercent}% (-${discountVal} ₽)` : '0% (Добавить)';
+      document.getElementById('orderTotalPrice').textContent = `${finalPrice} ₽`;
+
+      syncFloatingMobileBar();
+    }
+
+      const container = document.getElementById('orderItemsContainer');
+      container.innerHTML = '';
+
+      if (!table.order || table.order.items.length === 0) {
+        container.innerHTML = `
+          <div class="h-full flex flex-col items-center justify-center text-center p-6 text-stone-400">
+            <span class="text-4xl mb-2 opacity-50">🛒</span>
+            <p class="text-xs font-semibold">Заказ пока пуст</p>
+            <p class="text-[11px] text-stone-400 mt-0.5">Выберите блюда из меню слева</p>
+          </div>
+        `;
+        document.getElementById('orderTotalQty').textContent = '0';
+        document.getElementById('orderTotalPrice').textContent = '0 ₽';
+        return;
+      }
+
+      let totalQty = 0;
+      let subtotal = 0;
+
+      table.order.items.forEach((item, index) => {
+        totalQty += item.qty;
+        const lineTotal = item.price * item.qty;
+        subtotal += lineTotal;
+
+        const row = document.createElement('div');
+        row.className = "bg-stone-50 p-2.5 rounded-xl border border-stone-200/80 text-xs flex items-center justify-between gap-2";
+
+        const modsHtml = item.modifiers && item.modifiers.length > 0 
+          ? `<div class="text-[10px] text-amber-700 mt-0.5 font-medium flex flex-wrap gap-1">
+              ${item.modifiers.map(m => `<span class="bg-amber-100/80 px-1.5 py-0.2 rounded">${m}</span>`).join('')}
+             </div>` 
+          : '';
+
+        const kitchenTag = item.sentToKitchen 
+          ? `<span class="text-[9px] font-bold text-emerald-700 bg-emerald-100 px-1 py-0.2 rounded">В кухне ✓</span>` 
+          : `<span class="text-[9px] font-bold text-amber-600 bg-amber-100 px-1 py-0.2 rounded">Черновик</span>`;
+
+        row.innerHTML = `
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center gap-1.5">
+              <span class="font-bold text-stone-900 truncate">${item.name}</span>
+              ${kitchenTag}
+            </div>
+            <div class="text-[11px] text-stone-400 font-mono">${item.price} ₽ × ${item.qty} = <b class="text-stone-700">${lineTotal} ₽</b></div>
+            ${modsHtml}
+          </div>
+
+          <div class="flex items-center gap-1 shrink-0">
+            <button onclick="changeQty(${index}, -1)" class="w-6 h-6 rounded-lg bg-white hover:bg-stone-200 border border-stone-200 font-bold flex items-center justify-center text-stone-700 active:scale-95">
+              -
+            </button>
+            <span class="font-bold font-mono px-1.5">${item.qty}</span>
+            <button onclick="changeQty(${index}, 1)" class="w-6 h-6 rounded-lg bg-white hover:bg-stone-200 border border-stone-200 font-bold flex items-center justify-center text-stone-700 active:scale-95">
+              +
+            </button>
+          </div>
+        `;
+        container.appendChild(row);
+      });
+
+      const discountPercent = table.order.discount || 0;
+      const discountVal = Math.round(subtotal * (discountPercent / 100));
+      const finalPrice = subtotal - discountVal;
+
+      document.getElementById('orderTotalQty').textContent = totalQty;
+      document.getElementById('btnDiscount').textContent = discountPercent > 0 ? `${discountPercent}% (-${discountVal} ₽)` : '0% (Добавить)';
+      document.getElementById('orderTotalPrice').textContent = `${finalPrice} ₽`;
+    }
+
+    function changeGuestsCount() {
+      const table = tables.find(t => t.id === currentTableId);
+      if (!table) return;
+      let count = (table.guests || 2) + 1;
+      if (count > 12) count = 1;
+      table.guests = count;
+      saveState();
+      renderOrderScreen();
+      showToast(`Гостей за столом: ${count}`, '👥');
+    }
+
+    function closeCurrentOrderScreen() {
+      setMainView('tables');
+    }
+
+    function cancelActiveOrder() {
+      const table = tables.find(t => t.id === currentTableId);
+      if (!table || !table.order || table.order.items.length === 0) {
+        showToast('Заказ уже пуст', 'ℹ️');
+        return;
+      }
+      table.order = { items: [], discount: 0 };
+      table.status = 'free';
+      table.openedAt = null;
+      saveState();
+      renderOrderScreen();
+      renderTables();
+      showToast('Заказ очищен', '🗑️');
+    }
+  </script>
+
+  <script>
+    function sendOrderToKitchen() {
+      const table = tables.find(t => t.id === currentTableId);
+      if (!table || !table.order || table.order.items.length === 0) {
+        showToast('Добавьте блюда перед отправкой', '⚠️');
+        return;
+      }
+
+      const unprinted = table.order.items.filter(it => !it.sentToKitchen);
+      if (unprinted.length === 0) {
+        showToast('Все позиции уже были переданы на кухню!', 'ℹ️');
+        return;
+      }
+
+      playSuccessSound();
+
+      // Mark as sent
+      unprinted.forEach(it => it.sentToKitchen = true);
+
+      // Create new ticket for KDS
+      const ticket = {
+        id: 'T-' + Math.floor(1000 + Math.random() * 9000),
+        table: table.name,
+        tableId: table.id,
+        time: new Date().toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' }),
+        items: unprinted.map(i => ({ name: i.name, qty: i.qty, mods: i.modifiers })),
+        status: 'cooking' // cooking | ready
+      };
+
+      kitchenTickets.unshift(ticket);
+      saveState();
+      renderOrderScreen();
+      renderTables();
+      renderKds();
+
+      showToast(`Бегунок отправлен на кухню (${table.name})!`, '🔔');
+    }
+
+    function renderKds() {
+      const grid = document.getElementById('kdsGrid');
+      grid.innerHTML = '';
+
+      let activeCount = 0;
+      let doneCount = 0;
+
+      kitchenTickets.forEach((ticket, tIdx) => {
+        if (ticket.status === 'cooking') activeCount++;
+        if (ticket.status === 'ready') doneCount++;
+
+        const card = document.createElement('div');
+        const isReady = ticket.status === 'ready';
+
+        card.className = `p-4 rounded-2xl border transition shadow-xs flex flex-col justify-between ${
+          isReady ? 'bg-emerald-50/60 border-emerald-300' : 'bg-white border-amber-300 ring-2 ring-amber-400/20'
+        }`;
+
+        const itemsHtml = ticket.items.map(it => `
+          <div class="py-1 border-b border-stone-100 flex items-start justify-between text-xs">
+            <div>
+              <span class="font-bold text-stone-900">${it.name}</span>
+              ${it.mods && it.mods.length ? `<div class="text-[10px] text-rose-600 font-semibold">${it.mods.join(', ')}</div>` : ''}
+            </div>
+            <span class="font-bold font-mono text-sm px-2 py-0.5 bg-stone-100 rounded-lg">×${it.qty}</span>
+          </div>
+        `).join('');
+
+        card.innerHTML = `
+          <div>
+            <div class="flex items-center justify-between pb-2 border-b border-stone-200">
+              <span class="font-bold text-sm text-stone-950">${ticket.table}</span>
+              <span class="font-mono text-xs text-stone-400">⏱️ ${ticket.time}</span>
+            </div>
+            <div class="py-2 space-y-1">
+              ${itemsHtml}
+            </div>
+          </div>
+
+          <div class="pt-3 flex gap-2">
+            ${
+              isReady 
+                ? `<button onclick="archiveKdsTicket(${tIdx})" class="w-full py-2 bg-stone-200 hover:bg-stone-300 text-stone-700 text-xs font-bold rounded-xl">В архив (Отдано)</button>`
+                : `<button onclick="markKdsReady(${tIdx})" class="w-full py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-xs">Готово к выдаче ✓</button>`
+            }
+          </div>
+        `;
+
+        grid.appendChild(card);
+      });
+
+      document.getElementById('kdsActiveCount').textContent = activeCount;
+      document.getElementById('kdsDoneCount').textContent = doneCount;
+      document.getElementById('kdsBadge').textContent = activeCount;
+
+      const bnavKds = document.getElementById('bnavKdsBadge');
+      if (bnavKds) {
+        bnavKds.textContent = activeCount;
+        if (activeCount > 0) {
+          bnavKds.classList.remove('hidden');
+        } else {
+          bnavKds.classList.add('hidden');
+        }
+      }
+    }
+
+    function markKdsReady(idx) {
+      playSuccessSound();
+      kitchenTickets[idx].status = 'ready';
+      saveState();
+      renderKds();
+      showToast(`Блюда для ${kitchenTickets[idx].table} готовы!`, '🛎️');
+    }
+
+    function archiveKdsTicket(idx) {
+      kitchenTickets.splice(idx, 1);
+      saveState();
+      renderKds();
+    }
+  </script>
+
+  <script>
+    function openDiscountModal() {
+      document.getElementById('discountModal').classList.remove('hidden');
+    }
+
+    function applyDiscount(percent) {
+      const table = tables.find(t => t.id === currentTableId);
+      if (table && table.order) {
+        table.order.discount = percent;
+        currentDiscount = percent;
+      }
+      closeModal('discountModal');
+      saveState();
+      renderOrderScreen();
+      showToast(`Применена скидка ${percent}%`, '🏷️');
+    }
+
+    function openPaymentModal() {
+      const table = tables.find(t => t.id === currentTableId);
+      if (!table || !table.order || table.order.items.length === 0) {
+        showToast('В заказе нет блюд для расчета', '⚠️');
+        return;
+      }
+
+      const subtotal = table.order.items.reduce((sum, it) => sum + (it.price * it.qty), 0);
+      const discount = table.order.discount || 0;
+      const discountVal = Math.round(subtotal * (discount / 100));
+      const total = subtotal - discountVal;
+
+      document.getElementById('payTableInfo').textContent = `${table.name} • ${table.order.items.length} поз.`;
+      document.getElementById('paySubtotal').textContent = `${subtotal} ₽`;
+      document.getElementById('payDiscountAmount').textContent = `-${discountVal} ₽ (${discount}%)`;
+      document.getElementById('payTotalFinal').textContent = `${total} ₽`;
+
+      selectPayMethod('card');
+      document.getElementById('paymentModal').classList.remove('hidden');
+    }
+
+    function selectPayMethod(method) {
+      selectedPayMethodType = method;
+      document.querySelectorAll('.pay-method-btn').forEach(btn => {
+        btn.classList.remove('border-brand-800', 'bg-brand-50', 'text-brand-900');
+        btn.classList.add('border-stone-200', 'bg-white', 'text-stone-700');
+      });
+
+      const activeBtn = document.getElementById(`payBtn-${method}`);
+      if (activeBtn) {
+        activeBtn.classList.remove('border-stone-200', 'bg-white', 'text-stone-700');
+        activeBtn.classList.add('border-brand-800', 'bg-brand-50', 'text-brand-900');
+      }
+
+      const cashBlock = document.getElementById('cashCalcBlock');
+      if (method === 'cash') {
+        cashBlock.classList.remove('hidden');
+        document.getElementById('cashGivenInput').value = '';
+        document.getElementById('cashChangeOutput').textContent = '0 ₽';
+      } else {
+        cashBlock.classList.add('hidden');
+      }
+    }
+
+    function recalcChange() {
+      const table = tables.find(t => t.id === currentTableId);
+      if (!table) return;
+      const total = calcTableTotal(table);
+      const given = parseFloat(document.getElementById('cashGivenInput').value) || 0;
+      const change = given - total;
+      document.getElementById('cashChangeOutput').textContent = change >= 0 ? `${change} ₽` : 'Недостаточно';
+    }
+
+    function printPrecheck() {
+      const table = tables.find(t => t.id === currentTableId);
+      if (!table || !table.order || table.order.items.length === 0) {
+        showToast('Заказ пуст', '⚠️');
+        return;
+      }
+
+      table.status = 'precheck';
+      saveState();
+      renderTables();
+      renderOrderScreen();
+
+      renderReceiptSlip(table, false);
+      document.getElementById('receiptModal').classList.remove('hidden');
+      showToast('Пречек сформирован и напечатан', '🖨️');
+    }
+
+    function finalizePayment() {
+      const table = tables.find(t => t.id === currentTableId);
+      if (!table || !table.order || table.order.items.length === 0) return;
+
+      playSuccessSound();
+
+      const total = calcTableTotal(table);
+      const checkNumber = Math.floor(1000 + Math.random() * 9000);
+      const now = new Date();
+
+      const paidRecord = {
+        checkNo: checkNumber,
+        table: table.name,
+        time: now.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' }),
+        date: now.toLocaleDateString('ru-RU'),
+        waiter: "Алексей М.",
+        payMethod: selectedPayMethodType === 'card' ? 'Карта' : selectedPayMethodType === 'sbp' ? 'СБП' : 'Наличные',
+        items: JSON.parse(JSON.stringify(table.order.items)),
+        discount: table.order.discount || 0,
+        total: total
+      };
+
+      paidHistory.unshift(paidRecord);
+
+      // Reset Table
+      table.status = 'free';
+      table.openedAt = null;
+      table.order = null;
+
+      saveState();
+      closeModal('paymentModal');
+
+      // Show receipt
+      renderReceiptSlip(paidRecord, true);
+      document.getElementById('receiptModal').classList.remove('hidden');
+
+      renderTables();
+      renderOrderScreen();
+      updateShiftSummary();
+      showToast(`Чек №${checkNumber} успешно оплачен!`, '💰');
+    }
+
+    function renderReceiptSlip(data, isFiscal = false) {
+      const container = document.getElementById('receiptContent');
+      const now = new Date();
+
+      const items = data.items || (data.order && data.order.items) || [];
+      const subtotal = items.reduce((s, it) => s + (it.price * it.qty), 0);
+      const discount = data.discount !== undefined ? data.discount : (data.order ? data.order.discount : 0);
+      const discountVal = Math.round(subtotal * (discount / 100));
+      const total = subtotal - discountVal;
+
+      const itemsRows = items.map(it => `
+        <div class="flex justify-between items-start py-0.5">
+          <div class="pr-2">
+            <div>${it.name}</div>
+            <div class="text-[9px] text-stone-500">${it.qty} × ${it.price} ₽</div>
+          </div>
+          <div class="font-bold">${it.qty * it.price} ₽</div>
+        </div>
+      `).join('');
+
+      container.innerHTML = `
+        <div class="text-center space-y-1 mb-3">
+          <div class="font-bold text-sm tracking-wider">COFFEEMAN</div>
+          <div class="text-[10px] text-stone-500">ООО «КОФЕМАН РИТЕЙЛ» • SINCE 2008</div>
+          <div class="text-[10px] text-stone-500">ИНН 7701984210 • Касса №1</div>
+          <div class="text-[10px] font-bold mt-1 text-stone-700">${isFiscal ? '*** КАССОВЫЙ ЧЕК ***' : '*** ПРЕЧЕК / СЧЕТ ***'}</div>
+        </div>
+
+        <div class="border-t border-b border-dashed border-stone-300 py-1.5 my-2 space-y-0.5 text-[10px]">
+          <div class="flex justify-between"><span>Стол: ${data.name || data.table}</span> <span>Официант: Алексей</span></div>
+          <div class="flex justify-between"><span>Дата: ${now.toLocaleDateString('ru-RU')}</span> <span>Время: ${now.toLocaleTimeString('ru-RU', {hour: '2-digit', minute:'2-digit'})}</span></div>
+        </div>
+
+        <div class="py-1">
+          ${itemsRows}
+        </div>
+
+        <div class="border-t border-dashed border-stone-300 pt-2 mt-2 space-y-1 text-xs">
+          <div class="flex justify-between">
+            <span>Подытог:</span>
+            <span>${subtotal} ₽</span>
+          </div>
+          ${discount > 0 ? `
+          <div class="flex justify-between text-emerald-700 font-medium">
+            <span>Скидка (${discount}%):</span>
+            <span>-${discountVal} ₽</span>
+          </div>` : ''}
+          <div class="flex justify-between text-sm font-bold pt-1 border-t border-stone-200">
+            <span>ИТОГО К ОПЛАТЕ:</span>
+            <span>${total} ₽</span>
+          </div>
+          ${isFiscal ? `
+          <div class="flex justify-between text-[10px] text-stone-500 pt-1">
+            <span>Оплачено (${data.payMethod || 'Карта'}):</span>
+            <span>${total} ₽</span>
+          </div>` : ''}
+        </div>
+
+        <div class="text-center pt-4 text-[9px] text-stone-400 space-y-0.5">
+          <div>Приятного аппетита и хорошего дня!</div>
+          <div class="font-mono text-[8px] text-stone-300">ФД: 00049281 • ФП: 9283749102</div>
+          <div>QR-код фискализации сформирован</div>
+        </div>
+      `;
+    }
+
+    function simulateReceiptPrintSound() {
+      playSuccessSound();
+      showToast('Печать отправлена на фискальный принтер', '🖨️');
+      closeModal('receiptModal');
+    }
+
+    function closeModal(modalId) {
+      document.getElementById(modalId).classList.add('hidden');
+    }
+  </script>
+
+  <script>
+    function updateShiftSummary() {
+      const totalChecks = paidHistory.length;
+      let cardSum = 0;
+      let cashSum = 0;
+      let grandTotal = 0;
+
+      paidHistory.forEach(r => {
+        grandTotal += r.total;
+        if (r.payMethod === 'Наличные') {
+          cashSum += r.total;
+        } else {
+          cardSum += r.total;
+        }
+      });
+
+      const avgCheck = totalChecks > 0 ? Math.round(grandTotal / totalChecks) : 0;
+
+      document.getElementById('headerRevenue').textContent = `${grandTotal} ₽`;
+      document.getElementById('statTotalChecks').textContent = totalChecks;
+      document.getElementById('statCardTotal').textContent = `${cardSum} ₽`;
+      document.getElementById('statCashTotal').textContent = `${cashSum} ₽`;
+      document.getElementById('statAvgCheck').textContent = `${avgCheck} ₽`;
+
+      renderPaidHistoryTable();
+    }
+
+    function renderPaidHistoryTable() {
+      const tbody = document.getElementById('paidOrdersTbody');
+      const emptyState = document.getElementById('noChecksState');
+      tbody.innerHTML = '';
+
+      if (paidHistory.length === 0) {
+        emptyState.classList.remove('hidden');
+        return;
+      }
+      emptyState.classList.add('hidden');
+
+      paidHistory.forEach((item, index) => {
+        const tr = document.createElement('tr');
+        tr.className = "hover:bg-stone-50 transition";
+        tr.innerHTML = `
+          <td class="py-2.5 px-3 font-mono font-bold text-stone-900">#${item.checkNo}</td>
+          <td class="py-2.5 px-3 font-mono text-stone-500">${item.time}</td>
+          <td class="py-2.5 px-3 font-medium">${item.table}</td>
+          <td class="py-2.5 px-3 text-stone-600">${item.waiter}</td>
+          <td class="py-2.5 px-3">
+            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${
+              item.payMethod === 'Наличные' ? 'bg-emerald-100 text-emerald-800' : 'bg-blue-100 text-blue-800'
+            }">${item.payMethod}</span>
+          </td>
+          <td class="py-2.5 px-3 text-right font-mono font-bold text-stone-900">${item.total} ₽</td>
+          <td class="py-2.5 px-3 text-center">
+            <button onclick="reprintCheck(${index})" class="text-xs text-brand-800 hover:underline font-bold">
+              Повтор чека
+            </button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function reprintCheck(index) {
+      const record = paidHistory[index];
+      renderReceiptSlip(record, true);
+      document.getElementById('receiptModal').classList.remove('hidden');
+    }
+
+    function printZReport() {
+      playSuccessSound();
+      let grandTotal = paidHistory.reduce((s, r) => s + r.total, 0);
+      let cashTotal = paidHistory.filter(r => r.payMethod === 'Наличные').reduce((s, r) => s + r.total, 0);
+      let cardTotal = grandTotal - cashTotal;
+
+      const container = document.getElementById('receiptContent');
+      const now = new Date();
+
+      container.innerHTML = `
+        <div class="text-center space-y-1 mb-3">
+          <div class="font-bold text-sm tracking-wider">COFFEEMAN</div>
+          <div class="text-[10px] font-bold text-stone-700">*** СУТОЧНЫЙ ОТЧЕТ С ГАШЕНИЕМ (Z-ОТЧЕТ) ***</div>
+          <div class="text-[9px] text-stone-400">Смена закрыта: ${now.toLocaleDateString()} ${now.toLocaleTimeString()}</div>
+        </div>
+
+        <div class="border-t border-b border-dashed border-stone-300 py-2 my-2 text-xs space-y-1 font-mono">
+          <div class="flex justify-between"><span>Количество чеков:</span> <span>${paidHistory.length}</span></div>
+          <div class="flex justify-between"><span>Оплата картой / СБП:</span> <span>${cardTotal} ₽</span></div>
+          <div class="flex justify-between"><span>Оплата наличными:</span> <span>${cashTotal} ₽</span></div>
+          <div class="flex justify-between font-bold text-stone-900 pt-1 border-t border-stone-200">
+            <span>ОБЩАЯ ВЫРУЧКА:</span> <span>${grandTotal} ₽</span>
+          </div>
+        </div>
+
+        <div class="text-center pt-3 text-[9px] text-stone-400">
+          Смена сохранена в фискальный накопитель.<br>Денежный ящик инкассирован.
+        </div>
+      `;
+
+      document.getElementById('receiptModal').classList.remove('hidden');
+      showToast('Z-Отчет успешно сформирован', '📑');
+    }
+
+    function resetShiftData() {
+      // Custom clean reset
+      if (paidHistory.length === 0) {
+        showToast('В смене еще нет данных для очистки', 'ℹ️');
+        return;
+      }
+      paidHistory = [];
+      saveState();
+      updateShiftSummary();
+      showToast('Данные смены сброшены', '🔄');
+    }
+  </script>
+
+  <script>
+    function setMainView(viewName) {
+      document.getElementById('view-tables').classList.add('hidden');
+      document.getElementById('view-order').classList.add('hidden');
+      document.getElementById('view-kds').classList.add('hidden');
+      document.getElementById('view-cashier').classList.add('hidden');
+
+      // Update Desktop tabs
+      document.querySelectorAll('.nav-tab').forEach(b => {
+        b.className = "nav-tab px-3.5 py-1.5 rounded-lg text-stone-300 hover:text-white hover:bg-white/5 transition flex items-center gap-1.5 font-semibold";
+      });
+      const activeBtn = document.getElementById(`nav-${viewName}`);
+      if (activeBtn) {
+        activeBtn.className = "nav-tab px-3.5 py-1.5 rounded-lg bg-amber-500 text-brand-950 shadow-xs flex items-center gap-1.5 transition font-bold";
+      }
+
+      // Update Mobile Bottom Nav
+      document.querySelectorAll('.bnav-btn').forEach(b => {
+        b.classList.remove('text-amber-400');
+        b.classList.add('text-stone-400');
+      });
+      const activeBnav = document.getElementById(`bnav-${viewName}`);
+      if (activeBnav) {
+        activeBnav.classList.remove('text-stone-400');
+        activeBnav.classList.add('text-amber-400');
+      }
+
+      document.getElementById(`view-${viewName}`).classList.remove('hidden');
+
+      if (viewName === 'tables') renderTables();
+      if (viewName === 'kds') renderKds();
+      if (viewName === 'cashier') updateShiftSummary();
+      if (viewName === 'order') {
+        renderOrderScreen();
+        // On mobile, default to menu panel
+        if (window.innerWidth < 1024) {
+          switchOrderSubTab(activeOrderSubTab || 'menu');
+        } else {
+          // On desktop/tablet, show both panels
+          document.getElementById('orderMenuPanel').classList.remove('hidden');
+          const cart = document.getElementById('orderCartPanel');
+          cart.classList.remove('hidden');
+          cart.classList.add('flex');
+        }
+      }
+    }
+
+    // Live clock update
+    function startClock() {
+      const clockEl = document.getElementById('liveClock');
+      setInterval(() => {
+        const d = new Date();
+        clockEl.textContent = d.toLocaleTimeString('ru-RU');
       }, 1000);
     }
 
-    function updateTimerDisplay() {
-      const m = String(Math.floor(timerSeconds / 60)).padStart(2, '0');
-      const s = String(timerSeconds % 60).padStart(2, '0');
-      document.getElementById('activeTimerDigits').innerText = `${m}:${s}`;
-    }
+    // Handle screen resize between phone, tablet and desktop
+    window.addEventListener('resize', () => {
+      if (window.innerWidth >= 1024) {
+        document.getElementById('orderMenuPanel').classList.remove('hidden');
+        const cart = document.getElementById('orderCartPanel');
+        cart.classList.remove('hidden');
+        cart.classList.add('flex');
+        const floatBar = document.getElementById('mobileCartFloatingBar');
+        if (floatBar) floatBar.classList.add('hidden');
+      } else {
+        if (!document.getElementById('view-order').classList.contains('hidden')) {
+          switchOrderSubTab(activeOrderSubTab);
+        }
+      }
+    });
 
-    function stopTimer() {
-      if (timerInterval) clearInterval(timerInterval);
-      document.getElementById('activeTimerWidget').classList.add('hidden');
-    }
-
-    window.addEventListener('DOMContentLoaded', initData);
+    // Startup initialization
+    window.addEventListener('DOMContentLoaded', () => {
+      startClock();
+      renderTables();
+      updateShiftSummary();
+      renderKds();
+    });
   </script>
 </body>
 </html>
