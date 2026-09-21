@@ -1278,6 +1278,21 @@
       saveState();
       renderOrderScreen();
       renderDishes();
+      showToast(`+ ${dish.name}`, '🍽️');
+    }
+
+    function changeItemQty(index, delta) {
+      playBeep();
+      const table = tables.find(t => t.id === currentTableId);
+      if (!table || !table.items || !table.items[index]) return;
+
+      table.items[index].qty += delta;
+      if (table.items[index].qty <= 0) {
+        table.items.splice(index, 1);
+      }
+      saveState();
+      renderOrderScreen();
+      renderDishes();
     }
 
     function setItemCourse(index, newCourse) {
@@ -1287,6 +1302,23 @@
       table.items[index].course = newCourse;
       saveState();
       renderOrderScreen();
+    }
+
+    function toggleItemServed(index) {
+      playBeep();
+      const table = tables.find(t => t.id === currentTableId);
+      if (!table || !table.items || !table.items[index]) return;
+
+      table.items[index].served = !table.items[index].served;
+      saveState();
+      renderOrderScreen();
+      renderTables();
+
+      if (table.items[index].served) {
+        showToast(`Подано: ${table.items[index].name}`, '✅');
+      } else {
+        showToast(`Снята отметка: ${table.items[index].name}`, '↩️');
+      }
     }
 
     function sendNewItemsToKitchen() {
@@ -1323,7 +1355,30 @@
       saveState();
       renderOrderScreen();
       renderDishes();
+      renderTables();
       showToast(`${table.name} очищен`, '🗑️');
+    }
+
+    function updateMobileFloatingBar() {
+      const bar = document.getElementById('mobileCartFloatingBtn');
+      if (!bar) return;
+      const table = tables.find(t => t.id === currentTableId);
+      const totalQty = (table && table.items) ? table.items.reduce((s, it) => s + it.qty, 0) : 0;
+      const totalPrice = calcTableSum(table);
+
+      const tableEl = document.getElementById('mobileFloatTable');
+      const qtyEl = document.getElementById('mobileFloatQty');
+      const sumEl = document.getElementById('mobileFloatSum');
+
+      if (tableEl && table) tableEl.textContent = table.name;
+      if (qtyEl) qtyEl.textContent = `${totalQty} блюд`;
+      if (sumEl) sumEl.textContent = `${totalPrice} ₽`;
+
+      if (window.innerWidth < 1024 && currentView === 'order' && orderMobileTab === 'menu' && totalQty > 0) {
+        bar.classList.remove('hidden');
+      } else {
+        bar.classList.add('hidden');
+      }
     }
 
     function renderOrderScreen() {
@@ -1332,21 +1387,85 @@
 
       const titleEl = document.getElementById('activeOrderTitle');
       const subtitleEl = document.getElementById('activeOrderSubtitle');
-    function toggleItemServed(index) {
-      playBeep();
-      const table = tables.find(t => t.id === currentTableId);
-      if (!table || !table.items || !table.items[index]) return;
+      const guestsBtn = document.getElementById('btnGuestsDisplay');
+      const personsBadge = document.getElementById('ticketPersonsBadge');
 
-      table.items[index].served = !table.items[index].served;
-      saveState();
-      renderOrderScreen();
-      renderTables();
+      if (titleEl) titleEl.textContent = table.name;
+      if (subtitleEl) subtitleEl.textContent = `${table.guests || 2} персоны`;
+      if (guestsBtn) guestsBtn.textContent = `${table.guests || 2} чел.`;
+      if (personsBadge) personsBadge.textContent = `${table.guests || 2} персоны`;
 
-      if (table.items[index].served) {
-        showToast(`Подано: ${table.items[index].name}`, '✅');
-      } else {
-        showToast(`Снята отметка подачи: ${table.items[index].name}`, '↩️');
+      const container = document.getElementById('ticketItemsContainer');
+      const totalQtyEl = document.getElementById('ticketTotalQty');
+      const totalPriceEl = document.getElementById('ticketTotalPrice');
+      const mobileCartCountBadge = document.getElementById('mobileCartCountBadge');
+      const statusBadge = document.getElementById('ticketKitchenStatusBadge');
+
+      const items = table.items || [];
+      const totalQty = items.reduce((s, it) => s + it.qty, 0);
+      const totalPrice = calcTableSum(table);
+
+      if (totalQtyEl) totalQtyEl.textContent = `${totalQty} шт.`;
+      if (totalPriceEl) totalPriceEl.textContent = `${totalPrice} ₽`;
+      if (mobileCartCountBadge) mobileCartCountBadge.textContent = totalQty;
+
+      const unsentCount = items.filter(it => !it.sentToKitchen).length;
+      if (statusBadge) {
+        if (items.length === 0) {
+          statusBadge.textContent = 'Пусто';
+          statusBadge.className = 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-stone-100 text-stone-600';
+        } else if (unsentCount > 0) {
+          statusBadge.textContent = `Новых: ${unsentCount}`;
+          statusBadge.className = 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 animate-pulse';
+        } else {
+          statusBadge.textContent = 'Все в цеху';
+          statusBadge.className = 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-900';
+        }
       }
+
+      if (!container) return;
+      container.innerHTML = '';
+
+      if (items.length === 0) {
+        container.innerHTML = `
+          <div class="h-40 flex flex-col items-center justify-center text-center text-stone-400">
+            <span class="text-3xl mb-1">🍽️</span>
+            <p class="text-xs font-bold text-stone-700">В заказе пока пусто</p>
+            <p class="text-[11px] text-stone-400">Выберите блюда из меню слева</p>
+          </div>
+        `;
+        updateMobileFloatingBar();
+        return;
+      }
+
+      if (ticketGrouping === 'all') {
+        items.forEach((item, index) => {
+          container.appendChild(buildTicketRow(item, index));
+        });
+      } else {
+        const courses = ['Сразу', 'Напитки', '1-й курс', '2-й курс', 'Десерт'];
+        courses.forEach(cName => {
+          const courseItems = items
+            .map((it, idx) => ({ item: it, originalIndex: idx }))
+            .filter(obj => obj.item.course === cName);
+
+          if (courseItems.length > 0) {
+            const groupHeader = document.createElement('div');
+            groupHeader.className = 'pt-1.5 pb-0.5 text-[11px] font-extrabold uppercase tracking-wide text-amber-900 border-b border-amber-200/60 flex items-center justify-between';
+            groupHeader.innerHTML = `
+              <span>${cName}</span>
+              <span class="text-[10px] font-mono font-bold text-stone-500">${courseItems.reduce((s, it) => s + it.item.qty, 0)} шт.</span>
+            `;
+            container.appendChild(groupHeader);
+
+            courseItems.forEach(obj => {
+              container.appendChild(buildTicketRow(obj.item, obj.originalIndex));
+            });
+          }
+        });
+      }
+
+      updateMobileFloatingBar();
     }
 
     function buildTicketRow(item, index) {
