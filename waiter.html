@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>COFFEEMAN</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    :root {
+      --bg-screen: #f8fafc;
+      --card-bg: #ffffff;
+      --orange-main: #f97316;
+      --orange-soft: #fff7ed;
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+    }
+
+    body {
+      background-color: var(--bg-screen);
+      color: var(--text-main);
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    /* Фоновые пассивные градиентные сферы */
+    .ambient-sphere-1 {
+      position: fixed;
+      width: 280px;
+      height: 280px;
+      border-radius: 9999px;
+      background: radial-gradient(circle, rgba(249, 115, 22, 0.12) 0%, rgba(249, 115, 22, 0) 70%);
+      top: -60px;
+      right: -60px;
+      filter: blur(40px);
+      z-index: 1;
+      animation: floatAmbient 12s ease-in-out infinite alternate;
+      pointer-events: none;
+    }
+    .ambient-sphere-2 {
+      position: fixed;
+      width: 320px;
+      height: 320px;
+      border-radius: 9999px;
+      background: radial-gradient(circle, rgba(251, 146, 60, 0.08) 0%, rgba(251, 146, 60, 0) 70%);
+      bottom: 60px;
+      left: -80px;
+      filter: blur(50px);
+      z-index: 1;
+      animation: floatAmbient 16s ease-in-out infinite alternate-reverse;
+      pointer-events: none;
+    }
+
+    @keyframes floatAmbient {
+      0% { transform: translate(0, 0) scale(1); }
+      50% { transform: translate(25px, 35px) scale(1.1); }
+      100% { transform: translate(-20px, 15px) scale(0.95); }
+    }
+
+    /* Анимация поднимающегося пара кофе */
+    @keyframes steamRise {
+      0% { transform: translateY(0) scaleX(1); opacity: 0; }
+      15% { opacity: 0.6; }
+      50% { transform: translateY(-16px) scaleX(1.3) translateX(3px); opacity: 0.4; }
+      90% { opacity: 0.1; }
+      100% { transform: translateY(-32px) scaleX(1.6) translateX(-3px); opacity: 0; }
+    }
+
+    .steam-line-1 { animation: steamRise 3s infinite ease-out; }
+    .steam-line-2 { animation: steamRise 3.2s infinite ease-out 0.8s; }
+    .steam-line-3 { animation: steamRise 2.8s infinite ease-out 1.6s; }
+
+    /* iOS Card Style */
+    .app-card {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-blur: 16px;
+      border-radius: 24px;
+      box-shadow: 0 10px 30px -4px rgba(15, 23, 42, 0.05);
+      border: 1px solid rgba(226, 232, 240, 0.8);
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    /* Карта зала */
+    .hall-map-canvas {
+      background-color: #fafaf9;
+      background-image: 
+        radial-gradient(circle, #e2e8f0 1.2px, transparent 1.2px),
+        linear-gradient(to right, #f1f5f9 1px, transparent 1px),
+        linear-gradient(to bottom, #f1f5f9 1px, transparent 1px);
+      background-size: 20px 20px, 80px 80px, 80px 80px;
+    }
+
+    .map-table-btn {
+      position: absolute;
+      user-select: none;
+      -webkit-user-select: none;
+      touch-action: manipulation;
+      cursor: pointer;
+      transform-origin: center center;
+      transition: transform 0.12s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.15s ease;
+      z-index: 30;
+      box-shadow: 0 6px 16px rgba(15, 23, 42, 0.08);
+    }
+    .map-table-btn:active {
+      transform: scale(0.92);
+    }
+
+    /* Декорации карты */
+    .window-glass {
+      background: repeating-linear-gradient(90deg, rgba(186, 230, 253, 0.5), rgba(186, 230, 253, 0.5) 16px, rgba(56, 189, 248, 0.7) 16px, rgba(56, 189, 248, 0.7) 20px);
+      border: 2px solid #38bdf8;
+      border-radius: 8px;
+    }
+    .plant-divider {
+      background: repeating-linear-gradient(45deg, #86efac, #86efac 10px, #4ade80 10px, #4ade80 20px);
+      border: 2px solid #22c55e;
+      border-radius: 12px;
+    }
+    .sofa-item {
+      background: #fed7aa;
+      border: 2px solid #fb923c;
+      border-radius: 14px;
+      position: relative;
+    }
+    .sofa-back-strip {
+      position: absolute;
+      top: 0; left: 0; right: 0; height: 32%;
+      background: #f97316;
+      border-radius: 10px 10px 0 0;
+    }
+
+    /* Нижний скользящий островок-переключатель */
+    .sliding-nav-pill {
+      position: absolute;
+      top: 4px;
+      bottom: 4px;
+      width: calc(25% - 4px);
+      background: #f97316;
+      border-radius: 9999px;
+      box-shadow: 0 4px 14px rgba(249, 115, 22, 0.35);
+      transition: transform 0.28s cubic-bezier(0.34, 1.3, 0.64, 1);
+      z-index: 0;
+    }
+
+    ::-webkit-scrollbar { display: none; }
+  </style>
+</head>
+<body class="w-full h-[100dvh] flex flex-col overflow-hidden select-none fixed inset-0">
+
+  <!-- Ambient Glow на фоне -->
+  <div class="ambient-sphere-1"></div>
+  <div class="ambient-sphere-2"></div>
+
+  <!-- Всплывающий тост -->
+  <div id="toast" class="fixed top-4 left-1/2 -translate-x-1/2 z-50 transition-all duration-300 pointer-events-none opacity-0 -translate-y-4">
+    <div class="bg-slate-900/90 backdrop-blur-md text-white px-5 py-2 rounded-full shadow-2xl text-xs sm:text-sm font-semibold flex items-center gap-2">
+      <span id="toastIcon">🔔</span>
+      <span id="toastMsg">Уведомление</span>
+    </div>
+  </div>
+
+  <!-- ШАПКА ПРИЛОЖЕНИЯ -->
+  <header class="bg-white/80 backdrop-blur-md border-b border-slate-100 px-4 py-2.5 pt-safe shrink-0 z-30 flex items-center justify-between shadow-2xs relative">
+    <div class="flex items-center gap-2.5 min-w-0">
+      <a href="index.html" class="w-9 h-9 rounded-2xl bg-orange-500 text-white font-black flex items-center justify-center text-sm shadow-md shadow-orange-500/20 active:scale-95 transition">
+        ☕
+      </a>
+      <div class="leading-none min-w-0">
+        <h1 class="font-extrabold text-sm text-slate-900 tracking-tight">COFFEEMAN</h1>
+        <p id="headerWaiterName" class="text-[11px] text-slate-500 mt-0.5 truncate font-medium">Официант: —</p>
+      </div>
+    </div>
+
+    <div class="flex items-center gap-1.5 shrink-0">
+      <span id="headerTableBadge" class="hidden font-mono px-3 py-1 rounded-full bg-orange-100 text-orange-600 text-xs font-bold">№1</span>
+      
+      <button onclick="openWelcomeModal()" title="Сменить имя" class="w-8 h-8 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center text-xs font-bold active:scale-90 transition">
+        👤
+      </button>
+
+      <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" title="В сети"></span>
+    </div>
+  </header>
+
+  <!-- ОСНОВНАЯ ОБЛАСТЬ ЭКРАНА -->
+  <main class="flex-1 flex flex-col min-h-0 overflow-hidden relative p-2.5 sm:p-3 z-10">
+
+    <!-- ЭКРАН 1: КАРТА ЗАЛА -->
+    <section id="view-tables" class="flex-1 flex flex-col min-h-0 overflow-hidden relative">
+      <div id="hallMapContainer" class="flex-1 hall-map-canvas app-card relative overflow-hidden cursor-grab active:cursor-grabbing">
+        <div id="hallMapWorld" class="absolute top-0 left-0 w-[4000px] h-[3000px] origin-top-left transition-transform duration-75">
+          <div id="layerObstacles" class="absolute inset-0 pointer-events-none z-10"></div>
+          <div id="layerTables" class="absolute inset-0 pointer-events-auto z-30"></div>
+        </div>
+
+        <!-- Плавающий контроллер зума -->
+        <div class="absolute bottom-3 left-3 z-40 flex items-center gap-1 bg-white/95 border border-slate-200/80 p-1 rounded-full shadow-lg backdrop-blur-md">
+          <button onclick="zoomMap(0.1)" class="w-7 h-7 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs flex items-center justify-center active:scale-95">+</button>
+          <span id="mapZoomDisplay" class="font-mono text-[11px] px-2 text-slate-600 font-bold">100%</span>
+          <button onclick="zoomMap(-0.1)" class="w-7 h-7 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs flex items-center justify-center active:scale-95">-</button>
+          <button onclick="resetMapView()" class="px-2.5 h-7 rounded-full bg-orange-500 text-white text-[11px] font-bold active:scale-95 transition">Центр</button>
+        </div>
+
+        <!-- Статистика сверху -->
+        <div class="absolute top-3 left-3 right-3 z-40 pointer-events-none flex justify-center">
+          <div class="bg-white/95 border border-slate-200/80 px-4 py-1.5 rounded-full shadow-md flex items-center gap-4 text-xs font-semibold text-slate-600 pointer-events-auto backdrop-blur-md">
+            <div class="flex items-center gap-1.5">
+              <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+              <span>Свободно:</span>
+              <span id="mapFreeCount" class="font-mono font-bold text-emerald-600">0</span>
+            </div>
+            <div class="flex items-center gap-1.5">
+              <span class="w-2 h-2 rounded-full bg-orange-500 animate-pulse"></span>
+              <span>Занято:</span>
+              <span id="mapBusyCount" class="font-mono font-bold text-orange-600">0</span>
+            </div>
+            <div class="flex items-center gap-1.5 font-mono font-bold text-slate-800">
+              <span id="mapSumTotal">0 ₽</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ЭКРАН 2: АКТИВНЫЕ ЗАКАЗЫ С СОРТИРОВКОЙ -->
+    <section id="view-active-orders" class="hidden flex-1 app-card p-3 sm:p-4 flex flex-col min-h-0 space-y-3 overflow-hidden">
+      <div class="flex items-center justify-between pb-2 border-b border-slate-100 shrink-0">
+        <div>
+          <h2 class="font-black text-sm sm:text-base text-slate-900">Активные заказы</h2>
+          <p class="text-[11px] text-slate-400">Все столы с открытыми чеками</p>
+        </div>
+        <span id="activeOrdersTotalBadge" class="bg-orange-50 text-orange-600 border border-orange-200 font-mono text-xs px-2.5 py-0.5 rounded-full font-bold">0 столов</span>
+      </div>
+
+      <!-- Сортировка / фильтр по статусу -->
+      <div class="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-hide shrink-0 text-xs font-bold">
+        <button onclick="filterActiveOrders('all')" id="order-filter-all" class="order-filter-btn px-3 py-1.5 rounded-full bg-orange-500 text-white shadow-xs transition">Все</button>
+        <button onclick="filterActiveOrders('new')" id="order-filter-new" class="order-filter-btn px-3 py-1.5 rounded-full bg-slate-100 text-slate-600 transition">Новые (в цех)</button>
+        <button onclick="filterActiveOrders('cooking')" id="order-filter-cooking" class="order-filter-btn px-3 py-1.5 rounded-full bg-slate-100 text-slate-600 transition">Готовятся</button>
+        <button onclick="filterActiveOrders('served')" id="order-filter-served" class="order-filter-btn px-3 py-1.5 rounded-full bg-slate-100 text-slate-600 transition">Подано</button>
+      </div>
+
+      <!-- Список активных столов -->
+      <div id="activeOrdersListContainer" class="flex-1 overflow-y-auto space-y-2 pr-0.5 min-h-0"></div>
+    </section>
+
+    <!-- ЭКРАН 3: ПРИЁМ ЗАКАЗА (МЕНЮ И ЧЕК) -->
+    <section id="view-order" class="hidden flex-1 flex flex-col min-h-0 gap-2 overflow-hidden">
+      <!-- Панель управления столом -->
+      <div class="app-card p-3 flex items-center justify-between gap-2 shrink-0">
+        <div class="flex items-center gap-2.5 min-w-0">
+          <button onclick="goToTablesView()" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold flex items-center justify-center text-xs active:scale-95 transition shrink-0">
+            ←
+          </button>
+          <div class="min-w-0 leading-tight">
+            <h2 id="activeOrderTitle" class="font-black text-sm text-slate-900 truncate">Стол 1</h2>
+            <p id="activeOrderSubtitle" class="text-[11px] text-slate-500">2 персоны</p>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-1.5 shrink-0">
+          <button onclick="openGuestsModalForCurrentTable()" class="px-2.5 py-1.5 rounded-full bg-slate-100 text-slate-700 text-xs font-semibold flex items-center gap-1 active:scale-95 transition">
+            <span>👥</span> <span id="btnGuestsDisplay">2</span>
+          </button>
+          <button onclick="openTransferTableModal()" title="Пересадить гостей" class="px-2.5 py-1.5 rounded-full bg-slate-100 text-slate-700 text-xs font-semibold flex items-center gap-1 active:scale-95 transition">
+            <span>🔄</span> <span class="hidden sm:inline">Пересадить</span>
+          </button>
+          <button onclick="openCashierCheckoutModal()" class="px-3 py-1.5 rounded-full bg-emerald-500 text-white text-xs font-bold flex items-center gap-1 active:scale-95 transition shadow-xs">
+            <span>🧾</span> <span>Счёт</span>
+          </button>
+          <button onclick="clearCurrentOrder()" title="Очистить чек" class="w-7 h-7 rounded-full bg-rose-50 text-rose-500 flex items-center justify-center text-xs font-bold active:scale-95">
+            🗑️
+          </button>
+        </div>
+      </div>
+
+      <!-- Меню и Чек -->
+      <div class="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-2 min-h-0 overflow-hidden">
+        
+        <!-- Меню блюд -->
+        <div id="orderMenuColumn" class="lg:col-span-7 xl:col-span-8 flex flex-col app-card p-3 min-h-0 overflow-hidden">
+          <div class="flex items-center gap-2 shrink-0 pb-2.5">
+            <div class="relative flex-1">
+              <input type="text" id="searchInput" oninput="onSearchChange()" placeholder="Поиск блюда или напитка..."
+                     class="w-full bg-slate-50 border border-slate-200/80 rounded-2xl py-2 pl-9 pr-7 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-orange-400 transition">
+              <span class="absolute left-3 top-2.5 text-slate-400 text-xs">🔍</span>
+              <button id="clearSearchBtn" onclick="clearSearchInput()" class="hidden absolute right-2 top-2 text-slate-400 font-bold text-xs bg-slate-200 w-4 h-4 rounded-full flex items-center justify-center">✕</button>
+            </div>
+            <button onclick="openCustomDishModal()" class="px-3 py-2 bg-orange-50 border border-orange-200 text-orange-600 rounded-2xl text-xs font-bold flex items-center gap-1 active:scale-95 transition shrink-0">
+              <span>✨</span> <span>Своя</span>
+            </button>
+          </div>
+
+          <!-- Категории меню -->
+          <div class="flex items-center gap-1.5 overflow-x-auto pb-2.5 scrollbar-hide text-xs font-bold shrink-0">
+            <button onclick="selectCategory('all')" class="cat-pill px-3.5 py-1.5 rounded-full bg-orange-500 text-white shrink-0" data-cat="all">⚡ Все</button>
+            <button onclick="selectCategory('coffee_classic')" class="cat-pill px-3.5 py-1.5 rounded-full bg-slate-100 text-slate-600 shrink-0" data-cat="coffee_classic">☕ Кофе</button>
+            <button onclick="selectCategory('coffee_author')" class="cat-pill px-3.5 py-1.5 rounded-full bg-slate-100 text-slate-600 shrink-0" data-cat="coffee_author">✨ Авторский</button>
+            <button onclick="selectCategory('tea')" class="cat-pill px-3.5 py-1.5 rounded-full bg-slate-100 text-slate-600 shrink-0" data-cat="tea">🫖 Чай</button>
+            <button onclick="selectCategory('breakfast')" class="cat-pill px-3.5 py-1.5 rounded-full bg-slate-100 text-slate-600 shrink-0" data-cat="breakfast">🍳 Завтраки</button>
+            <button onclick="selectCategory('snacks')" class="cat-pill px-3.5 py-1.5 rounded-full bg-slate-100 text-slate-600 shrink-0" data-cat="snacks">🥪 Закуски</button>
+            <button onclick="selectCategory('salads')" class="cat-pill px-3.5 py-1.5 rounded-full bg-slate-100 text-slate-600 shrink-0" data-cat="salads">🥗 Салаты</button>
+            <button onclick="selectCategory('soups')" class="cat-pill px-3.5 py-1.5 rounded-full bg-slate-100 text-slate-600 shrink-0" data-cat="soups">🍲 Супы</button>
+            <button onclick="selectCategory('pastas')" class="cat-pill px-3.5 py-1.5 rounded-full bg-slate-100 text-slate-600 shrink-0" data-cat="pastas">🍝 Пасты</button>
+            <button onclick="selectCategory('hot')" class="cat-pill px-3.5 py-1.5 rounded-full bg-slate-100 text-slate-600 shrink-0" data-cat="hot">🥩 Горячее</button>
+            <button onclick="selectCategory('lunch')" class="cat-pill px-3.5 py-1.5 rounded-full bg-slate-100 text-slate-600 shrink-0" data-cat="lunch">🍱 Ланчи</button>
+            <button onclick="selectCategory('desserts')" class="cat-pill px-3.5 py-1.5 rounded-full bg-slate-100 text-slate-600 shrink-0" data-cat="desserts">🍰 Десерты</button>
+            <button onclick="selectCategory('smoothies')" class="cat-pill px-3.5 py-1.5 rounded-full bg-slate-100 text-slate-600 shrink-0" data-cat="smoothies">🥤 Смузи</button>
+            <button onclick="selectCategory('cold_drinks')" class="cat-pill px-3.5 py-1.5 rounded-full bg-slate-100 text-slate-600 shrink-0" data-cat="cold_drinks">🍹 Напитки</button>
+          </div>
+
+          <div id="dishesList" class="flex-1 overflow-y-auto pr-0.5 grid grid-cols-2 sm:grid-cols-3 gap-2 min-h-0"></div>
+        </div>
+
+        <!-- Чек стола -->
+        <div id="orderCartColumn" class="hidden lg:flex lg:col-span-5 xl:col-span-4 flex-col app-card p-3 min-h-0 overflow-hidden">
+          <div class="flex items-center justify-between pb-2 border-b border-slate-100 shrink-0">
+            <div class="flex items-center gap-1.5">
+              <span class="font-extrabold text-xs text-slate-800">Чек стола</span>
+              <span id="ticketKitchenStatusBadge" class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">Пусто</span>
+            </div>
+            <span id="cartItemsCountText" class="text-xs font-mono text-slate-400 font-bold">0 поз.</span>
+          </div>
+
+          <div id="ticketItemsContainer" class="flex-1 overflow-y-auto space-y-1.5 py-2 pr-0.5 min-h-0"></div>
+
+          <div class="pt-2 border-t border-slate-100 space-y-2 shrink-0">
+            <div class="flex items-baseline justify-between bg-slate-50 p-2.5 rounded-2xl">
+              <div>
+                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">К ОПЛАТЕ:</span>
+                <span id="ticketPersonsBadge" class="text-[11px] text-slate-500 font-semibold">2 персоны</span>
+              </div>
+              <span id="ticketTotalPrice" class="text-xl font-black font-mono text-orange-600">0 ₽</span>
+            </div>
+
+            <div class="grid grid-cols-2 gap-1.5">
+              <button onclick="sendNewItemsToKitchen()" class="w-full py-2.5 bg-orange-500 hover:bg-orange-600 text-white font-black rounded-2xl text-xs flex items-center justify-center gap-1 shadow-sm active:scale-95 transition">
+                <span>🚀</span> <span>В цех</span>
+              </button>
+              <button onclick="openCashierCheckoutModal()" class="w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-2xl text-xs flex items-center justify-center gap-1 active:scale-95 transition">
+                <span>🧾</span> <span>Счёт</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+
+  <!-- НИЖНИЙ ПЛАВАЮЩИЙ ТАББАР С АНИМАЦИЕЙ СКОЛЬЗЯЩЕЙ ТАБЛЕТКИ -->
+  <div class="px-4 pb-3 pt-1 shrink-0 z-40">
+    <nav class="max-w-md mx-auto bg-white/90 backdrop-blur-md border border-slate-200/80 p-1 rounded-full shadow-lg flex items-center relative select-none">
+      
+      <!-- Скользящий оранжевый шарик/таблетка -->
+      <div id="slidingNavPill" class="sliding-nav-pill" style="transform: translateX(0%);"></div>
+
+      <!-- Вкладки (4 шт) -->
+      <button onclick="switchAppTab('map', 0)" class="nav-tab-btn flex-1 py-2 flex flex-col items-center justify-center gap-0.5 relative z-10 transition-colors text-white font-black" data-tab-index="0">
+        <span class="text-base leading-none">🗺️</span>
+        <span class="text-[10px] leading-none">Зал</span>
+      </button>
+
+      <button onclick="switchAppTab('orders', 1)" class="nav-tab-btn flex-1 py-2 flex flex-col items-center justify-center gap-0.5 relative z-10 transition-colors text-slate-500 font-medium" data-tab-index="1">
+        <div class="relative">
+          <span class="text-base leading-none">🔥</span>
+          <span id="navOrdersBadge" class="hidden absolute -top-1 -right-2 w-2 h-2 rounded-full bg-orange-500"></span>
+        </div>
+        <span class="text-[10px] leading-none">Заказы</span>
+      </button>
+
+      <button onclick="switchAppTab('menu', 2)" class="nav-tab-btn flex-1 py-2 flex flex-col items-center justify-center gap-0.5 relative z-10 transition-colors text-slate-500 font-medium" data-tab-index="2">
+        <span class="text-base leading-none">🍽️</span>
+        <span class="text-[10px] leading-none">Меню</span>
+      </button>
+
+      <button onclick="switchAppTab('cart', 3)" class="nav-tab-btn flex-1 py-2 flex flex-col items-center justify-center gap-0.5 relative z-10 transition-colors text-slate-500 font-medium" data-tab-index="3">
+        <div class="relative">
+          <span class="text-base leading-none">🧾</span>
+          <span id="mobileCartCountBadge" class="hidden absolute -top-1 -right-2 bg-orange-500 text-white text-[9px] px-1 rounded-full font-bold">0</span>
+        </div>
+        <span class="text-[10px] leading-none">Чек</span>
+      </button>
+
+    </nav>
+  </div>
+
+  <!-- МОДАЛКА ПРИВЕТСТВИЯ С АНИМИРОВАННОЙ ЧАШКОЙ КОФЕ И ПАРОМ -->
+  <div id="welcomeModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-md z-50 flex items-center justify-center p-4">
+    <div class="bg-white max-w-xs sm:max-w-sm w-full rounded-3xl p-6 shadow-2xl text-center space-y-4 relative overflow-hidden border border-slate-100">
+      
+      <!-- Анимированный кофе с клубящимся дымом -->
+      <div class="relative w-20 h-20 mx-auto flex items-center justify-center">
+        <!-- SVG струи пара -->
+        <svg class="absolute -top-3 w-12 h-10 overflow-visible pointer-events-none" viewBox="0 0 40 40">
+          <path class="steam-line-1" d="M12,30 Q16,18 10,8 Q8,2 14,0" fill="none" stroke="#f97316" stroke-width="2.5" stroke-linecap="round"/>
+          <path class="steam-line-2" d="M20,30 Q24,16 18,8 Q16,2 22,0" fill="none" stroke="#fb923c" stroke-width="2.5" stroke-linecap="round"/>
+          <path class="steam-line-3" d="M28,30 Q32,18 26,8 Q24,2 30,0" fill="none" stroke="#fdba74" stroke-width="2.5" stroke-linecap="round"/>
+        </svg>
+
+        <!-- Чашка -->
+        <div class="w-14 h-14 rounded-2xl bg-gradient-to-tr from-orange-500 to-amber-400 text-white flex items-center justify-center text-2xl shadow-lg shadow-orange-500/30 relative z-10">
+          ☕
+        </div>
+      </div>
+
+      <div>
+        <h3 class="font-black text-lg text-slate-900">Добро пожаловать!</h3>
+        <p class="text-xs text-slate-400 mt-0.5">Выберите ваше имя или введите новое</p>
+      </div>
+
+      <!-- Быстрый выбор имён (динамически подтягиваются из базы) -->
+      <div id="quickWaitersList" class="flex flex-wrap justify-center gap-1.5 text-xs font-semibold">
+        <!-- Генерируется из базы -->
+      </div>
+
+      <div class="relative">
+        <input type="text" id="waiterCustomNameInput" placeholder="Или введите своё имя..." 
+               class="w-full bg-slate-50 border border-slate-200 rounded-2xl py-2.5 px-3 text-xs text-slate-800 outline-none focus:ring-2 focus:ring-orange-400 font-medium transition">
+      </div>
+
+      <button onclick="confirmWaiterLogin()" class="w-full py-3 bg-orange-500 hover:bg-orange-600 text-white font-black rounded-2xl text-xs sm:text-sm shadow-md shadow-orange-500/25 active:scale-95 transition">
+        Начать смену ☕
+      </button>
+    </div>
+  </div>
+
+  <!-- МОДАЛКА МОДИФИКАТОРОВ -->
+  <div id="itemModifiersModal" class="hidden fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
+    <div class="bg-white max-w-md w-full rounded-t-3xl sm:rounded-3xl p-4 sm:p-5 shadow-2xl space-y-3.5 max-h-[88dvh] flex flex-col">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-2.5 shrink-0">
+        <div>
+          <h3 id="modModalDishName" class="font-black text-base text-slate-900">Блюдо</h3>
+          <p id="modModalBasePrice" class="text-xs font-mono font-bold text-orange-600 mt-0.5">0 ₽</p>
+        </div>
+        <button onclick="closeModal('itemModifiersModal')" class="w-7 h-7 rounded-full bg-slate-100 text-slate-400 hover:text-slate-700 font-bold flex items-center justify-center text-xs">✕</button>
+      </div>
+
+      <div id="modModalContent" class="flex-1 overflow-y-auto space-y-2.5 pr-0.5 min-h-0 text-xs"></div>
+
+      <div class="shrink-0 space-y-2 bg-slate-50 p-3 rounded-2xl border border-slate-100">
+        <label class="text-[11px] font-bold text-slate-700 block">Пожелание гостя:</label>
+        <div class="flex flex-wrap gap-1.5">
+          <button type="button" onclick="appendQuickComment('Без лука')" class="px-2.5 py-1 rounded-full bg-white border border-slate-200 text-[10px] font-semibold text-slate-700 active:scale-95">🧅 Без лука</button>
+          <button type="button" onclick="appendQuickComment('Погорячее')" class="px-2.5 py-1 rounded-full bg-white border border-slate-200 text-[10px] font-semibold text-slate-700 active:scale-95">🔥 Погорячее</button>
+          <button type="button" onclick="appendQuickComment('Соус отдельно')" class="px-2.5 py-1 rounded-full bg-white border border-slate-200 text-[10px] font-semibold text-slate-700 active:scale-95">🥣 Соус отдельно</button>
+          <button type="button" onclick="appendQuickComment('Без льда')" class="px-2.5 py-1 rounded-full bg-white border border-slate-200 text-[10px] font-semibold text-slate-700 active:scale-95">🧊 Без льда</button>
+          <button type="button" onclick="appendQuickComment('С собой')" class="px-2.5 py-1 rounded-full bg-white border border-slate-200 text-[10px] font-semibold text-slate-700 active:scale-95">🛍️ С собой</button>
+        </div>
+
+        <div class="relative">
+          <input type="text" id="modModalComment" placeholder="Свой комментарий к блюду..." 
+                 class="w-full bg-white border border-slate-200 rounded-xl py-2 px-3 pr-7 text-xs text-slate-800 placeholder-slate-400 outline-none focus:ring-1 focus:ring-orange-400">
+          <button type="button" onclick="clearModalComment()" class="absolute right-2 top-2 text-slate-400 text-xs font-bold">✕</button>
+        </div>
+      </div>
+
+      <div class="shrink-0 pt-1 flex items-center gap-2">
+        <button onclick="skipAndAddDish()" class="w-1/3 py-2.5 rounded-2xl bg-slate-100 text-slate-600 font-bold text-xs active:scale-95 transition">
+          Пропустить
+        </button>
+        <button onclick="confirmDishWithModifiers()" class="flex-1 py-2.5 bg-orange-500 hover:bg-orange-600 text-white font-black rounded-2xl text-xs shadow-md transition active:scale-95 flex items-center justify-center gap-1.5">
+          <span>В чек</span>
+          <span id="modModalTotalPrice" class="font-mono bg-black/10 px-2 py-0.5 rounded-lg text-xs">0 ₽</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- МОДАЛКА: ПЕРЕСАДКА СТОЛА -->
+  <div id="transferTableModal" class="hidden fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+    <div class="bg-white max-w-sm w-full rounded-3xl p-5 shadow-2xl space-y-3.5 flex flex-col max-h-[85dvh]">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-2">
+        <div>
+          <h3 class="font-black text-sm text-slate-900">Пересадить гостей</h3>
+          <p id="transferModalFromText" class="text-[11px] text-orange-600 font-mono">Стол №1</p>
+        </div>
+        <button onclick="closeModal('transferTableModal')" class="w-7 h-7 rounded-full bg-slate-100 text-slate-400 font-bold flex items-center justify-center text-xs">✕</button>
+      </div>
+
+      <p class="text-xs text-slate-500">Выберите свободный стол для переноса чека:</p>
+      <div id="transferAvailableTablesContainer" class="flex-1 overflow-y-auto pr-0.5 grid grid-cols-3 gap-2 min-h-0 py-1"></div>
+
+      <button onclick="closeModal('transferTableModal')" class="w-full py-2.5 rounded-2xl bg-slate-100 text-slate-600 font-bold text-xs active:scale-95">
+        Отмена
+      </button>
+    </div>
+  </div>
+
+  <!-- МОДАЛКА: ГОСТИ -->
+  <div id="guestsModal" class="hidden fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
+    <div class="bg-white max-w-sm w-full rounded-t-3xl sm:rounded-3xl p-5 shadow-2xl space-y-3.5">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-2">
+        <h3 class="font-extrabold text-sm text-slate-900">Количество гостей</h3>
+        <button onclick="closeModal('guestsModal')" class="w-7 h-7 rounded-full bg-slate-100 text-slate-400 font-bold flex items-center justify-center text-xs">✕</button>
+      </div>
+
+      <div class="grid grid-cols-3 gap-2">
+        <button onclick="setTempGuests(1)" class="guest-btn p-2.5 rounded-2xl bg-slate-50 border border-slate-200 text-slate-800 font-bold flex flex-col items-center">
+          <span class="text-base font-black">1</span><span class="text-[10px] text-slate-400">гость</span>
+        </button>
+        <button onclick="setTempGuests(2)" class="guest-btn p-2.5 rounded-2xl border-2 border-orange-500 bg-orange-50 text-orange-600 font-bold flex flex-col items-center">
+          <span class="text-base font-black">2</span><span class="text-[10px] text-orange-500">персоны</span>
+        </button>
+        <button onclick="setTempGuests(3)" class="guest-btn p-2.5 rounded-2xl bg-slate-50 border border-slate-200 text-slate-800 font-bold flex flex-col items-center">
+          <span class="text-base font-black">3</span><span class="text-[10px] text-slate-400">персоны</span>
+        </button>
+        <button onclick="setTempGuests(4)" class="guest-btn p-2.5 rounded-2xl bg-slate-50 border border-slate-200 text-slate-800 font-bold flex flex-col items-center">
+          <span class="text-base font-black">4</span><span class="text-[10px] text-slate-400">персоны</span>
+        </button>
+        <button onclick="setTempGuests(5)" class="guest-btn p-2.5 rounded-2xl bg-slate-50 border border-slate-200 text-slate-800 font-bold flex flex-col items-center">
+          <span class="text-base font-black">5</span><span class="text-[10px] text-slate-400">персон</span>
+        </button>
+        <button onclick="setTempGuests(6)" class="guest-btn p-2.5 rounded-2xl bg-slate-50 border border-slate-200 text-slate-800 font-bold flex flex-col items-center">
+          <span class="text-base font-black">6</span><span class="text-[10px] text-slate-400">персон</span>
+        </button>
+      </div>
+
+      <button onclick="confirmGuestSelection()" class="w-full py-3 bg-orange-500 hover:bg-orange-600 text-white font-black rounded-2xl text-xs shadow-md transition active:scale-95">
+        Открыть заказ стола →
+      </button>
+    </div>
+  </div>
+
+  <!-- МОДАЛКА: СЧЁТ КАССЫ -->
+  <div id="cashierCheckoutModal" class="hidden fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+    <div class="bg-white max-w-sm w-full rounded-3xl p-5 shadow-2xl flex flex-col max-h-[85dvh]">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-2">
+        <h3 id="cashierModalTableTag" class="font-black text-sm text-slate-900">Счёт для кассы</h3>
+        <button onclick="closeModal('cashierCheckoutModal')" class="w-7 h-7 rounded-full bg-slate-100 text-slate-400 font-bold flex items-center justify-center text-xs">✕</button>
+      </div>
+
+      <div id="cashierReceiptLines" class="flex-1 overflow-y-auto py-2 space-y-1 font-mono text-xs"></div>
+
+      <div class="border-t border-slate-100 pt-2.5 space-y-2 shrink-0">
+        <div class="flex items-baseline justify-between bg-slate-50 p-2.5 rounded-2xl">
+          <span class="font-bold text-xs text-slate-500 uppercase">ИТОГО:</span>
+          <span id="cashierModalTotalSum" class="font-mono font-black text-lg text-orange-600">0 ₽</span>
+        </div>
+        <div class="grid grid-cols-2 gap-1.5">
+          <button onclick="copyReceiptToClipboard()" class="py-2.5 bg-slate-100 text-slate-700 text-xs font-bold rounded-2xl active:scale-95">
+            Копировать
+          </button>
+          <button onclick="completeAndFreeTable()" class="py-2.5 bg-emerald-500 text-white text-xs font-bold rounded-2xl active:scale-95">
+            Свободен
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- МОДАЛКА: СВОЯ ПОЗИЦИЯ -->
+  <div id="customDishModal" class="hidden fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+    <div class="bg-white max-w-xs w-full rounded-3xl p-5 shadow-2xl space-y-3 text-xs">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-2">
+        <h3 class="font-black text-sm text-slate-900">Своя позиция</h3>
+        <button onclick="closeModal('customDishModal')" class="w-7 h-7 rounded-full bg-slate-100 text-slate-400 font-bold flex items-center justify-center text-xs">✕</button>
+      </div>
+      <div>
+        <label class="font-semibold text-slate-600 block mb-1">Название:</label>
+        <input type="text" id="customDishName" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2 text-slate-800 outline-none focus:ring-1 focus:ring-orange-400">
+      </div>
+      <div class="grid grid-cols-2 gap-2">
+        <div>
+          <label class="font-semibold text-slate-600 block mb-1">Цена (₽):</label>
+          <input type="number" id="customDishPrice" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2 font-mono text-slate-800 outline-none">
+        </div>
+        <div>
+          <label class="font-semibold text-slate-600 block mb-1">Кол-во:</label>
+          <input type="number" id="customDishQty" value="1" min="1" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2 font-mono text-slate-800 outline-none">
+        </div>
+      </div>
+      <div class="flex items-center gap-1.5 pt-1">
+        <button onclick="closeModal('customDishModal')" class="flex-1 py-2 rounded-xl bg-slate-100 text-slate-600 font-bold">Отмена</button>
+        <button onclick="saveCustomDishToOrder()" class="flex-1 py-2 bg-orange-500 text-white font-bold rounded-xl active:scale-95">Добавить</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="waiter.js"></script>
+</body>
+</html>

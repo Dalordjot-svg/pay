@@ -1,895 +1,827 @@
 <!DOCTYPE html>
-<html lang="ru" class="dark">
+<html lang="ru">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>ChefOS Admin • Управление рецептами</title>
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>👑</text></svg>">
-
-  <!-- Tailwind CSS & Font Awesome -->
-  <script>
-    const _origWarn = console.warn;
-    console.warn = (...args) => {
-      if (typeof args[0] === 'string' && args[0].includes('cdn.tailwindcss.com')) return;
-      _origWarn.apply(console, args);
-    };
-  </script>
+  <title>COFFEEMAN • Конструктор зала</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
-
-  <!-- Firebase Modular SDK -->
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-    import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-database.js";
-
-    const firebaseConfig = {
-      apiKey: "AIzaSyCT2aJ8rF5KRCIFS3W6r4wbQeyBzkhmqnc",
-      authDomain: "lte-bank.firebaseapp.com",
-      databaseURL: "https://lte-bank-default-rtdb.firebaseio.com",
-      projectId: "lte-bank",
-      storageBucket: "lte-bank.firebasestorage.app",
-      messagingSenderId: "286397543738",
-      appId: "1:286397543738:web:c3ef297e6b6666620c4c03",
-      measurementId: "G-Q9BM100F5P"
-    };
-
-    const fbApp = initializeApp(firebaseConfig);
-    const fbDb = getDatabase(fbApp);
-
-    window.fbDb = fbDb;
-    window.fbRef = ref;
-    window.fbSet = set;
-    window.fbOnValue = onValue;
-
-    window.dispatchEvent(new Event('firebase-ready'));
-  </script>
-
+  <link rel="stylesheet" href="style.css">
   <style>
-    * { -webkit-tap-highlight-color: transparent; outline: none; }
-    body {
-      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
-      background-color: #08080c;
-      color: #f1f5f9;
-      -webkit-font-smoothing: antialiased;
+    .blueprint-canvas {
+      background-color: #0b0b0e;
+      background-image: 
+        radial-gradient(circle, #262630 1px, transparent 1px),
+        linear-gradient(to right, #181820 1px, transparent 1px),
+        linear-gradient(to bottom, #181820 1px, transparent 1px);
+      background-size: 20px 20px, 80px 80px, 80px 80px;
     }
-    .bento-card {
-      background: #111117;
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      border-radius: 24px;
-      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-    }
-    .bento-card:hover {
-      border-color: rgba(255, 255, 255, 0.16);
-    }
-    .glass-dock {
-      background: rgba(18, 18, 24, 0.92);
-      backdrop-filter: blur(28px) saturate(190%);
-      -webkit-backdrop-filter: blur(28px) saturate(190%);
-      border: 1px solid rgba(255, 255, 255, 0.12);
-    }
-    .no-scrollbar::-webkit-scrollbar { display: none; }
-    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-
-    /* --- Visual Editor & Content Typography --- */
-    .word-editor {
-      min-height: 140px;
-      padding: 14px 16px;
-      background: rgba(0, 0, 0, 0.45);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      border-radius: 16px;
-      color: #e2e8f0;
-      font-size: 13.5px;
-      line-height: 1.7;
-      transition: border-color 0.2s, box-shadow 0.2s;
-    }
-    .word-editor:focus {
-      border-color: #f59e0b;
-      box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.15);
-    }
-    .word-editor:empty:before {
-      content: attr(data-placeholder);
-      color: #475569;
-      pointer-events: none;
-      display: block;
-    }
-
-    /* Стили форматирования внутри редактора и карточек */
-    .rich-content mark, .word-editor mark {
-      background: rgba(245, 158, 11, 0.25);
-      color: #fbbf24;
-      padding: 2px 6px;
-      border-radius: 6px;
-      border: 1px solid rgba(245, 158, 11, 0.35);
-      font-weight: 600;
-    }
-    .rich-content b, .rich-content strong, .word-editor b, .word-editor strong {
-      font-weight: 700;
-      color: #ffffff;
-    }
-    .rich-content u, .word-editor u {
-      text-decoration-color: #f59e0b;
-      text-underline-offset: 3px;
-    }
-    .rich-content s, .word-editor s {
-      color: #94a3b8;
-    }
-    .rich-content .chef-color-danger, .word-editor .chef-color-danger {
-      color: #fb7185 !important;
-      font-weight: 700;
-    }
-    .rich-content .chef-color-gold, .word-editor .chef-color-gold {
-      color: #facc15 !important;
-      font-weight: 700;
-    }
-    .rich-content .chef-color-emerald, .word-editor .chef-color-emerald {
-      color: #34d399 !important;
-      font-weight: 700;
-    }
-    .rich-content .chef-callout, .word-editor .chef-callout {
-      display: block;
-      margin: 8px 0;
-      padding: 10px 14px;
-      background: rgba(245, 158, 11, 0.1);
-      border-left: 3px solid #f59e0b;
-      border-radius: 0 12px 12px 0;
-      color: #fef3c7;
-      font-size: 13px;
-    }
-    .rich-content ul, .word-editor ul {
-      list-style-type: disc;
-      padding-left: 22px;
-      margin: 6px 0;
-    }
-    .rich-content ol, .word-editor ol {
-      list-style-type: decimal;
-      padding-left: 22px;
-      margin: 6px 0;
-    }
-    .rich-content li, .word-editor li {
-      margin-bottom: 4px;
-    }
-
-    /* Кнопки панели форматирования Word Toolbar */
-    .tb-btn {
-      height: 30px;
-      min-width: 30px;
-      padding: 0 8px;
-      border-radius: 8px;
-      background: rgba(255, 255, 255, 0.05);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      font-size: 12px;
-      font-weight: 600;
-      color: #cbd5e1;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 5px;
-      transition: all 0.15s ease;
-      cursor: pointer;
+    .drawn-item {
+      position: absolute;
       user-select: none;
+      -webkit-user-select: none;
+      touch-action: none;
+      cursor: grab;
+      transform-origin: center center;
     }
-    .tb-btn:hover {
-      background: rgba(255, 255, 255, 0.12);
-      color: #ffffff;
-      transform: translateY(-1px);
+    .drawn-item:active {
+      cursor: grabbing;
     }
-    .tb-btn:active {
-      transform: translateY(0);
+    .drawn-item.selected {
+      outline: 2px dashed #c084fc !important;
+      outline-offset: 4px;
+      z-index: 50 !important;
     }
-    .tb-btn.active {
-      background: rgba(245, 158, 11, 0.25);
-      border-color: rgba(245, 158, 11, 0.5);
-      color: #fbbf24;
+    #previewBox {
+      position: absolute;
+      pointer-events: none;
+      border: 2px dashed #a855f7;
+      background: rgba(168, 85, 247, 0.2);
+      display: none;
+      z-index: 60;
     }
-    .tb-divider {
-      width: 1px;
-      height: 18px;
-      background: rgba(255, 255, 255, 0.1);
-      margin: 0 2px;
+    .window-glass {
+      background: repeating-linear-gradient(
+        90deg,
+        rgba(56, 189, 248, 0.35),
+        rgba(56, 189, 248, 0.35) 16px,
+        rgba(14, 165, 233, 0.75) 16px,
+        rgba(14, 165, 233, 0.75) 20px
+      );
+      border: 2px solid #38bdf8;
+      box-shadow: 0 0 10px rgba(56, 189, 248, 0.3);
+    }
+    .plant-divider {
+      background: repeating-linear-gradient(
+        45deg,
+        #14532d,
+        #14532d 10px,
+        #166534 10px,
+        #166534 20px
+      );
+      border: 2px solid #22c55e;
+      border-radius: 12px;
+    }
+    .sofa-item {
+      background: #78350f;
+      border: 2px solid #92400e;
+      border-radius: 14px;
+      position: relative;
+    }
+    .sofa-back-strip {
+      position: absolute;
+      top: 0; left: 0; right: 0; height: 30%;
+      background: #451a03;
+      border-radius: 10px 10px 0 0;
+    }
+    /* Табуретка / Барный стул */
+    .stool-item {
+      background: radial-gradient(circle, #b45309 35%, #78350f 100%);
+      border: 2.5px solid #d97706;
+      border-radius: 9999px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.5);
+      position: relative;
+    }
+    .stool-inner {
+      position: absolute;
+      inset: 22%;
+      border-radius: 9999px;
+      border: 1px dashed rgba(254, 215, 170, 0.4);
     }
   </style>
 </head>
-<body class="min-h-screen pb-28 select-none">
+<body class="bg-stone-950 text-stone-100 flex flex-col h-[100dvh] overflow-hidden select-none">
 
   <!-- Header -->
-  <header class="sticky top-0 z-30 bg-[#08080c]/90 backdrop-blur-xl border-b border-white/10 px-4 sm:px-6 py-3.5">
-    <div class="max-w-4xl mx-auto flex items-center justify-between gap-3">
-      
-      <div class="flex items-center gap-3">
-        <div class="w-10 h-10 rounded-2xl bg-amber-500/15 border border-amber-400/30 flex items-center justify-center text-xl shadow-inner">
-          👑
-        </div>
-        <div>
-          <div class="flex items-center gap-2">
-            <h1 class="text-base font-extrabold text-white tracking-tight">ChefOS Admin</h1>
-            <span class="text-[10px] font-mono font-bold px-2 py-0.5 rounded-md bg-amber-500/20 text-amber-400 border border-amber-500/30 uppercase">
-              ШЕФ
-            </span>
-          </div>
-          <p id="cloudStatus" class="text-[11px] font-mono text-emerald-400 flex items-center gap-1.5 mt-0.5">
-            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> База подключена
-          </p>
+  <header class="bg-stone-900 text-white px-4 py-2 shrink-0 flex items-center justify-between border-b border-stone-800 z-30">
+    <div class="flex items-center gap-3">
+      <a href="index.html" class="w-8 h-8 rounded-xl bg-purple-600 text-white font-black flex items-center justify-center text-sm active:scale-95 transition">
+        📐
+      </a>
+      <div>
+        <div class="flex items-center gap-2">
+          <h1 class="font-extrabold text-sm tracking-wide">COFFEEMAN</h1>
+          <span class="text-[10px] bg-purple-900 text-purple-200 px-1.5 py-0.2 rounded font-bold">КОНСТРУКТОР</span>
         </div>
       </div>
+    </div>
 
-      <div class="flex items-center gap-2">
-        <button onclick="openRecipeEditor(null)" class="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-black text-xs font-black transition flex items-center gap-1.5 shadow-lg">
-          <i class="fa-solid fa-plus"></i> Новый рецепт
-        </button>
+    <!-- Actions -->
+    <div class="flex items-center gap-2 text-xs font-bold">
+      <span id="localSaveBadge" class="text-[11px] text-emerald-400 font-mono hidden sm:inline">💾 Автосохранено</span>
 
-        <a href="index.html" class="px-3.5 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold transition flex items-center gap-1.5 border border-white/10">
-          <i class="fa-solid fa-arrow-up-right-from-square text-amber-400"></i>
-          <span class="hidden sm:inline">В цех</span>
-        </a>
+      <div class="flex items-center gap-1.5 bg-stone-800 px-2.5 py-1.5 rounded-xl border border-stone-700">
+        <span id="syncDot" class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
+        <span id="syncText" class="font-mono text-stone-300">Подключение...</span>
       </div>
 
+      <button onclick="downloadBackupJSON()" title="Скачать копию на ПК" class="px-2.5 py-1.5 bg-stone-800 hover:bg-stone-700 text-stone-300 rounded-xl transition">
+        📥 Резервная копия
+      </button>
+
+      <button onclick="saveFloorplan()" class="px-4 py-1.5 bg-purple-600 hover:bg-purple-700 active:bg-purple-800 text-white rounded-xl shadow-md transition flex items-center gap-1.5 active:scale-95">
+        <span>☁️</span> <span>Загрузить в облако</span>
+      </button>
+
+      <a href="index.html" class="px-2.5 py-1.5 bg-stone-800 hover:bg-stone-700 text-stone-300 rounded-xl transition">
+        Выход
+      </a>
     </div>
   </header>
 
-  <!-- Main View -->
-  <main class="max-w-4xl mx-auto px-4 sm:px-6 pt-5 space-y-5">
+  <!-- Workspace -->
+  <div class="flex-1 flex min-h-0 relative overflow-hidden">
 
-    <!-- Filters & Search -->
-    <div class="flex flex-wrap items-center justify-between gap-3">
-      <div class="flex items-center gap-2 text-xs">
-        <button onclick="setFilter('all')" id="btn-all" class="px-3.5 py-1.5 rounded-xl bg-amber-500 text-black font-bold transition">Все (<span id="c-all">0</span>)</button>
-        <button onclick="setFilter('popular')" id="btn-popular" class="px-3.5 py-1.5 rounded-xl bg-white/5 text-slate-300 hover:text-white border border-white/10 font-bold transition">🔥 Популярные (<span id="c-pop">0</span>)</button>
-        <button onclick="setFilter('regular')" id="btn-regular" class="px-3.5 py-1.5 rounded-xl bg-white/5 text-slate-300 hover:text-white border border-white/10 font-bold transition">Остальные (<span id="c-reg">0</span>)</button>
+    <!-- LEFT PALETTE -->
+    <aside class="w-52 bg-stone-900/95 border-r border-stone-800 p-2.5 flex flex-col gap-3 shrink-0 z-20 overflow-y-auto">
+      <div>
+        <span class="text-[9px] uppercase font-black text-stone-500 tracking-wider">Инструменты</span>
+        <div class="grid grid-cols-2 gap-1 mt-1">
+          <button onclick="setTool('select')" id="tool-select" class="tool-btn p-2 rounded-xl bg-purple-600 text-white text-xs font-bold flex items-center justify-center gap-1">
+            <span>👆</span> <span>Выбор</span>
+          </button>
+          <button onclick="setTool('pan')" id="tool-pan" class="tool-btn p-2 rounded-xl bg-stone-800 hover:bg-stone-700 text-stone-300 text-xs font-bold flex items-center justify-center gap-1">
+            <span>✋</span> <span>Рука</span>
+          </button>
+        </div>
       </div>
 
-      <div class="relative flex-1 min-w-[220px] max-w-xs">
-        <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 text-xs"></i>
-        <input id="searchInput" type="text" oninput="renderRecipes()" placeholder="Поиск рецепта..."
-               class="w-full pl-9 pr-4 py-1.5 rounded-xl bg-white/5 border border-white/10 text-xs text-white placeholder-slate-500 focus:border-amber-400">
-      </div>
-    </div>
-
-    <!-- Recipes List -->
-    <div id="recipesContainer" class="space-y-4">
-      <!-- Dynamic cards rendered via JS -->
-    </div>
-
-  </main>
-
-  <!-- Word-Like Visual Modal Editor -->
-  <div id="editorModal" class="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-black/85 backdrop-blur-xl opacity-0 pointer-events-none transition-opacity duration-200">
-    <div class="w-full max-w-3xl max-h-[92vh] bento-card border-amber-500/40 p-5 sm:p-6 shadow-2xl flex flex-col space-y-4 overflow-hidden bg-[#121219]">
-      
-      <!-- Header -->
-      <div class="flex items-center justify-between border-b border-white/10 pb-3">
-        <div class="flex items-center gap-3">
-          <span id="ed-emoji-preview" class="w-11 h-11 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-2xl">🍰</span>
-          <div>
-            <h3 id="ed-modal-title" class="text-base font-extrabold text-white">Визуальный редактор</h3>
-            <p class="text-xs text-slate-400">Выделяйте текст и форматируйте как в Word • Поддержка Undo/Redo</p>
-          </div>
+      <div>
+        <span class="text-[9px] uppercase font-black text-stone-500 tracking-wider">Столы и мебель</span>
+        <div class="grid grid-cols-1 gap-1 mt-1">
+          <button onclick="setTool('draw_table_round')" id="tool-draw_table_round" class="tool-btn w-full p-2 rounded-xl bg-stone-800 hover:bg-stone-700 text-stone-300 text-xs font-bold flex items-center gap-2">
+            <span class="w-4 h-4 rounded-full border-2 border-amber-400"></span> <span>Круглый стол</span>
+          </button>
+          <button onclick="setTool('draw_table_rect')" id="tool-draw_table_rect" class="tool-btn w-full p-2 rounded-xl bg-stone-800 hover:bg-stone-700 text-stone-300 text-xs font-bold flex items-center gap-2">
+            <span class="w-4 h-3 rounded-sm border-2 border-amber-400"></span> <span>Стол обычный</span>
+          </button>
+          <button onclick="setTool('draw_sofa')" id="tool-draw_sofa" class="tool-btn w-full p-2 rounded-xl bg-stone-800 hover:bg-stone-700 text-stone-300 text-xs font-bold flex items-center gap-2">
+            <span class="w-4 h-3 bg-amber-900 border border-amber-600 rounded"></span> <span>Мягкий диван</span>
+          </button>
+          <!-- ТАБУРЕТКА -->
+          <button onclick="setTool('draw_stool')" id="tool-draw_stool" class="tool-btn w-full p-2 rounded-xl bg-stone-800 hover:bg-stone-700 text-stone-300 text-xs font-bold flex items-center gap-2">
+            <span class="w-3.5 h-3.5 rounded-full bg-amber-600 border border-amber-400 shadow-xs"></span> <span>Табуретка / Барный стул</span>
+          </button>
         </div>
-        <button onclick="closeRecipeEditor()" class="w-8 h-8 rounded-full bg-white/10 text-slate-300 hover:text-white flex items-center justify-center text-sm">✕</button>
       </div>
 
-      <!-- Scrollable Editor Form -->
-      <div class="flex-1 overflow-y-auto no-scrollbar space-y-4 pr-1">
-        
-        <!-- Primary Fields -->
-        <div class="grid grid-cols-12 gap-3">
-          <div class="col-span-3 sm:col-span-2">
-            <label class="text-[11px] font-mono text-slate-400 uppercase font-bold">Эмодзи</label>
-            <input id="ed-emoji" type="text" value="🍓" oninput="document.getElementById('ed-emoji-preview').innerText = this.value || '🍰'"
-                   class="w-full mt-1 px-3 py-2 rounded-xl bg-black/50 border border-white/10 text-center text-xl text-white">
-          </div>
-          <div class="col-span-9 sm:col-span-6">
-            <label class="text-[11px] font-mono text-slate-400 uppercase font-bold">Название десерта</label>
-            <input id="ed-title" type="text" placeholder="Меренговый рулет..."
-                   class="w-full mt-1 px-3.5 py-2 rounded-xl bg-black/50 border border-white/10 text-sm text-white font-bold">
-          </div>
-          <div class="col-span-12 sm:col-span-4 flex items-center pt-2 sm:pt-6">
-            <label class="flex items-center gap-2 cursor-pointer select-none bg-white/5 px-3 py-2 rounded-xl border border-white/10 w-full hover:bg-white/10 transition">
-              <input id="ed-isPopular" type="checkbox" class="w-4 h-4 rounded text-amber-500 accent-amber-500">
-              <span class="text-xs font-bold text-amber-400">🔥 Популярный десерт</span>
-            </label>
-          </div>
-        </div>
-
-        <!-- Baking Specs -->
-        <div class="grid grid-cols-2 gap-3 p-3.5 rounded-2xl bg-white/[0.02] border border-white/5">
-          <div>
-            <label class="text-[11px] font-mono text-slate-400 uppercase font-bold">Температура духовки</label>
-            <input id="ed-ovenTemp" type="text" placeholder="150°C"
-                   class="w-full mt-1 px-3 py-2 rounded-xl bg-black/50 border border-white/10 text-xs font-mono font-bold text-amber-400">
-          </div>
-          <div>
-            <label class="text-[11px] font-mono text-slate-400 uppercase font-bold">Время выпекания (мин)</label>
-            <input id="ed-bakeMinutes" type="number" value="50"
-                   class="w-full mt-1 px-3 py-2 rounded-xl bg-black/50 border border-white/10 text-xs font-mono font-bold text-white">
-          </div>
-        </div>
-
-        <!-- Sticky Toolbar for WYSIWYG -->
-        <div class="sticky top-0 z-20 p-2 rounded-2xl glass-dock flex flex-wrap items-center gap-1.5 shadow-lg border border-white/10">
-          <!-- Undo / Redo -->
-          <button type="button" onmousedown="event.preventDefault(); execWordCmd('undo');" title="Отменить (Ctrl+Z)" class="tb-btn">
-            <i class="fa-solid fa-rotate-left"></i>
+      <div>
+        <span class="text-[9px] uppercase font-black text-stone-500 tracking-wider">Препятствия & Окна</span>
+        <div class="grid grid-cols-1 gap-1 mt-1">
+          <button onclick="setTool('draw_window')" id="tool-draw_window" class="tool-btn w-full p-2 rounded-xl bg-stone-800 hover:bg-stone-700 text-stone-300 text-xs font-bold flex items-center gap-2">
+            <span class="w-4 h-1.5 bg-sky-400 rounded-sm"></span> <span>Окно (под углом)</span>
           </button>
-          <button type="button" onmousedown="event.preventDefault(); execWordCmd('redo');" title="Повторить (Ctrl+Y)" class="tb-btn">
-            <i class="fa-solid fa-rotate-right"></i>
+          <button onclick="setTool('draw_plant')" id="tool-draw_plant" class="tool-btn w-full p-2 rounded-xl bg-stone-800 hover:bg-stone-700 text-stone-300 text-xs font-bold flex items-center gap-2">
+            <span class="w-4 h-2 bg-emerald-600 rounded"></span> <span>Цветы / Перегородка</span>
           </button>
-
-          <div class="tb-divider"></div>
-
-          <!-- Basic Typography Toggles -->
-          <button type="button" onmousedown="event.preventDefault(); execWordCmd('bold');" title="Жирный" class="tb-btn font-black">
-            B
+          <button onclick="setTool('draw_wall')" id="tool-draw_wall" class="tool-btn w-full p-2 rounded-xl bg-stone-800 hover:bg-stone-700 text-stone-300 text-xs font-bold flex items-center gap-2">
+            <span class="w-4 h-2 bg-stone-600 rounded-sm"></span> <span>Стена</span>
           </button>
-          <button type="button" onmousedown="event.preventDefault(); execWordCmd('italic');" title="Курсив" class="tb-btn italic">
-            I
+          <button onclick="setTool('draw_bar')" id="tool-draw_bar" class="tool-btn w-full p-2 rounded-xl bg-stone-800 hover:bg-stone-700 text-stone-300 text-xs font-bold flex items-center gap-2">
+            <span class="w-4 h-3 bg-amber-950 border border-amber-700 rounded"></span> <span>Барная стойка</span>
           </button>
-          <button type="button" onmousedown="event.preventDefault(); execWordCmd('underline');" title="Подчеркнутый" class="tb-btn underline">
-            U
-          </button>
-          <button type="button" onmousedown="event.preventDefault(); execWordCmd('strikeThrough');" title="Зачеркнутый" class="tb-btn line-through">
-            S
-          </button>
-
-          <div class="tb-divider"></div>
-
-          <!-- Smart Highlight & Mutually Exclusive Colors -->
-          <button type="button" onmousedown="event.preventDefault(); toggleHighlight();" title="Маркер выделения (вкл/выкл)" class="tb-btn text-amber-400">
-            🖍️ Маркер
-          </button>
-          <button type="button" onmousedown="event.preventDefault(); toggleExclusiveColor('danger');" title="Красный (Важно)" class="tb-btn text-rose-400">
-            ⚡ Важно
-          </button>
-          <button type="button" onmousedown="event.preventDefault(); toggleExclusiveColor('gold');" title="Золотой акцент" class="tb-btn text-yellow-300">
-            ✦ Золото
-          </button>
-          <button type="button" onmousedown="event.preventDefault(); toggleExclusiveColor('emerald');" title="Зеленый секрет" class="tb-btn text-emerald-400">
-            🌿 Секрет
-          </button>
-
-          <div class="tb-divider"></div>
-
-          <!-- Lists & Callout -->
-          <button type="button" onmousedown="event.preventDefault(); execWordCmd('insertOrderedList');" title="Нумерованный список" class="tb-btn">
-            <i class="fa-solid fa-list-ol"></i>
-          </button>
-          <button type="button" onmousedown="event.preventDefault(); execWordCmd('insertUnorderedList');" title="Маркированный список" class="tb-btn">
-            <i class="fa-solid fa-list-ul"></i>
-          </button>
-          <button type="button" onmousedown="event.preventDefault(); insertCalloutBox();" title="Блок примечания" class="tb-btn text-amber-300">
-            💡 Заметка
-          </button>
-
-          <div class="tb-divider"></div>
-
-          <!-- Clear Formatting -->
-          <button type="button" onmousedown="event.preventDefault(); clearCustomFormatting();" title="Очистить всё оформление" class="tb-btn text-slate-400 hover:text-rose-400">
-            <i class="fa-solid fa-eraser"></i> Сброс
+          <button onclick="setTool('draw_column')" id="tool-draw_column" class="tool-btn w-full p-2 rounded-xl bg-stone-800 hover:bg-stone-700 text-stone-300 text-xs font-bold flex items-center gap-2">
+            <span class="w-3.5 h-3.5 rounded-full bg-stone-500"></span> <span>Колонна</span>
           </button>
         </div>
-
-        <!-- Ingredients WYSIWYG Editable Area -->
-        <div class="space-y-1.5 p-3.5 rounded-2xl bg-white/[0.02] border border-white/5">
-          <label class="text-[11px] font-mono text-amber-400 uppercase font-bold flex items-center justify-between">
-            <span class="flex items-center gap-1.5"><i class="fa-solid fa-scale-balanced"></i> Ингредиенты:</span>
-            <span class="text-[10px] text-slate-500 font-normal">Форматируется прямо здесь</span>
-          </label>
-          <div id="ed-ingredients" 
-               contenteditable="true" 
-               class="word-editor rich-content" 
-               data-placeholder="Введите ингредиенты (напр. Белки яичные — 6 шт.)..."></div>
-        </div>
-
-        <!-- Instructions WYSIWYG Editable Area -->
-        <div class="space-y-1.5 p-3.5 rounded-2xl bg-white/[0.02] border border-white/5">
-          <label class="text-[11px] font-mono text-amber-400 uppercase font-bold flex items-center justify-between">
-            <span class="flex items-center gap-1.5"><i class="fa-solid fa-list-check"></i> Пошаговая инструкция:</span>
-            <span class="text-[10px] text-slate-500 font-normal">Выделяйте фрагменты и нажимайте кнопки на панели</span>
-          </label>
-          <div id="ed-instructions" 
-               contenteditable="true" 
-               class="word-editor rich-content" 
-               data-placeholder="1. Обезжирить чашу миксера...&#10;2. Начать взбивать на 1 скорости..."></div>
-        </div>
-
       </div>
 
-      <!-- Footer Actions -->
-      <div class="flex items-center justify-between border-t border-white/10 pt-3">
-        <button onclick="deleteCurrentRecipe()" id="btnDelete" class="px-4 py-2 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 text-rose-400 text-xs font-bold transition border border-rose-500/30">
-          <i class="fa-regular fa-trash-can"></i> Удалить
+      <div class="mt-auto pt-2 border-t border-stone-800 space-y-1.5">
+        <label class="w-full py-1.5 px-2 bg-stone-800 hover:bg-stone-700 text-stone-300 text-[11px] font-bold rounded-xl transition cursor-pointer flex items-center justify-center gap-1">
+          <span>📤 Загрузить файл</span>
+          <input type="file" id="importFileInput" accept=".json" class="hidden" onchange="importBackupJSON(event)">
+        </label>
+        <button onclick="clearEverything()" class="w-full py-1.5 px-2 bg-rose-950/60 hover:bg-rose-900 border border-rose-800/80 text-rose-200 text-[11px] font-bold rounded-xl transition">
+          Очистить карту
         </button>
+      </div>
+    </aside>
 
-        <div class="flex items-center gap-2">
-          <button onclick="closeRecipeEditor()" class="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-slate-300 text-xs font-bold transition">
-            Отмена
-          </button>
-          <button onclick="saveRecipe()" class="px-6 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-black text-xs font-black transition shadow-lg">
-            Сохранить рецепт
-          </button>
+    <!-- CENTER CANVAS -->
+    <div id="canvasViewport" class="flex-1 blueprint-canvas relative overflow-hidden cursor-default">
+      <div id="canvasWorld" class="absolute top-0 left-0 w-[4000px] h-[3000px] origin-top-left">
+        <div id="previewBox"></div>
+        <div id="elementsLayer" class="w-full h-full relative"></div>
+      </div>
+
+      <!-- Zoom controls -->
+      <div class="absolute bottom-3 left-3 z-20 flex items-center gap-1 bg-stone-900/90 border border-stone-800 p-1 rounded-xl shadow-xl">
+        <button onclick="adjustZoom(0.1)" class="w-7 h-7 bg-stone-800 hover:bg-stone-700 rounded-lg font-bold text-white text-sm">+</button>
+        <span id="zoomVal" class="text-xs font-mono font-bold px-2 text-stone-300">100%</span>
+        <button onclick="adjustZoom(-0.1)" class="w-7 h-7 bg-stone-800 hover:bg-stone-700 rounded-lg font-bold text-white text-sm">-</button>
+      </div>
+    </div>
+
+    <!-- RIGHT INSPECTOR -->
+    <aside id="inspector" class="w-64 bg-stone-900/95 border-l border-stone-800 p-3.5 flex flex-col justify-between shrink-0 z-20 overflow-y-auto">
+      <div class="space-y-3.5">
+        <div class="border-b border-stone-800 pb-2 flex items-center justify-between">
+          <span class="text-[10px] uppercase font-bold text-purple-400">Настройки</span>
+          <span id="inspTypeBadge" class="text-[9px] bg-stone-800 text-stone-300 px-1.5 py-0.5 rounded font-mono font-bold">—</span>
+        </div>
+
+        <div id="inspEmpty" class="text-xs text-stone-500 py-8 text-center">
+          Выберите элемент для поворота или изменения размера
+        </div>
+
+        <div id="inspForm" class="hidden space-y-3 text-xs">
+          <div id="tableNameField">
+            <label class="block text-[10px] text-stone-400 mb-1">Номер стола:</label>
+            <input type="text" id="inspName" oninput="editProp('name', this.value)" class="w-full bg-stone-950 border border-stone-700 rounded-lg p-2 text-white font-bold outline-none focus:ring-1 focus:ring-purple-500">
+          </div>
+
+          <!-- Свободный поворот угла -->
+          <div class="bg-stone-950/70 p-2.5 rounded-xl border border-stone-800 space-y-2">
+            <div class="flex items-center justify-between">
+              <label class="text-[10px] font-bold text-amber-400">Угол поворота:</label>
+              <span id="inspAngleVal" class="font-mono font-bold text-xs text-white">0°</span>
+            </div>
+            <input type="range" id="inspRotationSlider" min="0" max="360" step="1" oninput="editRotation(parseInt(this.value))" class="w-full accent-purple-500 cursor-pointer">
+            <div class="grid grid-cols-4 gap-1 pt-1">
+              <button onclick="addRotation(-45)" class="py-1 bg-stone-800 hover:bg-stone-700 rounded text-[10px] font-bold">-45°</button>
+              <button onclick="addRotation(-15)" class="py-1 bg-stone-800 hover:bg-stone-700 rounded text-[10px] font-bold">-15°</button>
+              <button onclick="addRotation(15)" class="py-1 bg-stone-800 hover:bg-stone-700 rounded text-[10px] font-bold">+15°</button>
+              <button onclick="addRotation(45)" class="py-1 bg-stone-800 hover:bg-stone-700 rounded text-[10px] font-bold">+45°</button>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="block text-[10px] text-stone-400 mb-0.5">Размер (W):</label>
+              <input type="number" id="inspW" step="5" oninput="editProp('w', parseInt(this.value))" class="w-full bg-stone-950 border border-stone-700 rounded-lg p-1.5 font-mono text-white outline-none">
+            </div>
+            <div>
+              <label class="block text-[10px] text-stone-400 mb-0.5">Размер (H):</label>
+              <input type="number" id="inspH" step="5" oninput="editProp('h', parseInt(this.value))" class="w-full bg-stone-950 border border-stone-700 rounded-lg p-1.5 font-mono text-white outline-none">
+            </div>
+          </div>
         </div>
       </div>
 
-    </div>
+      <div id="inspDeleteBox" class="hidden pt-3 border-t border-stone-800">
+        <button onclick="deleteActiveObject()" class="w-full py-2.5 bg-rose-950/80 hover:bg-rose-900 border border-rose-800 text-rose-200 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5">
+          <span>🗑️</span> <span>Удалить элемент</span>
+        </button>
+      </div>
+    </aside>
+
   </div>
 
-  <!-- Toast -->
-  <div id="adminToast" class="fixed top-5 left-1/2 -translate-x-1/2 z-50 transform -translate-y-24 opacity-0 pointer-events-none transition-all duration-300 max-w-sm w-11/12 glass-dock px-4 py-3 rounded-2xl shadow-2xl flex items-center gap-3 border border-white/15">
-    <span id="toastIcon" class="text-lg text-amber-400">👑</span>
-    <span id="toastMsg" class="text-xs font-bold text-white flex-1">Рецепт сохранён</span>
-  </div>
+  <!-- SCRIPT -->
+  <script type="module">
+    import { initFirebaseAuth, subscribeToCloudTables, saveTablesToCloud } from "./firebase.js";
+    import { TABLES_INITIAL } from "./menu.js";
 
-  <script>
-    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    function playTone(freq, dur = 0.08) {
+    let activeTool = 'select';
+    let scale = 1;
+    let panX = 40;
+    let panY = 40;
+
+    let tables = [];
+    let obstacles = [];
+    let selectedId = null;
+
+    let isDrawing = false;
+    let isPanning = false;
+    let panStartX = 0, panStartY = 0;
+    let drawStartX = 0, drawStartY = 0;
+
+    let draggingObj = null;
+    let draggingEl = null;
+    let dragStartMouseX = 0, dragStartMouseY = 0;
+    let dragStartObjX = 0, dragStartObjY = 0;
+
+    const viewport = document.getElementById('canvasViewport');
+    const world = document.getElementById('canvasWorld');
+    const elementsLayer = document.getElementById('elementsLayer');
+    const previewBox = document.getElementById('previewBox');
+
+    function triggerAutoSave() {
       try {
-        if (audioCtx.state === 'suspended') audioCtx.resume();
-        const osc = audioCtx.createOscillator();
-        const g = audioCtx.createGain();
-        osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-        g.gain.setValueAtTime(0.08, audioCtx.currentTime);
-        g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + dur);
-        osc.connect(g);
-        g.connect(audioCtx.destination);
-        osc.start();
-        osc.stop(audioCtx.currentTime + dur);
+        localStorage.setItem('coffeeman_local_backup', JSON.stringify({ tables, obstacles, time: Date.now() }));
+        const badge = document.getElementById('localSaveBadge');
+        if (badge) {
+          badge.textContent = "💾 Сохранено локально";
+          badge.classList.remove('opacity-50');
+        }
       } catch (e) {}
     }
 
-    function showToast(msg, icon = '👑') {
-      playTone(880, 0.1);
-      const t = document.getElementById('adminToast');
-      document.getElementById('toastMsg').innerText = msg;
-      document.getElementById('toastIcon').innerText = icon;
-      t.classList.remove('-translate-y-24', 'opacity-0');
-      t.classList.add('translate-y-0', 'opacity-100');
-      setTimeout(() => {
-        t.classList.remove('translate-y-0', 'opacity-100');
-        t.classList.add('-translate-y-24', 'opacity-0');
-      }, 2400);
+    function applyTransform() {
+      world.style.transform = `translate(${panX}px, ${panY}px) scale(${scale})`;
+      document.getElementById('zoomVal').textContent = `${Math.round(scale * 100)}%`;
     }
 
-    /* Baseline Recipes with visual markup */
-    const BASELINE_RECIPES = {
-      meringue: {
-        id: 'meringue',
-        title: 'Меренговый рулет',
-        emoji: '🍓',
-        isPopular: true,
-        ovenTemp: '150°C',
-        bakeMinutes: 50,
-        ingredients: `<ul>
-<li><b>Белки яичные</b> (в сухую чашу) — 6 шт. (200–220 г)</li>
-<li>Сахар (в меренгу) — <b>280 г</b></li>
-<li>Лимонный сок — 8 мл</li>
-<li>Крахмал кукурузный — 8 г</li>
-<li>Клубника замороженная — 100 г</li>
-<li>Творожный сыр (крем) — 200 г</li>
-<li>Сливки 33% (крем) — 100 г</li>
-<li>Сахар (в крем) — 50 г</li>
-</ul>`,
-        instructions: `<ol>
-<li><mark>Тщательно обезжирить</mark> и вытереть насухо чашу миксера и венчик. Разбить 6 яиц. <span class="chef-color-danger">Духовку заранее НЕ включать (холодный старт!)</span>.</li>
-<li><b>0:00–5:00</b> — включить 1-ю скорость, плавно довести до устойчивой белой пены.</li>
-<li>На отметке <b>5:00</b> влить 8 мл лимонного сока.</li>
-<li>С 6-й минуты разгон: строго <u>+1 скорость в минуту</u>.</li>
-<li>На отметке <b>7:00</b> тонкой струйкой всыпать весь сахар (280 г).</li>
-<li>На 8:50–9:00 остановить миксер: масса держит плотный клюв.</li>
-<li>На 9:00 всыпать кукурузный крахмал (8 г) и довзбивать ровно 1 минуту.</li>
-<li>Выложить готовую меренгу на силиконовый коврик ровным прямоугольником.</li>
-<li><div class="chef-callout">🔥 Поставить противень в ХОЛОДНУЮ духовку, включить 150°C ровно на 50 минут!</div></li>
-<li>Остывшую меренгу перевернуть, смазать кремом и свернуть рулет.</li>
-</ol>`
-      },
-      cheesecake: {
-        id: 'cheesecake',
-        title: 'Классический чизкейк',
-        emoji: '🧀',
-        isPopular: true,
-        ovenTemp: '175°C',
-        bakeMinutes: 50,
-        ingredients: `<ul>
-<li>Печенье («Юбилейное») — 16 шт. (~180 г)</li>
-<li>Сливочное масло (растопить) — 150 г</li>
-<li><b>Творожный сыр</b> — 550 г</li>
-<li>Сливки 33% — 150 г</li>
-<li>Сахар — 120 г</li>
-<li>Крахмал кукурузный — 10 г</li>
-<li>Яйца куриные — 2 шт.</li>
-<li>Сметана 20% — 2 ст. л.</li>
-</ul>`,
-        instructions: `<ol>
-<li>Печенье измельчить в крошку со 150 г масла, утрамбовать основу и убрать в морозилку на 30 мин.</li>
-<li>Смешать сыр, сливки, сахар и крахмал. По одному ввести яйца и сметану.</li>
-<li><mark>Вымешивать на минимальной скорости</mark>, чтобы не насыщать воздухом.</li>
-<li><div class="chef-callout">Обязательно оставить массу на 30–60 минут на столе, чтобы вышли микропузыри!</div></li>
-<li>Залить на замороженную основу и выпекать при <span class="chef-color-gold">175°C ровно 50 минут</span>.</li>
-</ol>`
-      },
-      banana: {
-        id: 'banana',
-        title: 'Банановый хлеб',
-        emoji: '🍌',
-        isPopular: false,
-        ovenTemp: '175°C',
-        bakeMinutes: 50,
-        ingredients: `<ul>
-<li>Бананы спелые — 2 шт.</li>
-<li>Яйца куриные — 2 шт.</li>
-<li>Масло сливочное растопленное — 130 г</li>
-<li>Сахар — 150 г (тесто) + 25 г (крем)</li>
-<li>Мука пшеничная — 250 г</li>
-<li>Соль мелкая — 1 ч. л. без горки</li>
-<li><span class="chef-color-danger">Сода пищевая — 1 ч. л. С ГОРКОЙ</span></li>
-</ul>`,
-        instructions: `<ol>
-<li>Разогреть духовку заранее до <span class="chef-color-gold">175°C</span>.</li>
-<li>В блендере взбить бананы с яйцами в шелковистую эмульсию.</li>
-<li>Соединить с растопленным маслом, сахаром и мукой.</li>
-<li>Всыпать соль и соду с горкой, вымешивать <u>не дольше 15 секунд</u>!</li>
-<li><span class="chef-color-danger">МОМЕНТАЛЬНО</span> перелить в форму и поставить в печь на 50 минут.</li>
-</ol>`
-      }
+    window.adjustZoom = (delta) => {
+      scale = Math.max(0.3, Math.min(2.5, scale + delta));
+      applyTransform();
     };
 
-    window.recipes = {};
-    window.currentFilter = 'all';
-    window.editingId = null;
-    window.expandedAdminCards = {};
-
-    /* --- Word WYSIWYG Engine --- */
-    function execWordCmd(command, val = null) {
-      playTone(650, 0.05);
-      document.execCommand(command, false, val);
-    }
-
-    // Toggle Highlighter (Mark)
-    function toggleHighlight() {
-      playTone(700, 0.05);
-      const sel = window.getSelection();
-      if (!sel || sel.rangeCount === 0 || sel.isCollapsed) {
-        showToast('Выделите текст для выделения маркером', 'ℹ️');
-        return;
-      }
-
-      let parentNode = sel.anchorNode;
-      if (parentNode.nodeType === Node.TEXT_NODE) parentNode = parentNode.parentNode;
-
-      // Если уже внутри <mark> — отменяем / снимаем
-      const existingMark = parentNode.closest('mark');
-      if (existingMark) {
-        const text = existingMark.innerHTML;
-        existingMark.outerHTML = text;
-        return;
-      }
-
-      // Оборачиваем в <mark>
-      const range = sel.getRangeAt(0);
-      const mark = document.createElement('mark');
-      mark.appendChild(range.extractContents());
-      range.insertNode(mark);
-      sel.removeAllRanges();
-    }
-
-    // Mutually Exclusive Colors (Красный, Золотой, Зеленый заменяют друг друга без наслаивания)
-    function toggleExclusiveColor(colorType) {
-      playTone(740, 0.05);
-      const sel = window.getSelection();
-      if (!sel || sel.rangeCount === 0 || sel.isCollapsed) {
-        showToast('Выделите текст мышкой для смены цвета', 'ℹ️');
-        return;
-      }
-
-      const className = `chef-color-${colorType}`;
-      let parentNode = sel.anchorNode;
-      if (parentNode.nodeType === Node.TEXT_NODE) parentNode = parentNode.parentNode;
-
-      const existingColoredSpan = parentNode.closest('.chef-color-danger, .chef-color-gold, .chef-color-emerald');
-      
-      // Если повторно нажимаем тот же цвет — снимаем его (toggle)
-      if (existingColoredSpan && existingColoredSpan.classList.contains(className)) {
-        existingColoredSpan.outerHTML = existingColoredSpan.innerHTML;
-        return;
-      }
-
-      // Если был другой цвет — меняем класс без создания нового слоя
-      if (existingColoredSpan) {
-        existingColoredSpan.classList.remove('chef-color-danger', 'chef-color-gold', 'chef-color-emerald');
-        existingColoredSpan.classList.add(className);
-        return;
-      }
-
-      // Оборачиваем в чистый span
-      const range = sel.getRangeAt(0);
-      const span = document.createElement('span');
-      span.className = className;
-      span.appendChild(range.extractContents());
-      range.insertNode(span);
-      sel.removeAllRanges();
-    }
-
-    // Вставка цитаты / акцентного блока
-    function insertCalloutBox() {
-      playTone(580, 0.06);
-      const sel = window.getSelection();
-      if (!sel || sel.rangeCount === 0) return;
-
-      const range = sel.getRangeAt(0);
-      let content = range.extractContents();
-      
-      const div = document.createElement('div');
-      div.className = 'chef-callout';
-      if (!content.textContent.trim()) {
-        div.innerHTML = '💡 <b>Важная заметка шефа:</b> Введите рекомендацию здесь...';
-      } else {
-        div.appendChild(content);
-      }
-
-      range.insertNode(div);
-      sel.removeAllRanges();
-    }
-
-    // Полная очистка стилей выделенного участка
-    function clearCustomFormatting() {
-      playTone(400, 0.08);
-      document.execCommand('removeFormat', false, null);
-      
-      const sel = window.getSelection();
-      if (!sel || sel.rangeCount === 0 || sel.isCollapsed) return;
-
-      let parentNode = sel.anchorNode;
-      if (parentNode.nodeType === Node.TEXT_NODE) parentNode = parentNode.parentNode;
-
-      const styledParent = parentNode.closest('mark, .chef-color-danger, .chef-color-gold, .chef-color-emerald, .chef-callout');
-      if (styledParent) {
-        styledParent.outerHTML = styledParent.innerHTML;
-      }
-      showToast('Форматирование очищено', '🧹');
-    }
-
-    function toggleCardAccordion(id, e) {
-      if (e) e.stopPropagation();
-      playTone(520, 0.04);
-      window.expandedAdminCards[id] = !window.expandedAdminCards[id];
-      renderRecipes();
-    }
-
-    function initAdmin() {
-      try {
-        const raw = localStorage.getItem('pastry_recipes_simple');
-        if (raw) window.recipes = JSON.parse(raw);
-        else window.recipes = JSON.parse(JSON.stringify(BASELINE_RECIPES));
-      } catch (e) {
-        window.recipes = JSON.parse(JSON.stringify(BASELINE_RECIPES));
-      }
-      renderRecipes();
-
-      function connect() {
-        if (!window.fbDb || !window.fbRef || !window.fbOnValue) return;
-        const recRef = window.fbRef(window.fbDb, 'pastry_handbook/recipes_simple');
-
-        window.fbOnValue(recRef, (snap) => {
-          const val = snap.val();
-          if (val && Object.keys(val).length > 0) {
-            window.recipes = val;
-            try { localStorage.setItem('pastry_recipes_simple', JSON.stringify(val)); } catch (e) {}
-          } else {
-            window.fbSet(recRef, BASELINE_RECIPES);
-          }
-          renderRecipes();
-          document.getElementById('cloudStatus').innerHTML = '<span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> Firebase онлайн';
-        }, (err) => {
-          console.warn('Firebase error:', err);
-          document.getElementById('cloudStatus').innerHTML = '<span class="w-2 h-2 rounded-full bg-amber-400"></span> Локальный кэш';
-        });
-      }
-
-      if (window.fbDb) connect();
-      else window.addEventListener('firebase-ready', connect);
-    }
-
-    function setFilter(f) {
-      playTone(550, 0.05);
-      window.currentFilter = f;
-      ['all', 'popular', 'regular'].forEach(t => {
-        const b = document.getElementById(`btn-${t}`);
-        if (t === f) b.className = "px-3.5 py-1.5 rounded-xl bg-amber-500 text-black font-bold transition";
-        else b.className = "px-3.5 py-1.5 rounded-xl bg-white/5 text-slate-300 hover:text-white border border-white/10 font-bold transition";
+    window.setTool = (tool) => {
+      activeTool = tool;
+      document.querySelectorAll('.tool-btn').forEach(btn => {
+        btn.className = "tool-btn w-full p-2 rounded-xl bg-stone-800 hover:bg-stone-700 text-stone-300 text-xs font-bold flex items-center gap-2";
       });
-      renderRecipes();
-    }
-
-    function togglePopular(id) {
-      if (!window.recipes[id]) return;
-      playTone(620, 0.06);
-      window.recipes[id].isPopular = !window.recipes[id].isPopular;
-      saveAllToStorage();
-      renderRecipes();
-      showToast(window.recipes[id].isPopular ? 'Отмечен как популярный 🔥' : 'Снят статус популярного', '⭐');
-    }
-
-    function renderRecipes() {
-      const container = document.getElementById('recipesContainer');
-      const q = (document.getElementById('searchInput').value || '').toLowerCase().trim();
-      container.innerHTML = '';
-
-      let list = Object.values(window.recipes);
-
-      document.getElementById('c-all').innerText = list.length;
-      document.getElementById('c-pop').innerText = list.filter(r => r.isPopular).length;
-      document.getElementById('c-reg').innerText = list.filter(r => !r.isPopular).length;
-
-      if (q) {
-        list = list.filter(r => 
-          (r.title || '').toLowerCase().includes(q) ||
-          (r.ingredients || '').toLowerCase().includes(q) ||
-          (r.instructions || '').toLowerCase().includes(q)
-        );
+      const activeBtn = document.getElementById(`tool-${tool}`);
+      if (activeBtn) {
+        activeBtn.className = "tool-btn w-full p-2 rounded-xl bg-purple-600 text-white text-xs font-bold flex items-center gap-2 shadow-sm";
       }
 
-      if (window.currentFilter === 'popular') list = list.filter(r => r.isPopular);
-      else if (window.currentFilter === 'regular') list = list.filter(r => !r.isPopular);
-      else list.sort((a, b) => (b.isPopular ? 1 : 0) - (a.isPopular ? 1 : 0));
+      if (tool === 'pan') viewport.style.cursor = 'grab';
+      else if (tool === 'select') viewport.style.cursor = 'default';
+      else viewport.style.cursor = 'crosshair';
+    };
 
-      if (list.length === 0) {
-        container.innerHTML = `<div class="p-8 text-center text-slate-500 bento-card">Рецепты не найдены</div>`;
+    function getCanvasCoords(clientX, clientY) {
+      const rect = viewport.getBoundingClientRect();
+      const x = (clientX - rect.left - panX) / scale;
+      const y = (clientY - rect.top - panY) / scale;
+      return {
+        x: Math.round(x / 5) * 5,
+        y: Math.round(y / 5) * 5
+      };
+    }
+
+    viewport.addEventListener('pointerdown', (e) => {
+      if (e.target !== viewport && e.target !== world && e.target !== elementsLayer) {
         return;
       }
 
-      list.forEach(r => {
-        const isExp = !!window.expandedAdminCards[r.id];
-        const card = document.createElement('div');
-        card.className = `rounded-[28px] bento-card overflow-hidden transition-all duration-200 ${isExp ? 'border-amber-500/30 shadow-xl' : 'hover:border-white/20'}`;
+      if (activeTool === 'pan' || (activeTool === 'select' && (e.button === 1 || e.spaceKey))) {
+        isPanning = true;
+        panStartX = e.clientX - panX;
+        panStartY = e.clientY - panY;
+        viewport.style.cursor = 'grabbing';
+        return;
+      }
 
-        card.innerHTML = `
-          <!-- Header Card -->
-          <div onclick="toggleCardAccordion('${r.id}')" class="p-4 sm:p-5 flex flex-wrap items-center justify-between gap-3 cursor-pointer select-none">
-            <div class="flex items-center gap-3.5">
-              <span class="w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-2xl shrink-0">
-                ${r.emoji || '🧁'}
-              </span>
-              <div>
-                <div class="flex items-center gap-2">
-                  <h3 class="text-base sm:text-lg font-bold text-white">${r.title}</h3>
-                  <button onclick="event.stopPropagation(); togglePopular('${r.id}')" 
-                          class="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold border transition ${r.isPopular ? 'bg-amber-500/20 text-amber-400 border-amber-500/40' : 'bg-white/5 text-slate-400 border-white/10 hover:text-white'}">
-                    ${r.isPopular ? '🔥 Топ десерт' : 'Обычный'}
-                  </button>
-                </div>
-                <div class="text-xs text-slate-400 font-mono mt-0.5">
-                  🔥 ${r.ovenTemp || '175°C'} • ⏱ ${r.bakeMinutes || 50} мин
-                </div>
-              </div>
-            </div>
+      const coords = getCanvasCoords(e.clientX, e.clientY);
+      drawStartX = coords.x;
+      drawStartY = coords.y;
 
-            <div class="flex items-center gap-2">
-              <button onclick="event.stopPropagation(); openRecipeEditor('${r.id}')" 
-                      class="px-3.5 py-1.5 rounded-xl bg-white/10 hover:bg-amber-500 hover:text-black text-white text-xs font-bold transition flex items-center gap-1.5 border border-white/10 shadow-sm">
-                <i class="fa-solid fa-pen-to-square"></i> Редактировать
-              </button>
-              <button onclick="toggleCardAccordion('${r.id}', event)" 
-                      class="w-8 h-8 rounded-xl bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white flex items-center justify-center text-xs transition-transform duration-200 ${isExp ? 'rotate-180 text-amber-400' : ''}">
-                <i class="fa-solid fa-chevron-down"></i>
-              </button>
-            </div>
-          </div>
+      if (activeTool.startsWith('draw_')) {
+        isDrawing = true;
+        previewBox.style.display = 'block';
+        previewBox.style.left = `${drawStartX}px`;
+        previewBox.style.top = `${drawStartY}px`;
+        previewBox.style.width = '10px';
+        previewBox.style.height = '10px';
+        previewBox.style.borderRadius = (activeTool.includes('round') || activeTool === 'draw_stool') ? '9999px' : '6px';
+      } else {
+        selectedId = null;
+        updateSelectedHighlight();
+        updateInspector();
+      }
+    });
 
-          <!-- Раскрытый красивый текст рецепта -->
-          ${isExp ? `
-            <div class="px-5 pb-5 pt-1 border-t border-white/5 grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div class="p-4 rounded-2xl bg-black/40 border border-white/5 space-y-2">
-                <span class="text-[10px] font-mono font-bold text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
-                  <i class="fa-solid fa-scale-balanced"></i> Ингредиенты:
-                </span>
-                <div class="rich-content text-xs text-slate-300 leading-relaxed">${r.ingredients || '—'}</div>
-              </div>
+    window.addEventListener('pointermove', (e) => {
+      if (isPanning) {
+        panX = e.clientX - panStartX;
+        panY = e.clientY - panStartY;
+        applyTransform();
+        return;
+      }
 
-              <div class="p-4 rounded-2xl bg-black/40 border border-white/5 space-y-2">
-                <span class="text-[10px] font-mono font-bold text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
-                  <i class="fa-solid fa-list-check"></i> Инструкция:
-                </span>
-                <div class="rich-content text-xs text-slate-200 leading-relaxed">${r.instructions || '—'}</div>
-              </div>
-            </div>
-          ` : ''}
-        `;
-        container.appendChild(card);
+      if (draggingObj && draggingEl) {
+        const dx = (e.clientX - dragStartMouseX) / scale;
+        const dy = (e.clientY - dragStartMouseY) / scale;
+
+        draggingObj.x = Math.round((dragStartObjX + dx) / 5) * 5;
+        draggingObj.y = Math.round((dragStartObjY + dy) / 5) * 5;
+
+        draggingEl.style.left = `${draggingObj.x}px`;
+        draggingEl.style.top = `${draggingObj.y}px`;
+        return;
+      }
+
+      if (isDrawing) {
+        const coords = getCanvasCoords(e.clientX, e.clientY);
+        let left = Math.min(drawStartX, coords.x);
+        let top = Math.min(drawStartY, coords.y);
+        let width = Math.abs(coords.x - drawStartX);
+        let height = Math.abs(coords.y - drawStartY);
+
+        if (activeTool.includes('round') || activeTool === 'draw_stool') {
+          const side = Math.max(width, height);
+          width = side; height = side;
+        }
+
+        previewBox.style.left = `${left}px`;
+        previewBox.style.top = `${top}px`;
+        previewBox.style.width = `${Math.max(10, width)}px`;
+        previewBox.style.height = `${Math.max(10, height)}px`;
+      }
+    });
+
+    window.addEventListener('pointerup', () => {
+      if (isPanning) {
+        isPanning = false;
+        viewport.style.cursor = activeTool === 'pan' ? 'grab' : 'default';
+      }
+
+      if (draggingObj) {
+        draggingObj = null;
+        draggingEl = null;
+        triggerAutoSave();
+        updateInspector();
+      }
+
+      if (!isDrawing) return;
+      isDrawing = false;
+      previewBox.style.display = 'none';
+
+      let left = parseInt(previewBox.style.left, 10);
+      let top = parseInt(previewBox.style.top, 10);
+      let width = parseInt(previewBox.style.width, 10);
+      let height = parseInt(previewBox.style.height, 10);
+
+      // Для табуретки даже короткий одиночный клик создает аккуратный стульчик 32x32
+      if (activeTool === 'draw_stool' && (width < 15 || height < 15)) {
+        width = 32;
+        height = 32;
+      } else if (width < 10 && height < 10) {
+        return;
+      }
+
+      createDrawnObject(activeTool, left, top, width, height);
+    });
+
+    viewport.addEventListener('wheel', (e) => {
+      e.preventDefault();
+      window.adjustZoom(e.deltaY < 0 ? 0.08 : -0.08);
+    }, { passive: false });
+
+    function createDrawnObject(tool, x, y, w, h) {
+      if (tool === 'draw_table_rect' || tool === 'draw_table_round') {
+        const isRound = tool === 'draw_table_round';
+        const nextNum = tables.length > 0 ? Math.max(...tables.map(t => parseInt(t.id) || 0)) + 1 : 1;
+        const newTable = {
+          id: nextNum,
+          name: `${nextNum}`,
+          type: 'table',
+          shape: isRound ? 'round' : 'rect',
+          x, y, w, h,
+          rotation: 0,
+          guests: 2,
+          waiter: "",
+          items: []
+        };
+        tables.push(newTable);
+        selectedId = newTable.id;
+      } else {
+        const category = tool.replace('draw_', '');
+        const isRound = category === 'column' || category === 'stool';
+        const newObs = {
+          id: `obs_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
+          type: category,
+          shape: isRound ? 'round' : 'rect',
+          x, y, 
+          w: category === 'stool' ? Math.min(45, Math.max(25, w)) : w,
+          h: category === 'stool' ? Math.min(45, Math.max(25, h)) : h,
+          rotation: 0
+        };
+        obstacles.push(newObs);
+        selectedId = newObs.id;
+      }
+
+      renderElements();
+      updateInspector();
+      triggerAutoSave();
+      window.setTool('select');
+    }
+
+    function renderElements() {
+      elementsLayer.innerHTML = '';
+
+      obstacles.forEach(obs => {
+        const el = document.createElement('div');
+        el.id = `item_${obs.id}`;
+        el.className = `drawn-item ${selectedId === obs.id ? 'selected' : ''}`;
+        el.style.left = `${obs.x}px`;
+        el.style.top = `${obs.y}px`;
+        el.style.width = `${obs.w}px`;
+        el.style.height = `${obs.h}px`;
+        el.style.transform = `rotate(${obs.rotation || 0}deg)`;
+
+        if (obs.type === 'stool') {
+          el.className += " stool-item";
+          el.innerHTML = `<div class="stool-inner"></div>`;
+        } else if (obs.type === 'sofa') {
+          el.className += " sofa-item";
+          el.innerHTML = `<div class="sofa-back-strip"></div>`;
+        } else if (obs.type === 'plant') {
+          el.className += " plant-divider";
+        } else if (obs.type === 'window') {
+          el.className += " window-glass";
+        } else if (obs.type === 'wall') {
+          el.className += " bg-stone-700 border border-stone-600 rounded-sm";
+        } else if (obs.type === 'bar') {
+          el.className += " bg-amber-950 border-2 border-amber-700 rounded-2xl";
+        } else if (obs.type === 'column') {
+          el.className += " bg-stone-500 border-2 border-stone-400 rounded-full";
+        }
+
+        bindDragToElement(el, obs);
+        elementsLayer.appendChild(el);
+      });
+
+      tables.forEach(table => {
+        const el = document.createElement('div');
+        el.id = `item_${table.id}`;
+        const isRound = table.shape === 'round';
+        const shapeClass = isRound ? 'rounded-full' : 'rounded-2xl';
+
+        el.className = `drawn-item bg-amber-500/15 hover:bg-amber-500/25 border-2 border-amber-500 text-amber-300 ${shapeClass} flex items-center justify-center font-black text-sm shadow-xl ${selectedId === table.id ? 'selected' : ''}`;
+        el.style.left = `${table.x}px`;
+        el.style.top = `${table.y}px`;
+        el.style.width = `${table.w}px`;
+        el.style.height = `${table.h}px`;
+        el.style.transform = `rotate(${table.rotation || 0}deg)`;
+
+        el.innerHTML = `<span>${table.name || table.id}</span>`;
+
+        bindDragToElement(el, table);
+        elementsLayer.appendChild(el);
       });
     }
 
-    function openRecipeEditor(id) {
-      playTone(520, 0.08);
-      window.editingId = id;
-      const modal = document.getElementById('editorModal');
-      const delBtn = document.getElementById('btnDelete');
+    function bindDragToElement(el, itemData) {
+      el.onpointerdown = (e) => {
+        if (activeTool !== 'select') return;
+        e.stopPropagation();
 
-      if (id && window.recipes[id]) {
-        const r = window.recipes[id];
-        document.getElementById('ed-modal-title').innerText = 'Редактирование: ' + r.title;
-        document.getElementById('ed-emoji').value = r.emoji || '🍰';
-        document.getElementById('ed-emoji-preview').innerText = r.emoji || '🍰';
-        document.getElementById('ed-title').value = r.title || '';
-        document.getElementById('ed-ovenTemp').value = r.ovenTemp || '175°C';
-        document.getElementById('ed-bakeMinutes').value = r.bakeMinutes || 50;
-        document.getElementById('ed-isPopular').checked = !!r.isPopular;
-        
-        // Вставляем HTML напрямую в визуальные редакторы
-        document.getElementById('ed-ingredients').innerHTML = r.ingredients || '';
-        document.getElementById('ed-instructions').innerHTML = r.instructions || '';
-        delBtn.classList.remove('hidden');
-      } else {
-        document.getElementById('ed-modal-title').innerText = 'Новый десерт';
-        document.getElementById('ed-emoji').value = '✨';
-        document.getElementById('ed-emoji-preview').innerText = '✨';
-        document.getElementById('ed-title').value = '';
-        document.getElementById('ed-ovenTemp').value = '175°C';
-        document.getElementById('ed-bakeMinutes').value = 45;
-        document.getElementById('ed-isPopular').checked = false;
-        
-        document.getElementById('ed-ingredients').innerHTML = '';
-        document.getElementById('ed-instructions').innerHTML = '';
-        delBtn.classList.add('hidden');
-      }
+        selectedId = itemData.id;
+        updateSelectedHighlight();
+        updateInspector();
 
-      modal.classList.remove('opacity-0', 'pointer-events-none');
-    }
+        draggingObj = itemData;
+        draggingEl = el;
+        dragStartMouseX = e.clientX;
+        dragStartMouseY = e.clientY;
+        dragStartObjX = itemData.x;
+        dragStartObjY = itemData.y;
 
-    function closeRecipeEditor() {
-      playTone(450, 0.06);
-      document.getElementById('editorModal').classList.add('opacity-0', 'pointer-events-none');
-    }
-
-    function saveRecipe() {
-      const title = document.getElementById('ed-title').value.trim();
-      if (!title) {
-        showToast('Введите название десерта!', '⚠️');
-        return;
-      }
-
-      const id = window.editingId || ('rec_' + Date.now());
-      const data = {
-        id,
-        title,
-        emoji: document.getElementById('ed-emoji').value.trim() || '🧁',
-        ovenTemp: document.getElementById('ed-ovenTemp').value.trim() || '175°C',
-        bakeMinutes: parseInt(document.getElementById('ed-bakeMinutes').value) || 50,
-        isPopular: document.getElementById('ed-isPopular').checked,
-        // Забираем чистый HTML прямо из визуального редактора
-        ingredients: document.getElementById('ed-ingredients').innerHTML.trim(),
-        instructions: document.getElementById('ed-instructions').innerHTML.trim()
+        try { el.setPointerCapture(e.pointerId); } catch(err) {}
       };
 
-      window.recipes[id] = data;
-      saveAllToStorage();
-      closeRecipeEditor();
-      renderRecipes();
-      showToast('Рецепт сохранён!', '💾');
+      el.onpointermove = (e) => {
+        if (!draggingObj || draggingObj.id !== itemData.id) return;
+        e.stopPropagation();
+
+        const dx = (e.clientX - dragStartMouseX) / scale;
+        const dy = (e.clientY - dragStartMouseY) / scale;
+
+        itemData.x = Math.round((dragStartObjX + dx) / 5) * 5;
+        itemData.y = Math.round((dragStartObjY + dy) / 5) * 5;
+
+        el.style.left = `${itemData.x}px`;
+        el.style.top = `${itemData.y}px`;
+      };
+
+      el.onpointerup = (e) => {
+        if (draggingObj && draggingObj.id === itemData.id) {
+          draggingObj = null;
+          draggingEl = null;
+          try { el.releasePointerCapture(e.pointerId); } catch(err) {}
+          triggerAutoSave();
+          updateInspector();
+        }
+      };
+
+      el.onpointercancel = (e) => {
+        if (draggingObj && draggingObj.id === itemData.id) {
+          draggingObj = null;
+          draggingEl = null;
+          try { el.releasePointerCapture(e.pointerId); } catch(err) {}
+        }
+      };
     }
 
-    function deleteCurrentRecipe() {
-      const id = window.editingId;
-      if (!id) return;
-
-      delete window.recipes[id];
-      saveAllToStorage();
-      closeRecipeEditor();
-      renderRecipes();
-      showToast('Рецепт удалён', '🗑');
-    }
-
-    function saveAllToStorage() {
-      try {
-        localStorage.setItem('pastry_recipes_simple', JSON.stringify(window.recipes));
-      } catch (e) {}
-
-      if (window.fbDb && window.fbRef && window.fbSet) {
-        window.fbSet(window.fbRef(window.fbDb, 'pastry_handbook/recipes_simple'), window.recipes);
+    function updateSelectedHighlight() {
+      document.querySelectorAll('.drawn-item').forEach(el => {
+        el.classList.remove('selected');
+      });
+      if (selectedId) {
+        const active = document.getElementById(`item_${selectedId}`);
+        if (active) active.classList.add('selected');
       }
     }
 
-    window.addEventListener('DOMContentLoaded', initAdmin);
+    function updateInspector() {
+      const emptyBox = document.getElementById('inspEmpty');
+      const form = document.getElementById('inspForm');
+      const delBox = document.getElementById('inspDeleteBox');
+      const typeBadge = document.getElementById('inspTypeBadge');
+      const nameField = document.getElementById('tableNameField');
+
+      const obj = tables.find(t => t.id === selectedId) || obstacles.find(o => o.id === selectedId);
+
+      if (!obj) {
+        emptyBox.classList.remove('hidden');
+        form.classList.add('hidden');
+        delBox.classList.add('hidden');
+        typeBadge.textContent = '—';
+        return;
+      }
+
+      emptyBox.classList.add('hidden');
+      form.classList.remove('hidden');
+      delBox.classList.remove('hidden');
+
+      const isTable = obj.type === 'table';
+      typeBadge.textContent = (obj.type || 'СТОЛ').toUpperCase();
+
+      if (isTable) {
+        nameField.classList.remove('hidden');
+        document.getElementById('inspName').value = obj.name || obj.id;
+      } else {
+        nameField.classList.add('hidden');
+      }
+
+      document.getElementById('inspW').value = obj.w;
+      document.getElementById('inspH').value = obj.h;
+
+      const angle = obj.rotation || 0;
+      document.getElementById('inspRotationSlider').value = angle;
+      document.getElementById('inspAngleVal').textContent = `${angle}°`;
+    }
+
+    window.editProp = (prop, val) => {
+      const obj = tables.find(t => t.id === selectedId) || obstacles.find(o => o.id === selectedId);
+      if (!obj) return;
+
+      if (prop === 'name') {
+        obj.name = val;
+      } else if (prop === 'w') {
+        obj.w = Math.max(10, val || 10);
+        if (obj.shape === 'round') obj.h = obj.w;
+      } else if (prop === 'h') {
+        obj.h = Math.max(10, val || 10);
+        if (obj.shape === 'round') obj.w = obj.h;
+      }
+
+      const el = document.getElementById(`item_${selectedId}`);
+      if (el) {
+        el.style.width = `${obj.w}px`;
+        el.style.height = `${obj.h}px`;
+        if (obj.type === 'table') {
+          el.innerHTML = `<span>${obj.name || obj.id}</span>`;
+        }
+      }
+      triggerAutoSave();
+    };
+
+    window.editRotation = (deg) => {
+      const obj = tables.find(t => t.id === selectedId) || obstacles.find(o => o.id === selectedId);
+      if (!obj) return;
+      obj.rotation = deg;
+      document.getElementById('inspAngleVal').textContent = `${deg}°`;
+      
+      const el = document.getElementById(`item_${selectedId}`);
+      if (el) el.style.transform = `rotate(${deg}deg)`;
+      triggerAutoSave();
+    };
+
+    window.addRotation = (delta) => {
+      const obj = tables.find(t => t.id === selectedId) || obstacles.find(o => o.id === selectedId);
+      if (!obj) return;
+      let angle = (obj.rotation || 0) + delta;
+      if (angle >= 360) angle -= 360;
+      if (angle < 0) angle += 360;
+      obj.rotation = angle;
+      document.getElementById('inspRotationSlider').value = angle;
+      document.getElementById('inspAngleVal').textContent = `${angle}°`;
+      
+      const el = document.getElementById(`item_${selectedId}`);
+      if (el) el.style.transform = `rotate(${angle}deg)`;
+      triggerAutoSave();
+    };
+
+    window.deleteActiveObject = () => {
+      tables = tables.filter(t => t.id !== selectedId);
+      obstacles = obstacles.filter(o => o.id !== selectedId);
+      selectedId = null;
+      renderElements();
+      updateInspector();
+      triggerAutoSave();
+    };
+
+    window.clearEverything = () => {
+      if (!confirm('Очистить всю карту?')) return;
+      tables = [];
+      obstacles = [];
+      selectedId = null;
+      renderElements();
+      updateInspector();
+      triggerAutoSave();
+    };
+
+    window.downloadBackupJSON = () => {
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify({ tables, obstacles }, null, 2));
+      const downloadAnchor = document.createElement('a');
+      downloadAnchor.setAttribute("href", dataStr);
+      downloadAnchor.setAttribute("download", `coffeeman_hall_plan_${new Date().toISOString().slice(0,10)}.json`);
+      document.body.appendChild(downloadAnchor);
+      downloadAnchor.click();
+      downloadAnchor.remove();
+    };
+
+    window.importBackupJSON = (event) => {
+      const file = event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const parsed = JSON.parse(e.target.result);
+          if (parsed && (parsed.tables || parsed.obstacles)) {
+            tables = parsed.tables || [];
+            obstacles = parsed.obstacles || [];
+            renderElements();
+            triggerAutoSave();
+            alert("План успешно загружен из файла!");
+          }
+        } catch (err) {
+          alert("Ошибка чтения файла: неверный формат JSON");
+        }
+      };
+      reader.readAsText(file);
+    };
+
+    window.saveFloorplan = () => {
+      const cleanTables = tables.map(t => ({
+        id: Number(t.id) || 1,
+        name: String(t.name || t.id),
+        type: "table",
+        shape: t.shape || "round",
+        x: Number(t.x) || 0,
+        y: Number(t.y) || 0,
+        w: Number(t.w) || 80,
+        h: Number(t.h) || 80,
+        rotation: Number(t.rotation) || 0,
+        guests: Number(t.guests) || 2,
+        waiter: t.waiter || "",
+        items: Array.isArray(t.items) ? t.items : []
+      }));
+
+      const cleanObstacles = obstacles.map(o => ({
+        id: String(o.id),
+        type: o.type || "wall",
+        shape: o.shape || "rect",
+        x: Number(o.x) || 0,
+        y: Number(o.y) || 0,
+        w: Number(o.w) || 80,
+        h: Number(o.h) || 80,
+        rotation: Number(o.rotation) || 0
+      }));
+
+      triggerAutoSave();
+      saveTablesToCloud(cleanTables, cleanObstacles, "Конструктор");
+      alert("Карта зала сохранена локально и отправлена в облако Firebase!");
+    };
+
+    try {
+      const localData = localStorage.getItem('coffeeman_local_backup');
+      if (localData) {
+        const parsed = JSON.parse(localData);
+        if (parsed.tables && parsed.tables.length > 0) tables = parsed.tables;
+        if (parsed.obstacles && parsed.obstacles.length > 0) obstacles = parsed.obstacles;
+        renderElements();
+      }
+    } catch(e) {}
+
+    let isInitialLoaded = false;
+
+    initFirebaseAuth(() => {
+      subscribeToCloudTables((remoteTables, remoteObstacles) => {
+        if (!isInitialLoaded) {
+          isInitialLoaded = true;
+
+          if (remoteTables && remoteTables.length > 0) {
+            tables = remoteTables.map(t => ({
+              ...t,
+              w: Number(t.w) || 80,
+              h: Number(t.h) || 80,
+              rotation: Number(t.rotation) || 0,
+              x: Number(t.x) || 100,
+              y: Number(t.y) || 100
+            }));
+          }
+
+          if (remoteObstacles && remoteObstacles.length > 0) {
+            obstacles = remoteObstacles.map(o => ({
+              ...o,
+              w: Number(o.w) || 80,
+              h: Number(o.h) || 80,
+              rotation: Number(o.rotation) || 0,
+              x: Number(o.x) || 100,
+              y: Number(o.y) || 100
+            }));
+          }
+
+          renderElements();
+          applyTransform();
+        }
+      });
+    });
   </script>
 </body>
 </html>

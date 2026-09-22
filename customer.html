@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>COFFEEMAN • Экран покупателя</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="bg-stone-900 text-stone-100 flex flex-col justify-between p-4 sm:p-8">
+
+  <!-- Top Bar -->
+  <header class="flex items-center justify-between border-b border-stone-800 pb-4">
+    <div class="flex items-center gap-3">
+      <div class="w-12 h-12 rounded-2xl bg-amber-500 text-amber-950 font-black flex items-center justify-center text-2xl shadow-lg">
+        ☕
+      </div>
+      <div>
+        <h1 class="text-xl sm:text-2xl font-black tracking-wide text-white">COFFEEMAN</h1>
+        <p class="text-xs text-amber-400 font-medium">Ваш заказ в реальном времени</p>
+      </div>
+    </div>
+
+    <!-- Table Selector & Live Status -->
+    <div class="flex items-center gap-3">
+      <div class="flex items-center gap-2 bg-stone-800/80 px-3 py-1.5 rounded-xl border border-stone-700">
+        <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
+        <span id="syncStatusText" class="text-xs font-mono text-stone-300">В сети</span>
+      </div>
+
+      <select id="tableSelector" class="bg-stone-800 text-white font-bold text-sm px-3 py-2 rounded-xl border border-stone-700 outline-none focus:ring-2 focus:ring-amber-500">
+        <!-- 11 столов заполняются скриптом -->
+      </select>
+    </div>
+  </header>
+
+  <!-- Main Content Area -->
+  <main class="flex-1 flex flex-col justify-center my-6 min-h-0">
+    
+    <!-- Empty State Banner -->
+    <div id="customerEmptyState" class="flex flex-col items-center justify-center text-center py-12">
+      <div class="w-20 h-20 bg-stone-800/60 rounded-3xl flex items-center justify-center text-4xl mb-4 border border-stone-700/50 shadow-inner">
+        ✨
+      </div>
+      <h2 class="text-2xl sm:text-3xl font-black text-white">Ожидаем ваш заказ</h2>
+      <p class="text-stone-400 text-sm sm:text-base mt-1 max-w-sm">Официант формирует позиции стола. Они сразу появятся на этом экране.</p>
+    </div>
+
+    <!-- Active Receipt Container -->
+    <div id="customerActiveOrder" class="hidden flex-1 flex flex-col min-h-0 bg-stone-800/40 border border-stone-800 rounded-3xl p-4 sm:p-6 shadow-2xl">
+      <div class="flex items-center justify-between pb-3 border-b border-stone-700/60 mb-3">
+        <span class="text-xs uppercase font-extrabold tracking-wider text-amber-400">Наименование</span>
+        <span class="text-xs uppercase font-extrabold tracking-wider text-amber-400">Сумма</span>
+      </div>
+
+      <!-- Items List -->
+      <div id="customerItemsList" class="flex-1 overflow-y-auto scroll-touch space-y-3 pr-2 font-sans">
+        <!-- Генерируется из Firebase -->
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Footer Summary -->
+  <footer id="customerFooter" class="hidden bg-stone-800 border border-stone-700 rounded-3xl p-4 sm:p-6 shadow-2xl flex items-center justify-between">
+    <div>
+      <div class="text-xs uppercase font-bold text-stone-400">Итого к оплате:</div>
+      <div id="customerTotalQty" class="text-xs text-stone-400 mt-0.5">0 позиций</div>
+    </div>
+    <div id="customerTotalPrice" class="font-mono font-black text-3xl sm:text-4xl text-amber-400">
+      0 ₽
+    </div>
+  </footer>
+
+  <!-- Script logic -->
+  <script type="module">
+    import { initFirebaseAuth, subscribeToCloudTables } from "./firebase.js";
+    import { calcTableSum, TABLES_INITIAL } from "./menu.js";
+
+    let currentTableId = 1;
+    let tablesData = TABLES_INITIAL;
+
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("table")) {
+      currentTableId = parseInt(params.get("table"), 10) || 1;
+    }
+
+    const tableSelector = document.getElementById("tableSelector");
+    for (let i = 1; i <= 11; i++) {
+      const opt = document.createElement("option");
+      opt.value = i;
+      opt.textContent = `Стол ${i}`;
+      if (i === currentTableId) opt.selected = true;
+      tableSelector.appendChild(opt);
+    }
+
+    tableSelector.addEventListener("change", (e) => {
+      currentTableId = parseInt(e.target.value, 10);
+      renderCustomerScreen();
+    });
+
+    function renderCustomerScreen() {
+      const table = tablesData.find(t => t.id === currentTableId);
+      const emptyState = document.getElementById("customerEmptyState");
+      const activeOrder = document.getElementById("customerActiveOrder");
+      const footer = document.getElementById("customerFooter");
+      const itemsList = document.getElementById("customerItemsList");
+      const totalQtyEl = document.getElementById("customerTotalQty");
+      const totalPriceEl = document.getElementById("customerTotalPrice");
+
+      const items = (table && Array.isArray(table.items)) ? table.items : [];
+
+      if (items.length === 0) {
+        emptyState.classList.remove("hidden");
+        activeOrder.classList.add("hidden");
+        footer.classList.add("hidden");
+        return;
+      }
+
+      emptyState.classList.add("hidden");
+      activeOrder.classList.remove("hidden");
+      footer.classList.remove("hidden");
+
+      itemsList.innerHTML = "";
+      let totalQty = 0;
+
+      items.forEach((item) => {
+        totalQty += item.qty;
+        const lineTotal = item.price * item.qty;
+        const row = document.createElement("div");
+        row.className = "flex items-start justify-between py-2 border-b border-stone-800/60 last:border-0";
+
+        const modsHtml = item.modifiers && item.modifiers.length > 0
+          ? `<div class="text-[11px] text-amber-300 mt-0.5">${item.modifiers.join(", ")}</div>`
+          : "";
+
+        const statusTag = item.served 
+          ? `<span class="text-[10px] bg-emerald-950 text-emerald-300 border border-emerald-800 px-2 py-0.5 rounded-md font-bold">✓ Подано</span>`
+          : item.sentToKitchen 
+            ? `<span class="text-[10px] bg-amber-950 text-amber-300 border border-amber-800 px-2 py-0.5 rounded-md font-bold">Готовится</span>`
+            : `<span class="text-[10px] bg-stone-700 text-stone-300 px-2 py-0.5 rounded-md font-bold">В чеке</span>`;
+
+        row.innerHTML = `
+          <div class="pr-2">
+            <div class="flex items-center gap-2">
+              <span class="text-base sm:text-lg font-bold text-white">${item.name}</span>
+              ${statusTag}
+            </div>
+            <div class="text-xs text-stone-400 mt-0.5 font-mono">${item.qty} шт. × ${item.price} ₽</div>
+            ${modsHtml}
+          </div>
+          <div class="text-right shrink-0">
+            <span class="font-mono font-black text-base sm:text-lg text-amber-400">${lineTotal} ₽</span>
+          </div>
+        `;
+        itemsList.appendChild(row);
+      });
+
+      totalQtyEl.textContent = `${totalQty} позиций`;
+      totalPriceEl.textContent = `${calcTableSum(table)} ₽`;
+    }
+
+    // Инициализация облака
+    initFirebaseAuth(() => {
+      subscribeToCloudTables((remoteTables) => {
+        tablesData = remoteTables;
+        renderCustomerScreen();
+      });
+    });
+  </script>
+</body>
+</html>
