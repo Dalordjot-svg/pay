@@ -9,18 +9,41 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700;800&display=swap" rel="stylesheet">
   <style>
+    html, body {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      width: 100vw;
+      height: 100vh;
+      height: 100dvh;
+      overflow: hidden;
+      overscroll-behavior: none;
+      -webkit-overscroll-behavior: none;
+    }
     * {
       -webkit-tap-highlight-color: transparent;
       touch-action: manipulation;
+      box-sizing: border-box;
     }
     body {
       font-family: 'Inter', sans-serif;
+      user-select: none;
+      -webkit-user-select: none;
     }
     .font-mono {
       font-family: 'JetBrains Mono', monospace;
     }
     .pb-safe {
-      padding-bottom: max(env(safe-area-inset-bottom, 16px), 16px);
+      padding-bottom: max(env(safe-area-inset-bottom, 12px), 12px);
+    }
+    .pt-safe {
+      padding-top: max(env(safe-area-inset-top, 0px), 0px);
+    }
+    .scroll-touch {
+      -webkit-overflow-scrolling: touch;
+      overscroll-behavior-y: contain;
     }
     ::-webkit-scrollbar {
       width: 4px;
@@ -59,30 +82,30 @@
     }
   </style>
 </head>
-<body class="bg-stone-100 text-stone-900 min-h-screen flex flex-col antialiased select-none overflow-x-hidden">
+<body class="bg-stone-100 text-stone-900 w-full h-[100dvh] flex flex-col antialiased overflow-hidden select-none fixed inset-0">
 
-  <header class="bg-amber-950 text-stone-100 sticky top-0 z-40 shadow-md border-b border-amber-900/60">
-    <div class="max-w-6xl mx-auto px-3 sm:px-4 py-2.5 flex items-center justify-between gap-2">
+  <header class="bg-amber-950 text-stone-100 shrink-0 z-40 shadow-md border-b border-amber-900/60 pt-safe">
+    <div class="max-w-6xl mx-auto px-3 sm:px-4 py-2 sm:py-2.5 flex items-center justify-between gap-2">
       
-      <button onclick="goToTablesView()" class="flex items-center gap-2.5 text-left active:opacity-80 transition">
-        <div class="w-9 h-9 rounded-xl bg-amber-500 text-amber-950 font-black flex items-center justify-center text-lg shadow-sm">
+      <button onclick="goToTablesView()" class="flex items-center gap-2.5 text-left active:opacity-80 transition shrink-0">
+        <div class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-amber-500 text-amber-950 font-black flex items-center justify-center text-base sm:text-lg shadow-sm">
           ☕
         </div>
         <div>
           <div class="flex items-center gap-1.5">
-            <span class="font-extrabold tracking-wide text-sm sm:text-base">COFFEEMAN</span>
-            <span class="text-[10px] bg-amber-800 text-amber-200 px-1.5 py-0.2 rounded font-bold">ОФИЦИАНТ</span>
+            <span class="font-extrabold tracking-wide text-xs sm:text-base">COFFEEMAN</span>
+            <span class="text-[9px] sm:text-[10px] bg-amber-800 text-amber-200 px-1.5 py-0.2 rounded font-bold">ОФИЦИАНТ</span>
           </div>
-          <p class="text-[11px] text-amber-200/80">Заказ & Персоны</p>
+          <p class="text-[10px] sm:text-[11px] text-amber-200/80 leading-none">Заказ & Персоны</p>
         </div>
       </button>
 
-      <div class="flex items-center gap-2">
+      <div class="flex items-center gap-1.5 sm:gap-2 shrink-0">
         <!-- Active Waiter Badge & Switcher -->
-        <button onclick="openWelcomeModal()" class="px-2.5 py-1.5 rounded-xl bg-amber-900/90 hover:bg-amber-800 border border-amber-700/70 text-xs font-bold text-amber-100 flex items-center gap-1.5 transition active:scale-95 shadow-2xs">
-          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
-          <span class="text-[11px] text-amber-300 hidden sm:inline">Официант:</span>
-          <span id="headerWaiterName" class="font-bold text-white">Войти</span>
+        <button onclick="openWelcomeModal()" class="px-2 sm:px-2.5 py-1.5 rounded-xl bg-amber-900/90 hover:bg-amber-800 border border-amber-700/70 text-xs font-bold text-amber-100 flex items-center gap-1.5 transition active:scale-95 shadow-2xs">
+          <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+          <span class="text-[11px] text-amber-300 hidden md:inline">Официант:</span>
+          <span id="headerWaiterName" class="font-bold text-white max-w-[80px] sm:max-w-none truncate">Войти</span>
           <span class="text-xs">🔄</span>
         </button>
 
@@ -92,9 +115,9 @@
           <span id="syncText">Облако</span>
         </div>
 
-        <button id="headerTableBtn" onclick="toggleViewFromHeader()" class="px-3.5 py-2 rounded-xl bg-amber-900/80 hover:bg-amber-800 border border-amber-700/60 text-xs font-bold text-amber-200 flex items-center gap-1.5 transition active:scale-95">
+        <button id="headerTableBtn" onclick="toggleViewFromHeader()" class="px-2.5 sm:px-3.5 py-1.5 sm:py-2 rounded-xl bg-amber-900/80 hover:bg-amber-800 border border-amber-700/60 text-xs font-bold text-amber-200 flex items-center gap-1.5 transition active:scale-95">
           <span id="headerTableIcon">🪑</span>
-          <span id="headerTableLabel">К столам</span>
+          <span id="headerTableLabel" class="hidden xs:inline">К столам</span>
           <span id="headerTableBadge" class="hidden font-mono px-1.5 py-0.5 rounded-md bg-amber-400 text-amber-950 text-[11px] font-black">№1</span>
         </button>
       </div>
@@ -102,31 +125,31 @@
     </div>
   </header>
 
-  <main class="flex-1 max-w-6xl w-full mx-auto p-2.5 sm:p-4 flex flex-col min-h-0">
+  <main class="flex-1 max-w-6xl w-full mx-auto p-2 sm:p-3 md:p-4 flex flex-col min-h-0 overflow-hidden">
 
-    <section id="view-tables" class="flex-1 flex flex-col space-y-3">
+    <section id="view-tables" class="flex-1 flex flex-col min-h-0 space-y-2 sm:space-y-3 overflow-hidden">
       
-      <div class="bg-white p-3 rounded-2xl border border-stone-200 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
-        <div class="flex items-center gap-1.5 overflow-x-auto scrollbar-hide text-xs font-bold">
-          <button onclick="filterZone('all')" id="zone-btn-all" class="zone-btn px-3.5 py-2 rounded-xl bg-amber-950 text-white shadow-xs">
+      <div class="bg-white p-2.5 sm:p-3 rounded-2xl border border-stone-200 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-2 shrink-0">
+        <div class="flex items-center gap-1.5 overflow-x-auto scrollbar-hide text-xs font-bold shrink-0">
+          <button onclick="filterZone('all')" id="zone-btn-all" class="zone-btn px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-xl bg-amber-950 text-white shadow-xs">
             Все столы (16)
           </button>
-          <button onclick="filterZone('hall')" id="zone-btn-hall" class="zone-btn px-3.5 py-2 rounded-xl bg-stone-100 text-stone-700 hover:bg-stone-200">
+          <button onclick="filterZone('hall')" id="zone-btn-hall" class="zone-btn px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-xl bg-stone-100 text-stone-700 hover:bg-stone-200">
             Зал (11)
           </button>
-          <button onclick="filterZone('terrace')" id="zone-btn-terrace" class="zone-btn px-3.5 py-2 rounded-xl bg-stone-100 text-stone-700 hover:bg-stone-200">
+          <button onclick="filterZone('terrace')" id="zone-btn-terrace" class="zone-btn px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-xl bg-stone-100 text-stone-700 hover:bg-stone-200">
             Терраса (5)
           </button>
         </div>
 
-        <div class="flex items-center gap-3 text-xs font-semibold text-stone-500">
+        <div class="flex items-center gap-2.5 sm:gap-3 text-[11px] sm:text-xs font-semibold text-stone-500 overflow-x-auto scrollbar-hide shrink-0">
           <div class="flex items-center gap-1.5">
             <span class="w-2.5 h-2.5 rounded-full bg-stone-300"></span>
             <span>Свободен</span>
           </div>
           <div class="flex items-center gap-1.5">
             <span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
-            <span>С заказом</span>
+            <span>Заказ</span>
           </div>
           <div class="flex items-center gap-1.5">
             <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
@@ -135,64 +158,64 @@
         </div>
       </div>
 
-      <div id="tablesGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5 sm:gap-3.5 overflow-y-auto pr-0.5">
+      <div id="tablesGrid" class="flex-1 overflow-y-auto scroll-touch pr-0.5 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 sm:gap-3 pb-safe">
         <!-- Rendered by JS -->
       </div>
     </section>
 
-    <section id="view-order" class="hidden flex-1 flex flex-col min-h-0 space-y-2.5">
+    <section id="view-order" class="hidden flex-1 flex flex-col min-h-0 space-y-2 overflow-hidden">
 
       <!-- Order Top Control Bar -->
-      <div class="bg-white p-2.5 sm:p-3 rounded-2xl border border-stone-200 shadow-xs flex items-center justify-between gap-2">
-        <div class="flex items-center gap-2">
-          <button onclick="goToTablesView()" class="px-3.5 py-2 bg-stone-100 hover:bg-stone-200 active:bg-stone-300 text-stone-800 rounded-xl text-xs sm:text-sm font-bold flex items-center gap-1.5 active:scale-95 transition">
-            <span>←</span> <span>Столы</span>
+      <div class="bg-white p-2 sm:p-2.5 rounded-2xl border border-stone-200 shadow-xs flex items-center justify-between gap-1.5 shrink-0">
+        <div class="flex items-center gap-1.5 sm:gap-2 min-w-0">
+          <button onclick="goToTablesView()" class="px-2.5 sm:px-3 py-1.5 sm:py-2 bg-stone-100 hover:bg-stone-200 active:bg-stone-300 text-stone-800 rounded-xl text-xs sm:text-sm font-bold flex items-center gap-1 active:scale-95 transition shrink-0">
+            <span>←</span> <span class="hidden xs:inline">Столы</span>
           </button>
-          <div>
-            <div class="flex items-center gap-1.5">
-              <h2 id="activeOrderTitle" class="font-extrabold text-sm sm:text-base text-stone-900 leading-tight">Стол 1</h2>
-              <span id="activeOrderWaiterTag" class="text-[10px] px-2 py-0.5 rounded-md bg-amber-100 text-amber-900 font-bold">Официант: —</span>
+          <div class="min-w-0">
+            <div class="flex items-center gap-1 sm:gap-1.5">
+              <h2 id="activeOrderTitle" class="font-extrabold text-xs sm:text-base text-stone-900 leading-tight truncate">Стол 1</h2>
+              <span id="activeOrderWaiterTag" class="text-[9px] sm:text-[10px] px-1.5 sm:px-2 py-0.5 rounded-md bg-amber-100 text-amber-900 font-bold truncate">Официант: —</span>
             </div>
-            <p id="activeOrderSubtitle" class="text-[11px] text-stone-500">2 персоны</p>
+            <p id="activeOrderSubtitle" class="text-[10px] sm:text-[11px] text-stone-500 leading-none">2 персоны</p>
           </div>
         </div>
 
-        <div class="flex items-center gap-2">
+        <div class="flex items-center gap-1 sm:gap-2 shrink-0">
           <!-- Guests Count Button -->
-          <button onclick="openGuestsModalForCurrentTable()" class="px-3 py-2 bg-amber-50 border border-amber-300 hover:bg-amber-100 text-amber-950 rounded-xl text-xs sm:text-sm font-bold flex items-center gap-1.5 active:scale-95 transition">
+          <button onclick="openGuestsModalForCurrentTable()" class="px-2 sm:px-3 py-1.5 sm:py-2 bg-amber-50 border border-amber-300 hover:bg-amber-100 text-amber-950 rounded-xl text-xs sm:text-sm font-bold flex items-center gap-1 active:scale-95 transition">
             <span>👥</span> <span id="btnGuestsDisplay">2 чел.</span>
           </button>
 
           <!-- Cashier / Bill Button -->
-          <button onclick="openCashierCheckoutModal()" title="Счёт для кассы" class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white rounded-xl text-xs sm:text-sm font-bold flex items-center gap-1.5 active:scale-95 transition shadow-xs">
+          <button onclick="openCashierCheckoutModal()" title="Счёт для кассы" class="px-2.5 sm:px-3.5 py-1.5 sm:py-2 bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white rounded-xl text-xs sm:text-sm font-bold flex items-center gap-1 active:scale-95 transition shadow-xs">
             <span>🧾</span> <span class="hidden sm:inline">Гости уходят</span><span class="sm:hidden">Счёт</span>
           </button>
 
           <!-- Clear Order Button -->
-          <button onclick="clearCurrentOrder()" title="Очистить стол" class="p-2 text-stone-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl text-base font-bold transition active:scale-95">
+          <button onclick="clearCurrentOrder()" title="Очистить стол" class="p-1.5 sm:p-2 text-stone-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl text-sm sm:text-base font-bold transition active:scale-95">
             🗑️
           </button>
         </div>
       </div>
 
       <!-- Mobile Tabs Switcher (Menu / Cart) -->
-      <div class="lg:hidden flex items-center bg-stone-200/70 p-1.5 rounded-2xl text-xs sm:text-sm font-bold gap-1">
-        <button id="mobileTabMenuBtn" onclick="switchOrderMobileTab('menu')" class="flex-1 py-2.5 rounded-xl bg-white text-stone-900 shadow-xs flex items-center justify-center gap-1.5 transition">
+      <div class="lg:hidden flex items-center bg-stone-200/70 p-1 rounded-xl text-xs font-bold gap-1 shrink-0">
+        <button id="mobileTabMenuBtn" onclick="switchOrderMobileTab('menu')" class="flex-1 py-2 rounded-lg bg-white text-stone-900 shadow-xs flex items-center justify-center gap-1.5 transition">
           <span>🍽️</span> <span>Меню блюд</span>
         </button>
-        <button id="mobileTabCartBtn" onclick="switchOrderMobileTab('cart')" class="flex-1 py-2.5 rounded-xl text-stone-600 hover:text-stone-900 flex items-center justify-center gap-1.5 transition">
+        <button id="mobileTabCartBtn" onclick="switchOrderMobileTab('cart')" class="flex-1 py-2 rounded-lg text-stone-600 hover:text-stone-900 flex items-center justify-center gap-1.5 transition">
           <span>🧾</span> <span>Чек стола</span>
-          <span id="mobileCartCountBadge" class="bg-amber-600 text-white text-[11px] px-2 py-0.5 rounded-full font-mono font-bold">0</span>
+          <span id="mobileCartCountBadge" class="bg-amber-600 text-white text-[10px] px-1.5 py-0.2 rounded-full font-mono font-bold">0</span>
         </button>
       </div>
 
-      <div class="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-3 min-h-0">
+      <div class="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-2 sm:gap-3 min-h-0 overflow-hidden">
         
         <!-- LEFT: MENU DISHES & SEARCH -->
-        <div id="orderMenuColumn" class="lg:col-span-7 xl:col-span-8 flex flex-col bg-white rounded-2xl border border-stone-200 shadow-xs p-2.5 sm:p-3 space-y-2.5 min-h-0">
+        <div id="orderMenuColumn" class="lg:col-span-7 xl:col-span-8 flex flex-col bg-white rounded-2xl border border-stone-200 shadow-xs p-2 sm:p-2.5 min-h-0 overflow-hidden">
           
           <!-- Fast Search & Custom Item -->
-          <div class="flex items-center gap-2">
+          <div class="flex items-center gap-1.5 shrink-0 pb-1.5">
             <div class="relative flex-1">
               <input type="text" id="searchInput" oninput="onSearchChange()" placeholder="Поиск блюда, напитка или состава..."
                      class="w-full bg-stone-50 border border-stone-200 rounded-xl py-2 pl-8 pr-7 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-amber-600 focus:bg-white transition">
@@ -200,13 +223,13 @@
               <button id="clearSearchBtn" onclick="clearSearchInput()" class="hidden absolute right-2.5 top-2 text-stone-400 hover:text-stone-700 font-bold text-xs bg-stone-200 w-4 h-4 rounded-full flex items-center justify-center">✕</button>
             </div>
             
-            <button onclick="openCustomDishModal()" class="px-3 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-bold flex items-center gap-1 shadow-xs active:scale-95 transition shrink-0">
+            <button onclick="openCustomDishModal()" class="px-2.5 sm:px-3 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-bold flex items-center gap-1 shadow-xs active:scale-95 transition shrink-0">
               <span>✨</span> <span class="hidden sm:inline">+ Своя позиция</span><span class="sm:hidden">+ Своя</span>
             </button>
           </div>
 
           <!-- Category Pills -->
-          <div class="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-hide text-xs font-bold shrink-0">
+          <div class="flex items-center gap-1.5 overflow-x-auto pb-2 scrollbar-hide text-xs font-bold shrink-0">
             <button onclick="selectCategory('all')" class="cat-pill px-3 py-1.5 rounded-xl bg-stone-100 text-stone-700 hover:bg-stone-200 shrink-0" data-cat="all">⚡ Все</button>
             <button onclick="selectCategory('breakfast')" class="cat-pill px-3 py-1.5 rounded-xl bg-amber-950 text-white shadow-xs shrink-0" data-cat="breakfast">🍳 Завтраки</button>
             <button onclick="selectCategory('salads')" class="cat-pill px-3 py-1.5 rounded-xl bg-stone-100 text-stone-700 hover:bg-stone-200 shrink-0" data-cat="salads">🥗 Салаты</button>
@@ -224,55 +247,55 @@
             <button onclick="selectCategory('extras')" class="cat-pill px-3 py-1.5 rounded-xl bg-stone-100 text-stone-700 hover:bg-stone-200 shrink-0" data-cat="extras">🥛 Сиропы & Молоко</button>
           </div>
 
-          <div id="dishesList" class="flex-1 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-2.5 overflow-y-auto pr-0.5 pb-2">
+          <div id="dishesList" class="flex-1 overflow-y-auto scroll-touch pr-0.5 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-2 pb-safe">
             <!-- Rendered by JS -->
           </div>
         </div>
 
-        <div id="orderCartColumn" class="hidden lg:flex lg:col-span-5 xl:col-span-4 flex-col bg-white rounded-2xl border border-stone-200 shadow-xs p-3 space-y-2 min-h-0">
+        <div id="orderCartColumn" class="hidden lg:flex lg:col-span-5 xl:col-span-4 flex-col bg-white rounded-2xl border border-stone-200 shadow-xs p-2.5 sm:p-3 min-h-0 overflow-hidden">
           
-          <div class="flex items-center justify-between pb-2 border-b border-stone-200">
+          <div class="flex items-center justify-between pb-2 border-b border-stone-200 shrink-0">
             <div class="flex items-center gap-1.5">
-              <span class="font-extrabold text-sm text-stone-900">Чек стола</span>
+              <span class="font-extrabold text-xs sm:text-sm text-stone-900">Чек стола</span>
               <span id="ticketKitchenStatusBadge" class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-stone-100 text-stone-600">Пусто</span>
             </div>
-            <span id="ticketPersonsBadge" class="text-xs font-bold text-amber-900 bg-amber-100 px-2.5 py-0.5 rounded-lg">2 персоны</span>
+            <span id="ticketPersonsBadge" class="text-xs font-bold text-amber-900 bg-amber-100 px-2 py-0.5 rounded-lg">2 персоны</span>
           </div>
 
           <!-- Group Filter Tabs for Ticket (По порядку / По курсам) -->
-          <div class="flex items-center gap-1 bg-stone-100 p-1 rounded-xl text-[11px] font-bold text-stone-600">
+          <div class="flex items-center gap-1 bg-stone-100 p-1 rounded-xl text-[11px] font-bold text-stone-600 shrink-0 my-1">
             <button onclick="setTicketGrouping('all')" id="ticketGroupBtn-all" class="flex-1 py-1 rounded-lg bg-white text-stone-900 shadow-2xs transition">По порядку</button>
             <button onclick="setTicketGrouping('courses')" id="ticketGroupBtn-courses" class="flex-1 py-1 rounded-lg text-stone-500 hover:text-stone-900 transition">По курсам</button>
           </div>
 
           <!-- Items list container -->
-          <div id="ticketItemsContainer" class="flex-1 overflow-y-auto space-y-2 pr-0.5 min-h-[160px]">
+          <div id="ticketItemsContainer" class="flex-1 overflow-y-auto scroll-touch space-y-1.5 pr-0.5 min-h-0">
             <!-- Rendered by JS -->
           </div>
 
           <!-- Summary footer -->
-          <div class="pt-2 border-t border-stone-200 space-y-2 shrink-0">
+          <div class="pt-2 border-t border-stone-200 space-y-1.5 shrink-0 pb-safe">
             <div class="flex items-center justify-between text-xs text-stone-500">
               <span>Всего позиций:</span>
               <span id="ticketTotalQty" class="font-mono font-bold text-stone-800">0 шт.</span>
             </div>
 
-            <div class="flex items-baseline justify-between bg-amber-50 p-2.5 rounded-xl border border-amber-200">
-              <span class="text-xs font-bold uppercase tracking-wide text-amber-950">Сумма заказа:</span>
-              <span id="ticketTotalPrice" class="text-xl sm:text-2xl font-black font-mono text-amber-950">0 ₽</span>
+            <div class="flex items-baseline justify-between bg-amber-50 p-2 sm:p-2.5 rounded-xl border border-amber-200">
+              <span class="text-[11px] sm:text-xs font-bold uppercase tracking-wide text-amber-950">Сумма заказа:</span>
+              <span id="ticketTotalPrice" class="text-lg sm:text-xl font-black font-mono text-amber-950">0 ₽</span>
             </div>
 
             <!-- Action buttons -->
-            <div class="space-y-2">
-              <button onclick="openCashierCheckoutModal()" class="w-full py-2.5 px-3 bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-700 hover:to-teal-800 text-white font-bold rounded-xl text-xs sm:text-sm flex items-center justify-center gap-2 shadow-sm transition btn-press">
+            <div class="space-y-1.5">
+              <button onclick="openCashierCheckoutModal()" class="w-full py-2 sm:py-2.5 px-3 bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-700 hover:to-teal-800 text-white font-bold rounded-xl text-xs sm:text-sm flex items-center justify-center gap-1.5 shadow-sm transition btn-press">
                 <span>🧾</span> <span>Гости уходят (Счёт для кассы)</span>
               </button>
 
-              <div class="grid grid-cols-2 gap-2">
-                <button id="sendToKitchenBtn" onclick="sendNewItemsToKitchen()" class="py-2.5 px-2 bg-amber-700 hover:bg-amber-800 text-white font-bold rounded-xl text-xs flex items-center justify-center gap-1.5 shadow-xs transition btn-press">
+              <div class="grid grid-cols-2 gap-1.5">
+                <button id="sendToKitchenBtn" onclick="sendNewItemsToKitchen()" class="py-2 sm:py-2.5 px-2 bg-amber-700 hover:bg-amber-800 text-white font-bold rounded-xl text-xs flex items-center justify-center gap-1 shadow-xs transition btn-press">
                   <span>🚀</span> <span>В цех</span>
                 </button>
-                <button onclick="goToTablesView()" class="py-2.5 px-2 bg-amber-950 hover:bg-stone-900 text-white font-bold rounded-xl text-xs flex items-center justify-center gap-1.5 shadow-xs transition btn-press">
+                <button onclick="goToTablesView()" class="py-2 sm:py-2.5 px-2 bg-amber-950 hover:bg-stone-900 text-white font-bold rounded-xl text-xs flex items-center justify-center gap-1 shadow-xs transition btn-press">
                   <span>✓</span> <span>К столам</span>
                 </button>
               </div>
@@ -283,7 +306,7 @@
       </div>
 
       <!-- Mobile Floating Cart Bar -->
-      <div id="mobileCartFloatingBtn" onclick="switchOrderMobileTab('cart')" class="lg:hidden hidden fixed bottom-4 left-3 right-3 bg-amber-950 text-white p-3 rounded-2xl shadow-xl z-30 flex items-center justify-between border border-amber-700/50 cursor-pointer active:scale-98 transition">
+      <div id="mobileCartFloatingBtn" onclick="switchOrderMobileTab('cart')" class="lg:hidden hidden fixed bottom-3 left-3 right-3 bg-amber-950 text-white p-2.5 sm:p-3 rounded-2xl shadow-2xl z-30 flex items-center justify-between border border-amber-700/50 cursor-pointer active:scale-98 transition">
         <div class="flex items-center gap-2">
           <div class="w-8 h-8 rounded-xl bg-amber-500 text-amber-950 flex items-center justify-center font-bold text-sm">🧾</div>
           <div>
@@ -717,22 +740,22 @@
     ];
 
     const TABLES_INITIAL = [
-      { id: 1, name: "Стол 1", zone: "hall", guests: 2, waiter: "", items: [] },
-      { id: 2, name: "Стол 2", zone: "hall", guests: 2, waiter: "", items: [] },
-      { id: 3, name: "Стол 3", zone: "hall", guests: 4, waiter: "", items: [] },
-      { id: 4, name: "Стол 4", zone: "hall", guests: 4, waiter: "", items: [] },
-      { id: 5, name: "Стол 5", zone: "hall", guests: 4, waiter: "", items: [] },
-      { id: 6, name: "Стол 6", zone: "hall", guests: 4, waiter: "", items: [] },
-      { id: 7, name: "Стол 7", zone: "hall", guests: 6, waiter: "", items: [] },
-      { id: 8, name: "Стол 8", zone: "hall", guests: 6, waiter: "", items: [] },
-      { id: 9, name: "Стол 9", zone: "hall", guests: 2, waiter: "", items: [] },
-      { id: 10, name: "Стол 10", zone: "hall", guests: 4, waiter: "", items: [] },
-      { id: 11, name: "Стол 11 (VIP)", zone: "hall", guests: 8, waiter: "", items: [] },
-      { id: 12, name: "Терраса 1", zone: "terrace", guests: 2, waiter: "", items: [] },
-      { id: 13, name: "Терраса 2", zone: "terrace", guests: 2, waiter: "", items: [] },
-      { id: 14, name: "Терраса 3", zone: "terrace", guests: 4, waiter: "", items: [] },
-      { id: 15, name: "Терраса 4", zone: "terrace", guests: 4, waiter: "", items: [] },
-      { id: 16, name: "Терраса 5", zone: "terrace", guests: 6, waiter: "", items: [] }
+      { id: 1, name: "Стол 1", zone: "hall", guests: 0, waiter: "", items: [] },
+      { id: 2, name: "Стол 2", zone: "hall", guests: 0, waiter: "", items: [] },
+      { id: 3, name: "Стол 3", zone: "hall", guests: 0, waiter: "", items: [] },
+      { id: 4, name: "Стол 4", zone: "hall", guests: 0, waiter: "", items: [] },
+      { id: 5, name: "Стол 5", zone: "hall", guests: 0, waiter: "", items: [] },
+      { id: 6, name: "Стол 6", zone: "hall", guests: 0, waiter: "", items: [] },
+      { id: 7, name: "Стол 7", zone: "hall", guests: 0, waiter: "", items: [] },
+      { id: 8, name: "Стол 8", zone: "hall", guests: 0, waiter: "", items: [] },
+      { id: 9, name: "Стол 9", zone: "hall", guests: 0, waiter: "", items: [] },
+      { id: 10, name: "Стол 10", zone: "hall", guests: 0, waiter: "", items: [] },
+      { id: 11, name: "Стол 11 (VIP)", zone: "hall", guests: 0, waiter: "", items: [] },
+      { id: 12, name: "Терраса 1", zone: "terrace", guests: 0, waiter: "", items: [] },
+      { id: 13, name: "Терраса 2", zone: "terrace", guests: 0, waiter: "", items: [] },
+      { id: 14, name: "Терраса 3", zone: "terrace", guests: 0, waiter: "", items: [] },
+      { id: 15, name: "Терраса 4", zone: "terrace", guests: 0, waiter: "", items: [] },
+      { id: 16, name: "Терраса 5", zone: "terrace", guests: 0, waiter: "", items: [] }
     ];
 
     /* App State */
@@ -873,7 +896,9 @@
       }
       playBeep();
       currentWaiter = name;
-      localStorage.setItem('coffeeman_waiter_name', currentWaiter);
+      try {
+        localStorage.setItem('coffeeman_waiter_name', currentWaiter);
+      } catch (e) {}
 
       const headerName = document.getElementById('headerWaiterName');
       if (headerName) headerName.textContent = currentWaiter;
@@ -888,6 +913,14 @@
 
     function goToTablesView() {
       playBeep();
+      // If current table has no items, ensure it stays completely free (0 guests, no waiter)
+      const activeTable = tables.find(t => t.id === currentTableId);
+      if (activeTable && (!activeTable.items || activeTable.items.length === 0)) {
+        activeTable.waiter = "";
+        activeTable.guests = 0;
+        syncTablesToCloud();
+      }
+
       currentView = 'tables';
       const viewTables = document.getElementById('view-tables');
       const viewOrder = document.getElementById('view-order');
@@ -913,10 +946,6 @@
       if (viewOrder) viewOrder.classList.remove('hidden');
 
       const table = tables.find(t => t.id === tableId);
-      if (table && !table.waiter && currentWaiter) {
-        table.waiter = currentWaiter;
-        syncTablesToCloud();
-      }
 
       const headerBadge = document.getElementById('headerTableBadge');
       const headerIcon = document.getElementById('headerTableIcon');
@@ -1022,7 +1051,7 @@
               ${statusLabel}
             </div>
             <div class="flex items-center gap-1.5 text-xs text-stone-500">
-              <span class="font-semibold text-stone-700">👥 ${table.guests} перс.</span>
+              <span class="font-semibold text-stone-700">👥 ${table.guests > 0 ? table.guests + ' перс.' : '0 персон'}</span>
               <span>•</span>
               <span class="text-[11px] capitalize">${table.zone === 'terrace' ? 'Терраса' : 'Основной зал'}</span>
             </div>
@@ -1059,7 +1088,7 @@
     function openGuestsModal(tableId) {
       pendingModalTableId = tableId;
       const table = tables.find(t => t.id === tableId);
-      tempGuestsCount = table ? (table.guests || 2) : 2;
+      tempGuestsCount = (table && table.guests > 0) ? table.guests : 2;
 
       const tag = document.getElementById('guestModalTableTag');
       if (tag) tag.textContent = table ? table.name : "Стол";
@@ -1102,14 +1131,12 @@
       const table = tables.find(t => t.id === pendingModalTableId);
       if (table) {
         table.guests = tempGuestsCount;
-        if (!table.waiter && currentWaiter) {
-          table.waiter = currentWaiter;
-        }
+        // Waiter is not assigned yet; will be assigned upon adding the first dish
         syncTablesToCloud();
       }
       closeModal('guestsModal');
       goToOrderView(pendingModalTableId);
-      showToast(`${table.name}: ${tempGuestsCount} персоны (${table.waiter || 'Вы'})`, '👥');
+      showToast(`${table.name}: ${tempGuestsCount} персоны`, '👥');
     }
 
     function selectCategory(cat) {
@@ -1315,6 +1342,10 @@
       if (!table) return;
 
       if (!table.items) table.items = [];
+      if (table.guests === 0) {
+        table.guests = 1;
+      }
+      // Assign waiter specifically when a dish is added to the table
       if (!table.waiter && currentWaiter) {
         table.waiter = currentWaiter;
       }
@@ -1363,6 +1394,11 @@
       table.items[index].qty += delta;
       if (table.items[index].qty <= 0) {
         table.items.splice(index, 1);
+      }
+      // If table became empty, release waiter assignment
+      if (table.items.length === 0) {
+        table.waiter = "";
+        table.guests = 0;
       }
       syncTablesToCloud();
       renderOrderScreen();
@@ -1427,6 +1463,7 @@
       }
       table.items = [];
       table.waiter = "";
+      table.guests = 0;
       syncTablesToCloud();
       renderOrderScreen();
       renderDishes();
@@ -1518,10 +1555,10 @@
       const personsBadge = document.getElementById('ticketPersonsBadge');
 
       if (titleEl) titleEl.textContent = table.name;
-      if (subtitleEl) subtitleEl.textContent = `${table.guests || 2} персоны`;
-      if (waiterTagEl) waiterTagEl.textContent = `Официант: ${table.waiter || currentWaiter || 'Не назначен'}`;
-      if (guestsBtn) guestsBtn.textContent = `${table.guests || 2} чел.`;
-      if (personsBadge) personsBadge.textContent = `${table.guests || 2} персоны`;
+      if (subtitleEl) subtitleEl.textContent = `${table.guests || 0} персоны`;
+      if (waiterTagEl) waiterTagEl.textContent = `Официант: ${table.waiter || 'Не назначен'}`;
+      if (guestsBtn) guestsBtn.textContent = `${table.guests || 0} чел.`;
+      if (personsBadge) personsBadge.textContent = `${table.guests || 0} персоны`;
 
       const container = document.getElementById('ticketItemsContainer');
       const totalQtyEl = document.getElementById('ticketTotalQty');
@@ -1702,9 +1739,13 @@
       if (totalQtyEl) totalQtyEl.textContent = `${totalQty} шт.`;
       if (totalSumEl) totalSumEl.textContent = `${totalSum} ₽`;
       
-      const guests = table.guests || 1;
+      const guests = table.guests > 0 ? table.guests : 1;
       const perPerson = Math.round(totalSum / guests);
-      if (perPersonEl) perPersonEl.textContent = `На 1 персону (${guests} чел.): ~${perPerson} ₽`;
+      if (perPersonEl) {
+        perPersonEl.textContent = table.guests > 0 
+          ? `На 1 персону (${table.guests} чел.): ~${perPerson} ₽` 
+          : `Итого: ${totalSum} ₽`;
+      }
 
       if (linesContainer) {
         linesContainer.innerHTML = '';
@@ -1772,6 +1813,7 @@
       const tableName = table.name;
       table.items = [];
       table.waiter = "";
+      table.guests = 0;
       syncTablesToCloud();
 
       closeModal('cashierCheckoutModal');
@@ -1809,6 +1851,10 @@
       if (!table) return;
 
       if (!table.items) table.items = [];
+      if (table.guests === 0) {
+        table.guests = 1;
+      }
+      // Assign waiter specifically when custom dish is added
       if (!table.waiter && currentWaiter) {
         table.waiter = currentWaiter;
       }
@@ -1896,12 +1942,14 @@
 
     window.addEventListener('DOMContentLoaded', async () => {
       // Restore waiter name if cached
-      const savedName = localStorage.getItem('coffeeman_waiter_name');
-      if (savedName) {
-        currentWaiter = savedName;
-        const headerName = document.getElementById('headerWaiterName');
-        if (headerName) headerName.textContent = currentWaiter;
-      }
+      try {
+        const savedName = localStorage.getItem('coffeeman_waiter_name');
+        if (savedName) {
+          currentWaiter = savedName;
+          const headerName = document.getElementById('headerWaiterName');
+          if (headerName) headerName.textContent = currentWaiter;
+        }
+      } catch (e) {}
 
       renderTables();
       renderDishes();
