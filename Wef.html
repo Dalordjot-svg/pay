@@ -84,6 +84,15 @@
 </head>
 <body class="bg-stone-100 text-stone-900 w-full h-[100dvh] flex flex-col antialiased overflow-hidden select-none fixed inset-0">
 
+  <!-- Top Notification Toast (Pointer-events-none so it never blocks clicks) -->
+  <div id="toast" class="fixed top-14 left-1/2 -translate-x-1/2 z-50 transition-all duration-300 pointer-events-none opacity-0 -translate-y-6">
+    <div class="bg-amber-950/95 text-white px-4 py-2 rounded-2xl shadow-xl border border-amber-800 text-xs sm:text-sm font-bold flex items-center gap-2">
+      <span id="toastIcon">🔔</span>
+      <span id="toastMsg">Уведомление</span>
+    </div>
+  </div>
+
+  <!-- Header -->
   <header class="bg-amber-950 text-stone-100 shrink-0 z-40 shadow-md border-b border-amber-900/60 pt-safe">
     <div class="max-w-6xl mx-auto px-3 sm:px-4 py-2 sm:py-2.5 flex items-center justify-between gap-2">
       
@@ -94,9 +103,9 @@
         <div>
           <div class="flex items-center gap-1.5">
             <span class="font-extrabold tracking-wide text-xs sm:text-base">COFFEEMAN</span>
-            <span class="text-[9px] sm:text-[10px] bg-amber-800 text-amber-200 px-1.5 py-0.2 rounded font-bold">ОФИЦИАНТ</span>
+            <span class="text-[9px] sm:text-[10px] bg-amber-800 text-amber-200 px-1.5 py-0.2 rounded font-bold">ЗАЛ</span>
           </div>
-          <p class="text-[10px] sm:text-[11px] text-amber-200/80 leading-none">Заказ & Персоны</p>
+          <p class="text-[10px] sm:text-[11px] text-amber-200/80 leading-none">Терминал официанта</p>
         </div>
       </button>
 
@@ -110,12 +119,13 @@
         </button>
 
         <!-- Sync Indicator & Force Sync Button -->
-        <button onclick="forceSyncFromCloud()" id="cloudSyncStatus" title="Нажмите для проверки синхронизации" class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-amber-900/80 hover:bg-amber-800 border border-amber-700/70 text-[11px] text-amber-200 font-bold transition active:scale-95">
+        <button onclick="forceSyncFromCloud()" id="cloudSyncStatus" title="Нажмите для синхронизации с базой" class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-amber-900/80 hover:bg-amber-800 border border-amber-700/70 text-[11px] text-amber-200 font-bold transition active:scale-95">
           <span id="syncDot" class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-          <span id="syncText" class="font-mono">В сети</span>
+          <span id="syncText" class="font-mono hidden xs:inline">В сети</span>
           <span class="text-[10px]">☁️</span>
         </button>
 
+        <!-- Switch between Tables / Current Order -->
         <button id="headerTableBtn" onclick="toggleViewFromHeader()" class="px-2.5 sm:px-3.5 py-1.5 sm:py-2 rounded-xl bg-amber-900/80 hover:bg-amber-800 border border-amber-700/60 text-xs font-bold text-amber-200 flex items-center gap-1.5 transition active:scale-95">
           <span id="headerTableIcon">🪑</span>
           <span id="headerTableLabel" class="hidden xs:inline">К столам</span>
@@ -128,25 +138,26 @@
 
   <main class="flex-1 max-w-6xl w-full mx-auto p-2 sm:p-3 md:p-4 flex flex-col min-h-0 overflow-hidden">
 
+    <!-- VIEW 1: TABLES FLOOR & LISTS -->
     <section id="view-tables" class="flex-1 flex flex-col min-h-0 space-y-2 sm:space-y-3 overflow-hidden">
       
-      <!-- Top Control Bar: Zones, View Modes and Layout Editor Toggle -->
+      <!-- Top Control Bar: Status Filter, View Modes and Layout Editor Toggle -->
       <div class="bg-white p-2 sm:p-2.5 rounded-2xl border border-stone-200 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-2 shrink-0">
         
-        <!-- Left: Zones -->
+        <!-- Left: Quick Status Filters (All, Busy, Free) -->
         <div class="flex items-center gap-1.5 overflow-x-auto scrollbar-hide text-xs font-bold shrink-0">
-          <button onclick="filterZone('all')" id="zone-btn-all" class="zone-btn px-3 py-1.5 rounded-xl bg-amber-950 text-white shadow-xs">
-            Все (16)
+          <button onclick="filterTableStatus('all')" id="status-btn-all" class="status-btn px-3 py-1.5 rounded-xl bg-amber-950 text-white shadow-xs">
+            Все столы (11)
           </button>
-          <button onclick="filterZone('hall')" id="zone-btn-hall" class="zone-btn px-3 py-1.5 rounded-xl bg-stone-100 text-stone-700 hover:bg-stone-200">
-            Зал (11)
+          <button onclick="filterTableStatus('busy')" id="status-btn-busy" class="status-btn px-3 py-1.5 rounded-xl bg-stone-100 text-stone-700 hover:bg-stone-200">
+            Занятые
           </button>
-          <button onclick="filterZone('terrace')" id="zone-btn-terrace" class="zone-btn px-3 py-1.5 rounded-xl bg-stone-100 text-stone-700 hover:bg-stone-200">
-            Терраса (5)
+          <button onclick="filterTableStatus('free')" id="status-btn-free" class="status-btn px-3 py-1.5 rounded-xl bg-stone-100 text-stone-700 hover:bg-stone-200">
+            Свободные
           </button>
         </div>
 
-        <!-- Right: View Modes (Grid / Map / List) + Layout Editor Button -->
+        <!-- Right: View Modes (Map / Grid / List) + Layout Editor Button -->
         <div class="flex items-center gap-1.5 overflow-x-auto scrollbar-hide shrink-0">
           
           <div class="flex items-center bg-stone-100 p-1 rounded-xl text-xs font-bold gap-0.5 border border-stone-200/80">
@@ -161,13 +172,13 @@
             </button>
           </div>
 
-          <!-- Edit Layout Toggle (Only in Map Mode) -->
+          <!-- Edit Layout Toggle (Available in Map Mode) -->
           <button id="editLayoutBtn" onclick="toggleLayoutEditor()" class="px-2.5 py-1.5 rounded-xl bg-amber-100 hover:bg-amber-200 text-amber-950 border border-amber-300 text-xs font-bold flex items-center gap-1 transition active:scale-95">
             <span id="editLayoutIcon">✏️</span>
             <span id="editLayoutText" class="hidden sm:inline">Расстановка</span>
           </button>
 
-          <!-- Reset Default Layout Button (when in edit mode) -->
+          <!-- Reset Default Layout Button -->
           <button id="resetLayoutBtn" onclick="resetDefaultPositions()" title="Сбросить расстановку по умолчанию" class="hidden px-2 py-1.5 rounded-xl bg-stone-100 hover:bg-rose-100 text-stone-600 hover:text-rose-700 border border-stone-200 text-xs font-bold transition">
             🔄
           </button>
@@ -178,42 +189,42 @@
       <div id="editModeNotice" class="hidden bg-amber-500/15 border border-amber-400 p-2 rounded-xl text-xs text-amber-950 font-bold flex items-center justify-between gap-2 shrink-0">
         <div class="flex items-center gap-1.5">
           <span>✋</span>
-          <span>Режим расстановки: перетаскивайте столы пальцем/мышью, жмите шестерёнку ⚙️ для смены размера.</span>
+          <span>Перетаскивайте столы пальцем/мышью, жмите шестерёнку ⚙️ для смены размера.</span>
         </div>
         <button onclick="toggleLayoutEditor()" class="px-2.5 py-1 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-xs font-bold shadow-xs">
           Готово ✓
         </button>
       </div>
 
-      <!-- CONTAINER 1: MAP SCHEME (Interactive Visual Floor Plan with Walls & Boundaries) -->
+      <!-- CONTAINER 1: MAP SCHEME (Interactive Floor Plan of the Entire Hall) -->
       <div id="tablesMapWrapper" class="flex-1 bg-stone-200/90 rounded-2xl border-2 border-stone-300 p-2 sm:p-3 relative overflow-hidden flex flex-col min-h-0 shadow-inner">
         
-        <!-- Floor Header with Zones boundary labels -->
+        <!-- Floor Header with Hall Landmarks -->
         <div class="flex items-center justify-between pb-1.5 border-b border-stone-300 text-[11px] font-bold text-stone-600 uppercase tracking-wider shrink-0 select-none">
           <div class="flex items-center gap-2">
-            <span class="px-2 py-0.5 rounded-md bg-stone-100 border border-stone-300">🚪 Вход / Холл</span>
-            <span class="px-2 py-0.5 rounded-md bg-stone-800 text-white border border-stone-700">☕ Бар & Касса</span>
+            <span class="px-2 py-0.5 rounded-md bg-stone-100 border border-stone-300">🚪 Вход / Гардероб</span>
+            <span class="px-2 py-0.5 rounded-md bg-stone-800 text-amber-300 border border-stone-700">☕ Бар & Касса</span>
           </div>
           <div class="flex items-center gap-2">
-            <span class="px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-900 border border-emerald-300">🌿 Летняя терраса</span>
-            <span class="text-stone-400 font-normal">Сетка: 100% зала</span>
+            <span class="px-2 py-0.5 rounded-md bg-blue-50 text-blue-900 border border-blue-200">🪟 Панорамные окна</span>
+            <span class="text-stone-500 font-bold">11 столов</span>
           </div>
         </div>
 
-        <!-- The Canvas Floor Area with Walls and Constraints -->
+        <!-- The Canvas Floor Area with Boundaries -->
         <div id="floorCanvas" class="flex-1 relative w-full h-full min-h-[360px] rounded-xl bg-white border border-dashed border-stone-300 overflow-hidden shadow-xs select-none">
           
-          <!-- Background Zones Divider Line (Hall vs Terrace) -->
-          <div class="absolute inset-y-0 right-[32%] w-0.5 border-r-2 border-dashed border-emerald-400/60 pointer-events-none z-0 flex items-center justify-center">
-            <span class="bg-emerald-50 text-emerald-800 border border-emerald-300 text-[9px] font-bold px-1.5 py-0.5 rounded-md uppercase tracking-widest -rotate-90">Граница Террасы</span>
-          </div>
-
           <!-- Bar counter visual landmark -->
-          <div class="absolute top-2 left-2 w-32 sm:w-40 h-10 rounded-xl bg-stone-800 text-amber-200 font-bold text-[10px] sm:text-xs flex items-center justify-center border-2 border-stone-700 shadow-sm pointer-events-none z-0">
+          <div class="absolute top-2 left-2 w-32 sm:w-44 h-10 rounded-xl bg-stone-800 text-amber-200 font-bold text-[10px] sm:text-xs flex items-center justify-center border-2 border-stone-700 shadow-sm pointer-events-none z-0">
             ☕ БАРНАЯ ЗОНА
           </div>
 
-          <!-- Tables will be positioned absolutely by percentage coordinates inside #floorCanvas -->
+          <!-- Windows Landmark on the right side -->
+          <div class="absolute top-2 right-2 bottom-2 w-5 border-l-2 border-dashed border-blue-300 bg-blue-50/50 flex items-center justify-center pointer-events-none z-0">
+            <span class="text-[9px] font-bold text-blue-500 tracking-widest uppercase -rotate-90">ОКНА</span>
+          </div>
+
+          <!-- Tables Layer -->
           <div id="mapTablesLayer" class="absolute inset-0 z-10">
             <!-- Injected by renderMapTables() -->
           </div>
@@ -233,6 +244,7 @@
 
     </section>
 
+    <!-- VIEW 2: ORDER SCREEN (Dishes & Cart) -->
     <section id="view-order" class="hidden flex-1 flex flex-col min-h-0 space-y-2 overflow-hidden">
 
       <!-- Order Top Control Bar -->
@@ -246,14 +258,14 @@
               <h2 id="activeOrderTitle" class="font-extrabold text-xs sm:text-base text-stone-900 leading-tight truncate">Стол 1</h2>
               <span id="activeOrderWaiterTag" class="text-[9px] sm:text-[10px] px-1.5 sm:px-2 py-0.5 rounded-md bg-amber-100 text-amber-900 font-bold truncate">Официант: —</span>
             </div>
-            <p id="activeOrderSubtitle" class="text-[10px] sm:text-[11px] text-stone-500 leading-none">2 персоны</p>
+            <p id="activeOrderSubtitle" class="text-[10px] sm:text-[11px] text-stone-500 leading-none">0 персон</p>
           </div>
         </div>
 
         <div class="flex items-center gap-1 sm:gap-2 shrink-0">
           <!-- Guests Count Button -->
           <button onclick="openGuestsModalForCurrentTable()" class="px-2 sm:px-3 py-1.5 sm:py-2 bg-amber-50 border border-amber-300 hover:bg-amber-100 text-amber-950 rounded-xl text-xs sm:text-sm font-bold flex items-center gap-1 active:scale-95 transition">
-            <span>👥</span> <span id="btnGuestsDisplay">2 чел.</span>
+            <span>👥</span> <span id="btnGuestsDisplay">0 чел.</span>
           </button>
 
           <!-- Cashier / Bill Button -->
@@ -287,7 +299,7 @@
           <!-- Fast Search & Custom Item -->
           <div class="flex items-center gap-1.5 shrink-0 pb-1.5">
             <div class="relative flex-1">
-              <input type="text" id="searchInput" oninput="onSearchChange()" placeholder="Поиск блюда, напитка или состава..."
+              <input type="text" id="searchInput" oninput="onSearchChange()" placeholder="Быстрый поиск блюда, напитка или состава..."
                      class="w-full bg-stone-50 border border-stone-200 rounded-xl py-2 pl-8 pr-7 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-amber-600 focus:bg-white transition">
               <span class="absolute left-2.5 top-2.5 text-stone-400 text-xs">🔍</span>
               <button id="clearSearchBtn" onclick="clearSearchInput()" class="hidden absolute right-2.5 top-2 text-stone-400 hover:text-stone-700 font-bold text-xs bg-stone-200 w-4 h-4 rounded-full flex items-center justify-center">✕</button>
@@ -322,6 +334,7 @@
           </div>
         </div>
 
+        <!-- RIGHT: TABLE CART / TICKET -->
         <div id="orderCartColumn" class="hidden lg:flex lg:col-span-5 xl:col-span-4 flex-col bg-white rounded-2xl border border-stone-200 shadow-xs p-2.5 sm:p-3 min-h-0 overflow-hidden">
           
           <div class="flex items-center justify-between pb-2 border-b border-stone-200 shrink-0">
@@ -329,7 +342,7 @@
               <span class="font-extrabold text-xs sm:text-sm text-stone-900">Чек стола</span>
               <span id="ticketKitchenStatusBadge" class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-stone-100 text-stone-600">Пусто</span>
             </div>
-            <span id="ticketPersonsBadge" class="text-xs font-bold text-amber-900 bg-amber-100 px-2 py-0.5 rounded-lg">2 персоны</span>
+            <span id="ticketPersonsBadge" class="text-xs font-bold text-amber-900 bg-amber-100 px-2 py-0.5 rounded-lg">0 персон</span>
           </div>
 
           <!-- Group Filter Tabs for Ticket (По порядку / По курсам) -->
@@ -357,7 +370,41 @@
 
             <!-- Action buttons -->
             <div class="space-y-1.5">
-              <button onclick="openCashierCheckoutModal()" class="w-full py-2 sm:py-2.5 px-3 bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-700 hover:to-teal-800 text-white font-bold rounded-xl text-xs sm:text-sm flex items-center justify-center gap-1.5 shadow-sm transition btn-press">
+              <button onclick="openCashierCheckoutModal()" class="w-full py-2.5 px-3 bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-700 hover:to-teal-800 text-white font-bold rounded-xl text-xs sm:text-sm flex items-center justify-center gap-1.5 shadow-sm transition btn-press">
+                <span>🧾</span> <span>Счёт для кассы (Гости уходят)</span>
+              </button>
+
+              <button onclick="sendNewItemsToKitchen()" class="w-full py-2.5 px-3 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-xl text-xs sm:text-sm flex items-center justify-center gap-1.5 shadow-sm transition btn-press">
+                <span>🚀</span> <span>Отправить в цех (Кухня / Бар)</span>
+              </button>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+    </section>
+
+  </main>
+
+  <!-- Mobile Floating Cart Button -->
+  <div id="mobileCartFloatingBtn" class="hidden fixed bottom-3 left-3 right-3 z-30 lg:hidden">
+    <button onclick="switchOrderMobileTab('cart')" class="w-full py-3 px-4 rounded-2xl bg-amber-950 text-white shadow-2xl border border-amber-800 flex items-center justify-between btn-press">
+      <div class="flex items-center gap-2">
+        <span class="w-7 h-7 rounded-xl bg-amber-500 text-amber-950 font-black text-xs flex items-center justify-center">🧾</span>
+        <div class="text-left leading-tight">
+          <div id="mobileFloatTable" class="text-xs font-bold text-amber-200">Стол</div>
+          <div id="mobileFloatQty" class="text-[11px] text-stone-300">0 блюд</div>
+        </div>
+      </div>
+      <div class="flex items-center gap-2">
+        <span id="mobileFloatSum" class="font-mono font-black text-base text-amber-300">0 ₽</span>
+        <span class="text-xs">Открыть →</span>
+      </div>
+    </button>
+  </div>
+
   <!-- Size / Shape Editor Modal for Table -->
   <div id="tableSizeModal" class="hidden fixed inset-0 bg-stone-950/70 backdrop-blur-xs z-50 flex items-center justify-center p-4">
     <div class="bg-white max-w-xs w-full rounded-2xl p-4 shadow-2xl space-y-3 border border-stone-200">
@@ -365,7 +412,7 @@
         <h3 id="tableSizeModalTitle" class="font-extrabold text-sm text-stone-900">Размер стола</h3>
         <button onclick="closeModal('tableSizeModal')" class="text-stone-400 hover:text-stone-700 font-bold">✕</button>
       </div>
-      <p class="text-xs text-stone-500">Выберите тип и вместимость стола на карте:</p>
+      <p class="text-xs text-stone-500">Выберите вместимость и форму стола на карте:</p>
       
       <div class="grid grid-cols-2 gap-2 text-xs font-bold">
         <button type="button" onclick="setTableShapeSize('sm', 'square')" class="p-2.5 rounded-xl border border-stone-200 hover:border-amber-500 bg-stone-50 flex flex-col items-center gap-1">
@@ -394,36 +441,411 @@
     </div>
   </div>
 
+  <!-- Guests Modal -->
   <div id="guestsModal" class="hidden fixed inset-0 bg-stone-950/70 backdrop-blur-xs z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
-    /* Default initial table coordinates (percentage X, Y) and sizes */
-    const TABLES_INITIAL = [
-      /* Основной зал (11 столов) */
-      { id: 1, name: "Стол 1", zone: "hall", guests: 0, waiter: "", items: [], x: 6, y: 20, size: "sm", shape: "square" },
-      { id: 2, name: "Стол 2", zone: "hall", guests: 0, waiter: "", items: [], x: 22, y: 20, size: "sm", shape: "square" },
-      { id: 3, name: "Стол 3", zone: "hall", guests: 0, waiter: "", items: [], x: 38, y: 20, size: "md", shape: "square" },
-      { id: 4, name: "Стол 4", zone: "hall", guests: 0, waiter: "", items: [], x: 54, y: 20, size: "md", shape: "square" },
-      { id: 5, name: "Стол 5", zone: "hall", guests: 0, waiter: "", items: [], x: 6, y: 48, size: "md", shape: "square" },
-      { id: 6, name: "Стол 6", zone: "hall", guests: 0, waiter: "", items: [], x: 22, y: 48, size: "md", shape: "square" },
-      { id: 7, name: "Стол 7", zone: "hall", guests: 0, waiter: "", items: [], x: 38, y: 48, size: "md", shape: "square" },
-      { id: 8, name: "Стол 8", zone: "hall", guests: 0, waiter: "", items: [], x: 54, y: 48, size: "md", shape: "square" },
-      { id: 9, name: "Стол 9", zone: "hall", guests: 0, waiter: "", items: [], x: 6, y: 76, size: "md", shape: "square" },
-      { id: 10, name: "Стол 10", zone: "hall", guests: 0, waiter: "", items: [], x: 22, y: 76, size: "lg", shape: "rect" },
-      { id: 11, name: "Стол 11 (VIP)", zone: "hall", guests: 0, waiter: "", items: [], x: 42, y: 76, size: "xl", shape: "sofa" },
+    <div class="bg-white max-w-sm w-full rounded-t-3xl sm:rounded-3xl p-4 sm:p-5 shadow-2xl space-y-4 border border-stone-200 animate-in slide-in-from-bottom duration-200">
+      <div class="flex items-center justify-between border-b border-stone-100 pb-2">
+        <div class="flex items-center gap-2">
+          <span class="text-xl">👥</span>
+          <div>
+            <h3 class="font-extrabold text-sm sm:text-base text-stone-900">Количество гостей</h3>
+            <p id="guestModalTableTag" class="text-[11px] text-stone-500">Стол</p>
+          </div>
+        </div>
+        <button onclick="closeModal('guestsModal')" class="text-stone-400 hover:text-stone-700 font-bold p-1">✕</button>
+      </div>
 
-      /* Терраса (5 столов) */
-      { id: 12, name: "Терраса 1", zone: "terrace", guests: 0, waiter: "", items: [], x: 74, y: 15, size: "md", shape: "square" },
-      { id: 13, name: "Терраса 2", zone: "terrace", guests: 0, waiter: "", items: [], x: 74, y: 35, size: "md", shape: "square" },
-      { id: 14, name: "Терраса 3", zone: "terrace", guests: 0, waiter: "", items: [], x: 74, y: 55, size: "md", shape: "square" },
-      { id: 15, name: "Терраса 4", zone: "terrace", guests: 0, waiter: "", items: [], x: 74, y: 75, size: "md", shape: "square" },
-      { id: 16, name: "Терраса 5", zone: "terrace", guests: 0, waiter: "", items: [], x: 88, y: 45, size: "lg", shape: "rect" }
+      <!-- Quick Buttons (1-6) -->
+      <div class="grid grid-cols-3 gap-2">
+        <button onclick="setTempGuests(1)" class="guest-btn p-2.5 rounded-xl border-2 border-stone-200 text-stone-800 font-bold flex flex-col items-center hover:bg-stone-50 active:scale-95 transition">
+          <span class="text-base font-black">1</span>
+          <span class="text-[10px] text-stone-500">гость</span>
+        </button>
+        <button onclick="setTempGuests(2)" class="guest-btn p-2.5 rounded-xl border-2 border-amber-600 bg-amber-50 text-amber-950 font-bold flex flex-col items-center active:scale-95 transition">
+          <span class="text-base font-black">2</span>
+          <span class="text-[10px] text-amber-800">персоны</span>
+        </button>
+        <button onclick="setTempGuests(3)" class="guest-btn p-2.5 rounded-xl border-2 border-stone-200 text-stone-800 font-bold flex flex-col items-center hover:bg-stone-50 active:scale-95 transition">
+          <span class="text-base font-black">3</span>
+          <span class="text-[10px] text-stone-500">персоны</span>
+        </button>
+        <button onclick="setTempGuests(4)" class="guest-btn p-2.5 rounded-xl border-2 border-stone-200 text-stone-800 font-bold flex flex-col items-center hover:bg-stone-50 active:scale-95 transition">
+          <span class="text-base font-black">4</span>
+          <span class="text-[10px] text-stone-500">персоны</span>
+        </button>
+        <button onclick="setTempGuests(5)" class="guest-btn p-2.5 rounded-xl border-2 border-stone-200 text-stone-800 font-bold flex flex-col items-center hover:bg-stone-50 active:scale-95 transition">
+          <span class="text-base font-black">5</span>
+          <span class="text-[10px] text-stone-500">персон</span>
+        </button>
+        <button onclick="setTempGuests(6)" class="guest-btn p-2.5 rounded-xl border-2 border-stone-200 text-stone-800 font-bold flex flex-col items-center hover:bg-stone-50 active:scale-95 transition">
+          <span class="text-base font-black">6</span>
+          <span class="text-[10px] text-stone-500">персон</span>
+        </button>
+      </div>
+
+      <!-- Stepper Controls (+ / -) -->
+      <div class="flex items-center justify-between bg-stone-50 p-2 rounded-2xl border border-stone-200">
+        <button onclick="adjustTempGuests(-1)" class="w-10 h-10 rounded-xl bg-white border border-stone-300 font-black text-lg text-stone-800 active:bg-stone-200 flex items-center justify-center btn-press">
+          -
+        </button>
+        <div class="text-center">
+          <span id="guestDisplayVal" class="text-xl font-black font-mono text-amber-950">2</span>
+          <span class="text-xs text-stone-500 ml-1">перс.</span>
+        </div>
+        <button onclick="adjustTempGuests(1)" class="w-10 h-10 rounded-xl bg-white border border-stone-300 font-black text-lg text-stone-800 active:bg-stone-200 flex items-center justify-center btn-press">
+          +
+        </button>
+      </div>
+
+      <button onclick="confirmGuestSelection()" class="w-full py-3 bg-amber-600 hover:bg-amber-700 text-white font-extrabold rounded-2xl text-sm shadow-md transition active:scale-95">
+        Открыть заказ стола →
+      </button>
+    </div>
+  </div>
+
+  <!-- Modifiers Modal (Borscht with Sour Cream / Mayo, Milks, Meat, etc.) -->
+  <div id="modifiersModal" class="hidden fixed inset-0 bg-stone-950/70 backdrop-blur-xs z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
+    <div class="bg-white max-w-sm w-full rounded-t-3xl sm:rounded-3xl p-4 sm:p-5 shadow-2xl space-y-3.5 border border-stone-200 animate-in slide-in-from-bottom duration-200">
+      <div class="flex items-center justify-between border-b border-stone-100 pb-2">
+        <div>
+          <span id="modCategoryTag" class="text-[10px] uppercase font-bold text-amber-800 bg-amber-100 px-1.5 py-0.5 rounded">Позиция</span>
+          <h3 id="modDishName" class="font-extrabold text-sm sm:text-base text-stone-900 mt-0.5 leading-snug">Борщ</h3>
+        </div>
+        <span id="modDishPrice" class="font-mono font-black text-amber-950 text-base">380 ₽</span>
+      </div>
+
+      <div class="space-y-1">
+        <label class="text-xs font-bold text-stone-700">Опции подачи & Добавки:</label>
+        <div id="modCheckboxesContainer" class="max-h-48 overflow-y-auto scroll-touch space-y-1 pr-1">
+          <!-- Checkboxes injected by JS -->
+        </div>
+      </div>
+
+      <div class="space-y-1">
+        <label class="text-[11px] font-bold text-stone-600">Комментарий для повара / бармена:</label>
+        <input type="text" id="modCustomCommentInput" placeholder="Например: без лука, очень горячий..." 
+               class="w-full bg-stone-50 border border-stone-200 rounded-xl p-2 text-xs focus:ring-2 focus:ring-amber-500 focus:outline-none">
+      </div>
+
+      <div class="flex items-center gap-2 pt-1">
+        <button onclick="closeModal('modifiersModal')" class="flex-1 py-2.5 bg-stone-100 hover:bg-stone-200 text-stone-800 text-xs font-bold rounded-xl">
+          Отмена
+        </button>
+        <button onclick="confirmDishWithModifiers()" class="flex-1 py-2.5 bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold rounded-xl shadow-xs active:scale-95 transition">
+          Добавить в чек ✓
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Cashier / Bill Checkout Modal -->
+  <div id="cashierCheckoutModal" class="hidden fixed inset-0 bg-stone-950/70 backdrop-blur-xs z-50 flex items-center justify-center p-3 sm:p-4">
+    <div class="bg-white max-w-md w-full rounded-3xl p-4 sm:p-5 shadow-2xl border border-stone-200 flex flex-col max-h-[90dvh]">
+      <div class="flex items-center justify-between border-b border-stone-200 pb-2.5 shrink-0">
+        <div>
+          <span class="text-[10px] uppercase font-bold text-emerald-800 bg-emerald-100 px-1.5 py-0.5 rounded">Счёт для кассы</span>
+          <h3 id="cashierModalTableTag" class="font-extrabold text-base text-stone-900 mt-0.5">Стол 1</h3>
+        </div>
+        <button onclick="closeModal('cashierCheckoutModal')" class="text-stone-400 hover:text-stone-700 font-bold p-1">✕</button>
+      </div>
+
+      <div class="py-2 text-[11px] text-stone-500 border-b border-stone-100 flex items-center justify-between shrink-0">
+        <span id="cashierModalMeta">Стол 1 • Официант: —</span>
+        <span id="cashierModalServedTag" class="text-[10px] font-bold text-stone-600 bg-stone-100 px-1.5 py-0.2 rounded">Подано</span>
+      </div>
+
+      <!-- Receipt Items List -->
+      <div id="cashierReceiptLines" class="flex-1 overflow-y-auto scroll-touch py-2 space-y-1.5 font-mono text-xs pr-1">
+        <!-- Rendered by JS -->
+      </div>
+
+      <!-- Totals & Breakdown -->
+      <div class="border-t border-stone-200 pt-2.5 space-y-2 shrink-0">
+        <div class="flex items-center justify-between text-xs text-stone-600">
+          <span>Позиций в чеке:</span>
+          <span id="cashierModalTotalQty" class="font-mono font-bold">0 шт.</span>
+        </div>
+
+        <div class="flex items-baseline justify-between bg-amber-50 p-2.5 rounded-xl border border-amber-200">
+          <span class="font-bold text-xs uppercase text-amber-950">ИТОГО К ОПЛАТЕ:</span>
+          <span id="cashierModalTotalSum" class="font-mono font-black text-xl text-amber-950">0 ₽</span>
+        </div>
+
+        <div id="cashierModalPerPerson" class="text-center text-[11px] font-semibold text-stone-500">
+          На 1 персону: ~0 ₽
+        </div>
+
+        <div class="grid grid-cols-2 gap-2 pt-1">
+          <button onclick="copyReceiptToClipboard()" class="py-2.5 px-3 bg-stone-100 hover:bg-stone-200 text-stone-800 text-xs font-bold rounded-xl border border-stone-200 flex items-center justify-center gap-1 active:scale-95 transition">
+            <span>📋</span> <span>Скопировать</span>
+          </button>
+          <button onclick="completeAndFreeTable()" class="py-2.5 px-3 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-xs flex items-center justify-center gap-1 active:scale-95 transition">
+            <span>💰</span> <span>Рассчитан / Свободен</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Custom Dish Modal (+ Своя позиция) -->
+  <div id="customDishModal" class="hidden fixed inset-0 bg-stone-950/70 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+    <div class="bg-white max-w-xs w-full rounded-2xl p-4 shadow-2xl space-y-3 border border-stone-200">
+      <div class="flex items-center justify-between border-b border-stone-100 pb-2">
+        <h3 class="font-extrabold text-sm text-stone-900">✨ Добавить свою позицию</h3>
+        <button onclick="closeModal('customDishModal')" class="text-stone-400 hover:text-stone-700 font-bold">✕</button>
+      </div>
+
+      <div class="space-y-2 text-xs">
+        <div>
+          <label class="font-bold text-stone-700 block mb-1">Название блюда / напитка:</label>
+          <input type="text" id="customDishName" placeholder="Например: Авторский десерт..." 
+                 class="w-full bg-stone-50 border border-stone-200 rounded-xl p-2 focus:ring-2 focus:ring-amber-500 focus:outline-none">
+        </div>
+
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="font-bold text-stone-700 block mb-1">Цена (₽):</label>
+            <input type="number" id="customDishPrice" placeholder="0" 
+                   class="w-full bg-stone-50 border border-stone-200 rounded-xl p-2 font-mono font-bold focus:ring-2 focus:ring-amber-500 focus:outline-none">
+          </div>
+          <div>
+            <label class="font-bold text-stone-700 block mb-1">Количество:</label>
+            <input type="number" id="customDishQty" value="1" min="1" 
+                   class="w-full bg-stone-50 border border-stone-200 rounded-xl p-2 font-mono font-bold focus:ring-2 focus:ring-amber-500 focus:outline-none">
+          </div>
+        </div>
+
+        <div>
+          <label class="font-bold text-stone-700 block mb-1">Пожелание гостя (комментарий):</label>
+          <input type="text" id="customDishNote" placeholder="Особые пожелания..." 
+                 class="w-full bg-stone-50 border border-stone-200 rounded-xl p-2 focus:ring-2 focus:ring-amber-500 focus:outline-none">
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2 pt-1">
+        <button onclick="closeModal('customDishModal')" class="flex-1 py-2 bg-stone-100 hover:bg-stone-200 text-stone-800 text-xs font-bold rounded-xl">
+          Отмена
+        </button>
+        <button onclick="saveCustomDishToOrder()" class="flex-1 py-2 bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold rounded-xl shadow-xs active:scale-95 transition">
+          Добавить
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Welcome / Waiter Login Modal -->
+  <div id="welcomeModal" class="hidden fixed inset-0 bg-stone-950/80 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+    <div class="bg-white max-w-xs sm:max-w-sm w-full rounded-3xl p-5 sm:p-6 shadow-2xl border border-stone-200 text-center space-y-4">
+      
+      <!-- Steaming animated coffee cup -->
+      <div class="relative w-16 h-16 mx-auto bg-amber-500 text-amber-950 rounded-2xl flex items-center justify-center text-3xl shadow-lg border-2 border-amber-300">
+        <span>☕</span>
+        <div class="absolute -top-3 left-3 w-1.5 h-3 bg-amber-300/80 rounded-full steam-particle"></div>
+        <div class="absolute -top-4 left-7 w-1.5 h-4 bg-amber-300/80 rounded-full steam-particle"></div>
+        <div class="absolute -top-3 left-11 w-1.5 h-3 bg-amber-300/80 rounded-full steam-particle"></div>
+      </div>
+
+      <div>
+        <h3 class="font-black text-lg text-stone-900 tracking-tight">COFFEEMAN</h3>
+        <p class="text-xs text-stone-500 mt-0.5">Вход официанта в смену</p>
+      </div>
+
+      <!-- Quick Waiter Buttons -->
+      <div class="grid grid-cols-2 gap-2 text-xs font-bold">
+        <button type="button" onclick="selectQuickWaiter('Алексей')" class="waiter-chip p-2.5 rounded-xl border border-stone-200 bg-stone-50 hover:bg-amber-50 text-stone-800 text-center transition">
+          Алексей
+        </button>
+        <button type="button" onclick="selectQuickWaiter('Дарья')" class="waiter-chip p-2.5 rounded-xl border border-stone-200 bg-stone-50 hover:bg-amber-50 text-stone-800 text-center transition">
+          Дарья
+        </button>
+        <button type="button" onclick="selectQuickWaiter('Максим')" class="waiter-chip p-2.5 rounded-xl border border-stone-200 bg-stone-50 hover:bg-amber-50 text-stone-800 text-center transition">
+          Максим
+        </button>
+        <button type="button" onclick="selectQuickWaiter('Алина')" class="waiter-chip p-2.5 rounded-xl border border-stone-200 bg-stone-50 hover:bg-amber-50 text-stone-800 text-center transition">
+          Алина
+        </button>
+      </div>
+
+      <div class="text-left space-y-1">
+        <label class="text-[11px] font-bold text-stone-600">Или введите ваше имя:</label>
+        <input type="text" id="waiterCustomNameInput" placeholder="Имя официанта..." 
+               class="w-full bg-stone-50 border border-stone-200 rounded-xl p-2.5 text-xs font-bold text-stone-900 focus:ring-2 focus:ring-amber-500 focus:outline-none">
+      </div>
+
+      <button onclick="confirmWaiterLogin()" class="w-full py-3 bg-amber-600 hover:bg-amber-700 text-white font-extrabold rounded-2xl text-xs sm:text-sm shadow-md transition active:scale-95">
+        Начать смену ☕
+      </button>
+    </div>
+  </div>
+
+  <!-- Firebase SDK imports -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+    import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+    import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+    /* User provided Firebase configuration */
+    const firebaseConfig = {
+      apiKey: "AIzaSyBVEvKgcprZx2TBCnkQxsgo5IFVJdNaGRE",
+      authDomain: "check-list-c0458.firebaseapp.com",
+      databaseURL: "https://check-list-c0458-default-rtdb.firebaseio.com",
+      projectId: "check-list-c0458",
+      storageBucket: "check-list-c0458.firebasestorage.app",
+      messagingSenderId: "34268049423",
+      appId: "1:34268049423:web:0e6d5bbb3389b72192737a"
+    };
+
+    const effectiveConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : firebaseConfig;
+    const app = initializeApp(effectiveConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    const appId = typeof __app_id !== 'undefined' ? __app_id : 'coffeeman-hall-app';
+    const stateDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'tables_sync', 'current_state');
+
+    let currentUser = null;
+
+    const FULL_MENU = [
+      /* ЗАВТРАКИ */
+      { id: 101, cat: 'breakfast', catTitle: 'Завтраки', name: 'Мюсли с йогуртом', price: 310, desc: 'Хрустящие мюсли с натуральным йогуртом и ягодами', mods: [] },
+      { id: 102, cat: 'breakfast', catTitle: 'Завтраки', name: 'Сырники ванильные', price: 310, desc: 'Подаются со сметаной, сгущенкой или джемом', mods: ['Со сметаной', 'Со сгущенкой', 'С джемом'] },
+      { id: 103, cat: 'breakfast', catTitle: 'Завтраки', name: 'Каша овсяная / рисовая', price: 270, desc: 'На классическом молоке с фруктами и грецким орехом', mods: ['Овсяная', 'Рисовая', 'Без сахара', 'С фруктами'] },
+      { id: 104, cat: 'breakfast', catTitle: 'Завтраки', name: 'Каша на альтерн. молоке', price: 295, desc: 'Овсяная или рисовая на миндальном/кокосовом молоке', mods: ['Кокосовое', 'Миндальное', 'Овсяное', 'Без сахара'] },
+      { id: 105, cat: 'breakfast', catTitle: 'Завтраки', name: 'Блинчики со сметаной / джемом', price: 210, desc: 'Домашние блинчики (3 шт)', mods: ['Со сметаной', 'Со сгущенкой', 'С джемом'] },
+      { id: 106, cat: 'breakfast', catTitle: 'Завтраки', name: 'Блинчики с лососем', price: 370, desc: 'С начинкой из слабосоленого лосося и сливочного крем-сыра', mods: ['Крем-сыр отдельно'] },
+      { id: 107, cat: 'breakfast', catTitle: 'Завтраки', name: 'Блинчики с курицей / творогом', price: 340, desc: 'Сытная мясная или сладкая творожная начинка', mods: ['С курицей', 'С творогом'] },
+      { id: 108, cat: 'breakfast', catTitle: 'Завтраки', name: 'Английский завтрак', price: 360, desc: 'Яичница, помидор, огурец, сыр, поджаренный тост', mods: ['Глазунья', 'Скрэмбл'] },
+      { id: 109, cat: 'breakfast', catTitle: 'Завтраки', name: 'Мексиканский завтрак', price: 360, desc: 'Лаваш, яйца, сочный помидор, сыр', mods: ['Острый халапеньо'] },
+      { id: 110, cat: 'breakfast', catTitle: 'Завтраки', name: 'Яичница / Омлет с беконом', price: 360, desc: 'Классическая подача со свежей зеленью', mods: ['Глазунья', 'Омлет', 'С беконом'] },
+
+      /* САЛАТЫ */
+      { id: 201, cat: 'salads', catTitle: 'Салаты', name: 'Цезарь с курицей', price: 460, desc: 'Куриное филе, листья салата, томаты черри, крутоны, соус цезарь', mods: ['Соус отдельно', 'Без крутонов'] },
+      { id: 202, cat: 'salads', catTitle: 'Салаты', name: 'Цезарь с креветками', price: 480, desc: 'Тигровые креветки, салат, черри, сыр пармезан, соус цезарь', mods: ['Соус отдельно'] },
+      { id: 203, cat: 'salads', catTitle: 'Салаты', name: 'Оливье с куриным филе', price: 390, desc: 'Обжаренное куриное филе, яблоки, перепелиные яйца, майонез', mods: ['Без майонеза'] },
+      { id: 204, cat: 'salads', catTitle: 'Салаты', name: 'Салат из слабосоленого лосося', price: 480, desc: 'Лосось, стручковая фасоль, апельсин, микс салата', mods: [] },
+      { id: 205, cat: 'salads', catTitle: 'Салаты', name: 'Теплый салат с курицей', price: 460, desc: 'Куриное филе, микс салата, свежие овощи гриль', mods: [] },
+      { id: 206, cat: 'salads', catTitle: 'Салаты', name: 'Греко салат', price: 470, desc: 'Томаты, огурцы, болгарский перец, оливки, красный лук, сыр фета', mods: ['Без лука', 'Масло отдельно'] },
+      { id: 207, cat: 'salads', catTitle: 'Салаты', name: 'Салат свекольный с фетой', price: 480, desc: 'Свекла, листья салата, сыр фета, апельсин, микс семечек', mods: [] },
+
+      /* ЗАКУСКИ */
+      { id: 301, cat: 'snacks', catTitle: 'Закуски', name: 'Сэндвич на тостовом хлебе', price: 370, desc: 'Сыр, листья салата, томаты, куриное филе', mods: [] },
+      { id: 302, cat: 'snacks', catTitle: 'Закуски', name: 'Сэндвич-клаб', price: 370, desc: 'Классический клаб-сэндвич с картофелем фри', mods: [] },
+      { id: 303, cat: 'snacks', catTitle: 'Закуски', name: 'Сэндвич на бейгле', price: 380, desc: 'Сыр, свежий салат, соус, томаты, нежное филе', mods: [] },
+      { id: 304, cat: 'snacks', catTitle: 'Закуски', name: 'Кесадилья с курицей', price: 380, desc: 'Пшеничная тортилья, сыр, помидоры, куриное филе', mods: ['Острый соус'] },
+      { id: 305, cat: 'snacks', catTitle: 'Закуски', name: 'Наггетсы куриные', price: 380, desc: 'Хрустящие наггетсы с соусом на выбор', mods: ['Кетчуп', 'Сырный соус', 'Чесночный соус'] },
+      { id: 306, cat: 'snacks', catTitle: 'Закуски', name: 'Брускетта с лососем', price: 390, desc: 'Слабосоленый лосось, творожный сыр, зерновой хлеб', mods: [] },
+      { id: 307, cat: 'snacks', catTitle: 'Закуски', name: 'Брускетта авокадо и креветки', price: 390, desc: 'Спелое авокадо, тигровые креветки на тосте', mods: [] },
+      { id: 308, cat: 'snacks', catTitle: 'Закуски', name: 'Чикен & фрайс', price: 450, desc: 'Куриный шашлычок, картофель фри, фирменный соус', mods: [] },
+      { id: 309, cat: 'snacks', catTitle: 'Закуски', name: 'Картофель фри', price: 250, desc: 'Золотистый хрустящий картофель', mods: ['Кетчуп', 'Сырный соус'] },
+
+      /* ПАСТЫ */
+      { id: 401, cat: 'pastas', catTitle: 'Пасты', name: 'Паста «Болоньезе»', price: 620, desc: 'Домашняя паста, мясной фарш, соус болоньезе, пармезан', mods: ['Экстра пармезан'] },
+      { id: 402, cat: 'pastas', catTitle: 'Пасты', name: 'Паста «Карбонара»', price: 620, desc: 'Феттучини, хрустящий бекон, сливочный соус, яйцо, пармезан', mods: ['Экстра пармезан'] },
+      { id: 403, cat: 'pastas', catTitle: 'Пасты', name: 'Паста с креветками', price: 660, desc: 'Феттучини, сливочный соус, тигровые креветки, пармезан', mods: [] },
+      { id: 404, cat: 'pastas', catTitle: 'Пасты', name: 'Паста с цыпленком и грибами', price: 620, desc: 'Букатини, цыпленок, шампиньоны, сливочный соус', mods: [] },
+
+      /* СУПЫ (БОРЩ СО СМЕТАНОЙ И МАЙОНЕЗОМ) */
+      { id: 501, cat: 'soups', catTitle: 'Супы', name: 'Борщ традиционный', price: 380, desc: 'Насыщенный мясной борщ, свежая зелень. Выберите соус к подаче', 
+        mods: ['Со сметаной', 'С майонезом', 'Сметана отдельно', 'Майонез отдельно', 'Без зелени', 'Погорячее'] },
+      { id: 502, cat: 'soups', catTitle: 'Супы', name: 'Суп дня', price: 260, desc: 'Уточняйте у шеф-повара на смене', mods: [] },
+      { id: 503, cat: 'soups', catTitle: 'Супы', name: 'Куриный бульон с яйцом', price: 260, desc: 'Легкий бульон с домашней лапшой и яйцом', mods: ['Без зелени'] },
+      { id: 504, cat: 'soups', catTitle: 'Супы', name: 'Солянка сборная мясная', price: 360, desc: 'Подается с крутонами и долькой лимона', mods: ['Со сметаной', 'Без оливок'] },
+      { id: 505, cat: 'soups', catTitle: 'Супы', name: 'Сырный крем-суп', price: 360, desc: 'Нежный сливочно-сырный крем-суп с сухариками', mods: [] },
+      { id: 506, cat: 'soups', catTitle: 'Супы', name: 'Грибной крем-суп', price: 360, desc: 'Ароматные шампиньоны, сливки, зелень', mods: [] },
+      { id: 507, cat: 'soups', catTitle: 'Супы', name: 'Окрошка летняя', price: 380, desc: 'Свежие овощи, куриное филе. На кефире или рассоле/квасе', mods: ['На кефире', 'На рассоле/квасе'] },
+
+      /* ГОРЯЧЕЕ */
+      { id: 601, cat: 'hot', catTitle: 'Горячее', name: 'Удон с курицей', price: 570, desc: 'Пшеничная лапша, куриное филе, овощи, кунжут, соус', mods: ['Не острый', 'Острый'] },
+      { id: 602, cat: 'hot', catTitle: 'Горячее', name: 'Удон с креветками', price: 590, desc: 'Пшеничная лапша, тигровые креветки, овощи, кунжут', mods: [] },
+      { id: 603, cat: 'hot', catTitle: 'Горячее', name: 'Удон с говядиной', price: 590, desc: 'Пшеничная лапша, вырезка говядины, овощи, соус', mods: ['Не острый', 'Острый'] },
+      { id: 604, cat: 'hot', catTitle: 'Горячее', name: 'Тепьянки с мясом на выбор', price: 560, desc: 'Рис, кунжут, болгарский перец, лук, мясо на выбор', mods: ['С курицей', 'С говядиной', 'Со свининой'] },
+      { id: 605, cat: 'hot', catTitle: 'Горячее', name: 'Поке с лососем / угрём', price: 650, desc: 'Рис, овощи, авокадо, чука, ореховый соус', mods: ['С лососем', 'С угрём', 'С креветками'] },
+      { id: 606, cat: 'hot', catTitle: 'Горячее', name: 'Тонкацу с картофельным пюре', price: 650, desc: 'Хрустящее мясо, стручковая фасоль, соус тонкацу', mods: ['С курицей', 'Со свининой'] },
+      { id: 607, cat: 'hot', catTitle: 'Горячее', name: 'Жаркое по-домашнему', price: 670, desc: 'Томленая говядина, картофель, свежие овощи', mods: [] },
+      { id: 608, cat: 'hot', catTitle: 'Горячее', name: 'Котлета из говядины с брусничным соусом', price: 720, desc: 'Подается с нежным картофельным пюре', mods: ['Соус отдельно'] },
+      { id: 609, cat: 'hot', catTitle: 'Горячее', name: 'Бефстроганов с картофельным пюре', price: 740, desc: 'С солеными огурчиками собственного посола', mods: [] },
+      { id: 610, cat: 'hot', catTitle: 'Горячее', name: 'Телятина на косточке', price: 790, desc: 'Нежная телятина в сочном маринаде', mods: ['Medium', 'Well Done'] },
+      { id: 611, cat: 'hot', catTitle: 'Горячее', name: 'Пибимпаб по-корейски', price: 780, desc: 'Рис, свежие овощи, говяжий фарш, соус чили', mods: ['Соус чили отдельно'] },
+
+      /* ДЕСЕРТЫ */
+      { id: 701, cat: 'desserts', catTitle: 'Десерты', name: 'Домашний пирог', price: 330, desc: 'Свежая выпечка дня', mods: [] },
+      { id: 702, cat: 'desserts', catTitle: 'Десерты', name: 'Блинчики «Сюзетт»', price: 360, desc: 'Французский апельсиново-карамельный соус, мороженое', mods: [] },
+      { id: 703, cat: 'desserts', catTitle: 'Десерты', name: 'Сметанник с бананом', price: 360, desc: 'Бисквит, сметанный соус, банан, грецкий орех', mods: [] },
+      { id: 704, cat: 'desserts', catTitle: 'Десерты', name: 'Фруктовый салат с мороженым', price: 330, desc: 'Сезонные фрукты и шарик пломбира', mods: [] },
+      { id: 705, cat: 'desserts', catTitle: 'Десерты', name: 'Шоколадный брауни с мороженым', price: 370, desc: 'Теплый брауни с шариком мороженого', mods: [] },
+
+      /* КОФЕ КЛАССИЧЕСКИЙ */
+      { id: 801, cat: 'coffee_classic', catTitle: 'Кофе', name: 'Эспрессо', price: 140, desc: '30 мл бодрящего шот-эспрессо', mods: ['Сахар отдельно'] },
+      { id: 802, cat: 'coffee_classic', catTitle: 'Кофе', name: 'Американо 200 мл', price: 180, desc: 'Классический черный кофе', mods: ['С молоком', 'Без кофеина'] },
+      { id: 803, cat: 'coffee_classic', catTitle: 'Кофе', name: 'Американо большой 300 мл', price: 220, desc: 'Большая порция американо', mods: ['С молоком'] },
+      { id: 804, cat: 'coffee_classic', catTitle: 'Кофе', name: 'Капучино 250 мл', price: 260, desc: 'Шелковистая молочная пенка', mods: ['Кокосовое', 'Миндальное', 'Безлактозное'] },
+      { id: 805, cat: 'coffee_classic', catTitle: 'Кофе', name: 'Капучино большой 350 мл', price: 300, desc: 'Двойной шот эспрессо и молоко', mods: ['Кокосовое', 'Миндальное', 'Безлактозное'] },
+      { id: 806, cat: 'coffee_classic', catTitle: 'Кофе', name: 'Латте 300 мл', price: 260, desc: 'Нежный молочный кофе', mods: ['Кокосовое', 'Миндальное', 'Безлактозное'] },
+      { id: 807, cat: 'coffee_classic', catTitle: 'Кофе', name: 'Латте большой 400 мл', price: 300, desc: 'Большой объем сливочного кофе', mods: ['Кокосовое', 'Миндальное', 'Безлактозное'] },
+      { id: 808, cat: 'coffee_classic', catTitle: 'Кофе', name: 'Флэт Уайт', price: 270, desc: 'Насыщенный вкус двойного эспрессо с молоком', mods: ['Кокосовое', 'Овсяное'] },
+
+      /* АВТОРСКИЙ КОФЕ */
+      { id: 901, cat: 'coffee_author', catTitle: 'Авторский кофе', name: 'Цитрусовый раф', price: 350, desc: 'Сливки, эспрессо, цитрусовая цедра и сироп', mods: [] },
+      { id: 902, cat: 'coffee_author', catTitle: 'Авторский кофе', name: 'Ореховый раф', price: 350, desc: 'Сливочный раф с фундучным ароматом', mods: [] },
+      { id: 903, cat: 'coffee_author', catTitle: 'Авторский кофе', name: 'Латте соленая карамель', price: 350, desc: 'Морская соль и карамельная помадка', mods: ['Кокосовое', 'Овсяное'] },
+      { id: 904, cat: 'coffee_author', catTitle: 'Авторский кофе', name: 'Латте малина', price: 360, desc: 'Яркий акцент свежей малины', mods: [] },
+
+      /* МАТЧА & КАКАО */
+      { id: 1001, cat: 'hot_drinks', catTitle: 'Матча & Какао', name: 'Матча Латте', price: 320, desc: 'Японский зеленый чай матча с молоком', mods: ['Кокосовое', 'Овсяное', 'Безлактозное'] },
+      { id: 1002, cat: 'hot_drinks', catTitle: 'Матча & Какао', name: 'Какао с маршмеллоу', price: 260, desc: 'Шоколадный напиток', mods: ['С маршмеллоу'] },
+
+      /* ЧАИ */
+      { id: 1101, cat: 'tea', catTitle: 'Чай', name: 'Чёрный чай (чашка / чайник)', price: 140, desc: 'Классический черный высокогорный чай', mods: ['В чашке (140 ₽)', 'Чайник 600мл (240 ₽)'] },
+      { id: 1102, cat: 'tea', catTitle: 'Чай', name: 'Зелёный чай (чашка / чайник)', price: 140, desc: 'Освежающий листовой зеленый чай', mods: ['В чашке (140 ₽)', 'Чайник 600мл (240 ₽)'] },
+      { id: 1103, cat: 'tea', catTitle: 'Чай', name: 'Молочный улун', price: 160, desc: 'Сливочно-карамельный аромат улуна', mods: ['В чашке (160 ₽)', 'Чайник 600мл (270 ₽)'] },
+      { id: 1104, cat: 'tea', catTitle: 'Чай', name: 'Ройбуш', price: 160, desc: 'Южноафриканский травяной напиток без кофеина', mods: ['В чашке (160 ₽)', 'Чайник 600мл (270 ₽)'] },
+      { id: 1105, cat: 'tea', catTitle: 'Чай', name: 'Чай Облепиха-апельсин', price: 360, desc: 'Черный чай, облепиха, апельсин, мед', mods: ['Горячий', 'Со льдом'] },
+      { id: 1106, cat: 'tea', catTitle: 'Чай', name: 'Чай Лимон-имбирь', price: 360, desc: 'Черный чай, свежий корень имбиря, лимон, мед', mods: [] },
+      { id: 1107, cat: 'tea', catTitle: 'Чай', name: 'Чай Смородиновый', price: 360, desc: 'Черный чай, черная смородина, мед', mods: [] },
+      { id: 1108, cat: 'tea', catTitle: 'Чай', name: 'Чай Ягодный микс', price: 360, desc: 'Малина, смородина, мята, мед', mods: [] },
+
+      /* СМУЗИ & МИЛКШЕЙКИ */
+      { id: 1201, cat: 'smoothies', catTitle: 'Смузи & Шейки', name: 'Смузи тропический', price: 360, desc: 'Ананас, манго, сок, банан на безлактозном молоке', mods: [] },
+      { id: 1202, cat: 'smoothies', catTitle: 'Смузи & Шейки', name: 'Смузи смородиновый', price: 360, desc: 'Смородина, яблочный сок, банан', mods: [] },
+      { id: 1203, cat: 'smoothies', catTitle: 'Смузи & Шейки', name: 'Смузи витаминный', price: 360, desc: 'Клубника, малина, сок, банан', mods: [] },
+      { id: 1204, cat: 'smoothies', catTitle: 'Смузи & Шейки', name: 'Смузи зелёный', price: 360, desc: 'Киви, зеленое яблоко, банан, шпинат', mods: [] },
+      { id: 1205, cat: 'smoothies', catTitle: 'Смузи & Шейки', name: 'Милкшейк сливочный', price: 350, desc: 'Пломбир, цельное молоко, взбитые сливки', mods: [] },
+      { id: 1206, cat: 'smoothies', catTitle: 'Смузи & Шейки', name: 'Милкшейк клубничный', price: 350, desc: 'Клубничное пюре, мороженое, молоко', mods: [] },
+      { id: 1207, cat: 'smoothies', catTitle: 'Смузи & Шейки', name: 'Милкшейк шоколадный', price: 350, desc: 'Бельгийский шоколад, пломбир, молоко', mods: [] },
+
+      /* ХОЛОДНЫЕ НАПИТКИ */
+      { id: 1301, cat: 'cold_drinks', catTitle: 'Холодные напитки', name: 'Лимонад малина-лайм', price: 360, desc: 'Освежающий домашний лимонад', mods: ['Без льда'] },
+      { id: 1302, cat: 'cold_drinks', catTitle: 'Холодные напитки', name: 'Лимонад «Кофеман»', price: 360, desc: 'Ванильный лимонад с цитрусовой свежестью', mods: ['Без льда'] },
+      { id: 1303, cat: 'cold_drinks', catTitle: 'Холодные напитки', name: 'Морс брусничный / облепиховый', price: 150, desc: 'Натуральный ягодный морс', mods: ['Брусничный', 'Облепиховый'] },
+      { id: 1304, cat: 'cold_drinks', catTitle: 'Холодные напитки', name: 'Сок в ассортименте', price: 150, desc: 'Яблоко, апельсин, томат, вишня', mods: ['Апельсин', 'Яблоко', 'Томат'] },
+      { id: 1305, cat: 'cold_drinks', catTitle: 'Холодные напитки', name: 'Вода без газа / с газом', price: 130, desc: 'Бутилированная 0.5 л', mods: ['Без газа', 'С газом'] },
+
+      /* СИРОПЫ & ДОБАВКИ */
+      { id: 1401, cat: 'extras', catTitle: 'Сиропы & Добавки', name: 'Сироп в ассортименте', price: 60, desc: 'Ваниль, карамель, лесной орех, кокос', mods: ['Ваниль', 'Карамель', 'Орех', 'Кокос'] },
+      { id: 1402, cat: 'extras', catTitle: 'Сиропы & Добавки', name: 'Молоко альтернативное', price: 60, desc: 'Кокосовое, миндальное, овсяное', mods: ['Кокосовое', 'Миндальное', 'Овсяное'] }
     ];
 
-    /* App State */
+    /* Exact 11 tables in the Hall (No terrace!) */
+    const TABLES_INITIAL = [
+      { id: 1, name: "Стол 1", guests: 0, waiter: "", items: [], x: 8, y: 22, size: "sm", shape: "square" },
+      { id: 2, name: "Стол 2", guests: 0, waiter: "", items: [], x: 26, y: 22, size: "sm", shape: "square" },
+      { id: 3, name: "Стол 3", guests: 0, waiter: "", items: [], x: 48, y: 22, size: "md", shape: "square" },
+      { id: 4, name: "Стол 4", guests: 0, waiter: "", items: [], x: 72, y: 22, size: "md", shape: "square" },
+      { id: 5, name: "Стол 5", guests: 0, waiter: "", items: [], x: 8, y: 50, size: "md", shape: "square" },
+      { id: 6, name: "Стол 6", guests: 0, waiter: "", items: [], x: 26, y: 50, size: "md", shape: "square" },
+      { id: 7, name: "Стол 7", guests: 0, waiter: "", items: [], x: 48, y: 50, size: "md", shape: "square" },
+      { id: 8, name: "Стол 8", guests: 0, waiter: "", items: [], x: 72, y: 50, size: "md", shape: "square" },
+      { id: 9, name: "Стол 9", guests: 0, waiter: "", items: [], x: 10, y: 76, size: "md", shape: "square" },
+      { id: 10, name: "Стол 10", guests: 0, waiter: "", items: [], x: 34, y: 76, size: "lg", shape: "rect" },
+      { id: 11, name: "Стол 11 (VIP)", guests: 0, waiter: "", items: [], x: 62, y: 74, size: "xl", shape: "sofa" }
+    ];
+
+    /* Application State */
     let tables = TABLES_INITIAL;
     let currentWaiter = "";
     let currentTableId = 1;
-    let currentZone = 'all';
-    let currentDisplayMode = 'map'; // 'map', 'grid', 'list'
+    let currentStatusFilter = 'all'; // 'all', 'busy', 'free'
+    let currentDisplayMode = 'map';   // 'map', 'grid', 'list'
     let isLayoutEditMode = false;
     let tableBeingResized = null;
     let isDraggingTable = false;
@@ -437,6 +859,7 @@
     let toastTimer = null;
     let audioCtx = null;
 
+    /* Sound helper */
     function playBeep() {
       try {
         if (!audioCtx) {
@@ -468,13 +891,13 @@
 
       msgEl.textContent = msg;
       iconEl.textContent = icon;
-      toast.classList.remove('opacity-0', '-translate-y-24');
+      toast.classList.remove('opacity-0', '-translate-y-6');
       toast.classList.add('opacity-100', 'translate-y-0');
 
       if (toastTimer) clearTimeout(toastTimer);
       toastTimer = setTimeout(() => {
         toast.classList.remove('opacity-100', 'translate-y-0');
-        toast.classList.add('opacity-0', '-translate-y-24');
+        toast.classList.add('opacity-0', '-translate-y-6');
       }, 2000);
     }
 
@@ -518,7 +941,7 @@
 
     async function forceSyncFromCloud() {
       playBeep();
-      showToast('Синхронизация с базой...', '🔄');
+      showToast('Синхронизация с облаком...', '🔄');
       if (!currentUser) {
         try {
           if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
@@ -539,16 +962,22 @@
         if (snap.exists()) {
           const data = snap.data();
           if (data && Array.isArray(data.tables) && data.tables.length > 0) {
-            // Merge with local tables preserving positions if newly added
-            tables = data.tables.map(remoteTable => {
-              const localMatch = tables.find(t => t.id === remoteTable.id);
-              return {
-                ...remoteTable,
-                x: remoteTable.x !== undefined ? remoteTable.x : (localMatch?.x || 10),
-                y: remoteTable.y !== undefined ? remoteTable.y : (localMatch?.y || 10),
-                size: remoteTable.size || localMatch?.size || "md",
-                shape: remoteTable.shape || localMatch?.shape || "square"
-              };
+            // Keep strictly 11 hall tables
+            tables = TABLES_INITIAL.map(initT => {
+              const remote = data.tables.find(t => t.id === initT.id);
+              if (remote) {
+                return {
+                  ...initT,
+                  guests: remote.guests !== undefined ? remote.guests : initT.guests,
+                  waiter: remote.waiter || "",
+                  items: Array.isArray(remote.items) ? remote.items : [],
+                  x: remote.x !== undefined ? remote.x : initT.x,
+                  y: remote.y !== undefined ? remote.y : initT.y,
+                  size: remote.size || initT.size,
+                  shape: remote.shape || initT.shape
+                };
+              }
+              return initT;
             });
 
             const syncDot = document.getElementById('syncDot');
@@ -571,7 +1000,20 @@
       });
     }
 
-    /* Switch between Map / Grid / List Display Modes */
+    /* Filter tables by Status (all, busy, free) */
+    function filterTableStatus(status) {
+      playBeep();
+      currentStatusFilter = status;
+      document.querySelectorAll('.status-btn').forEach(btn => {
+        btn.className = "status-btn px-3 py-1.5 rounded-xl bg-stone-100 text-stone-700 hover:bg-stone-200 transition font-bold";
+      });
+      const activeBtn = document.getElementById(`status-btn-${status}`);
+      if (activeBtn) {
+        activeBtn.className = "status-btn px-3 py-1.5 rounded-xl bg-amber-950 text-white shadow-xs font-bold transition";
+      }
+      renderTables();
+    }
+
     function setTablesDisplayMode(mode) {
       playBeep();
       currentDisplayMode = mode;
@@ -588,7 +1030,6 @@
       const activeBtn = document.getElementById(`mode-btn-${mode}`);
       if (activeBtn) activeBtn.className = "mode-btn px-2.5 py-1 rounded-lg bg-white text-stone-900 shadow-2xs font-bold flex items-center gap-1 transition";
 
-      // Edit layout is primarily available in MAP mode
       if (editBtn) {
         if (mode === 'map') {
           editBtn.classList.remove('hidden');
@@ -612,7 +1053,7 @@
         if (notice) notice.classList.remove('hidden');
         if (btn) btn.className = "px-2.5 py-1.5 rounded-xl bg-amber-600 text-white border border-amber-700 text-xs font-bold flex items-center gap-1 shadow-xs";
         if (resetBtn) resetBtn.classList.remove('hidden');
-        showToast('Режим расстановки активен: двигайте столы', '✏️');
+        showToast('Режим расстановки: двигайте столы пальцем', '✏️');
       } else {
         if (notice) notice.classList.add('hidden');
         if (btn) btn.className = "px-2.5 py-1.5 rounded-xl bg-amber-100 hover:bg-amber-200 text-amber-950 border border-amber-300 text-xs font-bold flex items-center gap-1 transition active:scale-95";
@@ -665,6 +1106,16 @@
       showToast('Размер стола обновлен', '📐');
     }
 
+    function getFilteredTables() {
+      if (currentStatusFilter === 'busy') {
+        return tables.filter(t => t.items && t.items.length > 0);
+      }
+      if (currentStatusFilter === 'free') {
+        return tables.filter(t => !t.items || t.items.length === 0);
+      }
+      return tables;
+    }
+
     function renderTables() {
       const mapWrapper = document.getElementById('tablesMapWrapper');
       const grid = document.getElementById('tablesGrid');
@@ -688,28 +1139,24 @@
       }
     }
 
-    /* 1. MAP VIEW: Absolute positioning with drag-and-drop support */
+    /* 1. MAP VIEW: Full Hall without terrace */
     function renderMapTables() {
       const layer = document.getElementById('mapTablesLayer');
       if (!layer) return;
       layer.innerHTML = '';
 
-      const filtered = currentZone === 'all' 
-        ? tables 
-        : tables.filter(t => t.zone === currentZone);
+      const filtered = getFilteredTables();
 
       filtered.forEach(table => {
         const hasItems = table.items && table.items.length > 0;
         const total = calcTableSum(table);
         const el = document.createElement('div');
 
-        // Dimensions by size
-        let sizeClasses = "w-20 h-20 text-xs"; // md default
+        let sizeClasses = "w-20 h-20 text-xs";
         if (table.size === 'sm') sizeClasses = "w-16 h-16 text-[10px]";
         if (table.size === 'lg') sizeClasses = "w-28 h-20 text-xs";
         if (table.size === 'xl') sizeClasses = "w-32 h-24 text-xs";
 
-        // Style depending on status
         let bgClass = "bg-white border-stone-300 text-stone-800 shadow-sm";
         if (hasItems) {
           const allServed = table.items.every(it => it.served);
@@ -746,7 +1193,7 @@
           </div>
 
           <div class="text-[8px] text-stone-400 flex justify-between items-center leading-none">
-            <span>${table.zone === 'terrace' ? 'Терраса' : 'Зал'}</span>
+            <span>Зал</span>
             ${hasItems ? `<span class="text-amber-800 font-bold">${table.items.length} поз.</span>` : ''}
           </div>
         `;
@@ -761,7 +1208,6 @@
       });
     }
 
-    /* Drag-and-drop logic for visual map editor (Touch + Mouse) */
     function enableDragForTable(element, table) {
       let startX, startY, origLeft, origTop;
       const canvas = document.getElementById('floorCanvas');
@@ -818,15 +1264,13 @@
       element.ontouchstart = onPointerDown;
     }
 
-    /* 2. GRID VIEW: Standard responsive card grid */
+    /* 2. GRID VIEW */
     function renderGridTables() {
       const grid = document.getElementById('tablesGrid');
       if (!grid) return;
       grid.innerHTML = '';
 
-      const filtered = currentZone === 'all' 
-        ? tables 
-        : tables.filter(t => t.zone === currentZone);
+      const filtered = getFilteredTables();
 
       filtered.forEach(table => {
         const hasItems = table.items && table.items.length > 0;
@@ -887,7 +1331,7 @@
             <div class="flex items-center gap-1.5 text-xs text-stone-500">
               <span class="font-semibold text-stone-700">👥 ${table.guests > 0 ? table.guests + ' перс.' : '0 персон'}</span>
               <span>•</span>
-              <span class="text-[11px] capitalize">${table.zone === 'terrace' ? 'Терраса' : 'Основной зал'}</span>
+              <span class="text-[11px]">Основной зал</span>
             </div>
             ${waiterTag}
             ${itemsSnippet}
@@ -902,15 +1346,13 @@
       });
     }
 
-    /* 3. LIST VIEW: Compact registry table */
+    /* 3. LIST VIEW */
     function renderListTables() {
       const list = document.getElementById('tablesListView');
       if (!list) return;
       list.innerHTML = '';
 
-      const filtered = currentZone === 'all' 
-        ? tables 
-        : tables.filter(t => t.zone === currentZone);
+      const filtered = getFilteredTables();
 
       filtered.forEach(table => {
         const hasItems = table.items && table.items.length > 0;
@@ -931,7 +1373,7 @@
             <div class="min-w-0">
               <div class="flex items-center gap-1.5">
                 <span class="font-bold text-xs sm:text-sm text-stone-900 truncate">${table.name}</span>
-                <span class="text-[10px] text-stone-500 bg-stone-100 px-1.5 py-0.2 rounded font-semibold">${table.zone === 'terrace' ? 'Терраса' : 'Зал'}</span>
+                <span class="text-[10px] text-stone-500 bg-stone-100 px-1.5 py-0.2 rounded font-semibold">Зал</span>
               </div>
               <div class="text-[11px] text-stone-500 truncate">
                 ${table.waiter ? `👤 ${table.waiter}` : 'Официант: —'} • 👥 ${table.guests || 0} чел.
@@ -995,7 +1437,6 @@
 
     function goToTablesView() {
       playBeep();
-      // If current table has no items, ensure it stays completely free (0 guests, no waiter)
       const activeTable = tables.find(t => t.id === currentTableId);
       if (activeTable && (!activeTable.items || activeTable.items.length === 0)) {
         activeTable.waiter = "";
@@ -1053,103 +1494,6 @@
       }
     }
 
-    function filterZone(zone) {
-      playBeep();
-      currentZone = zone;
-      document.querySelectorAll('.zone-btn').forEach(btn => {
-        btn.className = "zone-btn px-3.5 py-2 rounded-xl bg-stone-100 text-stone-700 hover:bg-stone-200 transition font-bold";
-      });
-      const activeBtn = document.getElementById(`zone-btn-${zone}`);
-      if (activeBtn) {
-        activeBtn.className = "zone-btn px-3.5 py-2 rounded-xl bg-amber-950 text-white shadow-xs font-bold transition";
-      }
-      renderTables();
-    }
-
-    function renderTables() {
-      const grid = document.getElementById('tablesGrid');
-      if (!grid) return;
-      grid.innerHTML = '';
-
-      const filtered = currentZone === 'all' 
-        ? tables 
-        : tables.filter(t => t.zone === currentZone);
-
-      filtered.forEach(table => {
-        const hasItems = table.items && table.items.length > 0;
-        const total = calcTableSum(table);
-        const card = document.createElement('div');
-
-        const bgClass = hasItems 
-          ? 'bg-amber-50/90 border-amber-300 ring-2 ring-amber-400/25 shadow-sm' 
-          : 'bg-white border-stone-200 hover:border-amber-400 hover:shadow-xs';
-
-        const hasUnsent = hasItems && table.items.some(it => !it.sentToKitchen);
-        const totalCount = hasItems ? table.items.length : 0;
-        const servedCount = hasItems ? table.items.filter(it => it.served).length : 0;
-        const allServed = hasItems && totalCount > 0 && servedCount === totalCount;
-
-        let statusLabel = '';
-        if (hasItems) {
-          if (allServed) {
-            statusLabel = `<span class="text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-900 flex items-center gap-1"><span>✓</span>Подано</span>`;
-          } else if (hasUnsent) {
-            statusLabel = `<span class="text-[10px] font-bold px-2 py-0.5 rounded-md bg-amber-200 text-amber-950 flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-amber-600 animate-pulse"></span>Дозаказ</span>`;
-          } else {
-            statusLabel = `<span class="text-[10px] font-bold px-2 py-0.5 rounded-md bg-blue-100 text-blue-900 flex items-center gap-1"><span>🍽️</span>${servedCount}/${totalCount}</span>`;
-          }
-        } else {
-          statusLabel = `<span class="text-[10px] font-bold px-2 py-0.5 rounded-md bg-stone-100 text-stone-600">Свободен</span>`;
-        }
-
-        // Waiter attribution badge
-        const isMyTable = currentWaiter && table.waiter === currentWaiter;
-        let waiterTag = '';
-        if (table.waiter) {
-          waiterTag = `
-            <div class="mt-1.5 flex items-center gap-1 text-[11px] font-bold ${isMyTable ? 'text-amber-950 bg-amber-200/70 border-amber-300' : 'text-stone-700 bg-stone-100 border-stone-200'} px-2 py-0.5 rounded-lg border w-fit">
-              <span>👤</span>
-              <span>${table.waiter}${isMyTable ? ' (Вы)' : ''}</span>
-            </div>
-          `;
-        } else {
-          waiterTag = `<div class="mt-1.5 text-[10px] text-stone-400 font-medium">Официант: не назначен</div>`;
-        }
-
-        let itemsSnippet = '';
-        if (hasItems) {
-          const names = table.items.map(it => `${it.qty}× ${it.name}`).slice(0, 3).join(', ');
-          const extraCount = table.items.length > 3 ? ` +${table.items.length - 3}` : '';
-          itemsSnippet = `<div class="mt-1.5 text-[11px] text-stone-600 line-clamp-1 bg-white/70 p-1 rounded-md border border-amber-200/60 font-medium">📋 ${names}${extraCount}</div>`;
-        }
-
-        card.className = `p-3.5 sm:p-4 rounded-2xl border transition-all duration-150 cursor-pointer flex flex-col justify-between active:scale-[0.98] select-none ${bgClass}`;
-        card.onclick = () => onTableClicked(table.id);
-
-        card.innerHTML = `
-          <div>
-            <div class="flex items-center justify-between mb-1">
-              <span class="font-extrabold text-sm sm:text-base text-stone-900">${table.name}</span>
-              ${statusLabel}
-            </div>
-            <div class="flex items-center gap-1.5 text-xs text-stone-500">
-              <span class="font-semibold text-stone-700">👥 ${table.guests > 0 ? table.guests + ' перс.' : '0 персон'}</span>
-              <span>•</span>
-              <span class="text-[11px] capitalize">${table.zone === 'terrace' ? 'Терраса' : 'Основной зал'}</span>
-            </div>
-            ${waiterTag}
-            ${itemsSnippet}
-          </div>
-
-          <div class="mt-3 pt-2.5 border-t border-stone-200/80 flex items-center justify-between">
-            <span class="text-[11px] text-stone-500 font-medium">${hasItems ? table.items.reduce((s, it) => s + it.qty, 0) + ' шт.' : 'Заказ пуст'}</span>
-            <span class="font-mono font-bold text-xs sm:text-sm ${total > 0 ? 'text-amber-950 font-black' : 'text-stone-400'}">${total} ₽</span>
-          </div>
-        `;
-        grid.appendChild(card);
-      });
-    }
-
     function onTableClicked(tableId) {
       playBeep();
       const table = tables.find(t => t.id === tableId);
@@ -1201,9 +1545,9 @@
       document.querySelectorAll('.guest-btn').forEach((btn, idx) => {
         const val = idx + 1;
         if (val === tempGuestsCount) {
-          btn.className = "guest-btn p-2 rounded-xl border-2 border-amber-600 bg-amber-50 text-amber-950 font-bold flex flex-col items-center shadow-xs";
+          btn.className = "guest-btn p-2.5 rounded-xl border-2 border-amber-600 bg-amber-50 text-amber-950 font-bold flex flex-col items-center shadow-xs";
         } else {
-          btn.className = "guest-btn p-2 rounded-xl border-2 border-stone-200 text-stone-800 flex flex-col items-center hover:bg-stone-50";
+          btn.className = "guest-btn p-2.5 rounded-xl border-2 border-stone-200 text-stone-800 flex flex-col items-center hover:bg-stone-50";
         }
       });
     }
@@ -1213,7 +1557,6 @@
       const table = tables.find(t => t.id === pendingModalTableId);
       if (table) {
         table.guests = tempGuestsCount;
-        // Waiter is not assigned yet; will be assigned upon adding the first dish
         syncTablesToCloud();
       }
       closeModal('guestsModal');
@@ -1304,7 +1647,7 @@
           : '';
 
         const hasModsBadge = (dish.mods && dish.mods.length > 0)
-          ? `<span class="text-[9px] font-semibold text-stone-500 bg-stone-100 px-1.5 py-0.5 rounded border border-stone-200">⚙️ Добавки</span>`
+          ? `<span class="text-[9px] font-semibold text-stone-500 bg-stone-100 px-1.5 py-0.5 rounded border border-stone-200">⚙️ Опции</span>`
           : '';
 
         let actionControls = '';
@@ -1427,7 +1770,6 @@
       if (table.guests === 0) {
         table.guests = 1;
       }
-      // Assign waiter specifically when a dish is added to the table
       if (!table.waiter && currentWaiter) {
         table.waiter = currentWaiter;
       }
@@ -1477,7 +1819,6 @@
       if (table.items[index].qty <= 0) {
         table.items.splice(index, 1);
       }
-      // If table became empty, release waiter assignment
       if (table.items.length === 0) {
         table.waiter = "";
         table.guests = 0;
@@ -1496,6 +1837,7 @@
       renderOrderScreen();
     }
 
+    /* Toggle served status with strike-through */
     function toggleItemServed(index) {
       playBeep();
       const table = tables.find(t => t.id === currentTableId);
@@ -1522,7 +1864,7 @@
 
       const unsent = table.items.filter(it => !it.sentToKitchen);
       if (unsent.length === 0) {
-        showToast('Все позиции уже в цеху', '✓');
+        showToast('Все позиции уже отправлены', '✓');
         return;
       }
 
@@ -1534,7 +1876,7 @@
       syncTablesToCloud();
       renderOrderScreen();
       renderTables();
-      showToast(`Заказ отправлен на кухню!`, '🚀');
+      showToast(`Отправлено в цех!`, '🚀');
     }
 
     function clearCurrentOrder() {
@@ -1568,16 +1910,16 @@
             cartCol.classList.add('hidden');
             cartCol.classList.remove('flex');
           }
-          if (menuBtn) menuBtn.className = "flex-1 py-2.5 rounded-xl bg-white text-stone-900 shadow-xs flex items-center justify-center gap-1.5 transition";
-          if (cartBtn) cartBtn.className = "flex-1 py-2.5 rounded-xl text-stone-600 hover:text-stone-900 flex items-center justify-center gap-1.5 transition";
+          if (menuBtn) menuBtn.className = "flex-1 py-2 rounded-lg bg-white text-stone-900 shadow-xs flex items-center justify-center gap-1.5 transition";
+          if (cartBtn) cartBtn.className = "flex-1 py-2 rounded-lg text-stone-600 hover:text-stone-900 flex items-center justify-center gap-1.5 transition";
         } else {
           if (menuCol) menuCol.classList.add('hidden');
           if (cartCol) {
             cartCol.classList.remove('hidden');
             cartCol.classList.add('flex');
           }
-          if (cartBtn) cartBtn.className = "flex-1 py-2.5 rounded-xl bg-white text-stone-900 shadow-xs flex items-center justify-center gap-1.5 transition";
-          if (menuBtn) menuBtn.className = "flex-1 py-2.5 rounded-xl text-stone-600 hover:text-stone-900 flex items-center justify-center gap-1.5 transition";
+          if (cartBtn) cartBtn.className = "flex-1 py-2 rounded-lg bg-white text-stone-900 shadow-xs flex items-center justify-center gap-1.5 transition";
+          if (menuBtn) menuBtn.className = "flex-1 py-2 rounded-lg text-stone-600 hover:text-stone-900 flex items-center justify-center gap-1.5 transition";
           if (floatingBar) floatingBar.classList.add('hidden');
         }
       } else {
@@ -1637,10 +1979,10 @@
       const personsBadge = document.getElementById('ticketPersonsBadge');
 
       if (titleEl) titleEl.textContent = table.name;
-      if (subtitleEl) subtitleEl.textContent = `${table.guests || 0} персоны`;
+      if (subtitleEl) subtitleEl.textContent = `${table.guests || 0} персон`;
       if (waiterTagEl) waiterTagEl.textContent = `Официант: ${table.waiter || 'Не назначен'}`;
       if (guestsBtn) guestsBtn.textContent = `${table.guests || 0} чел.`;
-      if (personsBadge) personsBadge.textContent = `${table.guests || 0} персоны`;
+      if (personsBadge) personsBadge.textContent = `${table.guests || 0} персон`;
 
       const container = document.getElementById('ticketItemsContainer');
       const totalQtyEl = document.getElementById('ticketTotalQty');
@@ -1936,7 +2278,6 @@
       if (table.guests === 0) {
         table.guests = 1;
       }
-      // Assign waiter specifically when custom dish is added
       if (!table.waiter && currentWaiter) {
         table.waiter = currentWaiter;
       }
@@ -1970,10 +2311,11 @@
       if (el) el.classList.add('hidden');
     }
 
+    /* Window exports for HTML onclick handlers */
     window.goToTablesView = goToTablesView;
     window.goToOrderView = goToOrderView;
     window.toggleViewFromHeader = toggleViewFromHeader;
-    window.filterZone = filterZone;
+    window.filterTableStatus = filterTableStatus;
     window.setTablesDisplayMode = setTablesDisplayMode;
     window.toggleLayoutEditor = toggleLayoutEditor;
     window.resetDefaultPositions = resetDefaultPositions;
@@ -2029,7 +2371,6 @@
     });
 
     window.addEventListener('DOMContentLoaded', async () => {
-      // Restore waiter name if cached
       try {
         const savedName = localStorage.getItem('coffeeman_waiter_name');
         if (savedName) {
@@ -2042,12 +2383,10 @@
       renderTables();
       renderDishes();
 
-      // Show welcome entrance modal if no waiter selected
       if (!currentWaiter) {
         openWelcomeModal();
       }
 
-      // Initialize Firebase auth before operations (Rule 3)
       try {
         if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
           await signInWithCustomToken(auth, __initial_auth_token);
