@@ -642,6 +642,7 @@ function addDishDirectlyToCart(dish, modifiers = [], comment = "") {
   showToast(`+ 1 ${dish.name}`, '☕');
 }
 
+/* РЕНДЕРИНГ ЧЕКА СТОЛА С ПОДДЕРЖКОЙ DOUBLE-TAP ДЛЯ ПОДАЧИ */
 function renderOrderScreen() {
   const table = tables.find(t => t.id === currentTableId);
   if (!table) return;
@@ -691,37 +692,80 @@ function renderOrderScreen() {
     const itemFullPrice = it.price + modsSum;
 
     const row = document.createElement('div');
-    row.className = `p-2 bg-slate-50 rounded-2xl border text-xs flex flex-col gap-1 transition ${
-      it.served ? 'border-emerald-200 bg-emerald-50/40' : (it.sentToKitchen ? 'border-slate-200' : 'border-orange-200 bg-orange-50/30')
+    row.className = `p-2.5 rounded-2xl border text-xs flex flex-col gap-1 transition select-none cursor-pointer active:scale-[0.98] ${
+      it.served 
+        ? 'border-emerald-300 bg-emerald-50/70 shadow-xs' 
+        : (it.sentToKitchen ? 'border-slate-200 bg-slate-50' : 'border-orange-200 bg-orange-50/40')
     }`;
+
+    // Переменная для отслеживания двойного тапа
+    let lastTapTime = 0;
+
+    row.addEventListener('click', (e) => {
+      // Игнорируем клики по кнопкам + / - / удалить, чтобы не сбивать счетчик
+      if (e.target.closest('button')) return;
+
+      const currentTime = new Date().getTime();
+      const tapLength = currentTime - lastTapTime;
+
+      if (tapLength < 320 && tapLength > 0) {
+        // Двойной тап зафиксирован!
+        toggleServed(idx);
+        e.preventDefault();
+      }
+      lastTapTime = currentTime;
+    });
 
     row.innerHTML = `
       <div class="flex items-start justify-between gap-1.5">
         <div class="min-w-0 flex-1">
-          <div class="flex items-center gap-1 flex-wrap">
-            <span class="font-bold text-slate-800 text-xs ${it.served ? 'line-through text-slate-400' : ''}">${it.name}</span>
-            ${it.served ? '<span class="text-[8px] px-1 bg-emerald-100 text-emerald-700 rounded font-semibold">✓</span>' : ''}
-            ${!it.sentToKitchen ? '<span class="text-[8px] px-1 bg-orange-100 text-orange-700 rounded font-semibold">Новое</span>' : ''}
+          <div class="flex items-center gap-1.5 flex-wrap">
+            <span class="font-extrabold text-xs ${it.served ? 'line-through text-slate-400' : 'text-slate-800'}">
+              ${it.name}
+            </span>
+            ${it.served ? '<span class="text-[9px] px-1.5 py-0.2 bg-emerald-500 text-white rounded-full font-bold flex items-center gap-0.5">✓ Подано</span>' : ''}
+            ${(!it.served && it.sentToKitchen) ? '<span class="text-[9px] px-1.5 py-0.2 bg-blue-100 text-blue-700 rounded-full font-semibold">Готовится</span>' : ''}
+            ${(!it.served && !it.sentToKitchen) ? '<span class="text-[9px] px-1.5 py-0.2 bg-orange-100 text-orange-700 rounded-full font-semibold animate-pulse">Новое</span>' : ''}
           </div>
           ${it.modifiers && it.modifiers.length > 0 ? `<div class="text-[9px] text-orange-600 font-mono mt-0.5">+ ${it.modifiers.map(m => m.name).join(', ')}</div>` : ''}
-          ${it.comment ? `<div class="text-[9px] text-slate-400 italic mt-0.5">💬 "${it.comment}"</div>` : ''}
+          ${it.comment ? `<div class="text-[9px] text-slate-500 italic mt-0.5">💬 "${it.comment}"</div>` : ''}
+          <div class="text-[8px] text-slate-400 mt-0.5 tracking-tight font-medium">⚡ Двойной тап — ${it.served ? 'отменить подачу' : 'отметить как подано'}</div>
         </div>
         <span class="font-mono font-black text-xs text-slate-900 shrink-0">${itemFullPrice * it.qty} ₽</span>
       </div>
 
-      <div class="flex items-center justify-between pt-1 border-t border-slate-200/60">
+      <div class="flex items-center justify-between pt-1 border-t border-slate-200/60 mt-0.5">
         <span class="text-[9px] font-mono text-slate-400">${itemFullPrice} ₽/шт</span>
         <div class="flex items-center gap-1">
-          <button onclick="changeQty(${idx}, -1)" class="w-5 h-5 bg-white border border-slate-200 text-slate-700 rounded-md font-bold flex items-center justify-center active:scale-90">-</button>
-          <span class="font-mono font-bold text-xs px-1 text-slate-800">${it.qty}</span>
-          <button onclick="changeQty(${idx}, 1)" class="w-5 h-5 bg-white border border-slate-200 text-slate-700 rounded-md font-bold flex items-center justify-center active:scale-90">+</button>
-          <button onclick="deleteCartItem(${idx})" class="ml-1 p-0.5 text-slate-400 hover:text-rose-500 text-xs">✕</button>
+          <button onclick="changeQty(${idx}, -1)" class="w-6 h-6 bg-white border border-slate-200 text-slate-700 rounded-lg font-black flex items-center justify-center active:scale-90 shadow-2xs">-</button>
+          <span class="font-mono font-bold text-xs px-1.5 text-slate-800">${it.qty}</span>
+          <button onclick="changeQty(${idx}, 1)" class="w-6 h-6 bg-white border border-slate-200 text-slate-700 rounded-lg font-black flex items-center justify-center active:scale-90 shadow-2xs">+</button>
+          <button onclick="deleteCartItem(${idx})" title="Удалить позицию" class="ml-1.5 w-6 h-6 rounded-lg text-slate-400 hover:text-rose-500 flex items-center justify-center text-xs active:scale-90">✕</button>
         </div>
       </div>
     `;
     container.appendChild(row);
   });
 }
+
+/* ПЕРЕКЛЮЧЕНИЕ СТАТУСА ПОДАЧИ */
+function toggleServed(idx) {
+  const table = tables.find(t => t.id === currentTableId);
+  if (!table || !table.items[idx]) return;
+
+  table.items[idx].served = !table.items[idx].served;
+  const isNowServed = table.items[idx].served;
+
+  syncToCloud();
+  renderOrderScreen();
+
+  if (isNowServed) {
+    showToast(`«${table.items[idx].name}» подано! ✓`, '🍽️');
+  } else {
+    showToast(`«${table.items[idx].name}» возвращено в готовку`, '⏳');
+  }
+}
+
 
 function changeQty(idx, delta) {
   const table = tables.find(t => t.id === currentTableId);
