@@ -1,480 +1,147 @@
 <!DOCTYPE html>
-<html lang="ru" class="dark">
+<html lang="ru">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>ChefOS • Цех Кондитера</title>
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🍰</text></svg>">
-
+  <title>COFFEEMAN • Главный дашборд</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
-
-  <!-- Firebase Modular Scripts -->
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-    import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-database.js";
-
-    const firebaseConfig = {
-      apiKey: "AIzaSyCT2aJ8rF5KRCIFS3W6r4wbQeyBzkhmqnc",
-      authDomain: "lte-bank.firebaseapp.com",
-      databaseURL: "https://lte-bank-default-rtdb.firebaseio.com",
-      projectId: "lte-bank",
-      storageBucket: "lte-bank.firebasestorage.app",
-      messagingSenderId: "286397543738",
-      appId: "1:286397543738:web:c3ef297e6b6666620c4c03",
-      measurementId: "G-Q9BM100F5P"
-    };
-
-    const fbApp = initializeApp(firebaseConfig);
-    const fbDb = getDatabase(fbApp);
-
-    window.fbDb = fbDb;
-    window.fbRef = ref;
-    window.fbOnValue = onValue;
-
-    window.dispatchEvent(new Event('firebase-ready'));
-  </script>
-
-  <style>
-    * { 
-      -webkit-tap-highlight-color: transparent; 
-      outline: none; 
-      box-sizing: border-box;
-    }
-    
-    body {
-      background-color: #08080c;
-      color: #f1f5f9;
-      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
-      text-rendering: optimizeLegibility;
-      -webkit-font-smoothing: antialiased;
-    }
-
-    .bento-card {
-      background: #121218;
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      border-radius: 22px;
-      transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
-    }
-
-    /* --- Адаптивное отображение текста на экранах телефонов и планшетов --- */
-    .rich-display {
-      font-size: 15px; /* Крупный читаемый шрифт на телефоне */
-      line-height: 1.75;
-      color: #e2e8f0;
-      word-break: normal;
-      overflow-wrap: anywhere; /* Не рвёт слова на куски, переносит естественно */
-      hyphens: manual;
-    }
-
-    @media (min-width: 640px) {
-      .rich-display {
-        font-size: 15.5px;
-        line-height: 1.8;
-      }
-    }
-
-    /* Маркер-хайлайтер с защитой от разрыва строки внутри тега */
-    .rich-display mark {
-      background: rgba(245, 158, 11, 0.28);
-      color: #fde68a;
-      padding: 2px 6px;
-      border-radius: 6px;
-      border: 1px solid rgba(245, 158, 11, 0.45);
-      font-weight: 700;
-      box-decoration-break: clone;
-      -webkit-box-decoration-break: clone;
-      display: inline;
-    }
-
-    .rich-display b, 
-    .rich-display strong {
-      font-weight: 700;
-      color: #ffffff;
-    }
-
-    .rich-display u {
-      text-decoration-color: #f59e0b;
-      text-underline-offset: 3px;
-    }
-
-    .rich-display s {
-      color: #64748b;
-    }
-
-    .rich-display .chef-color-danger {
-      color: #fda4af !important;
-      font-weight: 700;
-    }
-
-    .rich-display .chef-color-gold {
-      color: #fde047 !important;
-      font-weight: 700;
-    }
-
-    .rich-display .chef-color-emerald {
-      color: #6ee7b7 !important;
-      font-weight: 700;
-    }
-
-    /* Блок подсказок шефа */
-    .rich-display .chef-callout {
-      display: block;
-      margin: 12px 0;
-      padding: 12px 14px;
-      background: rgba(245, 158, 11, 0.12);
-      border-left: 3.5px solid #f59e0b;
-      border-radius: 4px 14px 14px 4px;
-      color: #fef3c7;
-      font-size: 14.5px;
-      line-height: 1.65;
-    }
-
-    /* Адаптивные списки: компактные отступы на смартфонах */
-    .rich-display ul {
-      list-style-type: disc;
-      padding-left: 18px;
-      margin: 8px 0;
-    }
-
-    .rich-display ol {
-      list-style-type: decimal;
-      padding-left: 20px;
-      margin: 8px 0;
-    }
-
-    .rich-display li {
-      margin-bottom: 8px;
-      padding-left: 4px;
-    }
-
-    .rich-display li::marker {
-      color: #f59e0b;
-      font-weight: bold;
-    }
-  </style>
+  <link rel="stylesheet" href="style.css">
 </head>
-<body class="min-h-screen pb-28 select-none">
+<body class="bg-stone-900 text-stone-100 min-h-screen flex flex-col justify-between p-4 sm:p-8">
 
   <!-- Header -->
-  <header class="sticky top-0 z-30 bg-[#08080c]/95 backdrop-blur-xl border-b border-white/10 px-4 sm:px-6 py-3">
-    <div class="max-w-4xl mx-auto flex items-center justify-between">
-      <div class="flex items-center gap-2.5">
-        <span class="text-2xl drop-shadow">🍰</span>
-        <div>
-          <h1 class="text-base font-extrabold text-white tracking-tight leading-none">ChefOS • Цех</h1>
-          <p id="cloudStatus" class="text-[10px] font-mono text-emerald-400 mt-1 flex items-center gap-1">
-            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> База онлайн
-          </p>
-        </div>
+  <header class="max-w-5xl w-full mx-auto flex items-center justify-between border-b border-stone-800 pb-5">
+    <div class="flex items-center gap-3.5">
+      <div class="w-12 h-12 rounded-2xl bg-amber-500 text-amber-950 font-black flex items-center justify-center text-2xl shadow-lg">
+        ☕
       </div>
+      <div>
+        <h1 class="text-xl sm:text-2xl font-black tracking-tight text-white">COFFEEMAN POS</h1>
+        <p class="text-xs text-stone-400">Система управления кофейней и залом</p>
+      </div>
+    </div>
 
-      <a href="admin.html" class="px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 active:scale-95 text-white text-xs font-semibold transition flex items-center gap-1.5 border border-white/10">
-        <i class="fa-solid fa-user-gear text-amber-400"></i>
-        <span>Шеф</span>
-      </a>
+    <!-- Live indicator -->
+    <div class="flex items-center gap-2 bg-stone-800/80 px-3 py-1.5 rounded-xl border border-stone-700">
+      <span id="syncDot" class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
+      <span id="syncText" class="text-xs font-mono text-stone-300">В сети</span>
     </div>
   </header>
 
-  <!-- Active Oven Timer -->
-  <div class="max-w-4xl mx-auto px-3.5 sm:px-6 pt-3">
-    <div id="activeTimerWidget" class="hidden p-3.5 sm:p-4 rounded-2xl bento-card border-amber-500/40 bg-gradient-to-r from-amber-950/30 to-[#121218] flex items-center justify-between shadow-2xl">
-      <div class="flex items-center gap-3">
-        <span class="text-2xl animate-pulse">🔥</span>
-        <div>
-          <div id="activeTimerTitle" class="text-xs sm:text-sm font-bold text-white uppercase tracking-wider line-clamp-1">Печь в работе</div>
-          <div id="activeTimerSub" class="text-[11px] text-amber-400/80 font-mono">50 минут</div>
+  <!-- Metrics Bar -->
+  <section class="max-w-5xl w-full mx-auto my-6 grid grid-cols-2 sm:grid-cols-4 gap-3">
+    <div class="bg-stone-800/60 border border-stone-800 p-4 rounded-2xl">
+      <div class="text-[11px] uppercase font-bold text-stone-400">Занято столов</div>
+      <div id="metricBusyTables" class="font-mono font-black text-2xl text-amber-400 mt-1">0 / 11</div>
+    </div>
+    <div class="bg-stone-800/60 border border-stone-800 p-4 rounded-2xl">
+      <div class="text-[11px] uppercase font-bold text-stone-400">Гостей в зале</div>
+      <div id="metricGuests" class="font-mono font-black text-2xl text-white mt-1">0 чел.</div>
+    </div>
+    <div class="bg-stone-800/60 border border-stone-800 p-4 rounded-2xl">
+      <div class="text-[11px] uppercase font-bold text-stone-400">Блюд в работе</div>
+      <div id="metricItemsInProgress" class="font-mono font-black text-2xl text-white mt-1">0 шт.</div>
+    </div>
+    <div class="bg-stone-800/60 border border-stone-800 p-4 rounded-2xl">
+      <div class="text-[11px] uppercase font-bold text-stone-400">Сумма в зале</div>
+      <div id="metricActiveSum" class="font-mono font-black text-2xl text-emerald-400 mt-1">0 ₽</div>
+    </div>
+  </section>
+
+  <!-- Navigation Grid -->
+  <main class="max-w-5xl w-full mx-auto grid grid-cols-1 sm:grid-cols-2 gap-4 flex-1">
+
+    <!-- Card 1: Терминал официанта -->
+    <a href="waiter.html" class="bg-stone-800/80 hover:bg-stone-800 border border-stone-700/80 hover:border-amber-500/50 p-6 rounded-3xl flex flex-col justify-between transition-all duration-150 active:scale-[0.98] group">
+      <div>
+        <div class="w-12 h-12 rounded-2xl bg-amber-500/20 text-amber-400 flex items-center justify-center text-2xl mb-4 group-hover:scale-110 transition">
+          🪑
         </div>
+        <h2 class="text-xl font-bold text-white group-hover:text-amber-400 transition">Терминал официанта</h2>
+        <p class="text-xs sm:text-sm text-stone-400 mt-1">Раскладка столов, выбор зон, приём заказов, курсы подачи и отправка в цеха.</p>
       </div>
-      <div class="flex items-center gap-3">
-        <span id="activeTimerDigits" class="font-mono text-xl sm:text-2xl font-black text-amber-400">50:00</span>
-        <button onclick="stopTimer()" class="w-8 h-8 rounded-lg bg-white/10 text-white hover:bg-rose-500/20 hover:text-rose-400 active:scale-90 transition flex items-center justify-center text-xs">✕</button>
+      <div class="mt-6 flex items-center text-xs font-bold text-amber-400 gap-1">
+        <span>Открыть терминал</span> <span>→</span>
       </div>
-    </div>
-  </div>
+    </a>
 
-  <!-- Main Content -->
-  <main class="max-w-4xl mx-auto px-3.5 sm:px-6 pt-3 space-y-4">
-
-    <!-- Filters & Search -->
-    <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5">
-      <div class="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 no-scrollbar">
-        <button onclick="setFilter('all')" id="f-all" class="px-3.5 py-1.5 rounded-xl bg-amber-500 text-black text-xs font-bold whitespace-nowrap transition">Все</button>
-        <button onclick="setFilter('popular')" id="f-popular" class="px-3.5 py-1.5 rounded-xl bg-white/5 text-slate-300 hover:text-white text-xs font-bold border border-white/10 whitespace-nowrap transition">🔥 Популярные</button>
-        <button onclick="setFilter('regular')" id="f-regular" class="px-3.5 py-1.5 rounded-xl bg-white/5 text-slate-300 hover:text-white text-xs font-bold border border-white/10 whitespace-nowrap transition">Остальные</button>
+    <!-- Card 2: Касса -->
+    <a href="cashier.html" class="bg-stone-800/80 hover:bg-stone-800 border border-stone-700/80 hover:border-emerald-500/50 p-6 rounded-3xl flex flex-col justify-between transition-all duration-150 active:scale-[0.98] group">
+      <div>
+        <div class="w-12 h-12 rounded-2xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-2xl mb-4 group-hover:scale-110 transition">
+          🧾
+        </div>
+        <h2 class="text-xl font-bold text-white group-hover:text-emerald-400 transition">Экран кассира</h2>
+        <p class="text-xs sm:text-sm text-stone-400 mt-1">Расчёт столов, калькулятор сдачи, выбор способов оплаты (наличные/карта/СБП) и закрытие чеков.</p>
       </div>
-      <div class="relative w-full sm:w-64">
-        <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-xs"></i>
-        <input id="searchInput" type="text" oninput="renderRecipes()" placeholder="Поиск десерта..."
-               class="w-full pl-8 pr-3 py-2 rounded-xl bg-white/5 border border-white/10 text-xs text-white placeholder-slate-500 focus:border-amber-400">
+      <div class="mt-6 flex items-center text-xs font-bold text-emerald-400 gap-1">
+        <span>Перейти к кассе</span> <span>→</span>
       </div>
-    </div>
+    </a>
 
-    <!-- Recipes List -->
-    <div id="recipesContainer" class="space-y-3.5">
-      <!-- Injected via JavaScript -->
-    </div>
+    <!-- Card 3: Экран покупателя -->
+    <a href="customer.html" class="bg-stone-800/80 hover:bg-stone-800 border border-stone-700/80 hover:border-sky-500/50 p-6 rounded-3xl flex flex-col justify-between transition-all duration-150 active:scale-[0.98] group">
+      <div>
+        <div class="w-12 h-12 rounded-2xl bg-sky-500/20 text-sky-400 flex items-center justify-center text-2xl mb-4 group-hover:scale-110 transition">
+          🖥️
+        </div>
+        <h2 class="text-xl font-bold text-white group-hover:text-sky-400 transition">Экран покупателя</h2>
+        <p class="text-xs sm:text-sm text-stone-400 mt-1">Клиентский дисплей для вывода чека стола в реальном времени со статусами приготовления блюд.</p>
+      </div>
+      <div class="mt-6 flex items-center text-xs font-bold text-sky-400 gap-1">
+        <span>Запустить монитор</span> <span>→</span>
+      </div>
+    </a>
+
+    <!-- Card 4: Админ-панель -->
+    <a href="admin.html" class="bg-stone-800/80 hover:bg-stone-800 border border-stone-700/80 hover:border-purple-500/50 p-6 rounded-3xl flex flex-col justify-between transition-all duration-150 active:scale-[0.98] group">
+      <div>
+        <div class="w-12 h-12 rounded-2xl bg-purple-500/20 text-purple-400 flex items-center justify-center text-2xl mb-4 group-hover:scale-110 transition">
+          ⚙️
+        </div>
+        <h2 class="text-xl font-bold text-white group-hover:text-purple-400 transition">Панель управления</h2>
+        <p class="text-xs sm:text-sm text-stone-400 mt-1">Стоп-лист позиций, просмотр структуры базы данных, экстренный сброс столов и статистика смены.</p>
+      </div>
+      <div class="mt-6 flex items-center text-xs font-bold text-purple-400 gap-1">
+        <span>Войти в админку</span> <span>→</span>
+      </div>
+    </a>
+
   </main>
 
-  <script>
-    const BASELINE_RECIPES = {
-      meringue: {
-        id: 'meringue',
-        title: 'Меренговый рулет',
-        emoji: '🍓',
-        isPopular: true,
-        ovenTemp: '150°C',
-        bakeMinutes: 50,
-        ingredients: `<ul>
-<li><b>Белки яичные</b> (в сухую чашу) — 6 шт. (200–220 г)</li>
-<li>Сахар (в меренгу) — <b>280 г</b></li>
-<li>Лимонный сок — 8 мл</li>
-<li>Крахмал кукурузный — 8 г</li>
-<li>Клубника замороженная — 100 г</li>
-<li>Творожный сыр (крем) — 200 г</li>
-<li>Сливки 33% (крем) — 100 г</li>
-<li>Сахар (в крем) — 50 г</li>
-</ul>`,
-        instructions: `<ol>
-<li><mark>Тщательно обезжирить</mark> и вытереть насухо чашу миксера и венчик. Разбить 6 яиц. <span class="chef-color-danger">Духовку заранее НЕ включать (холодный старт!)</span>.</li>
-<li><b>0:00–5:00</b> — включить 1-ю скорость, плавно довести до устойчивой белой пены.</li>
-<li>На отметке <b>5:00</b> влить 8 мл лимонного сока.</li>
-<li>С 6-й минуты разгон: строго <u>+1 скорость в минуту</u>.</li>
-<li>На отметке <b>7:00</b> тонкой струйкой всыпать весь сахар (280 г).</li>
-<li>На 8:50–9:00 остановить миксер: масса держит плотный клюв.</li>
-<li>На 9:00 всыпать кукурузный крахмал (8 г) и довзбивать ровно 1 минуту.</li>
-<li>Выложить готовую меренгу на силиконовый коврик ровным прямоугольником.</li>
-<li><div class="chef-callout">🔥 Поставить противень в ХОЛОДНУЮ духовку, включить 150°C ровно на 50 минут!</div></li>
-<li>Остывшую меренгу перевернуть, смазать кремом и свернуть рулет.</li>
-</ol>`
-      },
-      cheesecake: {
-        id: 'cheesecake',
-        title: 'Классический чизкейк',
-        emoji: '🧀',
-        isPopular: true,
-        ovenTemp: '175°C',
-        bakeMinutes: 50,
-        ingredients: `<ul>
-<li>Печенье («Юбилейное») — 16 шт. (~180 г)</li>
-<li>Сливочное масло (растопить) — 150 г</li>
-<li><b>Творожный сыр</b> — 550 г</li>
-<li>Сливки 33% — 150 г</li>
-<li>Сахар — 120 г</li>
-<li>Крахмал кукурузный — 10 г</li>
-<li>Яйца куриные — 2 шт.</li>
-<li>Сметана 20% — 2 ст. л.</li>
-</ul>`,
-        instructions: `<ol>
-<li>Печенье измельчить в крошку со 150 г масла, утрамбовать основу и убрать в морозилку на 30 мин.</li>
-<li>Смешать сыр, сливки, сахар и крахмал. По одному ввести яйца и сметану.</li>
-<li><mark>Вымешивать на минимальной скорости</mark>, чтобы не насыщать воздухом.</li>
-<li><div class="chef-callout">Обязательно оставить массу на 30–60 минут на столе, чтобы вышли микропузыри!</div></li>
-<li>Залить на замороженную основу и выпекать при <span class="chef-color-gold">175°C ровно 50 минут</span>.</li>
-</ol>`
-      },
-      banana: {
-        id: 'banana',
-        title: 'Банановый хлеб',
-        emoji: '🍌',
-        isPopular: false,
-        ovenTemp: '175°C',
-        bakeMinutes: 50,
-        ingredients: `<ul>
-<li>Бананы спелые — 2 шт.</li>
-<li>Яйца куриные — 2 шт.</li>
-<li>Масло сливочное растопленное — 130 г</li>
-<li>Сахар — 150 г (тесто) + 25 г (крем)</li>
-<li>Мука пшеничная — 250 г</li>
-<li>Соль мелкая — 1 ч. л. без горки</li>
-<li><span class="chef-color-danger">Сода пищевая — 1 ч. л. С ГОРКОЙ</span></li>
-</ul>`,
-        instructions: `<ol>
-<li>Разогреть духовку заранее до <span class="chef-color-gold">175°C</span>.</li>
-<li>В блендере взбить бананы с яйцами в шелковистую эмульсию.</li>
-<li>Соединить с растопленным маслом, сахаром и мукой.</li>
-<li>Всыпать соль и соду с горкой, вымешивать <u>не дольше 15 секунд</u>!</li>
-<li><span class="chef-color-danger">МОМЕНТАЛЬНО</span> перелить в форму и поставить в печь на 50 минут.</li>
-</ol>`
-      }
-    };
+  <!-- Footer -->
+  <footer class="max-w-5xl w-full mx-auto border-t border-stone-800 pt-4 mt-6 text-center text-xs text-stone-500">
+    COFFEEMAN POS • Версия 2.0 • Firebase Realtime Sync
+  </footer>
 
-    window.recipes = {};
-    window.currentFilter = 'all';
-    window.expandedId = null;
-    let timerInterval = null;
-    let timerSeconds = 0;
+  <!-- Live Stats Script -->
+  <script type="module">
+    import { initFirebaseAuth, subscribeToCloudTables } from "./firebase.js";
+    import { calcTableSum, TABLES_INITIAL } from "./menu.js";
 
-    function initData() {
-      try {
-        const raw = localStorage.getItem('pastry_recipes_simple');
-        if (raw) window.recipes = JSON.parse(raw);
-        else window.recipes = BASELINE_RECIPES;
-      } catch (e) {
-        window.recipes = BASELINE_RECIPES;
-      }
-      renderRecipes();
+    function updateDashboardMetrics(tables) {
+      const busy = tables.filter(t => t.items && t.items.length > 0);
+      const totalGuests = busy.reduce((acc, t) => acc + (t.guests || 0), 0);
+      const activeSum = busy.reduce((acc, t) => acc + calcTableSum(t), 0);
 
-      function connect() {
-        if (!window.fbDb || !window.fbRef || !window.fbOnValue) return;
-        const recRef = window.fbRef(window.fbDb, 'pastry_handbook/recipes_simple');
-        window.fbOnValue(recRef, (snap) => {
-          const val = snap.val();
-          if (val && Object.keys(val).length > 0) {
-            window.recipes = val;
-            localStorage.setItem('pastry_recipes_simple', JSON.stringify(val));
-          }
-          renderRecipes();
+      let itemsCount = 0;
+      busy.forEach(t => {
+        (t.items || []).forEach(it => {
+          if (!it.served) itemsCount += it.qty;
         });
-      }
-
-      if (window.fbDb) connect();
-      else window.addEventListener('firebase-ready', connect);
-    }
-
-    function setFilter(f) {
-      window.currentFilter = f;
-      ['all', 'popular', 'regular'].forEach(t => {
-        const b = document.getElementById(`f-${t}`);
-        if (t === f) b.className = "px-3.5 py-1.5 rounded-xl bg-amber-500 text-black text-xs font-bold whitespace-nowrap transition";
-        else b.className = "px-3.5 py-1.5 rounded-xl bg-white/5 text-slate-300 hover:text-white text-xs font-bold border border-white/10 whitespace-nowrap transition";
       });
-      renderRecipes();
+
+      document.getElementById('metricBusyTables').textContent = `${busy.length} / ${tables.length}`;
+      document.getElementById('metricGuests').textContent = `${totalGuests} чел.`;
+      document.getElementById('metricItemsInProgress').textContent = `${itemsCount} шт.`;
+      document.getElementById('metricActiveSum').textContent = `${activeSum} ₽`;
     }
 
-    function toggleExpand(id) {
-      window.expandedId = window.expandedId === id ? null : id;
-      renderRecipes();
-    }
-
-    function renderRecipes() {
-      const container = document.getElementById('recipesContainer');
-      const q = (document.getElementById('searchInput').value || '').toLowerCase().trim();
-      container.innerHTML = '';
-
-      let list = Object.values(window.recipes);
-
-      if (q) {
-        list = list.filter(r => 
-          (r.title || '').toLowerCase().includes(q) ||
-          (r.ingredients || '').toLowerCase().includes(q) ||
-          (r.instructions || '').toLowerCase().includes(q)
-        );
-      }
-
-      if (window.currentFilter === 'popular') list = list.filter(r => r.isPopular);
-      else if (window.currentFilter === 'regular') list = list.filter(r => !r.isPopular);
-      else list.sort((a, b) => (b.isPopular ? 1 : 0) - (a.isPopular ? 1 : 0));
-
-      if (list.length === 0) {
-        container.innerHTML = `<div class="p-8 text-center text-slate-500 bento-card text-sm">Рецепты не найдены</div>`;
-        return;
-      }
-
-      list.forEach(r => {
-        const isExp = window.expandedId === r.id;
-        const card = document.createElement('div');
-        card.className = `bento-card overflow-hidden transition ${isExp ? 'border-amber-500/40 shadow-xl' : 'hover:border-white/20'}`;
-
-        card.innerHTML = `
-          <!-- Header Card (Крупные кликабельные зоны для пальцев) -->
-          <div onclick="toggleExpand('${r.id}')" class="p-4 sm:p-5 flex items-center justify-between cursor-pointer select-none gap-2">
-            <div class="flex items-center gap-3 min-w-0">
-              <span class="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-xl sm:text-2xl shrink-0">
-                ${r.emoji || '🧁'}
-              </span>
-              <div class="min-w-0">
-                <div class="flex items-center gap-1.5 flex-wrap">
-                  <h3 class="text-base sm:text-lg font-bold text-white tracking-tight truncate">${r.title}</h3>
-                  ${r.isPopular ? `<span class="px-1.5 py-0.5 rounded text-[9px] font-mono font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30 shrink-0">🔥 ТОП</span>` : ''}
-                </div>
-                <div class="text-xs text-slate-400 font-mono mt-0.5">
-                  🔥 ${r.ovenTemp} • ⏱ ${r.bakeMinutes} мин
-                </div>
-              </div>
-            </div>
-
-            <div class="flex items-center gap-2 shrink-0">
-              <button onclick="event.stopPropagation(); startTimer('${r.title}', ${r.bakeMinutes})" 
-                      class="px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 active:scale-95 text-black text-xs font-bold transition flex items-center gap-1.5 shadow">
-                <i class="fa-solid fa-play text-[9px]"></i>
-                <span class="hidden xs:inline">Таймер</span>
-              </button>
-              <div class="w-7 h-7 rounded-lg bg-white/5 flex items-center justify-center text-slate-400">
-                <i class="fa-solid fa-chevron-down text-xs transition-transform duration-200 ${isExp ? 'rotate-180 text-amber-400' : ''}"></i>
-              </div>
-            </div>
-          </div>
-
-          <!-- Развернутый текст, адаптированный под экраны смартфонов -->
-          ${isExp ? `
-            <div class="px-3.5 sm:px-5 pb-5 pt-1 border-t border-white/5 space-y-3.5">
-              
-              <!-- Ингредиенты -->
-              <div class="p-3.5 sm:p-4 rounded-2xl bg-black/50 border border-white/5 space-y-2">
-                <h4 class="text-[11px] sm:text-xs font-mono font-bold text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
-                  <i class="fa-solid fa-scale-balanced"></i> Ингредиенты:
-                </h4>
-                <div class="rich-display">
-                  ${r.ingredients || '<span class="text-slate-500">Ингредиенты не указаны.</span>'}
-                </div>
-              </div>
-
-              <!-- Инструкция -->
-              <div class="p-3.5 sm:p-4 rounded-2xl bg-black/50 border border-white/5 space-y-2">
-                <h4 class="text-[11px] sm:text-xs font-mono font-bold text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
-                  <i class="fa-solid fa-list-check"></i> Пошаговый процесс:
-                </h4>
-                <div class="rich-display">
-                  ${r.instructions || '<span class="text-slate-500">Инструкция не указана.</span>'}
-                </div>
-              </div>
-
-            </div>
-          ` : ''}
-        `;
-        container.appendChild(card);
+    initFirebaseAuth(() => {
+      subscribeToCloudTables((tables) => {
+        updateDashboardMetrics(tables || TABLES_INITIAL);
       });
-    }
-
-    function startTimer(title, minutes) {
-      if (timerInterval) clearInterval(timerInterval);
-      timerSeconds = minutes * 60;
-
-      const w = document.getElementById('activeTimerWidget');
-      w.classList.remove('hidden');
-      document.getElementById('activeTimerTitle').innerText = title;
-      document.getElementById('activeTimerSub').innerText = `${minutes} минут`;
-
-      updateTimerDisplay();
-
-      timerInterval = setInterval(() => {
-        timerSeconds--;
-        if (timerSeconds <= 0) {
-          clearInterval(timerInterval);
-          alert(`⏰ Время вышло! ${title} готов!`);
-          stopTimer();
-        } else {
-          updateTimerDisplay();
-        }
-      }, 1000);
-    }
-
-    function updateTimerDisplay() {
-      const m = String(Math.floor(timerSeconds / 60)).padStart(2, '0');
-      const s = String(timerSeconds % 60).padStart(2, '0');
-      document.getElementById('activeTimerDigits').innerText = `${m}:${s}`;
-    }
-
-    function stopTimer() {
-      if (timerInterval) clearInterval(timerInterval);
-      document.getElementById('activeTimerWidget').classList.add('hidden');
-    }
-
-    window.addEventListener('DOMContentLoaded', initData);
+    });
   </script>
 </body>
 </html>
