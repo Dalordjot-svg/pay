@@ -43,6 +43,20 @@
     .btn-press:active {
       transform: scale(0.96);
     }
+    @keyframes steamFloat {
+      0% { transform: translateY(0) scaleX(1); opacity: 0; }
+      50% { opacity: 0.8; }
+      100% { transform: translateY(-16px) scaleX(1.3); opacity: 0; }
+    }
+    .steam-particle {
+      animation: steamFloat 2.2s infinite ease-out;
+    }
+    .steam-particle:nth-child(2) {
+      animation-delay: 0.6s;
+    }
+    .steam-particle:nth-child(3) {
+      animation-delay: 1.2s;
+    }
   </style>
 </head>
 <body class="bg-stone-100 text-stone-900 min-h-screen flex flex-col antialiased select-none overflow-x-hidden">
@@ -64,6 +78,20 @@
       </button>
 
       <div class="flex items-center gap-2">
+        <!-- Active Waiter Badge & Switcher -->
+        <button onclick="openWelcomeModal()" class="px-2.5 py-1.5 rounded-xl bg-amber-900/90 hover:bg-amber-800 border border-amber-700/70 text-xs font-bold text-amber-100 flex items-center gap-1.5 transition active:scale-95 shadow-2xs">
+          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+          <span class="text-[11px] text-amber-300 hidden sm:inline">Официант:</span>
+          <span id="headerWaiterName" class="font-bold text-white">Войти</span>
+          <span class="text-xs">🔄</span>
+        </button>
+
+        <!-- Sync Indicator -->
+        <div id="cloudSyncStatus" title="Статус синхронизации" class="hidden sm:flex items-center gap-1 px-2 py-1 rounded-lg bg-amber-900/40 text-[10px] text-amber-300 font-mono">
+          <span id="syncDot" class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+          <span id="syncText">Облако</span>
+        </div>
+
         <button id="headerTableBtn" onclick="toggleViewFromHeader()" class="px-3.5 py-2 rounded-xl bg-amber-900/80 hover:bg-amber-800 border border-amber-700/60 text-xs font-bold text-amber-200 flex items-center gap-1.5 transition active:scale-95">
           <span id="headerTableIcon">🪑</span>
           <span id="headerTableLabel">К столам</span>
@@ -121,7 +149,10 @@
             <span>←</span> <span>Столы</span>
           </button>
           <div>
-            <h2 id="activeOrderTitle" class="font-extrabold text-sm sm:text-base text-stone-900 leading-tight">Стол 1</h2>
+            <div class="flex items-center gap-1.5">
+              <h2 id="activeOrderTitle" class="font-extrabold text-sm sm:text-base text-stone-900 leading-tight">Стол 1</h2>
+              <span id="activeOrderWaiterTag" class="text-[10px] px-2 py-0.5 rounded-md bg-amber-100 text-amber-900 font-bold">Официант: —</span>
+            </div>
             <p id="activeOrderSubtitle" class="text-[11px] text-stone-500">2 персоны</p>
           </div>
         </div>
@@ -342,6 +373,61 @@
     </div>
   </div>
 
+  <!-- Waiter Welcome & Login Modal -->
+  <div id="welcomeModal" class="hidden fixed inset-0 bg-stone-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-white max-w-md w-full rounded-3xl p-6 shadow-2xl border border-amber-200 text-center space-y-4 transform transition-all scale-100">
+      
+      <!-- Animated Coffee Icon with Steam -->
+      <div class="relative w-20 h-20 mx-auto flex items-center justify-center">
+        <div class="absolute -top-3 flex justify-center gap-1.5">
+          <span class="w-1.5 h-3 bg-amber-400 rounded-full steam-particle"></span>
+          <span class="w-1.5 h-4 bg-amber-500 rounded-full steam-particle"></span>
+          <span class="w-1.5 h-3 bg-amber-400 rounded-full steam-particle"></span>
+        </div>
+        <div class="w-16 h-16 rounded-2xl bg-amber-600 text-white font-black text-3xl flex items-center justify-center shadow-lg border-2 border-amber-400/40">
+          ☕
+        </div>
+      </div>
+
+      <div>
+        <span class="text-[11px] uppercase tracking-wider font-extrabold text-amber-700 bg-amber-100 px-2.5 py-0.5 rounded-full">Смена официанта</span>
+        <h2 class="text-xl sm:text-2xl font-black text-stone-900 mt-1">Добро пожаловать!</h2>
+        <p class="text-xs text-stone-500 mt-0.5">Выберите своё имя для обслуживания столов</p>
+      </div>
+
+      <!-- Quick Waiter Name Chips -->
+      <div class="space-y-2 text-left">
+        <label class="block text-[11px] font-bold text-stone-600">Быстрый выбор:</label>
+        <div class="grid grid-cols-3 gap-2 text-xs font-bold">
+          <button type="button" onclick="selectQuickWaiter('Алексей')" class="waiter-chip p-2.5 rounded-xl border border-stone-200 bg-stone-50 hover:bg-amber-50 hover:border-amber-300 text-stone-800 text-center transition">Алексей</button>
+          <button type="button" onclick="selectQuickWaiter('Дарья')" class="waiter-chip p-2.5 rounded-xl border border-stone-200 bg-stone-50 hover:bg-amber-50 hover:border-amber-300 text-stone-800 text-center transition">Дарья</button>
+          <button type="button" onclick="selectQuickWaiter('Максим')" class="waiter-chip p-2.5 rounded-xl border border-stone-200 bg-stone-50 hover:bg-amber-50 hover:border-amber-300 text-stone-800 text-center transition">Максим</button>
+          <button type="button" onclick="selectQuickWaiter('Алина')" class="waiter-chip p-2.5 rounded-xl border border-stone-200 bg-stone-50 hover:bg-amber-50 hover:border-amber-300 text-stone-800 text-center transition">Алина</button>
+          <button type="button" onclick="selectQuickWaiter('Артём')" class="waiter-chip p-2.5 rounded-xl border border-stone-200 bg-stone-50 hover:bg-amber-50 hover:border-amber-300 text-stone-800 text-center transition">Артём</button>
+          <button type="button" onclick="selectQuickWaiter('Полина')" class="waiter-chip p-2.5 rounded-xl border border-stone-200 bg-stone-50 hover:bg-amber-50 hover:border-amber-300 text-stone-800 text-center transition">Полина</button>
+        </div>
+      </div>
+
+      <!-- Custom Waiter Name Input -->
+      <div class="text-left space-y-1">
+        <label class="block text-[11px] font-bold text-stone-600">Или введите другое имя:</label>
+        <div class="relative">
+          <input type="text" id="waiterCustomNameInput" placeholder="Ваше имя..." 
+                 class="w-full bg-stone-50 border border-stone-200 rounded-xl py-2.5 pl-9 pr-3 text-xs sm:text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-amber-600 focus:bg-white transition">
+          <span class="absolute left-3 top-2.5 text-stone-400 text-sm">👤</span>
+        </div>
+      </div>
+
+      <div class="pt-2">
+        <button onclick="confirmWaiterLogin()" class="w-full py-3 px-4 bg-amber-900 hover:bg-amber-950 active:scale-98 text-white font-bold rounded-xl text-sm shadow-md flex items-center justify-center gap-2 transition btn-press">
+          <span>Начать смену</span>
+          <span>➔</span>
+        </button>
+      </div>
+
+    </div>
+  </div>
+
   <div id="modifiersModal" class="hidden fixed inset-0 bg-stone-950/70 backdrop-blur-xs z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
     <div class="bg-white max-w-sm w-full rounded-t-3xl sm:rounded-3xl p-5 shadow-2xl space-y-3 border border-stone-200 max-h-[90vh] overflow-y-auto pb-safe">
       <div class="flex items-start justify-between border-b border-stone-100 pb-2">
@@ -496,8 +582,35 @@
     <span id="toastMsg">Уведомление</span>
   </div>
 
-  <script>
-    /* Full complete dishes catalog based on Coffeeman menu */
+  <!-- FIREBASE MODULE & REAL-TIME APP SCRIPT -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+    import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+    import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+    const userFirebaseConfig = {
+      apiKey: "AIzaSyBVEvKgcprZx2TBCnkQxsgo5IFVJdNaGRE",
+      authDomain: "check-list-c0458.firebaseapp.com",
+      databaseURL: "https://check-list-c0458-default-rtdb.firebaseio.com",
+      projectId: "check-list-c0458",
+      storageBucket: "check-list-c0458.firebasestorage.app",
+      messagingSenderId: "34268049423",
+      appId: "1:34268049423:web:0e6d5bbb3389b72192737a"
+    };
+
+    const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : userFirebaseConfig;
+    const appId = typeof __app_id !== 'undefined' ? __app_id : 'coffeeman-waiter-app';
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    let currentUser = null;
+    let isCloudSynced = false;
+
+    // Strict path according to RULE 1: /artifacts/{appId}/public/data/{collectionName}
+    const stateDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'tables_sync', 'current_state');
+
     const FULL_MENU = [
       /* ЗАВТРАКИ */
       { id: 1, name: "Мюсли (йогурт)", cat: "breakfast", catTitle: "Завтраки", price: 310, desc: "Свежие мюсли с натуральным йогуртом", mods: ["Йогурт отдельно", "С собой"] },
@@ -603,40 +716,40 @@
       { id: 152, name: "Молоко альтерн./безлактозное", cat: "extras", catTitle: "Добавки", price: 60, desc: "В чашку 60₽ / порция 300мл 120₽", mods: ["Кокосовое", "Миндальное", "Овсяное", "Безлактозное", "Порция 300мл (+60₽)"] }
     ];
 
-    /* 11 tables in main hall, 5 tables on terrace = 16 tables total */
     const TABLES_INITIAL = [
-      { id: 1, name: "Стол 1", zone: "hall", guests: 2, items: [] },
-      { id: 2, name: "Стол 2", zone: "hall", guests: 2, items: [] },
-      { id: 3, name: "Стол 3", zone: "hall", guests: 4, items: [] },
-      { id: 4, name: "Стол 4", zone: "hall", guests: 4, items: [] },
-      { id: 5, name: "Стол 5", zone: "hall", guests: 4, items: [] },
-      { id: 6, name: "Стол 6", zone: "hall", guests: 4, items: [] },
-      { id: 7, name: "Стол 7", zone: "hall", guests: 6, items: [] },
-      { id: 8, name: "Стол 8", zone: "hall", guests: 6, items: [] },
-      { id: 9, name: "Стол 9", zone: "hall", guests: 2, items: [] },
-      { id: 10, name: "Стол 10", zone: "hall", guests: 4, items: [] },
-      { id: 11, name: "Стол 11 (VIP)", zone: "hall", guests: 8, items: [] },
-      { id: 12, name: "Терраса 1", zone: "terrace", guests: 2, items: [] },
-      { id: 13, name: "Терраса 2", zone: "terrace", guests: 2, items: [] },
-      { id: 14, name: "Терраса 3", zone: "terrace", guests: 4, items: [] },
-      { id: 15, name: "Терраса 4", zone: "terrace", guests: 4, items: [] },
-      { id: 16, name: "Терраса 5", zone: "terrace", guests: 6, items: [] }
+      { id: 1, name: "Стол 1", zone: "hall", guests: 2, waiter: "", items: [] },
+      { id: 2, name: "Стол 2", zone: "hall", guests: 2, waiter: "", items: [] },
+      { id: 3, name: "Стол 3", zone: "hall", guests: 4, waiter: "", items: [] },
+      { id: 4, name: "Стол 4", zone: "hall", guests: 4, waiter: "", items: [] },
+      { id: 5, name: "Стол 5", zone: "hall", guests: 4, waiter: "", items: [] },
+      { id: 6, name: "Стол 6", zone: "hall", guests: 4, waiter: "", items: [] },
+      { id: 7, name: "Стол 7", zone: "hall", guests: 6, waiter: "", items: [] },
+      { id: 8, name: "Стол 8", zone: "hall", guests: 6, waiter: "", items: [] },
+      { id: 9, name: "Стол 9", zone: "hall", guests: 2, waiter: "", items: [] },
+      { id: 10, name: "Стол 10", zone: "hall", guests: 4, waiter: "", items: [] },
+      { id: 11, name: "Стол 11 (VIP)", zone: "hall", guests: 8, waiter: "", items: [] },
+      { id: 12, name: "Терраса 1", zone: "terrace", guests: 2, waiter: "", items: [] },
+      { id: 13, name: "Терраса 2", zone: "terrace", guests: 2, waiter: "", items: [] },
+      { id: 14, name: "Терраса 3", zone: "terrace", guests: 4, waiter: "", items: [] },
+      { id: 15, name: "Терраса 4", zone: "terrace", guests: 4, waiter: "", items: [] },
+      { id: 16, name: "Терраса 5", zone: "terrace", guests: 6, waiter: "", items: [] }
     ];
 
-    /* State variables */
+    /* App State */
     let tables = TABLES_INITIAL;
+    let currentWaiter = "";
     let currentTableId = 1;
     let currentZone = 'all';
     let currentCategory = 'breakfast';
-    let currentView = 'tables'; // 'tables' | 'order'
-    let orderMobileTab = 'menu'; // 'menu' | 'cart'
-    let ticketGrouping = 'all'; // 'all' | 'courses'
+    let currentView = 'tables';
+    let orderMobileTab = 'menu';
+    let ticketGrouping = 'all';
     let pendingModalTableId = null;
     let tempGuestsCount = 2;
     let pendingDishForModifiers = null;
     let toastTimer = null;
-
     let audioCtx = null;
+
     function playBeep() {
       try {
         if (!audioCtx) {
@@ -660,15 +773,6 @@
       } catch (e) {}
     }
 
-    function saveState() {
-      // Clean memory state maintained during shift session
-    }
-
-    function calcTableSum(table) {
-      if (!table || !table.items) return 0;
-      return table.items.reduce((sum, it) => sum + (it.price * it.qty), 0);
-    }
-
     function showToast(msg, icon = '🔔') {
       const toast = document.getElementById('toast');
       const msgEl = document.getElementById('toastMsg');
@@ -687,6 +791,11 @@
       }, 2000);
     }
 
+    function calcTableSum(table) {
+      if (!table || !table.items) return 0;
+      return table.items.reduce((sum, it) => sum + (it.price * it.qty), 0);
+    }
+
     function getDishDepartment(cat) {
       if (['coffee_classic', 'coffee_author', 'hot_drinks', 'tea', 'smoothies', 'cold_drinks', 'extras'].includes(cat)) {
         return 'Бар';
@@ -695,6 +804,86 @@
         return 'Десерты';
       }
       return 'Кухня';
+    }
+
+    async function syncTablesToCloud() {
+      if (!currentUser) return;
+      try {
+        const payload = {
+          tables: tables,
+          updatedAt: new Date().toISOString(),
+          lastWaiter: currentWaiter || "Гость"
+        };
+        await setDoc(stateDocRef, payload);
+      } catch (err) {
+        console.error("Cloud sync error:", err);
+      }
+    }
+
+    function initCloudListener() {
+      if (!currentUser) return;
+      onSnapshot(stateDocRef, (snap) => {
+        if (snap.exists()) {
+          const data = snap.data();
+          if (data && Array.isArray(data.tables) && data.tables.length > 0) {
+            tables = data.tables;
+            const syncDot = document.getElementById('syncDot');
+            const syncText = document.getElementById('syncText');
+            if (syncDot) syncDot.className = "w-1.5 h-1.5 rounded-full bg-emerald-400";
+            if (syncText) syncText.textContent = "В сети";
+            if (currentView === 'tables') renderTables();
+            if (currentView === 'order') renderOrderScreen();
+          }
+        } else {
+          syncTablesToCloud();
+        }
+      }, (error) => {
+        console.warn("Firestore snapshot error:", error);
+        const syncDot = document.getElementById('syncDot');
+        const syncText = document.getElementById('syncText');
+        if (syncDot) syncDot.className = "w-1.5 h-1.5 rounded-full bg-amber-400";
+        if (syncText) syncText.textContent = "Локально";
+      });
+    }
+
+    function openWelcomeModal() {
+      const modal = document.getElementById('welcomeModal');
+      if (modal) modal.classList.remove('hidden');
+    }
+
+    function selectQuickWaiter(name) {
+      playBeep();
+      const input = document.getElementById('waiterCustomNameInput');
+      if (input) input.value = name;
+      document.querySelectorAll('.waiter-chip').forEach(btn => {
+        if (btn.textContent.trim() === name) {
+          btn.className = "waiter-chip p-2.5 rounded-xl border border-amber-500 bg-amber-100 text-amber-950 font-bold text-center transition";
+        } else {
+          btn.className = "waiter-chip p-2.5 rounded-xl border border-stone-200 bg-stone-50 hover:bg-amber-50 text-stone-800 text-center transition";
+        }
+      });
+    }
+
+    function confirmWaiterLogin() {
+      const input = document.getElementById('waiterCustomNameInput');
+      const name = (input ? input.value : '').trim();
+      if (!name) {
+        showToast('Пожалуйста, введите имя официанта', '⚠️');
+        return;
+      }
+      playBeep();
+      currentWaiter = name;
+      localStorage.setItem('coffeeman_waiter_name', currentWaiter);
+
+      const headerName = document.getElementById('headerWaiterName');
+      if (headerName) headerName.textContent = currentWaiter;
+
+      const modal = document.getElementById('welcomeModal');
+      if (modal) modal.classList.add('hidden');
+
+      showToast(`Привет, ${currentWaiter}! Удачной смены ☕`, '✨');
+      renderTables();
+      if (currentView === 'order') renderOrderScreen();
     }
 
     function goToTablesView() {
@@ -724,6 +913,11 @@
       if (viewOrder) viewOrder.classList.remove('hidden');
 
       const table = tables.find(t => t.id === tableId);
+      if (table && !table.waiter && currentWaiter) {
+        table.waiter = currentWaiter;
+        syncTablesToCloud();
+      }
+
       const headerBadge = document.getElementById('headerTableBadge');
       const headerIcon = document.getElementById('headerTableIcon');
       const headerLabel = document.getElementById('headerTableLabel');
@@ -787,21 +981,35 @@
         let statusLabel = '';
         if (hasItems) {
           if (allServed) {
-            statusLabel = `<span class="text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-900 flex items-center gap-1"><span>✓</span>Все подано</span>`;
+            statusLabel = `<span class="text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-900 flex items-center gap-1"><span>✓</span>Подано</span>`;
           } else if (hasUnsent) {
             statusLabel = `<span class="text-[10px] font-bold px-2 py-0.5 rounded-md bg-amber-200 text-amber-950 flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-amber-600 animate-pulse"></span>Дозаказ</span>`;
           } else {
-            statusLabel = `<span class="text-[10px] font-bold px-2 py-0.5 rounded-md bg-blue-100 text-blue-900 flex items-center gap-1"><span>🍽️</span>Подано ${servedCount}/${totalCount}</span>`;
+            statusLabel = `<span class="text-[10px] font-bold px-2 py-0.5 rounded-md bg-blue-100 text-blue-900 flex items-center gap-1"><span>🍽️</span>${servedCount}/${totalCount}</span>`;
           }
         } else {
           statusLabel = `<span class="text-[10px] font-bold px-2 py-0.5 rounded-md bg-stone-100 text-stone-600">Свободен</span>`;
+        }
+
+        // Waiter attribution badge
+        const isMyTable = currentWaiter && table.waiter === currentWaiter;
+        let waiterTag = '';
+        if (table.waiter) {
+          waiterTag = `
+            <div class="mt-1.5 flex items-center gap-1 text-[11px] font-bold ${isMyTable ? 'text-amber-950 bg-amber-200/70 border-amber-300' : 'text-stone-700 bg-stone-100 border-stone-200'} px-2 py-0.5 rounded-lg border w-fit">
+              <span>👤</span>
+              <span>${table.waiter}${isMyTable ? ' (Вы)' : ''}</span>
+            </div>
+          `;
+        } else {
+          waiterTag = `<div class="mt-1.5 text-[10px] text-stone-400 font-medium">Официант: не назначен</div>`;
         }
 
         let itemsSnippet = '';
         if (hasItems) {
           const names = table.items.map(it => `${it.qty}× ${it.name}`).slice(0, 3).join(', ');
           const extraCount = table.items.length > 3 ? ` +${table.items.length - 3}` : '';
-          itemsSnippet = `<div class="mt-2 text-[11px] text-stone-600 line-clamp-1 bg-white/70 p-1 rounded-md border border-amber-200/60 font-medium">📋 ${names}${extraCount}</div>`;
+          itemsSnippet = `<div class="mt-1.5 text-[11px] text-stone-600 line-clamp-1 bg-white/70 p-1 rounded-md border border-amber-200/60 font-medium">📋 ${names}${extraCount}</div>`;
         }
 
         card.className = `p-3.5 sm:p-4 rounded-2xl border transition-all duration-150 cursor-pointer flex flex-col justify-between active:scale-[0.98] select-none ${bgClass}`;
@@ -813,11 +1021,12 @@
               <span class="font-extrabold text-sm sm:text-base text-stone-900">${table.name}</span>
               ${statusLabel}
             </div>
-            <div class="flex items-center gap-1.5 text-xs text-stone-500 mt-1">
+            <div class="flex items-center gap-1.5 text-xs text-stone-500">
               <span class="font-semibold text-stone-700">👥 ${table.guests} перс.</span>
               <span>•</span>
               <span class="text-[11px] capitalize">${table.zone === 'terrace' ? 'Терраса' : 'Основной зал'}</span>
             </div>
+            ${waiterTag}
             ${itemsSnippet}
           </div>
 
@@ -834,6 +1043,11 @@
       playBeep();
       const table = tables.find(t => t.id === tableId);
       if (!table) return;
+
+      if (!currentWaiter) {
+        openWelcomeModal();
+        return;
+      }
 
       if (!table.items || table.items.length === 0) {
         openGuestsModal(tableId);
@@ -888,11 +1102,14 @@
       const table = tables.find(t => t.id === pendingModalTableId);
       if (table) {
         table.guests = tempGuestsCount;
-        saveState();
+        if (!table.waiter && currentWaiter) {
+          table.waiter = currentWaiter;
+        }
+        syncTablesToCloud();
       }
       closeModal('guestsModal');
       goToOrderView(pendingModalTableId);
-      showToast(`${table.name}: ${tempGuestsCount} персоны`, '👥');
+      showToast(`${table.name}: ${tempGuestsCount} персоны (${table.waiter || 'Вы'})`, '👥');
     }
 
     function selectCategory(cat) {
@@ -1098,6 +1315,9 @@
       if (!table) return;
 
       if (!table.items) table.items = [];
+      if (!table.waiter && currentWaiter) {
+        table.waiter = currentWaiter;
+      }
 
       let assignedCourse = course;
       if (['coffee_classic', 'coffee_author', 'hot_drinks', 'tea', 'smoothies', 'cold_drinks'].includes(dish.cat)) {
@@ -1124,11 +1344,12 @@
           course: assignedCourse,
           sentToKitchen: false,
           served: false,
+          waiterName: currentWaiter || table.waiter || "",
           addedAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
         });
       }
 
-      saveState();
+      syncTablesToCloud();
       renderOrderScreen();
       renderDishes();
       showToast(`+ ${dish.name}`, '🍽️');
@@ -1143,7 +1364,7 @@
       if (table.items[index].qty <= 0) {
         table.items.splice(index, 1);
       }
-      saveState();
+      syncTablesToCloud();
       renderOrderScreen();
       renderDishes();
     }
@@ -1153,7 +1374,7 @@
       const table = tables.find(t => t.id === currentTableId);
       if (!table || !table.items || !table.items[index]) return;
       table.items[index].course = newCourse;
-      saveState();
+      syncTablesToCloud();
       renderOrderScreen();
     }
 
@@ -1163,7 +1384,7 @@
       if (!table || !table.items || !table.items[index]) return;
 
       table.items[index].served = !table.items[index].served;
-      saveState();
+      syncTablesToCloud();
       renderOrderScreen();
       renderTables();
 
@@ -1192,7 +1413,7 @@
       });
 
       playBeep();
-      saveState();
+      syncTablesToCloud();
       renderOrderScreen();
       renderTables();
       showToast(`Заказ отправлен на кухню!`, '🚀');
@@ -1205,7 +1426,8 @@
         return;
       }
       table.items = [];
-      saveState();
+      table.waiter = "";
+      syncTablesToCloud();
       renderOrderScreen();
       renderDishes();
       renderTables();
@@ -1291,11 +1513,13 @@
 
       const titleEl = document.getElementById('activeOrderTitle');
       const subtitleEl = document.getElementById('activeOrderSubtitle');
+      const waiterTagEl = document.getElementById('activeOrderWaiterTag');
       const guestsBtn = document.getElementById('btnGuestsDisplay');
       const personsBadge = document.getElementById('ticketPersonsBadge');
 
       if (titleEl) titleEl.textContent = table.name;
       if (subtitleEl) subtitleEl.textContent = `${table.guests || 2} персоны`;
+      if (waiterTagEl) waiterTagEl.textContent = `Официант: ${table.waiter || currentWaiter || 'Не назначен'}`;
       if (guestsBtn) guestsBtn.textContent = `${table.guests || 2} чел.`;
       if (personsBadge) personsBadge.textContent = `${table.guests || 2} персоны`;
 
@@ -1462,7 +1686,7 @@
       const servedTag = document.getElementById('cashierModalServedTag');
 
       if (tag) tag.textContent = table.name;
-      if (meta) meta.textContent = `${table.name} • ${table.guests || 2} персоны • ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+      if (meta) meta.textContent = `${table.name} • Официант: ${table.waiter || currentWaiter || '—'} • ${table.guests || 2} персоны`;
 
       const totalQty = table.items.reduce((s, it) => s + it.qty, 0);
       const totalSum = calcTableSum(table);
@@ -1513,6 +1737,7 @@
       if (!table || !table.items || table.items.length === 0) return;
 
       let text = `COFFEEMAN • ${table.name}\n`;
+      text += `Официант: ${table.waiter || currentWaiter || '—'}\n`;
       text += `Гостей: ${table.guests || 2} чел.\n`;
       text += `Время: ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}\n`;
       text += `--------------------------------\n`;
@@ -1546,7 +1771,8 @@
 
       const tableName = table.name;
       table.items = [];
-      saveState();
+      table.waiter = "";
+      syncTablesToCloud();
 
       closeModal('cashierCheckoutModal');
       goToTablesView();
@@ -1583,6 +1809,9 @@
       if (!table) return;
 
       if (!table.items) table.items = [];
+      if (!table.waiter && currentWaiter) {
+        table.waiter = currentWaiter;
+      }
 
       const modifiers = note ? [note] : [];
 
@@ -1598,10 +1827,11 @@
         course: '1-й курс',
         sentToKitchen: false,
         served: false,
+        waiterName: currentWaiter || table.waiter || "",
         addedAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       });
 
-      saveState();
+      syncTablesToCloud();
       renderOrderScreen();
       closeModal('customDishModal');
       showToast(`Добавлено: ${name}`, '✨');
@@ -1611,6 +1841,40 @@
       const el = document.getElementById(modalId);
       if (el) el.classList.add('hidden');
     }
+
+    window.goToTablesView = goToTablesView;
+    window.goToOrderView = goToOrderView;
+    window.toggleViewFromHeader = toggleViewFromHeader;
+    window.filterZone = filterZone;
+    window.onTableClicked = onTableClicked;
+    window.openGuestsModal = openGuestsModal;
+    window.openGuestsModalForCurrentTable = openGuestsModalForCurrentTable;
+    window.setTempGuests = setTempGuests;
+    window.adjustTempGuests = adjustTempGuests;
+    window.confirmGuestSelection = confirmGuestSelection;
+    window.selectCategory = selectCategory;
+    window.onSearchChange = onSearchChange;
+    window.clearSearchInput = clearSearchInput;
+    window.onDishCardClickedById = onDishCardClickedById;
+    window.onDishCardClicked = onDishCardClicked;
+    window.confirmDishWithModifiers = confirmDishWithModifiers;
+    window.quickChangeDishQty = quickChangeDishQty;
+    window.changeItemQty = changeItemQty;
+    window.setItemCourse = setItemCourse;
+    window.toggleItemServed = toggleItemServed;
+    window.sendNewItemsToKitchen = sendNewItemsToKitchen;
+    window.clearCurrentOrder = clearCurrentOrder;
+    window.switchOrderMobileTab = switchOrderMobileTab;
+    window.setTicketGrouping = setTicketGrouping;
+    window.openCashierCheckoutModal = openCashierCheckoutModal;
+    window.copyReceiptToClipboard = copyReceiptToClipboard;
+    window.completeAndFreeTable = completeAndFreeTable;
+    window.openCustomDishModal = openCustomDishModal;
+    window.saveCustomDishToOrder = saveCustomDishToOrder;
+    window.closeModal = closeModal;
+    window.openWelcomeModal = openWelcomeModal;
+    window.selectQuickWaiter = selectQuickWaiter;
+    window.confirmWaiterLogin = confirmWaiterLogin;
 
     window.addEventListener('resize', () => {
       if (window.innerWidth >= 1024) {
@@ -1630,9 +1894,42 @@
       }
     });
 
-    window.addEventListener('DOMContentLoaded', () => {
+    window.addEventListener('DOMContentLoaded', async () => {
+      // Restore waiter name if cached
+      const savedName = localStorage.getItem('coffeeman_waiter_name');
+      if (savedName) {
+        currentWaiter = savedName;
+        const headerName = document.getElementById('headerWaiterName');
+        if (headerName) headerName.textContent = currentWaiter;
+      }
+
       renderTables();
       renderDishes();
+
+      // Show welcome entrance modal if no waiter selected
+      if (!currentWaiter) {
+        openWelcomeModal();
+      }
+
+      // Initialize Firebase auth before operations (Rule 3)
+      try {
+        if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+          await signInWithCustomToken(auth, __initial_auth_token);
+        } else {
+          await signInAnonymously(auth);
+        }
+      } catch (e) {
+        console.warn("Auth initialization fallback:", e);
+      }
+
+      onAuthStateChanged(auth, (user) => {
+        currentUser = user;
+        if (user) {
+          const syncStatus = document.getElementById('cloudSyncStatus');
+          if (syncStatus) syncStatus.classList.remove('hidden');
+          initCloudListener();
+        }
+      });
     });
   </script>
 </body>
