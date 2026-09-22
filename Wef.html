@@ -139,107 +139,56 @@
   <main class="flex-1 max-w-6xl w-full mx-auto p-2 sm:p-3 md:p-4 flex flex-col min-h-0 overflow-hidden">
 
     <!-- VIEW 1: TABLES FLOOR & LISTS -->
-    <section id="view-tables" class="flex-1 flex flex-col min-h-0 space-y-2 sm:space-y-3 overflow-hidden">
-      
-      <!-- Top Control Bar: Status Filter, View Modes and Layout Editor Toggle -->
-      <div class="bg-white p-2 sm:p-2.5 rounded-2xl border border-stone-200 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-2 shrink-0">
-        
-        <!-- Left: Quick Status Filters (All, Busy, Free) -->
-        <div class="flex items-center gap-1.5 overflow-x-auto scrollbar-hide text-xs font-bold shrink-0">
-          <button onclick="filterTableStatus('all')" id="status-btn-all" class="status-btn px-3 py-1.5 rounded-xl bg-amber-950 text-white shadow-xs">
-            Все столы (11)
-          </button>
-          <button onclick="filterTableStatus('busy')" id="status-btn-busy" class="status-btn px-3 py-1.5 rounded-xl bg-stone-100 text-stone-700 hover:bg-stone-200">
-            Занятые
-          </button>
-          <button onclick="filterTableStatus('free')" id="status-btn-free" class="status-btn px-3 py-1.5 rounded-xl bg-stone-100 text-stone-700 hover:bg-stone-200">
-            Свободные
-          </button>
-        </div>
-
-        <!-- Right: View Modes (Map / Grid / List) + Layout Editor Button -->
-        <div class="flex items-center gap-1.5 overflow-x-auto scrollbar-hide shrink-0">
+    <section id="view-tables" class="flex-1 flex flex-col min-h-0 space-y-2 sm:space-y-2.5 overflow-hidden">
+      <!-- Top Control Bar: Status Filter, Cluster Modes & Shift Stats -->
+      <div class="bg-white p-2 sm:p-2.5 rounded-2xl border border-stone-200 shadow-xs flex flex-col gap-2 shrink-0">
+        <div class="flex flex-wrap items-center justify-between gap-2">
           
-          <div class="flex items-center bg-stone-100 p-1 rounded-xl text-xs font-bold gap-0.5 border border-stone-200/80">
-            <button onclick="setTablesDisplayMode('map')" id="mode-btn-map" class="mode-btn px-2.5 py-1 rounded-lg bg-white text-stone-900 shadow-2xs flex items-center gap-1 transition">
-              <span>🗺️</span> <span class="hidden xs:inline">Карта</span>
+          <!-- Left: Quick Status Filters (All, Busy, Free) -->
+          <div class="flex items-center gap-1.5 overflow-x-auto scrollbar-hide text-xs font-bold shrink-0">
+            <button onclick="filterTableStatus('all')" id="status-btn-all" class="status-btn px-3 py-1.5 rounded-xl bg-amber-950 text-white shadow-xs transition">
+              Все столы (11)
             </button>
-            <button onclick="setTablesDisplayMode('grid')" id="mode-btn-grid" class="mode-btn px-2.5 py-1 rounded-lg text-stone-600 hover:text-stone-900 flex items-center gap-1 transition">
-              <span>🔲</span> <span class="hidden xs:inline">Сетка</span>
+            <button onclick="filterTableStatus('busy')" id="status-btn-busy" class="status-btn px-3 py-1.5 rounded-xl bg-stone-100 text-stone-700 hover:bg-stone-200 transition">
+              Занятые (<span id="countBusy">0</span>)
             </button>
-            <button onclick="setTablesDisplayMode('list')" id="mode-btn-list" class="mode-btn px-2.5 py-1 rounded-lg text-stone-600 hover:text-stone-900 flex items-center gap-1 transition">
-              <span>📋</span> <span class="hidden xs:inline">Список</span>
+            <button onclick="filterTableStatus('free')" id="status-btn-free" class="status-btn px-3 py-1.5 rounded-xl bg-stone-100 text-stone-700 hover:bg-stone-200 transition">
+              Свободные (<span id="countFree">11</span>)
             </button>
           </div>
 
-          <!-- Edit Layout Toggle (Available in Map Mode) -->
-          <button id="editLayoutBtn" onclick="toggleLayoutEditor()" class="px-2.5 py-1.5 rounded-xl bg-amber-100 hover:bg-amber-200 text-amber-950 border border-amber-300 text-xs font-bold flex items-center gap-1 transition active:scale-95">
-            <span id="editLayoutIcon">✏️</span>
-            <span id="editLayoutText" class="hidden sm:inline">Расстановка</span>
-          </button>
+          <!-- Right: Clustering selector (По зонам / По статусу / По официантам) -->
+          <div class="flex items-center gap-1 bg-stone-100 p-1 rounded-xl text-xs font-bold border border-stone-200/80 shrink-0">
+            <span class="text-[11px] text-stone-400 px-1 hidden md:inline">Кластеризация:</span>
+            <button onclick="setClusterMode('zone')" id="cluster-btn-zone" class="cluster-btn px-2.5 py-1 rounded-lg bg-white text-stone-900 shadow-2xs flex items-center gap-1 transition">
+              <span>🏛️</span> <span>По зонам</span>
+            </button>
+            <button onclick="setClusterMode('status')" id="cluster-btn-status" class="cluster-btn px-2.5 py-1 rounded-lg text-stone-600 hover:text-stone-900 flex items-center gap-1 transition">
+              <span>🚦</span> <span>По статусу</span>
+            </button>
+            <button onclick="setClusterMode('waiter')" id="cluster-btn-waiter" class="cluster-btn px-2.5 py-1 rounded-lg text-stone-600 hover:text-stone-900 flex items-center gap-1 transition">
+              <span>👤</span> <span>По официантам</span>
+            </button>
+          </div>
 
-          <!-- Reset Default Layout Button -->
-          <button id="resetLayoutBtn" onclick="resetDefaultPositions()" title="Сбросить расстановку по умолчанию" class="hidden px-2 py-1.5 rounded-xl bg-stone-100 hover:bg-rose-100 text-stone-600 hover:text-rose-700 border border-stone-200 text-xs font-bold transition">
-            🔄
-          </button>
         </div>
-      </div>
 
-      <!-- EDIT MODE BANNER (When active) -->
-      <div id="editModeNotice" class="hidden bg-amber-500/15 border border-amber-400 p-2 rounded-xl text-xs text-amber-950 font-bold flex items-center justify-between gap-2 shrink-0">
-        <div class="flex items-center gap-1.5">
-          <span>✋</span>
-          <span>Перетаскивайте столы пальцем/мышью, жмите шестерёнку ⚙️ для смены размера.</span>
-        </div>
-        <button onclick="toggleLayoutEditor()" class="px-2.5 py-1 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-xs font-bold shadow-xs">
-          Готово ✓
-        </button>
-      </div>
-
-      <!-- CONTAINER 1: MAP SCHEME (Interactive Floor Plan of the Entire Hall) -->
-      <div id="tablesMapWrapper" class="flex-1 bg-stone-200/90 rounded-2xl border-2 border-stone-300 p-2 sm:p-3 relative overflow-hidden flex flex-col min-h-0 shadow-inner">
-        
-        <!-- Floor Header with Hall Landmarks -->
-        <div class="flex items-center justify-between pb-1.5 border-b border-stone-300 text-[11px] font-bold text-stone-600 uppercase tracking-wider shrink-0 select-none">
+        <!-- Shift Quick Summary Strip -->
+        <div class="flex items-center justify-between pt-1 border-t border-stone-100 text-[11px] text-stone-500 font-medium">
           <div class="flex items-center gap-2">
-            <span class="px-2 py-0.5 rounded-md bg-stone-100 border border-stone-300">🚪 Вход / Гардероб</span>
-            <span class="px-2 py-0.5 rounded-md bg-stone-800 text-amber-300 border border-stone-700">☕ Бар & Касса</span>
+            <span>В зале гостей: <strong id="totalGuestsInHall" class="text-stone-800 font-mono font-bold">0</strong> чел.</span>
+            <span>•</span>
+            <span>Подано блюд: <strong id="totalServedRatio" class="text-stone-800 font-mono font-bold">0/0</strong></span>
           </div>
-          <div class="flex items-center gap-2">
-            <span class="px-2 py-0.5 rounded-md bg-blue-50 text-blue-900 border border-blue-200">🪟 Панорамные окна</span>
-            <span class="text-stone-500 font-bold">11 столов</span>
-          </div>
-        </div>
-
-        <!-- The Canvas Floor Area with Boundaries -->
-        <div id="floorCanvas" class="flex-1 relative w-full h-full min-h-[360px] rounded-xl bg-white border border-dashed border-stone-300 overflow-hidden shadow-xs select-none">
-          
-          <!-- Bar counter visual landmark -->
-          <div class="absolute top-2 left-2 w-32 sm:w-44 h-10 rounded-xl bg-stone-800 text-amber-200 font-bold text-[10px] sm:text-xs flex items-center justify-center border-2 border-stone-700 shadow-sm pointer-events-none z-0">
-            ☕ БАРНАЯ ЗОНА
-          </div>
-
-          <!-- Windows Landmark on the right side -->
-          <div class="absolute top-2 right-2 bottom-2 w-5 border-l-2 border-dashed border-blue-300 bg-blue-50/50 flex items-center justify-center pointer-events-none z-0">
-            <span class="text-[9px] font-bold text-blue-500 tracking-widest uppercase -rotate-90">ОКНА</span>
-          </div>
-
-          <!-- Tables Layer -->
-          <div id="mapTablesLayer" class="absolute inset-0 z-10">
-            <!-- Injected by renderMapTables() -->
+          <div>
+            <span>Активная выручка столов: <strong id="totalActiveSum" class="text-amber-950 font-mono font-bold">0 ₽</strong></span>
           </div>
         </div>
-
       </div>
 
-      <!-- CONTAINER 2: GRID VIEW (Classic Cards) -->
-      <div id="tablesGrid" class="hidden flex-1 overflow-y-auto scroll-touch pr-0.5 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 sm:gap-3 pb-safe">
-        <!-- Rendered by JS -->
-      </div>
-
-      <!-- CONTAINER 3: LIST VIEW (Registry) -->
-      <div id="tablesListView" class="hidden flex-1 overflow-y-auto scroll-touch bg-white rounded-2xl border border-stone-200 shadow-xs p-2 space-y-1.5 pb-safe">
-        <!-- Rendered by JS -->
+      <!-- MAIN CONTAINER: CLUSTERED TABLES LIST -->
+      <div id="tablesClusteredContainer" class="flex-1 overflow-y-auto scroll-touch pr-0.5 space-y-3 pb-safe min-h-0">
+        <!-- Rendered by renderClusteredTables() in JS -->
       </div>
 
     </section>
@@ -406,41 +355,6 @@
   </div>
 
   <!-- Size / Shape Editor Modal for Table -->
-  <div id="tableSizeModal" class="hidden fixed inset-0 bg-stone-950/70 backdrop-blur-xs z-50 flex items-center justify-center p-4">
-    <div class="bg-white max-w-xs w-full rounded-2xl p-4 shadow-2xl space-y-3 border border-stone-200">
-      <div class="flex items-center justify-between border-b border-stone-100 pb-2">
-        <h3 id="tableSizeModalTitle" class="font-extrabold text-sm text-stone-900">Размер стола</h3>
-        <button onclick="closeModal('tableSizeModal')" class="text-stone-400 hover:text-stone-700 font-bold">✕</button>
-      </div>
-      <p class="text-xs text-stone-500">Выберите вместимость и форму стола на карте:</p>
-      
-      <div class="grid grid-cols-2 gap-2 text-xs font-bold">
-        <button type="button" onclick="setTableShapeSize('sm', 'square')" class="p-2.5 rounded-xl border border-stone-200 hover:border-amber-500 bg-stone-50 flex flex-col items-center gap-1">
-          <span class="w-8 h-8 rounded-lg bg-amber-100 border border-amber-300 flex items-center justify-center">2</span>
-          <span>Компакт (2 чел)</span>
-        </button>
-        <button type="button" onclick="setTableShapeSize('md', 'square')" class="p-2.5 rounded-xl border border-stone-200 hover:border-amber-500 bg-stone-50 flex flex-col items-center gap-1">
-          <span class="w-10 h-10 rounded-lg bg-amber-200 border border-amber-400 flex items-center justify-center">4</span>
-          <span>Стандарт (4 чел)</span>
-        </button>
-        <button type="button" onclick="setTableShapeSize('lg', 'rect')" class="p-2.5 rounded-xl border border-stone-200 hover:border-amber-500 bg-stone-50 flex flex-col items-center gap-1">
-          <span class="w-14 h-8 rounded-lg bg-amber-300 border border-amber-500 flex items-center justify-center">6</span>
-          <span>Большой (6 чел)</span>
-        </button>
-        <button type="button" onclick="setTableShapeSize('xl', 'sofa')" class="p-2.5 rounded-xl border border-stone-200 hover:border-amber-500 bg-stone-50 flex flex-col items-center gap-1">
-          <span class="w-16 h-10 rounded-xl bg-purple-200 border border-purple-400 flex items-center justify-center">VIP</span>
-          <span>VIP Диван (8+)</span>
-        </button>
-      </div>
-
-      <div class="pt-1">
-        <button onclick="closeModal('tableSizeModal')" class="w-full py-2 bg-stone-100 hover:bg-stone-200 text-stone-800 text-xs font-bold rounded-xl">
-          Закрыть
-        </button>
-      </div>
-    </div>
-  </div>
-
   <!-- Guests Modal -->
   <div id="guestsModal" class="hidden fixed inset-0 bg-stone-950/70 backdrop-blur-xs z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
     <div class="bg-white max-w-sm w-full rounded-t-3xl sm:rounded-3xl p-4 sm:p-5 shadow-2xl space-y-4 border border-stone-200 animate-in slide-in-from-bottom duration-200">
@@ -821,23 +735,24 @@
       { id: 1305, cat: 'cold_drinks', catTitle: 'Холодные напитки', name: 'Вода без газа / с газом', price: 130, desc: 'Бутилированная 0.5 л', mods: ['Без газа', 'С газом'] },
 
       /* СИРОПЫ & ДОБАВКИ */
-      { id: 1401, cat: 'extras', catTitle: 'Сиропы & Добавки', name: 'Сироп в ассортименте', price: 60, desc: 'Ваниль, карамель, лесной орех, кокос', mods: ['Ваниль', 'Карамель', 'Орех', 'Кокос'] },
-      { id: 1402, cat: 'extras', catTitle: 'Сиропы & Добавки', name: 'Молоко альтернативное', price: 60, desc: 'Кокосовое, миндальное, овсяное', mods: ['Кокосовое', 'Миндальное', 'Овсяное'] }
     ];
 
-    /* Exact 11 tables in the Hall (No terrace!) */
+    /* Exact 11 small tables arranged by physical cafe zones from the real photo */
     const TABLES_INITIAL = [
-      { id: 1, name: "Стол 1", guests: 0, waiter: "", items: [], x: 8, y: 22, size: "sm", shape: "square" },
-      { id: 2, name: "Стол 2", guests: 0, waiter: "", items: [], x: 26, y: 22, size: "sm", shape: "square" },
-      { id: 3, name: "Стол 3", guests: 0, waiter: "", items: [], x: 48, y: 22, size: "md", shape: "square" },
-      { id: 4, name: "Стол 4", guests: 0, waiter: "", items: [], x: 72, y: 22, size: "md", shape: "square" },
-      { id: 5, name: "Стол 5", guests: 0, waiter: "", items: [], x: 8, y: 50, size: "md", shape: "square" },
-      { id: 6, name: "Стол 6", guests: 0, waiter: "", items: [], x: 26, y: 50, size: "md", shape: "square" },
-      { id: 7, name: "Стол 7", guests: 0, waiter: "", items: [], x: 48, y: 50, size: "md", shape: "square" },
-      { id: 8, name: "Стол 8", guests: 0, waiter: "", items: [], x: 72, y: 50, size: "md", shape: "square" },
-      { id: 9, name: "Стол 9", guests: 0, waiter: "", items: [], x: 10, y: 76, size: "md", shape: "square" },
-      { id: 10, name: "Стол 10", guests: 0, waiter: "", items: [], x: 34, y: 76, size: "lg", shape: "rect" },
-      { id: 11, name: "Стол 11 (VIP)", guests: 0, waiter: "", items: [], x: 62, y: 74, size: "xl", shape: "sofa" }
+      /* Cluster 1: Panoramic Window Nook */
+      { id: 1, name: "Стол 1", zone: "window", zoneName: "🪟 Зона у окна", guests: 0, waiter: "", items: [] },
+      { id: 2, name: "Стол 2", zone: "window", zoneName: "🪟 Зона у окна", guests: 0, waiter: "", items: [] },
+      /* Cluster 2: Soft lilac banquette divided by flower partitions */
+      { id: 3, name: "Стол 3", zone: "sofa", zoneName: "🌸 Мягкий диван (с цветами)", guests: 0, waiter: "", items: [] },
+      { id: 4, name: "Стол 4", zone: "sofa", zoneName: "🌸 Мягкий диван (с цветами)", guests: 0, waiter: "", items: [] },
+      { id: 5, name: "Стол 5", zone: "sofa", zoneName: "🌸 Мягкий диван (с цветами)", guests: 0, waiter: "", items: [] },
+      { id: 6, name: "Стол 6", zone: "sofa", zoneName: "🌸 Мягкий диван (с цветами)", guests: 0, waiter: "", items: [] },
+      /* Cluster 3: Freestanding center and foreground small round tables */
+      { id: 7, name: "Стол 7", zone: "center", zoneName: "☕ Центр зала", guests: 0, waiter: "", items: [] },
+      { id: 8, name: "Стол 8", zone: "center", zoneName: "☕ Центр зала", guests: 0, waiter: "", items: [] },
+      { id: 9, name: "Стол 9", zone: "center", zoneName: "☕ Центр зала", guests: 0, waiter: "", items: [] },
+      { id: 10, name: "Стол 10", zone: "center", zoneName: "☕ Центр зала", guests: 0, waiter: "", items: [] },
+      { id: 11, name: "Стол 11", zone: "center", zoneName: "☕ Центр зала", guests: 0, waiter: "", items: [] }
     ];
 
     /* Application State */
@@ -845,10 +760,7 @@
     let currentWaiter = "";
     let currentTableId = 1;
     let currentStatusFilter = 'all'; // 'all', 'busy', 'free'
-    let currentDisplayMode = 'map';   // 'map', 'grid', 'list'
-    let isLayoutEditMode = false;
-    let tableBeingResized = null;
-    let isDraggingTable = false;
+    let currentClusterMode = 'zone';  // 'zone', 'status', 'waiter'
     let currentCategory = 'breakfast';
     let currentView = 'tables';
     let orderMobileTab = 'menu';
@@ -970,11 +882,7 @@
                   ...initT,
                   guests: remote.guests !== undefined ? remote.guests : initT.guests,
                   waiter: remote.waiter || "",
-                  items: Array.isArray(remote.items) ? remote.items : [],
-                  x: remote.x !== undefined ? remote.x : initT.x,
-                  y: remote.y !== undefined ? remote.y : initT.y,
-                  size: remote.size || initT.size,
-                  shape: remote.shape || initT.shape
+                  items: Array.isArray(remote.items) ? remote.items : []
                 };
               }
               return initT;
@@ -1014,96 +922,17 @@
       renderTables();
     }
 
-    function setTablesDisplayMode(mode) {
+    function setClusterMode(mode) {
       playBeep();
-      currentDisplayMode = mode;
-      
-      const mapBtn = document.getElementById('mode-btn-map');
-      const gridBtn = document.getElementById('mode-btn-grid');
-      const listBtn = document.getElementById('mode-btn-list');
-      const editBtn = document.getElementById('editLayoutBtn');
-
-      [mapBtn, gridBtn, listBtn].forEach(b => {
-        if (b) b.className = "mode-btn px-2.5 py-1 rounded-lg text-stone-600 hover:text-stone-900 flex items-center gap-1 transition";
+      currentClusterMode = mode;
+      document.querySelectorAll('.cluster-btn').forEach(btn => {
+        btn.className = "cluster-btn px-2.5 py-1 rounded-lg text-stone-600 hover:text-stone-900 flex items-center gap-1 transition";
       });
-
-      const activeBtn = document.getElementById(`mode-btn-${mode}`);
-      if (activeBtn) activeBtn.className = "mode-btn px-2.5 py-1 rounded-lg bg-white text-stone-900 shadow-2xs font-bold flex items-center gap-1 transition";
-
-      if (editBtn) {
-        if (mode === 'map') {
-          editBtn.classList.remove('hidden');
-        } else {
-          editBtn.classList.add('hidden');
-          if (isLayoutEditMode) toggleLayoutEditor();
-        }
-      }
-
-      renderTables();
-    }
-
-    function toggleLayoutEditor() {
-      playBeep();
-      isLayoutEditMode = !isLayoutEditMode;
-      const notice = document.getElementById('editModeNotice');
-      const btn = document.getElementById('editLayoutBtn');
-      const resetBtn = document.getElementById('resetLayoutBtn');
-
-      if (isLayoutEditMode) {
-        if (notice) notice.classList.remove('hidden');
-        if (btn) btn.className = "px-2.5 py-1.5 rounded-xl bg-amber-600 text-white border border-amber-700 text-xs font-bold flex items-center gap-1 shadow-xs";
-        if (resetBtn) resetBtn.classList.remove('hidden');
-        showToast('Режим расстановки: двигайте столы пальцем', '✏️');
-      } else {
-        if (notice) notice.classList.add('hidden');
-        if (btn) btn.className = "px-2.5 py-1.5 rounded-xl bg-amber-100 hover:bg-amber-200 text-amber-950 border border-amber-300 text-xs font-bold flex items-center gap-1 transition active:scale-95";
-        if (resetBtn) resetBtn.classList.add('hidden');
-        syncTablesToCloud();
-        showToast('Расстановка сохранена в базу!', '💾');
+      const active = document.getElementById(`cluster-btn-${mode}`);
+      if (active) {
+        active.className = "cluster-btn px-2.5 py-1 rounded-lg bg-white text-stone-900 shadow-2xs font-bold flex items-center gap-1 transition";
       }
       renderTables();
-    }
-
-    function resetDefaultPositions() {
-      playBeep();
-      TABLES_INITIAL.forEach(init => {
-        const target = tables.find(t => t.id === init.id);
-        if (target) {
-          target.x = init.x;
-          target.y = init.y;
-          target.size = init.size;
-          target.shape = init.shape;
-        }
-      });
-      syncTablesToCloud();
-      renderTables();
-      showToast('Расстановка сброшена по умолчанию', '🔄');
-    }
-
-    function openTableSizeModal(tableId, event) {
-      if (event) event.stopPropagation();
-      playBeep();
-      tableBeingResized = tableId;
-      const table = tables.find(t => t.id === tableId);
-      const title = document.getElementById('tableSizeModalTitle');
-      if (title && table) title.textContent = `Размер: ${table.name}`;
-      const modal = document.getElementById('tableSizeModal');
-      if (modal) modal.classList.remove('hidden');
-    }
-
-    function setTableShapeSize(size, shape) {
-      if (!tableBeingResized) return;
-      playBeep();
-      const table = tables.find(t => t.id === tableBeingResized);
-      if (table) {
-        table.size = size;
-        table.shape = shape;
-        syncTablesToCloud();
-      }
-      closeModal('tableSizeModal');
-      tableBeingResized = null;
-      renderTables();
-      showToast('Размер стола обновлен', '📐');
     }
 
     function getFilteredTables() {
@@ -1116,281 +945,251 @@
       return tables;
     }
 
-    function renderTables() {
-      const mapWrapper = document.getElementById('tablesMapWrapper');
-      const grid = document.getElementById('tablesGrid');
-      const list = document.getElementById('tablesListView');
+    function updateHallMetrics() {
+      const busyTables = tables.filter(t => t.items && t.items.length > 0);
+      const freeTables = tables.filter(t => !t.items || t.items.length === 0);
+      const totalGuests = busyTables.reduce((sum, t) => sum + (t.guests || 0), 0);
+      const totalSum = busyTables.reduce((sum, t) => sum + calcTableSum(t), 0);
 
-      if (currentDisplayMode === 'map') {
-        if (mapWrapper) mapWrapper.classList.remove('hidden');
-        if (grid) grid.classList.add('hidden');
-        if (list) list.classList.add('hidden');
-        renderMapTables();
-      } else if (currentDisplayMode === 'grid') {
-        if (mapWrapper) mapWrapper.classList.add('hidden');
-        if (grid) grid.classList.remove('hidden');
-        if (list) list.classList.add('hidden');
-        renderGridTables();
-      } else {
-        if (mapWrapper) mapWrapper.classList.add('hidden');
-        if (grid) grid.classList.add('hidden');
-        if (list) list.classList.remove('hidden');
-        renderListTables();
-      }
-    }
-
-    /* 1. MAP VIEW: Full Hall without terrace */
-    function renderMapTables() {
-      const layer = document.getElementById('mapTablesLayer');
-      if (!layer) return;
-      layer.innerHTML = '';
-
-      const filtered = getFilteredTables();
-
-      filtered.forEach(table => {
-        const hasItems = table.items && table.items.length > 0;
-        const total = calcTableSum(table);
-        const el = document.createElement('div');
-
-        let sizeClasses = "w-20 h-20 text-xs";
-        if (table.size === 'sm') sizeClasses = "w-16 h-16 text-[10px]";
-        if (table.size === 'lg') sizeClasses = "w-28 h-20 text-xs";
-        if (table.size === 'xl') sizeClasses = "w-32 h-24 text-xs";
-
-        let bgClass = "bg-white border-stone-300 text-stone-800 shadow-sm";
-        if (hasItems) {
-          const allServed = table.items.every(it => it.served);
-          bgClass = allServed 
-            ? "bg-emerald-50 border-emerald-400 ring-2 ring-emerald-400/40 text-emerald-950 shadow-md"
-            : "bg-amber-50 border-amber-400 ring-2 ring-amber-400/50 text-amber-950 shadow-md";
-        }
-
-        const borderShape = table.shape === 'sofa' ? 'rounded-3xl border-2' : 'rounded-2xl border-2';
-
-        el.className = `absolute select-none flex flex-col justify-between p-1.5 cursor-pointer transition-shadow ${borderShape} ${sizeClasses} ${bgClass} ${isLayoutEditMode ? 'ring-2 ring-dashed ring-amber-600 animate-pulse' : 'hover:scale-105 active:scale-95'}`;
-        el.style.left = `${table.x || 10}%`;
-        el.style.top = `${table.y || 10}%`;
-
-        const waiterLabel = table.waiter ? `<span class="truncate text-[9px] font-bold text-amber-900 bg-amber-100/90 px-1 rounded">${table.waiter}</span>` : '';
-        const editGear = isLayoutEditMode ? `
-          <button onclick="openTableSizeModal(${table.id}, event)" title="Сменить размер" class="w-5 h-5 rounded-full bg-amber-600 text-white text-[10px] flex items-center justify-center font-bold absolute -top-2 -right-2 shadow-sm z-30">
-            ⚙️
-          </button>
-        ` : '';
-
-        el.innerHTML = `
-          ${editGear}
-          <div class="flex items-center justify-between leading-none">
-            <span class="font-extrabold tracking-tight truncate">${table.name}</span>
-            <span class="text-[9px] font-mono font-bold text-stone-500">${table.guests > 0 ? table.guests + 'п' : ''}</span>
-          </div>
-
-          <div class="flex flex-col items-center justify-center my-0.5">
-            ${hasItems 
-              ? `<span class="font-mono font-black text-[11px] sm:text-xs text-amber-950">${total} ₽</span>` 
-              : `<span class="text-[9px] text-stone-400 font-semibold">Свободен</span>`}
-            ${waiterLabel}
-          </div>
-
-          <div class="text-[8px] text-stone-400 flex justify-between items-center leading-none">
-            <span>Зал</span>
-            ${hasItems ? `<span class="text-amber-800 font-bold">${table.items.length} поз.</span>` : ''}
-          </div>
-        `;
-
-        if (isLayoutEditMode) {
-          enableDragForTable(el, table);
-        } else {
-          el.onclick = () => onTableClicked(table.id);
-        }
-
-        layer.appendChild(el);
+      let allItemsCount = 0;
+      let servedItemsCount = 0;
+      busyTables.forEach(t => {
+        (t.items || []).forEach(it => {
+          allItemsCount += it.qty;
+          if (it.served) servedItemsCount += it.qty;
+        });
       });
+
+      const countBusyEl = document.getElementById('countBusy');
+      const countFreeEl = document.getElementById('countFree');
+      const totalGuestsEl = document.getElementById('totalGuestsInHall');
+      const totalServedEl = document.getElementById('totalServedRatio');
+      const totalSumEl = document.getElementById('totalActiveSum');
+
+      if (countBusyEl) countBusyEl.textContent = busyTables.length;
+      if (countFreeEl) countFreeEl.textContent = freeTables.length;
+      if (totalGuestsEl) totalGuestsEl.textContent = totalGuests;
+      if (totalServedEl) totalServedEl.textContent = `${servedItemsCount}/${allItemsCount}`;
+      if (totalSumEl) totalSumEl.textContent = `${totalSum} ₽`;
     }
 
-    function enableDragForTable(element, table) {
-      let startX, startY, origLeft, origTop;
-      const canvas = document.getElementById('floorCanvas');
+    function groupTablesIntoClusters(filtered) {
+      const clusters = [];
 
-      function onPointerDown(e) {
-        e.stopPropagation();
-        isDraggingTable = true;
-        const pageX = e.touches ? e.touches[0].pageX : e.pageX;
-        const pageY = e.touches ? e.touches[0].pageY : e.pageY;
-        startX = pageX;
-        startY = pageY;
-        origLeft = table.x;
-        origTop = table.y;
+      if (currentClusterMode === 'zone') {
+        const zoneConfigs = [
+          { key: 'window', title: '🪟 Зона у окна', desc: 'Столы 1 и 2 вдоль панорамного окна' },
+          { key: 'sofa', title: '🌸 Мягкий диван (с цветами)', desc: 'Столы 3–6 в отдельных кабинках вдоль дивана' },
+          { key: 'center', title: '☕ Центр зала', desc: 'Столы 7–11, отдельно стоящие круглые столики' }
+        ];
 
-        window.addEventListener('mousemove', onPointerMove);
-        window.addEventListener('touchmove', onPointerMove, { passive: false });
-        window.addEventListener('mouseup', onPointerUp);
-        window.addEventListener('touchend', onPointerUp);
-      }
-
-      function onPointerMove(e) {
-        if (!isDraggingTable || !canvas) return;
-        if (e.cancelable) e.preventDefault();
-
-        const pageX = e.touches ? e.touches[0].pageX : e.pageX;
-        const pageY = e.touches ? e.touches[0].pageY : e.pageY;
-        const deltaX = pageX - startX;
-        const deltaY = pageY - startY;
-
-        const rect = canvas.getBoundingClientRect();
-        const deltaPercentX = (deltaX / rect.width) * 100;
-        const deltaPercentY = (deltaY / rect.height) * 100;
-
-        let newX = Math.max(2, Math.min(88, origLeft + deltaPercentX));
-        let newY = Math.max(5, Math.min(88, origTop + deltaPercentY));
-
-        table.x = Math.round(newX);
-        table.y = Math.round(newY);
-
-        element.style.left = `${table.x}%`;
-        element.style.top = `${table.y}%`;
-      }
-
-      function onPointerUp() {
-        isDraggingTable = false;
-        window.removeEventListener('mousemove', onPointerMove);
-        window.removeEventListener('touchmove', onPointerMove);
-        window.removeEventListener('mouseup', onPointerUp);
-        window.removeEventListener('touchend', onPointerUp);
-        syncTablesToCloud();
-      }
-
-      element.onmousedown = onPointerDown;
-      element.ontouchstart = onPointerDown;
-    }
-
-    /* 2. GRID VIEW */
-    function renderGridTables() {
-      const grid = document.getElementById('tablesGrid');
-      if (!grid) return;
-      grid.innerHTML = '';
-
-      const filtered = getFilteredTables();
-
-      filtered.forEach(table => {
-        const hasItems = table.items && table.items.length > 0;
-        const total = calcTableSum(table);
-        const card = document.createElement('div');
-
-        const bgClass = hasItems 
-          ? 'bg-amber-50/90 border-amber-300 ring-2 ring-amber-400/25 shadow-sm' 
-          : 'bg-white border-stone-200 hover:border-amber-400 hover:shadow-xs';
-
-        const hasUnsent = hasItems && table.items.some(it => !it.sentToKitchen);
-        const totalCount = hasItems ? table.items.length : 0;
-        const servedCount = hasItems ? table.items.filter(it => it.served).length : 0;
-        const allServed = hasItems && totalCount > 0 && servedCount === totalCount;
-
-        let statusLabel = '';
-        if (hasItems) {
-          if (allServed) {
-            statusLabel = `<span class="text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-900 flex items-center gap-1"><span>✓</span>Подано</span>`;
-          } else if (hasUnsent) {
-            statusLabel = `<span class="text-[10px] font-bold px-2 py-0.5 rounded-md bg-amber-200 text-amber-950 flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-amber-600 animate-pulse"></span>Дозаказ</span>`;
-          } else {
-            statusLabel = `<span class="text-[10px] font-bold px-2 py-0.5 rounded-md bg-blue-100 text-blue-900 flex items-center gap-1"><span>🍽️</span>${servedCount}/${totalCount}</span>`;
+        zoneConfigs.forEach(zc => {
+          const matched = filtered.filter(t => t.zone === zc.key);
+          if (matched.length > 0 || currentStatusFilter === 'all') {
+            clusters.push({
+              id: zc.key,
+              title: zc.title,
+              subtitle: zc.desc,
+              tables: matched
+            });
           }
-        } else {
-          statusLabel = `<span class="text-[10px] font-bold px-2 py-0.5 rounded-md bg-stone-100 text-stone-600">Свободен</span>`;
+        });
+      } else if (currentClusterMode === 'status') {
+        const busyAllServed = filtered.filter(t => t.items && t.items.length > 0 && t.items.every(it => it.served));
+        const busyInKitchen = filtered.filter(t => t.items && t.items.length > 0 && !t.items.every(it => it.served));
+        const freeTables = filtered.filter(t => !t.items || t.items.length === 0);
+
+        if (busyInKitchen.length > 0) {
+          clusters.push({
+            id: 'in_progress',
+            title: '🔥 Готовятся / Дозаказ',
+            subtitle: 'Столы с активным приготовлением позиций',
+            tables: busyInKitchen
+          });
         }
-
-        const isMyTable = currentWaiter && table.waiter === currentWaiter;
-        let waiterTag = '';
-        if (table.waiter) {
-          waiterTag = `
-            <div class="mt-1.5 flex items-center gap-1 text-[11px] font-bold ${isMyTable ? 'text-amber-950 bg-amber-200/70 border-amber-300' : 'text-stone-700 bg-stone-100 border-stone-200'} px-2 py-0.5 rounded-lg border w-fit">
-              <span>👤</span>
-              <span>${table.waiter}${isMyTable ? ' (Вы)' : ''}</span>
-            </div>
-          `;
-        } else {
-          waiterTag = `<div class="mt-1.5 text-[10px] text-stone-400 font-medium">Официант: не назначен</div>`;
+        if (busyAllServed.length > 0) {
+          clusters.push({
+            id: 'all_served',
+            title: '✅ Все блюда поданы',
+            subtitle: 'Гости отдыхают, всё вынесено',
+            tables: busyAllServed
+          });
         }
-
-        let itemsSnippet = '';
-        if (hasItems) {
-          const names = table.items.map(it => `${it.qty}× ${it.name}`).slice(0, 3).join(', ');
-          const extraCount = table.items.length > 3 ? ` +${table.items.length - 3}` : '';
-          itemsSnippet = `<div class="mt-1.5 text-[11px] text-stone-600 line-clamp-1 bg-white/70 p-1 rounded-md border border-amber-200/60 font-medium">📋 ${names}${extraCount}</div>`;
+        if (freeTables.length > 0) {
+          clusters.push({
+            id: 'free',
+            title: '⚪ Свободные столы',
+            subtitle: 'Готовы к приёму гостей',
+            tables: freeTables
+          });
         }
+      } else {
+        // Group by waiter
+        const waiterMap = {};
+        filtered.forEach(t => {
+          const w = t.waiter || "Не назначен";
+          if (!waiterMap[w]) waiterMap[w] = [];
+          waiterMap[w].push(t);
+        });
 
-        card.className = `p-3.5 sm:p-4 rounded-2xl border transition-all duration-150 cursor-pointer flex flex-col justify-between active:scale-[0.98] select-none ${bgClass}`;
-        card.onclick = () => onTableClicked(table.id);
+        // Current waiter first
+        const sortedWaiters = Object.keys(waiterMap).sort((a, b) => {
+          if (a === currentWaiter) return -1;
+          if (b === currentWaiter) return 1;
+          return a.localeCompare(b);
+        });
 
-        card.innerHTML = `
-          <div>
-            <div class="flex items-center justify-between mb-1">
-              <span class="font-extrabold text-sm sm:text-base text-stone-900">${table.name}</span>
-              ${statusLabel}
-            </div>
-            <div class="flex items-center gap-1.5 text-xs text-stone-500">
-              <span class="font-semibold text-stone-700">👥 ${table.guests > 0 ? table.guests + ' перс.' : '0 персон'}</span>
-              <span>•</span>
-              <span class="text-[11px]">Основной зал</span>
-            </div>
-            ${waiterTag}
-            ${itemsSnippet}
-          </div>
+        sortedWaiters.forEach(w => {
+          const isMy = currentWaiter && w === currentWaiter;
+          clusters.push({
+            id: `waiter_${w}`,
+            title: isMy ? `👤 ${w} (Ваши столы)` : `👤 ${w}`,
+            subtitle: `${waiterMap[w].length} столов в обслуживании`,
+            tables: waiterMap[w]
+          });
+        });
+      }
 
-          <div class="mt-3 pt-2.5 border-t border-stone-200/80 flex items-center justify-between">
-            <span class="text-[11px] text-stone-500 font-medium">${hasItems ? table.items.reduce((s, it) => s + it.qty, 0) + ' шт.' : 'Заказ пуст'}</span>
-            <span class="font-mono font-bold text-xs sm:text-sm ${total > 0 ? 'text-amber-950 font-black' : 'text-stone-400'}">${total} ₽</span>
+      return clusters;
+    }
+
+    function renderTables() {
+      updateHallMetrics();
+      const container = document.getElementById('tablesClusteredContainer');
+      if (!container) return;
+      container.innerHTML = '';
+
+      const filtered = getFilteredTables();
+      const clusters = groupTablesIntoClusters(filtered);
+
+      if (clusters.length === 0) {
+        container.innerHTML = `
+          <div class="py-12 bg-white rounded-2xl border border-stone-200 text-center text-stone-400">
+            <span class="text-3xl mb-1 block">🔍</span>
+            <p class="text-xs font-bold text-stone-700">Нет столов по выбранному фильтру</p>
+            <p class="text-[11px] text-stone-400 mt-0.5">Переключите фильтр «Все столы» или смените кластеризацию</p>
           </div>
         `;
-        grid.appendChild(card);
+        return;
+      }
+
+      clusters.forEach(cluster => {
+        const clusterCard = document.createElement('div');
+        clusterCard.className = "bg-white rounded-2xl border border-stone-200/90 shadow-2xs overflow-hidden";
+
+        const clusterSum = cluster.tables.reduce((sum, t) => sum + calcTableSum(t), 0);
+        const clusterGuests = cluster.tables.reduce((sum, t) => sum + (t.guests || 0), 0);
+        const clusterBusyCount = cluster.tables.filter(t => t.items && t.items.length > 0).length;
+
+        // Cluster Header
+        const header = document.createElement('div');
+        header.className = "px-3.5 py-2.5 bg-stone-50 border-b border-stone-200/70 flex items-center justify-between gap-2";
+        header.innerHTML = `
+          <div class="min-w-0">
+            <div class="flex items-center gap-1.5">
+              <h3 class="font-extrabold text-xs sm:text-sm text-stone-900 truncate">${cluster.title}</h3>
+              <span class="text-[10px] px-2 py-0.2 rounded-full font-mono font-bold bg-stone-200 text-stone-700">${cluster.tables.length}</span>
+            </div>
+            <p class="text-[10px] text-stone-400 leading-tight mt-0.5">${cluster.subtitle}</p>
+          </div>
+          <div class="text-right shrink-0">
+            <div class="font-mono font-black text-xs sm:text-sm ${clusterSum > 0 ? 'text-amber-950' : 'text-stone-400'}">${clusterSum} ₽</div>
+            <div class="text-[10px] text-stone-500 font-semibold">${clusterGuests} чел. • занято ${clusterBusyCount}/${cluster.tables.length}</div>
+          </div>
+        `;
+        clusterCard.appendChild(header);
+
+        // Clustered Items Rows
+        const listBody = document.createElement('div');
+        listBody.className = "divide-y divide-stone-100 p-1 sm:p-1.5 space-y-1";
+
+        cluster.tables.forEach(table => {
+          listBody.appendChild(createTableListRow(table));
+        });
+
+        clusterCard.appendChild(listBody);
+        container.appendChild(clusterCard);
       });
     }
 
-    /* 3. LIST VIEW */
-    function renderListTables() {
-      const list = document.getElementById('tablesListView');
-      if (!list) return;
-      list.innerHTML = '';
+    function createTableListRow(table) {
+      const hasItems = table.items && table.items.length > 0;
+      const total = calcTableSum(table);
+      const row = document.createElement('div');
 
-      const filtered = getFilteredTables();
+      const isMyTable = currentWaiter && table.waiter === currentWaiter;
+      const totalCount = hasItems ? table.items.reduce((s, it) => s + it.qty, 0) : 0;
+      const servedCount = hasItems ? table.items.filter(it => it.served).reduce((s, it) => s + it.qty, 0) : 0;
+      const allServed = hasItems && totalCount > 0 && servedCount === totalCount;
+      const hasUnsent = hasItems && table.items.some(it => !it.sentToKitchen);
 
-      filtered.forEach(table => {
-        const hasItems = table.items && table.items.length > 0;
-        const total = calcTableSum(table);
-        const row = document.createElement('div');
+      let rowBg = "bg-stone-50/50 hover:bg-stone-100 border-stone-200/70";
+      let badgeBg = "bg-stone-200 text-stone-700";
+      let statusTag = `<span class="text-[10px] font-bold px-2 py-0.5 rounded-md bg-stone-100 text-stone-500">Свободен</span>`;
 
-        row.className = `p-2.5 rounded-xl border flex items-center justify-between gap-2 cursor-pointer transition active:scale-[0.99] select-none ${hasItems ? 'bg-amber-50/70 border-amber-300' : 'bg-stone-50/60 border-stone-200 hover:bg-stone-100'}`;
-        row.onclick = () => onTableClicked(table.id);
+      if (hasItems) {
+        if (allServed) {
+          rowBg = "bg-emerald-50/60 border-emerald-300 ring-1 ring-emerald-300/40";
+          badgeBg = "bg-emerald-600 text-white";
+          statusTag = `<span class="text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-900 flex items-center gap-1"><span>✓</span>Все подано</span>`;
+        } else if (hasUnsent) {
+          rowBg = "bg-amber-50/90 border-amber-300 ring-1 ring-amber-300/60";
+          badgeBg = "bg-amber-600 text-white animate-pulse";
+          statusTag = `<span class="text-[10px] font-bold px-2 py-0.5 rounded-md bg-amber-200 text-amber-950 flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-amber-600 animate-ping"></span>Новый дозаказ</span>`;
+        } else {
+          rowBg = "bg-amber-50/60 border-amber-200";
+          badgeBg = "bg-amber-600 text-white";
+          statusTag = `<span class="text-[10px] font-bold px-2 py-0.5 rounded-md bg-blue-100 text-blue-900 flex items-center gap-1"><span>🍽️</span>Подано ${servedCount}/${totalCount}</span>`;
+        }
+      }
 
-        const servedCount = hasItems ? table.items.filter(it => it.served).length : 0;
-        const totalCount = hasItems ? table.items.length : 0;
+      row.className = `p-2.5 sm:p-3 rounded-xl border ${rowBg} flex items-center justify-between gap-2.5 cursor-pointer transition active:scale-[0.99] select-none`;
+      row.onclick = () => onTableClicked(table.id);
 
-        row.innerHTML = `
-          <div class="flex items-center gap-2.5 min-w-0">
-            <div class="w-9 h-9 rounded-xl flex items-center justify-center font-black text-xs ${hasItems ? 'bg-amber-600 text-white' : 'bg-stone-200 text-stone-700'}">
-              №${table.id}
-            </div>
-            <div class="min-w-0">
-              <div class="flex items-center gap-1.5">
-                <span class="font-bold text-xs sm:text-sm text-stone-900 truncate">${table.name}</span>
-                <span class="text-[10px] text-stone-500 bg-stone-100 px-1.5 py-0.2 rounded font-semibold">Зал</span>
-              </div>
-              <div class="text-[11px] text-stone-500 truncate">
-                ${table.waiter ? `👤 ${table.waiter}` : 'Официант: —'} • 👥 ${table.guests || 0} чел.
-                ${hasItems ? ` • Подано: ${servedCount}/${totalCount}` : ''}
-              </div>
-            </div>
+      // Snippet of ordered dishes
+      let itemsPreview = '';
+      if (hasItems) {
+        const dishNames = table.items.map(it => `${it.qty}× ${it.name}`).slice(0, 3).join(', ');
+        const extraCount = table.items.length > 3 ? ` +${table.items.length - 3}` : '';
+        itemsPreview = `<div class="mt-1 text-[11px] text-stone-600 line-clamp-1 bg-white/80 px-1.5 py-0.5 rounded border border-stone-200/60 font-medium">📋 ${dishNames}${extraCount}</div>`;
+      }
+
+      const waiterBadge = table.waiter 
+        ? `<span class="text-[10px] font-bold ${isMyTable ? 'bg-amber-200/90 text-amber-950 border border-amber-300' : 'bg-stone-100 text-stone-700 border border-stone-200'} px-1.5 py-0.5 rounded flex items-center gap-1"><span>👤</span>${table.waiter}${isMyTable ? ' (Вы)' : ''}</span>`
+        : `<span class="text-[10px] text-stone-400">Официант: —</span>`;
+
+      row.innerHTML = `
+        <div class="flex items-center gap-2.5 min-w-0 flex-1">
+          <div class="w-10 h-10 sm:w-11 sm:h-11 rounded-xl flex flex-col items-center justify-center font-black ${badgeBg} shadow-2xs shrink-0">
+            <span class="text-[9px] uppercase leading-none opacity-80">Стол</span>
+            <span class="text-sm sm:text-base leading-none mt-0.5">${table.id}</span>
           </div>
 
-          <div class="text-right shrink-0">
-            <div class="font-mono font-black text-xs sm:text-sm ${total > 0 ? 'text-amber-950' : 'text-stone-400'}">${total} ₽</div>
-            <span class="text-[10px] font-bold ${hasItems ? 'text-amber-700' : 'text-stone-400'}">
-              ${hasItems ? table.items.reduce((s, it) => s + it.qty, 0) + ' шт.' : 'Свободен'}
-            </span>
+          <div class="min-w-0 flex-1">
+            <div class="flex items-center gap-1.5 flex-wrap">
+              <span class="font-extrabold text-xs sm:text-sm text-stone-900">${table.name}</span>
+              <span class="text-[10px] text-stone-500 font-semibold bg-white/70 border border-stone-200 px-1.5 py-0.2 rounded">👥 ${table.guests > 0 ? table.guests + ' чел.' : '2 места'}</span>
+              ${statusTag}
+            </div>
+
+            <div class="flex items-center gap-2 mt-1">
+              ${waiterBadge}
+            </div>
+
+            ${itemsPreview}
           </div>
-        `;
-        list.appendChild(row);
-      });
+        </div>
+
+        <div class="text-right shrink-0 flex flex-col items-end justify-center">
+          <div class="font-mono font-black text-sm sm:text-base ${total > 0 ? 'text-amber-950' : 'text-stone-400'}">${total} ₽</div>
+          <div class="text-[10px] font-bold ${hasItems ? 'text-amber-700' : 'text-stone-400'} mt-0.5">
+            ${hasItems ? `${totalCount} блюд` : 'Заказ пуст'}
+          </div>
+          <span class="text-[10px] text-stone-400 font-semibold mt-0.5">Открыть →</span>
+        </div>
+      `;
+
+      return row;
     }
 
     function openWelcomeModal() {
@@ -2316,11 +2115,7 @@
     window.goToOrderView = goToOrderView;
     window.toggleViewFromHeader = toggleViewFromHeader;
     window.filterTableStatus = filterTableStatus;
-    window.setTablesDisplayMode = setTablesDisplayMode;
-    window.toggleLayoutEditor = toggleLayoutEditor;
-    window.resetDefaultPositions = resetDefaultPositions;
-    window.openTableSizeModal = openTableSizeModal;
-    window.setTableShapeSize = setTableShapeSize;
+    window.setClusterMode = setClusterMode;
     window.forceSyncFromCloud = forceSyncFromCloud;
     window.onTableClicked = onTableClicked;
     window.openGuestsModal = openGuestsModal;
