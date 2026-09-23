@@ -139,6 +139,17 @@ export const MODIFIERS_DATA = {
       { id: "es_fried", name: "Яичница-глазунья", price: 0 },
       { id: "es_omelet", name: "Омлет", price: 0 }
     ]
+  },
+
+  // Выбор вкуса мороженого
+  ice_cream_choice: {
+    title: "Мороженое на выбор",
+    type: "single",
+    items: [
+      { id: "ic_vanilla", name: "Ванильное", price: 0 },
+      { id: "ic_chocolate", name: "Шоколадное", price: 0 },
+      { id: "ic_strawberry", name: "Клубничное", price: 0 }
+    ]
   }
 };
 
@@ -244,7 +255,7 @@ export const FULL_MENU = [
 
   // --- ДЕСЕРТЫ ---
   { id: 261, name: "Домашний пирог", price: 330, cat: "desserts", catTitle: "Десерты", desc: "Свежая домашняя выпечка от шефа", modGroups: [] },
-  { id: 262, name: "Блинчики «Сюзетт»", price: 360, cat: "desserts", catTitle: "Десерты", desc: "Соус сюзетт, клубника, мороженое, клубничный топпинг", modGroups: [] },
+  { id: 262, name: "Блинчики «Сюзетт»", price: 360, cat: "desserts", catTitle: "Десерты", desc: "Соус сюзетт, клубника, мороженое, клубничный топпинг", modGroups: ["ice_cream_choice"] },
   { id: 263, name: "Сметанник с бананом", price: 360, cat: "desserts", catTitle: "Десерты", desc: "Бисквит, соус сметанник, банан, грецкий орех", modGroups: [] },
   { id: 264, name: "Фруктовый салат с шариком мороженого", price: 330, cat: "desserts", catTitle: "Десерты", desc: "Свежие сезонные фрукты со сливочным мороженым", modGroups: [] },
 
