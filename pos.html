@@ -163,20 +163,25 @@
 
       <!-- Синяя полоса навигации: МЕНЮ, ПОИСК, РЕЖИМЫ (как на фото 2) -->
       <div class="pos-subbar-teal px-4 py-2 flex items-center justify-between text-white shrink-0 border-b border-sky-600 shadow-md">
-        <div class="flex items-center gap-3">
-          <button onclick="showAllGroupsView()" class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-sky-900/60 hover:bg-sky-900 text-xs font-bold transition">
-            <span>МЕНЮ</span>
-            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
-          </button>
-          
-          <div id="activeGroupBreadcrumb" class="hidden items-center gap-2 text-xs font-bold text-sky-100">
-            <span>/</span>
-            <span id="breadcrumbGroupName" class="bg-white/20 px-2.5 py-1 rounded-lg">Группа</span>
-            <button onclick="showAllGroupsView()" class="text-[10px] text-sky-200 hover:underline">← Назад ко всем</button>
+        <div class="flex items-center gap-2 overflow-x-auto custom-scroll py-0.5">
+          <div id="breadcrumbNav" class="flex items-center gap-1.5 text-xs font-bold text-sky-100">
+            <!-- Динамические хлебные крошки (МЕНЮ / Подгруппа ...) -->
           </div>
         </div>
 
         <div class="flex items-center gap-2">
+          <!-- Кнопка добавить группу / вкладку -->
+          <button onclick="openGroupEditModal()" class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-sky-900/70 hover:bg-sky-900 active:scale-95 text-xs font-bold text-sky-100 border border-sky-400/30 transition" title="Создать новую группу / вкладку">
+            <svg class="w-3.5 h-3.5 text-sky-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 13h6m-3-3v6m-9 1V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>
+            <span class="hidden sm:inline">+ Вкладка</span>
+          </button>
+
+          <!-- Кнопка добавить позицию -->
+          <button onclick="openProductEditModal()" class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-xs font-bold text-white shadow-sm transition" title="Создать товар">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+            <span class="hidden sm:inline">+ Позиция</span>
+          </button>
+
           <!-- Поисковая строка -->
           <div class="relative flex items-center">
             <input 
@@ -184,13 +189,9 @@
               type="text" 
               placeholder="ПОИСК" 
               oninput="handleMenuSearch(this.value)"
-              class="w-40 sm:w-56 bg-sky-950/60 border border-sky-400/40 text-white placeholder-sky-300 text-xs font-semibold rounded-xl pl-3 pr-8 py-1.5 focus:w-64 focus:outline-none focus:border-white transition-all">
+              class="w-32 sm:w-44 bg-sky-950/60 border border-sky-400/40 text-white placeholder-sky-300 text-xs font-semibold rounded-xl pl-3 pr-8 py-1.5 focus:w-56 focus:outline-none focus:border-white transition-all">
             <svg class="w-3.5 h-3.5 text-sky-300 absolute right-2.5 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
           </div>
-
-          <button onclick="openProductEditModal()" class="w-8 h-8 rounded-xl bg-sky-950/60 hover:bg-sky-900 flex items-center justify-center text-sky-200" title="Добавить товар вручную">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-          </button>
         </div>
       </div>
 
@@ -554,131 +555,20 @@
         </div>
 
         <!-- Вкладки внутри отчетов -->
-        <div class="flex items-center bg-slate-900 p-1 rounded-2xl border border-slate-800">
-          <button onclick="switchReportsSubTab('analytics')" id="repTabBtn_analytics" class="px-4 py-1.5 rounded-xl text-xs font-bold transition bg-sky-600 text-white">
-            Графики & KPI
-          </button>
-          <button onclick="switchReportsSubTab('shift')" id="repTabBtn_shift" class="px-4 py-1.5 rounded-xl text-xs font-bold transition text-slate-400 hover:text-white">
-            Смена & Z-отчет
-          </button>
-          <button onclick="switchReportsSubTab('journal')" id="repTabBtn_journal" class="px-4 py-1.5 rounded-xl text-xs font-bold transition text-slate-400 hover:text-white">
-            Журнал чеков
-          </button>
-        </div>
-
-        <button onclick="closeModal('reportsModal')" class="w-8 h-8 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold flex items-center justify-center transition">✕</button>
+      <div class="flex items-center bg-slate-900 p-1 rounded-2xl border border-slate-800">
+        <button onclick="switchReportsSubTab('analytics')" id="repTabBtn_analytics" class="px-4 py-1.5 rounded-xl text-xs font-bold transition bg-sky-600 text-white">
+          Графики & KPI
+        </button>
+        <button onclick="switchReportsSubTab('shift')" id="repTabBtn_shift" class="px-4 py-1.5 rounded-xl text-xs font-bold transition text-slate-400 hover:text-white">
+          Смена & Z-отчет
+        </button>
+        <button onclick="switchReportsSubTab('journal')" id="repTabBtn_journal" class="px-4 py-1.5 rounded-xl text-xs font-bold transition text-slate-400 hover:text-white">
+          Журнал чеков
+        </button>
+        <button onclick="switchReportsSubTab('manage')" id="repTabBtn_manage" class="px-4 py-1.5 rounded-xl text-xs font-bold transition text-slate-400 hover:text-white">
+          Настройки & База
+        </button>
       </div>
-
-      <!-- Контент вкладки 1: Графики & Аналитика -->
-      <div id="repSection_analytics" class="flex-1 p-5 overflow-y-auto custom-scroll space-y-5">
-        <!-- KPI плитки -->
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <div class="bg-slate-950 border border-slate-800 p-4 rounded-2xl">
-            <span class="text-[10px] font-bold text-slate-400 uppercase">Выручка за смену</span>
-            <div id="kpiTotalRevenue" class="text-2xl font-black text-emerald-400 font-mono mt-1">0 ₽</div>
-            <span class="text-[10px] text-slate-500">С учетом всех скидок</span>
-          </div>
-          <div class="bg-slate-950 border border-slate-800 p-4 rounded-2xl">
-            <span class="text-[10px] font-bold text-slate-400 uppercase">Всего чеков</span>
-            <div id="kpiReceiptsCount" class="text-2xl font-black text-sky-400 font-mono mt-1">0</div>
-            <span class="text-[10px] text-slate-500">Пробитых заказов</span>
-          </div>
-          <div class="bg-slate-950 border border-slate-800 p-4 rounded-2xl">
-            <span class="text-[10px] font-bold text-slate-400 uppercase">Средний чек</span>
-            <div id="kpiAvgTicket" class="text-2xl font-black text-violet-400 font-mono mt-1">0 ₽</div>
-            <span class="text-[10px] text-slate-500">Глубина корзины</span>
-          </div>
-          <div class="bg-slate-950 border border-slate-800 p-4 rounded-2xl">
-            <span class="text-[10px] font-bold text-slate-400 uppercase">Скидок выдано</span>
-            <div id="kpiTotalDiscounts" class="text-2xl font-black text-amber-400 font-mono mt-1">0 ₽</div>
-            <span class="text-[10px] text-slate-500">Позиции + чеки</span>
-          </div>
-        </div>
-
-        <!-- 4 графика Chart.js -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div class="bg-slate-950 border border-slate-800 p-4 rounded-2xl flex flex-col">
-            <h4 class="text-xs font-bold uppercase text-slate-300 mb-2">Продажи по часам</h4>
-            <div class="flex-1 min-h-[200px]">
-              <canvas id="chartHourlySales"></canvas>
-            </div>
-          </div>
-          <div class="bg-slate-950 border border-slate-800 p-4 rounded-2xl flex flex-col">
-            <h4 class="text-xs font-bold uppercase text-slate-300 mb-2">Наличные vs Безнал</h4>
-            <div class="flex-1 min-h-[200px] flex items-center justify-center">
-              <canvas id="chartPaymentSplit"></canvas>
-            </div>
-          </div>
-          <div class="bg-slate-950 border border-slate-800 p-4 rounded-2xl flex flex-col">
-            <h4 class="text-xs font-bold uppercase text-slate-300 mb-2">Кластеризация по категориям</h4>
-            <div class="flex-1 min-h-[200px]">
-              <canvas id="chartCategorySales"></canvas>
-            </div>
-          </div>
-          <div class="bg-slate-950 border border-slate-800 p-4 rounded-2xl flex flex-col">
-            <h4 class="text-xs font-bold uppercase text-slate-300 mb-2">Топ-5 продаваемых блюд</h4>
-            <div class="flex-1 min-h-[200px]">
-              <canvas id="chartTopItems"></canvas>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Контент вкладки 2: Смена & Z-отчет -->
-      <div id="repSection_shift" class="flex-1 p-5 overflow-y-auto custom-scroll space-y-4 hidden">
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div class="bg-slate-950 border border-slate-800 p-4 rounded-2xl">
-            <span class="text-[10px] font-bold text-slate-400 uppercase">Наличных в ящике</span>
-            <div id="shiftDrawerCashDisplay" class="text-2xl font-black text-emerald-400 font-mono mt-1">0 ₽</div>
-            <p class="text-[11px] text-slate-500 mt-1">Включает разменный фонд</p>
-            <div class="flex gap-2 mt-4">
-              <button onclick="promptCashMovement('IN')" class="flex-1 py-2 bg-slate-800 hover:bg-slate-700 text-xs font-bold rounded-xl text-slate-200">
-                + Внесение
-              </button>
-              <button onclick="promptCashMovement('OUT')" class="flex-1 py-2 bg-slate-800 hover:bg-slate-700 text-xs font-bold rounded-xl text-slate-200">
-                - Изъятие
-              </button>
-            </div>
-          </div>
-
-          <div class="bg-slate-950 border border-slate-800 p-4 rounded-2xl">
-            <span class="text-[10px] font-bold text-slate-400 uppercase">Безналичные оплаты</span>
-            <div id="shiftCardRevenueDisplay" class="text-2xl font-black text-sky-400 font-mono mt-1">0 ₽</div>
-            <p class="text-[11px] text-slate-500 mt-1">Эквайринг + QR СБП</p>
-          </div>
-
-          <div class="bg-slate-950 border border-slate-800 p-4 rounded-2xl">
-            <span class="text-[10px] font-bold text-slate-400 uppercase">Суммарная выручка</span>
-            <div id="shiftTotalSalesDisplay" class="text-2xl font-black text-white font-mono mt-1">0 ₽</div>
-            <p class="text-[11px] text-slate-500 mt-1">Кассовая смена открыта</p>
-          </div>
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
-          <!-- X-отчет -->
-          <div class="bg-slate-950 border border-slate-800 p-5 rounded-2xl flex flex-col justify-between">
-            <div>
-              <h4 class="font-bold text-sm text-white">X-Отчет (Промежуточный без гашения)</h4>
-              <p class="text-xs text-slate-400 mt-1">Снимается для сверки выручки и наличности в кассе без закрытия смены.</p>
-            </div>
-            <button onclick="generatePrintReport('X')" class="mt-4 w-full py-3 bg-slate-800 hover:bg-slate-750 text-white rounded-xl text-xs font-bold transition">
-              Печать X-Отчета
-            </button>
-          </div>
-
-          <!-- Z-отчет -->
-          <div class="bg-slate-950 border border-rose-500/30 p-5 rounded-2xl flex flex-col justify-between">
-            <div>
-              <h4 class="font-bold text-sm text-rose-300">Z-Отчет (Закрытие смены с гашением)</h4>
-              <p class="text-xs text-slate-400 mt-1">Фиксирует выручку смены, обнуляет регистры, переносит остаток и закрывает день.</p>
-            </div>
-            <button onclick="confirmCloseShift()" class="mt-4 w-full py-3 bg-rose-600 hover:bg-rose-500 text-white rounded-xl text-xs font-bold shadow-lg shadow-rose-950/40 transition">
-              Закрыть смену и напечатать Z-Отчет
-            </button>
-          </div>
-        </div>
-      </div>
-
       <!-- Контент вкладки 3: Журнал чеков -->
       <div id="repSection_journal" class="flex-1 p-5 overflow-y-auto custom-scroll hidden">
         <h4 class="text-xs font-bold uppercase text-slate-300 mb-3">Чеки текущей смены</h4>
@@ -701,40 +591,101 @@
           </table>
         </div>
       </div>
-    </div>
-  </div>
 
-  <!-- ======================================================== -->
-  <!-- 10. МОДАЛКА: ТЕРМОЧЕК ДЛЯ ПЕЧАТИ (СТИЛЬ ЛЕНТЫ)            -->
-  <!-- ======================================================== -->
-  <div id="receiptSlipModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center hidden z-50 p-4">
-    <div class="relative max-w-xs w-full animate-pop">
-      <button onclick="closeModal('receiptSlipModal')" class="absolute -top-10 right-0 text-white hover:text-slate-300 text-xs font-bold bg-slate-800 px-3 py-1 rounded-lg">
-        ✕ Закрыть
-      </button>
-      <div id="receiptSlipPaper" class="receipt-paper text-slate-900 p-5 rounded-t-2xl font-mono-receipt text-xs max-h-[75vh] overflow-y-auto custom-scroll shadow-2xl">
-        <!-- Текст термоленты -->
+      <!-- Контент вкладки 4: Настройки и управление базой данных -->
+      <div id="repSection_manage" class="flex-1 p-5 overflow-y-auto custom-scroll space-y-4 hidden">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <!-- Блок создания структуры -->
+          <div class="bg-slate-950 border border-slate-800 p-5 rounded-2xl space-y-3">
+            <h4 class="text-sm font-bold text-white flex items-center gap-2">
+              <svg class="w-4 h-4 text-sky-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
+              Быстрое создание структуры
+            </h4>
+            <p class="text-xs text-slate-400">
+              Вы можете создавать вкладки (группы товаров) и отдельные блюда. Созданные в группе товары привязываются к ней автоматически.
+            </p>
+            <div class="flex gap-2 pt-2">
+              <button onclick="closeModal('reportsModal'); openGroupEditModal();" class="flex-1 py-3 bg-sky-600 hover:bg-sky-500 text-white rounded-xl text-xs font-bold transition">
+                + Новая вкладка / Группа
+              </button>
+              <button onclick="closeModal('reportsModal'); openProductEditModal();" class="flex-1 py-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold transition">
+                + Новая позиция / Товар
+              </button>
+            </div>
+          </div>
+
+          <!-- Блок сброса и очистки данных -->
+          <div class="bg-slate-950 border border-rose-500/30 p-5 rounded-2xl space-y-3">
+            <h4 class="text-sm font-bold text-rose-300 flex items-center gap-2">
+              <svg class="w-4 h-4 text-rose-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+              Очистка и сброс данных
+            </h4>
+            <p class="text-xs text-slate-400">
+              Удалить все товары, группы и историю чеков для чистого запуска кассы с нуля.
+            </p>
+            <div class="pt-2">
+              <button onclick="confirmWipeAllData()" class="w-full py-3 bg-rose-600/90 hover:bg-rose-600 text-white rounded-xl text-xs font-bold shadow-lg shadow-rose-950/40 transition">
+                Удалить все данные (Очистить базу полностью)
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
-      <div class="receipt-edge h-3 w-full rotate-180"></div>
-      <button onclick="printThermalPaper()" class="mt-2 w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold shadow-lg">
-        Печать документа
-      </button>
     </div>
   </div>
 
   <!-- ======================================================== -->
-  <!-- 11. ДИАЛОГ ПОДТВЕРЖДЕНИЯ (ВМЕСТО ALERT/CONFIRM)           -->
+  <!-- МОДАЛЬНОЕ ОКНО: СОЗДАНИЕ И РЕДАКТИРОВАНИЕ ВКЛАДКИ / ГРУППЫ -->
   <!-- ======================================================== -->
-  <div id="customDialogModal" class="fixed inset-0 bg-black/70 backdrop-blur-xs flex items-center justify-center hidden z-50 p-4">
-    <div class="bg-white rounded-3xl w-full max-w-sm p-6 shadow-2xl border border-slate-200 animate-pop space-y-4">
-      <h3 id="customDialogTitle" class="text-sm font-bold text-slate-900">Подтверждение</h3>
-      <p id="customDialogMessage" class="text-xs text-slate-600 leading-relaxed"></p>
-      <div class="flex gap-2 pt-2">
-        <button onclick="handleCustomDialogResponse(false)" class="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold">
+  <div id="groupEditModal" class="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center hidden z-50 p-4">
+    <div class="bg-white rounded-3xl w-full max-w-md p-6 shadow-2xl border border-slate-200 animate-pop space-y-4">
+      <div class="flex items-center justify-between border-b border-slate-200 pb-3">
+        <div>
+          <h3 id="groupEditModalTitle" class="text-base font-bold text-slate-900">Новая вкладка / Группа</h3>
+          <p id="groupEditModalSubtitle" class="text-xs text-slate-500">Настройка категории каталога</p>
+        </div>
+        <button onclick="closeGroupEditModal()" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold flex items-center justify-center transition">✕</button>
+      </div>
+
+      <div class="space-y-3 text-slate-800">
+        <div>
+          <label class="text-[11px] font-bold text-slate-500 uppercase">Название группы / вкладки</label>
+          <input id="editGroupNameInput" type="text" placeholder="например: Горячие напитки" class="w-full mt-1 p-3 bg-slate-50 border border-slate-300 rounded-2xl text-xs font-bold text-slate-900 focus:outline-none focus:border-sky-500">
+        </div>
+
+        <div>
+          <label class="text-[11px] font-bold text-slate-500 uppercase">Родительская группа</label>
+          <div id="groupParentDisplay" class="mt-1 p-3 bg-slate-100 border border-slate-200 rounded-2xl text-xs font-bold text-slate-700 flex items-center justify-between">
+            <span id="groupParentLabel">Без родительской группы (Корень)</span>
+            <span class="text-[10px] bg-slate-200 px-2 py-0.5 rounded text-slate-600 font-mono">автоматически</span>
+          </div>
+        </div>
+
+        <div>
+          <label class="text-[11px] font-bold text-slate-500 uppercase">Цвет плитки</label>
+          <div id="groupColorPalette" class="flex gap-2 mt-1.5 flex-wrap">
+            <!-- Палитра цветов -->
+          </div>
+        </div>
+
+        <div>
+          <label class="text-[11px] font-bold text-slate-500 uppercase">Иконка / Эмодзи</label>
+          <div id="groupIconPalette" class="flex gap-2 mt-1.5 flex-wrap">
+            <!-- Подборка эмодзи -->
+          </div>
+        </div>
+      </div>
+
+      <div class="flex gap-2 pt-3 border-t border-slate-200">
+        <button id="deleteGroupBtn" onclick="deleteCurrentGroup()" class="px-4 py-3 bg-rose-50 text-rose-600 hover:bg-rose-100 rounded-2xl text-xs font-bold transition hidden">
+          Удалить группу
+        </button>
+        <div class="flex-1"></div>
+        <button onclick="closeGroupEditModal()" class="px-4 py-3 text-slate-500 hover:bg-slate-100 rounded-2xl text-xs font-semibold">
           Отмена
         </button>
-        <button onclick="handleCustomDialogResponse(true)" class="flex-1 py-2.5 bg-rose-600 hover:bg-rose-500 text-white rounded-xl text-xs font-bold">
-          Подтвердить
+        <button onclick="saveCurrentGroup()" class="px-5 py-3 bg-sky-600 hover:bg-sky-500 text-white rounded-2xl text-xs font-bold shadow-md shadow-sky-600/30 transition">
+          Сохранить
         </button>
       </div>
     </div>
@@ -882,58 +833,179 @@
     // ==========================================
     // РЕНДЕР КАТАЛОГА (ГРУППЫ ИЗ ФОТО 2 И ТОВАРЫ)
     // ==========================================
-    function renderCatalog() {
-      const container = document.getElementById('catalogContainer');
-      const breadcrumb = document.getElementById('activeGroupBreadcrumb');
+      <div class="space-y-3 text-slate-800">
+        <div>
+          <label class="text-[11px] font-bold text-slate-500 uppercase">Наименование позиции</label>
+          <input id="editProdNameInput" type="text" class="w-full mt-1 p-3 bg-slate-50 border border-slate-300 rounded-2xl text-xs font-bold text-slate-900 focus:outline-none focus:border-sky-500">
+        </div>
 
-      // Если режим групп и нет поискового запроса:
-      if (currentViewMode === 'GROUPS' && !currentSearchTerm) {
-        breadcrumb.classList.add('hidden');
-        breadcrumb.classList.remove('flex');
-
-        container.innerHTML = `
-          <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3.5">
-            ${CATEGORIES_CONFIG.map(cat => {
-              const count = products.filter(p => p.category === cat.name).length;
-              return `
-                <div 
-                  onclick="selectGroup('${cat.name}')" 
-                  class="rounded-3xl p-4 flex flex-col justify-between shadow-md active:scale-95 transition-transform duration-150 cursor-pointer h-32 select-none relative overflow-hidden"
-                  style="background-color: ${cat.color};"
-                >
-                  <div class="flex items-start justify-between">
-                    <span class="text-3xl">${cat.icon}</span>
-                    <span class="text-[10px] bg-black/20 text-white font-bold px-2 py-0.5 rounded-full">${count} поз.</span>
-                  </div>
-                  <div>
-                    <span class="text-[10px] text-white/80 font-bold uppercase tracking-wider block">Группа</span>
-                    <h4 class="font-extrabold text-white text-xs leading-snug line-clamp-2">${cat.name}</h4>
-                  </div>
-                </div>
-              `;
-            }).join('')}
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="text-[11px] font-bold text-slate-500 uppercase">Цена продажи (₽)</label>
+            <input id="editProdPriceInput" type="number" step="any" class="w-full mt-1 p-3 bg-slate-50 border border-slate-300 rounded-2xl text-sm font-black font-mono text-slate-900 focus:outline-none focus:border-sky-500">
           </div>
+          <div>
+            <label class="text-[11px] font-bold text-slate-500 uppercase">Себестоимость (₽)</label>
+            <input id="editProdCostInput" type="number" step="any" class="w-full mt-1 p-3 bg-slate-50 border border-slate-300 rounded-2xl text-sm font-mono text-slate-900 focus:outline-none focus:border-sky-500">
+          </div>
+        </div>
+
+        <div>
+          <label class="text-[11px] font-bold text-slate-500 uppercase">Родительская группа / Вкладка</label>
+          <select id="editProdCategorySelect" class="w-full mt-1 p-3 bg-slate-50 border border-slate-300 rounded-2xl text-xs font-bold text-slate-900 focus:outline-none focus:border-sky-500">
+            <!-- Динамически заполняются группы + вариант "Без группы" -->
+          </select>
+        </div>
+      </div>
+  <!-- ======================================================== -->
+  <!-- СКРИПТЫ, ДАННЫЕ И БИЗНЕС-ЛОГИКА                          -->
+  <!-- ======================================================== -->
+  <script>
+    // Звуковой синтезатор без внешних URL
+    let audioCtx = null;
+    function playBeep(type) {
+      try {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        const now = audioCtx.currentTime;
+
+        if (type === 'tap') {
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(600, now);
+          osc.frequency.exponentialRampToValueAtTime(300, now + 0.04);
+          gain.gain.setValueAtTime(0.1, now);
+          gain.gain.exponentialRampToValueAtTime(0.01, now + 0.04);
+          osc.start(now);
+          osc.stop(now + 0.04);
+        } else if (type === 'success') {
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(523.25, now);
+          osc.frequency.setValueAtTime(783.99, now + 0.06);
+          gain.gain.setValueAtTime(0.15, now);
+          gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+          osc.start(now);
+          osc.stop(now + 0.2);
+        }
+      } catch (e) {}
+    }
+
+    // Доступные цвета для вкладок
+    const PRESET_COLORS = [
+      '#e75b36', '#ea8c1c', '#d946ef', '#0284c7', 
+      '#65a30d', '#64748b', '#e11d48', '#8b5cf6', '#059669'
+    ];
+    const PRESET_ICONS = ['☕', '🥤', '🍵', '🫖', '🍹', '🥛', '🧊', '🥪', '🍰', '🍯', '🍸', '🛍️', '🍽️', '🥐'];
+
+    // Хранилище: чистый старт (если в localStorage нет, создается пустая база)
+    let groups = JSON.parse(localStorage.getItem('qcore_groups')) || [];
+    let products = JSON.parse(localStorage.getItem('qcore_products')) || [];
+    let currentShift = JSON.parse(localStorage.getItem('qcore_shift')) || {
+      shiftNumber: 1,
+      openedAt: new Date().toISOString(),
+      drawerCash: 0,
+      cardRevenue: 0,
+      cashRevenue: 0,
+      receipts: []
+    };
+
+    // Навигация по каталогу: путь из ID групп. null = корень ("МЕНЮ")
+    let currentPath = [{ id: null, name: 'МЕНЮ' }];
+    let currentSearchTerm = '';
+
+    // Состояние сессии
+    let currentZone = 'Зал';
+    let currentOrder = null;
+    let openTables = [];
+
+    // Редактирование
+    let editingProductId = null;
+    let editingGroupId = null;
+    let selectedGroupColor = PRESET_COLORS[0];
+    let selectedGroupIcon = PRESET_ICONS[0];
+    let targetCartItemUid = null;
+    let activePaymentType = 'CASH';
+
+    // Графики
+    let chartHourly = null;
+    let chartPayment = null;
+    let chartCat = null;
+    let chartTop = null;
+
+    function saveDB() {
+      localStorage.setItem('qcore_groups', JSON.stringify(groups));
+      localStorage.setItem('qcore_products', JSON.stringify(products));
+      localStorage.setItem('qcore_shift', JSON.stringify(currentShift));
+    }
+
+    function getCurrentGroupId() {
+      return currentPath[currentPath.length - 1].id;
+    }
+
+    function getCurrentGroupName() {
+      return currentPath[currentPath.length - 1].name;
+    }
+
+    // Таймер часов
+    setInterval(() => {
+      const now = new Date();
+      document.getElementById('currentClockText').innerText = now.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+    }, 1000);
+
+    // ==========================================
+    // РЕНДЕР ХЛЕБНЫХ КРОШЕК И КАТАЛОГА
+    // ==========================================
+    function renderBreadcrumbs() {
+      const nav = document.getElementById('breadcrumbNav');
+      nav.innerHTML = currentPath.map((node, idx) => {
+        const isLast = idx === currentPath.length - 1;
+        return `
+          <button 
+            onclick="navigateToBreadcrumb(${idx})" 
+            class="px-2.5 py-1 rounded-xl text-xs font-bold transition flex items-center gap-1 ${isLast ? 'bg-white text-slate-900 shadow-sm' : 'bg-sky-900/60 hover:bg-sky-900 text-sky-100'}">
+            <span>${node.name}</span>
+            ${idx > 0 && isLast ? `<span class="text-[10px] text-slate-500 font-normal ml-0.5">(${groups.filter(g => g.parentId === node.id).length + products.filter(p => p.parentId === node.id).length})</span>` : ''}
+          </button>
+          ${!isLast ? '<span class="text-sky-300 text-xs">/</span>' : ''}
         `;
-      } else {
-        // Режим показа товаров в выбранной группе или результат поиска
-        breadcrumb.classList.remove('hidden');
-        breadcrumb.classList.add('flex');
-        document.getElementById('breadcrumbGroupName').innerText = selectedCategoryName || 'Поиск';
+      }).join('');
+    }
 
-        let items = products;
-        if (selectedCategoryName) {
-          items = items.filter(p => p.category === selectedCategoryName);
-        }
-        if (currentSearchTerm) {
-          items = items.filter(p => p.name.toLowerCase().includes(currentSearchTerm));
-        }
+    function navigateToBreadcrumb(idx) {
+      playBeep('tap');
+      currentPath = currentPath.slice(0, idx + 1);
+      currentSearchTerm = '';
+      document.getElementById('searchMenuInput').value = '';
+      renderCatalog();
+    }
 
-        if (items.length === 0) {
+    function enterGroup(groupId) {
+      playBeep('tap');
+      const grp = groups.find(g => g.id === groupId);
+      if (!grp) return;
+      currentPath.push({ id: grp.id, name: grp.name });
+      currentSearchTerm = '';
+      document.getElementById('searchMenuInput').value = '';
+      renderCatalog();
+    }
+
+    function renderCatalog() {
+      renderBreadcrumbs();
+      const container = document.getElementById('catalogContainer');
+      const currentParentId = getCurrentGroupId();
+
+      // Если в строке поиска есть текст — ищем сквозным поиском по всем товарам
+      if (currentSearchTerm) {
+        const matched = products.filter(p => p.name.toLowerCase().includes(currentSearchTerm));
+        if (matched.length === 0) {
           container.innerHTML = `
             <div class="py-20 text-center text-sky-200">
-              <p class="text-sm font-bold">В этой группе пока нет позиций</p>
-              <button onclick="openProductEditModal(null, '${selectedCategoryName}')" class="mt-3 px-4 py-2 bg-white/20 hover:bg-white/30 rounded-xl text-xs font-bold text-white">
-                + Добавить блюдо в группу
+              <p class="text-sm font-bold">Ничего не найдено по запросу "${currentSearchTerm}"</p>
+              <button onclick="document.getElementById('searchMenuInput').value=''; currentSearchTerm=''; renderCatalog();" class="mt-3 px-4 py-2 bg-white/20 hover:bg-white/30 rounded-xl text-xs font-bold text-white">
+                Очистить поиск
               </button>
             </div>
           `;
@@ -942,66 +1014,124 @@
 
         container.innerHTML = `
           <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3.5">
-            ${items.map(p => `
-              <div 
-                data-id="${p.id}"
-                onpointerdown="startProductHold('${p.id}', this)"
-                onpointerup="cancelProductHold(this)"
-                onpointercancel="cancelProductHold(this)"
-                onclick="handleProductCardClick('${p.id}')"
-                class="bg-white/95 hover:bg-white text-slate-900 rounded-3xl p-4 flex flex-col justify-between shadow-md active:scale-95 transition cursor-pointer h-32 select-none relative overflow-hidden border border-white/20"
-              >
-                <div>
-                  <span class="text-[10px] font-bold text-sky-700 uppercase tracking-wider block truncate">${p.category}</span>
-                  <h4 class="font-black text-slate-900 text-xs leading-tight line-clamp-2 mt-1">${p.name}</h4>
-                </div>
-
-                <div class="flex items-baseline justify-between pt-1">
-                  <span class="text-base font-black font-mono text-slate-900">${p.price} ₽</span>
-                  <span class="text-[11px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-lg">+ В чек</span>
-                </div>
-
-                <!-- Полоса долгого зажатия (Настройка/Удаление) -->
-                <div class="hold-bar absolute inset-x-0 bottom-0 h-1.5 bg-gradient-to-r from-amber-500 to-rose-500 scale-x-0 origin-left transition-transform duration-[1400ms] pointer-events-none"></div>
-              </div>
-            `).join('')}
+            ${matched.map(p => renderProductCardHtml(p)).join('')}
           </div>
         `;
+        return;
       }
-    }
 
-    function showAllGroupsView() {
-      playBeep('tap');
-      currentViewMode = 'GROUPS';
-      selectedCategoryName = null;
-      currentSearchTerm = '';
-      document.getElementById('searchMenuInput').value = '';
-      renderCatalog();
-    }
+      // Текущие подгруппы на этом уровне
+      const childGroups = groups.filter(g => g.parentId === currentParentId);
+      // Текущие товары на этом уровне
+      const childProducts = products.filter(p => p.parentId === currentParentId);
 
-    function selectGroup(catName) {
-      playBeep('tap');
-      currentViewMode = 'ITEMS';
-      selectedCategoryName = catName;
-      renderCatalog();
-    }
-
-    function handleMenuSearch(query) {
-      currentSearchTerm = query.trim().toLowerCase();
-      if (currentSearchTerm) {
-        currentViewMode = 'ITEMS';
-        selectedCategoryName = null;
+      if (childGroups.length === 0 && childProducts.length === 0) {
+        const isRoot = currentParentId === null;
+        container.innerHTML = `
+          <div class="py-20 text-center text-sky-200 space-y-3">
+            <div class="w-16 h-16 mx-auto rounded-3xl bg-white/10 flex items-center justify-center text-3xl">
+              📂
+            </div>
+            <p class="text-sm font-bold text-white">
+              ${isRoot ? 'Каталог пуст. Добавьте первые группы или товары' : `В группе "${getCurrentGroupName()}" пока нет содержимого`}
+            </p>
+            <p class="text-xs text-sky-200/80">
+              ${isRoot ? 'Товары созданные здесь будут без родительской группы.' : 'Товары созданные здесь автоматически получат эту группу.'}
+            </p>
+            <div class="flex justify-center gap-2 pt-2">
+              <button onclick="openGroupEditModal()" class="px-4 py-2.5 bg-white text-slate-900 rounded-xl text-xs font-bold shadow-md hover:bg-slate-100 transition">
+                + Добавить вкладку / группу
+              </button>
+              <button onclick="openProductEditModal()" class="px-4 py-2.5 bg-emerald-500 text-white rounded-xl text-xs font-bold shadow-md hover:bg-emerald-400 transition">
+                + Добавить позицию / товар
+              </button>
+            </div>
+          </div>
+        `;
+        return;
       }
+
+      let html = '<div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3.5">';
+
+      // 1. Сначала отображаем плитки групп
+      childGroups.forEach(grp => {
+        const itemsCount = products.filter(p => p.parentId === grp.id).length;
+        const subGroupsCount = groups.filter(g => g.parentId === grp.id).length;
+        html += `
+          <div 
+            data-group-id="${grp.id}"
+            onpointerdown="startItemHold('group', '${grp.id}', this)"
+            onpointerup="cancelItemHold(this)"
+            onpointercancel="cancelItemHold(this)"
+            onclick="handleItemClick('group', '${grp.id}')"
+            class="rounded-3xl p-4 flex flex-col justify-between shadow-md active:scale-95 transition-transform duration-150 cursor-pointer h-32 select-none relative overflow-hidden border border-white/20"
+            style="background-color: ${grp.color};"
+          >
+            <div class="flex items-start justify-between">
+              <span class="text-3xl">${grp.icon}</span>
+              <span class="text-[10px] bg-black/25 text-white font-bold px-2 py-0.5 rounded-full">
+                ${itemsCount + subGroupsCount} поз.
+              </span>
+            </div>
+            <div>
+              <span class="text-[10px] text-white/80 font-bold uppercase tracking-wider block">Группа</span>
+              <h4 class="font-extrabold text-white text-xs leading-snug line-clamp-2">${grp.name}</h4>
+            </div>
+            <div class="hold-bar absolute inset-x-0 bottom-0 h-1.5 bg-white/80 scale-x-0 origin-left transition-transform duration-[1400ms] pointer-events-none"></div>
+          </div>
+        `;
+      });
+
+      // 2. Затем отображаем карточки блюд/товаров этого уровня
+      childProducts.forEach(prod => {
+        html += renderProductCardHtml(prod);
+      });
+
+      html += '</div>';
+      container.innerHTML = html;
+    }
+
+    function renderProductCardHtml(p) {
+      const parentGroup = groups.find(g => g.id === p.parentId);
+      const groupLabel = parentGroup ? parentGroup.name : 'Без группы';
+
+      return `
+        <div 
+          data-prod-id="${p.id}"
+          onpointerdown="startItemHold('product', '${p.id}', this)"
+          onpointerup="cancelItemHold(this)"
+          onpointercancel="cancelItemHold(this)"
+          onclick="handleItemClick('product', '${p.id}')"
+          class="bg-white/95 hover:bg-white text-slate-900 rounded-3xl p-4 flex flex-col justify-between shadow-md active:scale-95 transition cursor-pointer h-32 select-none relative overflow-hidden border border-white/30"
+        >
+          <div>
+            <span class="text-[10px] font-bold text-sky-700 uppercase tracking-wider block truncate">${groupLabel}</span>
+            <h4 class="font-black text-slate-900 text-xs leading-tight line-clamp-2 mt-0.5">${p.name}</h4>
+          </div>
+
+          <div class="flex items-baseline justify-between pt-1">
+            <span class="text-base font-black font-mono text-slate-900">${p.price} ₽</span>
+            <span class="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-lg border border-emerald-200">+ Чек</span>
+          </div>
+
+          <!-- Индикатор зажатия -->
+          <div class="hold-bar absolute inset-x-0 bottom-0 h-1.5 bg-gradient-to-r from-amber-500 to-rose-500 scale-x-0 origin-left transition-transform duration-[1400ms] pointer-events-none"></div>
+        </div>
+      `;
+    }
+
+    function handleMenuSearch(val) {
+      currentSearchTerm = val.trim().toLowerCase();
       renderCatalog();
     }
 
     // ==========================================
-    // ЗАЖАТИЕ ПАЛЬЦЕМ НА КАРТОЧКЕ (1.5 СЕКУНДЫ)
+    // ЛОНГ-ТАП (1.4 СЕК) И КЛИКИ
     // ==========================================
     let holdTimer = null;
     let holdTriggered = false;
 
-    function startProductHold(id, el) {
+    function startItemHold(type, id, el) {
       holdTriggered = false;
       const bar = el.querySelector('.hold-bar');
       if (bar) bar.style.transform = 'scaleX(1)';
@@ -1010,107 +1140,305 @@
         holdTriggered = true;
         if (bar) bar.style.transform = 'scaleX(0)';
         playBeep('tap');
-        openProductEditModal(id);
-      }, 1400); // 1.4 секунды для комфортной работы
+        if (type === 'group') {
+          openGroupEditModal(id);
+        } else {
+          openProductEditModal(id);
+        }
+      }, 1400);
     }
 
-    function cancelProductHold(el) {
+    function cancelItemHold(el) {
       clearTimeout(holdTimer);
       const bar = el.querySelector('.hold-bar');
       if (bar) bar.style.transform = 'scaleX(0)';
     }
 
-    function handleProductCardClick(id) {
+    function handleItemClick(type, id) {
       if (holdTriggered) {
         holdTriggered = false;
         return;
       }
-      addProductToActiveOrder(id);
+      if (type === 'group') {
+        enterGroup(id);
+      } else {
+        addProductToActiveOrder(id);
+      }
     }
 
     // ==========================================
-    // ЛОГИКА ЗАКАЗОВ (СТОЛЫ И БЫСТРЫЙ ЗАКАЗ)
+    // УПРАВЛЕНИЕ ГРУППАМИ / ВКЛАДКАМИ
     // ==========================================
-    function startQuickOrder() {
-      playBeep('tap');
-      if (!currentOrder) {
-        currentOrder = {
-          orderNumber: (currentShift.receipts.length || 0) + 1042,
-          type: 'QUICK',
-          table: 'С собой / Бар',
-          guests: 1,
-          items: [],
-          discountPercent: 0
-        };
+    function openGroupEditModal(groupId = null) {
+      editingGroupId = groupId;
+      const title = document.getElementById('groupEditModalTitle');
+      const delBtn = document.getElementById('deleteGroupBtn');
+      const parentLabel = document.getElementById('groupParentLabel');
+
+      // Палитра цветов
+      const colorBox = document.getElementById('groupColorPalette');
+      colorBox.innerHTML = PRESET_COLORS.map(c => `
+        <button 
+          type="button" 
+          onclick="selectGroupColor('${c}')" 
+          id="colorBtn_${c.replace('#','')}" 
+          class="w-7 h-7 rounded-full border-2 transition active:scale-90" 
+          style="background-color: ${c}; border-color: ${c === selectedGroupColor ? '#000000' : 'transparent'};">
+        </button>
+      `).join('');
+
+      // Палитра иконок
+      const iconBox = document.getElementById('groupIconPalette');
+      iconBox.innerHTML = PRESET_ICONS.map(ic => `
+        <button 
+          type="button" 
+          onclick="selectGroupIcon('${ic}')" 
+          id="iconBtn_${encodeURIComponent(ic)}" 
+          class="w-8 h-8 rounded-xl text-base border flex items-center justify-center transition active:scale-90 ${ic === selectedGroupIcon ? 'bg-sky-100 border-sky-500' : 'bg-slate-50 border-slate-200'}">
+          ${ic}
+        </button>
+      `).join('');
+
+      if (groupId) {
+        const grp = groups.find(g => g.id === groupId);
+        title.innerText = 'Редактировать группу';
+        document.getElementById('editGroupNameInput').value = grp.name;
+        selectedGroupColor = grp.color || PRESET_COLORS[0];
+        selectedGroupIcon = grp.icon || PRESET_ICONS[0];
+        
+        const parentGrp = groups.find(g => g.id === grp.parentId);
+        parentLabel.innerText = parentGrp ? parentGrp.name : 'Без родительской группы (Корень)';
+        delBtn.classList.remove('hidden');
+      } else {
+        title.innerText = 'Новая вкладка / Группа';
+        document.getElementById('editGroupNameInput').value = '';
+        selectedGroupColor = PRESET_COLORS[0];
+        selectedGroupIcon = PRESET_ICONS[0];
+
+        const currParentId = getCurrentGroupId();
+        const currParent = groups.find(g => g.id === currParentId);
+        parentLabel.innerText = currParent ? currParent.name : 'Без родительской группы (Корень)';
+        delBtn.classList.add('hidden');
       }
-      renderOrderView();
-      showToast('Открыт быстрый чек');
+
+      selectGroupColor(selectedGroupColor);
+      selectGroupIcon(selectedGroupIcon);
+      openModal('groupEditModal');
     }
 
-    // Модалка гостей из Фото 2
-    let chosenGuestCount = 2;
-
-    function openTableGuestsModal() {
-      playBeep('tap');
-      const list = document.getElementById('guestsOptionsList');
-      chosenGuestCount = 2;
-
-      let html = '';
-      for (let i = 1; i <= 9; i++) {
-        const isSel = i === chosenGuestCount;
-        html += `
-          <div 
-            onclick="setGuestOption(${i})" 
-            id="guestRow_${i}"
-            class="p-2.5 rounded-xl border text-xs font-bold flex items-center justify-between cursor-pointer transition ${isSel ? 'bg-sky-50 border-sky-400 text-sky-900' : 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100'}">
-            <span>Гостей: ${i}</span>
-            ${isSel ? '<span class="text-sky-600 font-extrabold">✓</span>' : ''}
-          </div>
-        `;
-      }
-      list.innerHTML = html;
-      openModal('tableGuestsModal');
+    function selectGroupColor(c) {
+      selectedGroupColor = c;
+      PRESET_COLORS.forEach(col => {
+        const btn = document.getElementById(`colorBtn_${col.replace('#','')}`);
+        if (btn) btn.style.borderColor = col === c ? '#0f172a' : 'transparent';
+      });
     }
 
-    function setGuestOption(num) {
-      chosenGuestCount = num;
-      for (let i = 1; i <= 9; i++) {
-        const row = document.getElementById(`guestRow_${i}`);
-        if (row) {
-          if (i === num) {
-            row.className = 'p-2.5 rounded-xl border text-xs font-bold flex items-center justify-between cursor-pointer transition bg-sky-50 border-sky-400 text-sky-900';
-            row.innerHTML = `<span>Гостей: ${i}</span><span class="text-sky-600 font-extrabold">✓</span>`;
-          } else {
-            row.className = 'p-2.5 rounded-xl border text-xs font-bold flex items-center justify-between cursor-pointer transition bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100';
-            row.innerHTML = `<span>Гостей: ${i}</span>`;
-          }
+    function selectGroupIcon(ic) {
+      selectedGroupIcon = ic;
+      PRESET_ICONS.forEach(item => {
+        const btn = document.getElementById(`iconBtn_${encodeURIComponent(item)}`);
+        if (btn) {
+          btn.className = item === ic 
+            ? 'w-8 h-8 rounded-xl text-base border flex items-center justify-center transition bg-sky-100 border-sky-500' 
+            : 'w-8 h-8 rounded-xl text-base border flex items-center justify-center transition bg-slate-50 border-slate-200';
         }
+      });
+    }
+
+    function closeGroupEditModal() {
+      closeModal('groupEditModal');
+      editingGroupId = null;
+    }
+
+    function saveCurrentGroup() {
+      const name = document.getElementById('editGroupNameInput').value.trim();
+      if (!name) {
+        showToast('Введите название группы');
+        return;
       }
-    }
 
-    function confirmOpenTableOrder() {
+      if (editingGroupId) {
+        const idx = groups.findIndex(g => g.id === editingGroupId);
+        if (idx !== -1) {
+          groups[idx].name = name;
+          groups[idx].color = selectedGroupColor;
+          groups[idx].icon = selectedGroupIcon;
+          showToast(`Группа "${name}" обновлена`);
+        }
+      } else {
+        // Автоматически присваиваем родительскую группу из текущего экрана
+        const parentId = getCurrentGroupId();
+        const newGroup = {
+          id: 'grp_' + Date.now(),
+          parentId: parentId, // null если в корне, иначе id текущей группы
+          name: name,
+          color: selectedGroupColor,
+          icon: selectedGroupIcon
+        };
+        groups.push(newGroup);
+        showToast(`Вкладка "${name}" создана`);
+      }
+
+      saveDB();
       playBeep('success');
-      const tableName = document.getElementById('selectedTableDropdown').value;
-
-      currentOrder = {
-        orderNumber: (currentShift.receipts.length || 0) + 1042,
-        type: 'TABLE',
-        table: tableName,
-        guests: chosenGuestCount,
-        items: [],
-        discountPercent: 0
-      };
-
-      closeModal('tableGuestsModal');
-      renderOrderView();
-      showToast(`Открыт ${tableName} (${chosenGuestCount} гостей)`);
+      closeGroupEditModal();
+      renderCatalog();
     }
 
+    function deleteCurrentGroup() {
+      if (!editingGroupId) return;
+      showCustomConfirmDialog(
+        'Удалить эту группу?',
+        'Все вложенные подгруппы и товары также будут перемещены в корень или удалены.',
+        () => {
+          // Удаляем подгруппы и товары или выносим в корень
+          groups = groups.filter(g => g.id !== editingGroupId && g.parentId !== editingGroupId);
+          products = products.filter(p => p.parentId !== editingGroupId);
+          saveDB();
+          playBeep('tap');
+          closeGroupEditModal();
+          // Если мы были внутри удаляемой группы, возвращаемся в корень
+          if (getCurrentGroupId() === editingGroupId) {
+            currentPath = [{ id: null, name: 'МЕНЮ' }];
+          }
+          renderCatalog();
+          showToast('Группа удалена');
+        }
+      );
+    }
+
+    // ==========================================
+    // УПРАВЛЕНИЕ ПОЗИЦИЯМИ / ТОВАРАМИ
+    // ==========================================
+    function openProductEditModal(id = null) {
+      editingProductId = id;
+      const title = document.getElementById('productEditTitle');
+      const delBtn = document.getElementById('deleteProductBtn');
+      const catSelect = document.getElementById('editProdCategorySelect');
+
+      // Заполняем выбор категории: "Без группы (Корень)" + список всех созданных групп
+      let optionsHtml = `<option value="">Без родительской группы (Корень)</option>`;
+      groups.forEach(g => {
+        optionsHtml += `<option value="${g.id}">📁 ${g.name}</option>`;
+      });
+      catSelect.innerHTML = optionsHtml;
+
+      if (id) {
+        const p = products.find(prod => prod.id === id);
+        title.innerText = 'Редактирование товара';
+        document.getElementById('editProdNameInput').value = p.name;
+        document.getElementById('editProdPriceInput').value = p.price;
+        document.getElementById('editProdCostInput').value = p.cost || 0;
+        catSelect.value = p.parentId || '';
+        delBtn.classList.remove('hidden');
+      } else {
+        title.innerText = 'Создать новую позицию';
+        document.getElementById('editProdNameInput').value = '';
+        document.getElementById('editProdPriceInput').value = '';
+        document.getElementById('editProdCostInput').value = '';
+        // ВАЖНО: Если мы находимся внутри группы — по умолчанию присваивается она! Если в корне — пусто
+        catSelect.value = getCurrentGroupId() || '';
+        delBtn.classList.add('hidden');
+      }
+
+      openModal('productEditModal');
+    }
+
+    function closeProductEditModal() {
+      closeModal('productEditModal');
+      editingProductId = null;
+    }
+
+    function saveCurrentProduct() {
+      const name = document.getElementById('editProdNameInput').value.trim();
+      const price = parseFloat(document.getElementById('editProdPriceInput').value) || 0;
+      const cost = parseFloat(document.getElementById('editProdCostInput').value) || 0;
+      const parentId = document.getElementById('editProdCategorySelect').value || null;
+
+      if (!name || price <= 0) {
+        showToast('Укажите корректное название и цену позиции');
+        return;
+      }
+
+      if (editingProductId) {
+        const idx = products.findIndex(p => p.id === editingProductId);
+        if (idx !== -1) {
+          products[idx].name = name;
+          products[idx].price = price;
+          products[idx].cost = cost;
+          products[idx].parentId = parentId;
+          showToast(`Позиция "${name}" обновлена`);
+        }
+      } else {
+        products.push({
+          id: 'p_' + Date.now(),
+          parentId: parentId, // null если в корне, иначе выбранная группа
+          name: name,
+          price: price,
+          cost: cost
+        });
+        showToast(`Позиция "${name}" добавлена`);
+      }
+
+      saveDB();
+      playBeep('success');
+      closeProductEditModal();
+      renderCatalog();
+    }
+
+    function deleteCurrentProduct() {
+      if (!editingProductId) return;
+      showCustomConfirmDialog(
+        'Удалить этот товар?',
+        'Товар будет безвозвратно удален из каталога.',
+        () => {
+          products = products.filter(p => p.id !== editingProductId);
+          saveDB();
+          playBeep('tap');
+          closeProductEditModal();
+          renderCatalog();
+          showToast('Товар удален');
+        }
+      );
+    }
+
+    // ==========================================
+    // ПОЛНЫЙ СБРОС И ОЧИСТКА ВСЕХ ДАННЫХ
+    // ==========================================
+    function confirmWipeAllData() {
+      showCustomConfirmDialog(
+        'ОЧИСТИТЬ ВСЮ БАЗУ ДАННЫХ?',
+        'Будут безвозвратно удалены все товары, все группы/вкладки и история чеков. Система вернется к абсолютно чистому состоянию.',
+        () => {
+          groups = [];
+          products = [];
+          currentShift = {
+            shiftNumber: 1,
+            openedAt: new Date().toISOString(),
+            drawerCash: 0,
+            cardRevenue: 0,
+            cashRevenue: 0,
+            receipts: []
+          };
+          currentOrder = null;
+          currentPath = [{ id: null, name: 'МЕНЮ' }];
+          currentSearchTerm = '';
+          saveDB();
+          playBeep('success');
+          closeModal('reportsModal');
+          renderCatalog();
+          renderOrderView();
+          showToast('Все данные успешно очищены');
+        }
+      );
+    }
+
+    // Заказ: переопределение для структуры без жестких категорий
     function addProductToActiveOrder(productId) {
       const prod = products.find(p => p.id === productId);
       if (!prod) return;
 
-      // Если заказ еще не был начат, автоматически открываем быстрый
       if (!currentOrder) {
         currentOrder = {
           orderNumber: (currentShift.receipts.length || 0) + 1042,
@@ -1127,12 +1455,13 @@
       if (existing) {
         existing.qty++;
       } else {
+        const parentGrp = groups.find(g => g.id === prod.parentId);
         currentOrder.items.push({
           uid: 'ci_' + Date.now() + Math.random().toString(36).substr(2, 4),
           productId: prod.id,
           name: prod.name,
           price: prod.price,
-          category: prod.category,
+          category: parentGrp ? parentGrp.name : 'Без группы',
           cost: prod.cost || (prod.price * 0.4),
           qty: 1,
           discountPercent: 0
@@ -1643,7 +1972,7 @@
 
     function switchReportsSubTab(tab) {
       playBeep('tap');
-      ['analytics', 'shift', 'journal'].forEach(t => {
+      ['analytics', 'shift', 'journal', 'manage'].forEach(t => {
         const btn = document.getElementById(`repTabBtn_${t}`);
         const sec = document.getElementById(`repSection_${t}`);
         if (t === tab) {
