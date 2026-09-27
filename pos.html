@@ -1,0 +1,1956 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>QCore Soft POS Pro</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+
+  <style>
+    * {
+      -webkit-touch-callout: none;
+      -webkit-user-select: none;
+      user-select: none;
+      box-sizing: border-box;
+      font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+    }
+    input, textarea {
+      -webkit-user-select: text;
+      user-select: text;
+    }
+    .font-mono-receipt {
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .custom-scroll::-webkit-scrollbar {
+      width: 5px;
+      height: 5px;
+    }
+    .custom-scroll::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    .custom-scroll::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 9999px;
+    }
+    .custom-scroll-dark::-webkit-scrollbar {
+      width: 5px;
+      height: 5px;
+    }
+    .custom-scroll-dark::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 9999px;
+    }
+    .pos-bg-teal {
+      background: radial-gradient(circle at top left, #05709f, #005a84, #004b70);
+    }
+    .pos-subbar-teal {
+      background-color: #0081ba;
+    }
+    .receipt-paper {
+      background: repeating-linear-gradient(
+        0deg,
+        #ffffff,
+        #ffffff 24px,
+        #fbfbfc 25px
+      );
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.2);
+    }
+    .receipt-edge {
+      background: radial-gradient(circle, transparent, transparent 50%, #ffffff 50%, #ffffff 100%);
+      background-size: 12px 12px;
+    }
+    @keyframes popIn {
+      from { opacity: 0; transform: scale(0.96) translateY(8px); }
+      to { opacity: 1; transform: scale(1) translateY(0); }
+    }
+    .animate-pop {
+      animation: popIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+  </style>
+</head>
+<body class="bg-slate-900 text-slate-100 h-screen w-screen overflow-hidden flex flex-col antialiased">
+
+  <!-- ======================================================== -->
+  <!-- 1. ВЕРХНИЙ СТАТУС-БАР ПЛАНШЕТА (КАК НА ФОТО)             -->
+  <!-- ======================================================== -->
+  <aside class="bg-sky-950 text-sky-200/90 px-4 py-1 text-[11px] font-semibold flex items-center justify-between border-b border-sky-900 shrink-0 select-none">
+    <div class="flex items-center gap-2">
+      <span id="currentClockText" class="font-mono text-white">15:54</span>
+      <span>•</span>
+      <span id="currentDateText">Вс 27 сент.</span>
+    </div>
+    <div class="flex items-center gap-3 text-xs">
+      <span class="flex items-center gap-1">
+        <svg class="w-3.5 h-3.5 text-sky-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.141 0M1.393 9.393c5.857-5.857 15.355-5.857 21.213 0"/></svg>
+        <span>Wi-Fi</span>
+      </span>
+      <span class="flex items-center gap-1 font-mono text-white">
+        <svg class="w-3.5 h-3.5 text-emerald-400" fill="currentColor" viewBox="0 0 24 24"><path d="M15.67 4H14V2h-4v2H8.33C7.6 4 7 4.6 7 5.33v15.33C7 21.4 7.6 22 8.33 22h7.33c.74 0 1.34-.6 1.34-1.33V5.33C17 4.6 16.4 4 15.67 4z"/></svg>
+        <span>98%</span>
+      </span>
+    </div>
+  </aside>
+
+  <!-- ======================================================== -->
+  <!-- 2. ГЛАВНЫЙ HEADER ТЕРМИНАЛА (БЕЛЫЙ / СВЕТЛЫЙ, ИЗ ФОТО)   -->
+  <!-- ======================================================== -->
+  <header class="bg-white text-slate-800 px-4 py-2 flex items-center justify-between border-b border-slate-200 shadow-sm shrink-0 z-20">
+    <!-- Левая секция: Аватар, Имя кассира, Шестеренка, Зал -->
+    <div class="flex items-center gap-3">
+      <!-- Лого / Аватар со статусом -->
+      <div class="relative flex items-center justify-center">
+        <div class="w-10 h-10 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-600 font-bold shadow-xs">
+          <svg class="w-6 h-6 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+        </div>
+        <span class="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-rose-500 border-2 border-white"></span>
+      </div>
+
+      <!-- Имя кассира -->
+      <div>
+        <p class="text-[11px] text-slate-400 font-medium leading-none">Кассир-бариста</p>
+        <h2 id="cashierNameDisplay" class="text-sm font-bold text-slate-900 leading-snug">Идегел Дажый-оол</h2>
+      </div>
+
+      <!-- Шестеренка (Z-отчет, аналитика, настройки) -->
+      <button onclick="openReportsModal()" class="w-9 h-9 rounded-xl bg-slate-100 hover:bg-slate-200 active:scale-95 text-slate-600 flex items-center justify-center transition border border-slate-200 ml-1" title="Отчеты, Смена и Настройки">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+      </button>
+
+      <!-- Переключатель залов / локаций (как на фото) -->
+      <div class="flex items-center gap-1 bg-slate-100 p-1 rounded-2xl border border-slate-200 ml-2">
+        <button onclick="setHallZone('Зал')" id="zoneBtn_Зал" class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition bg-white text-slate-900 shadow-xs">
+          Зал
+        </button>
+        <button onclick="setHallZone('Терраса')" id="zoneBtn_Терраса" class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition text-slate-500 hover:text-slate-900">
+          Терраса
+        </button>
+        <button onclick="setHallZone('БАР')" id="zoneBtn_БАР" class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition text-slate-500 hover:text-slate-900">
+          БАР
+        </button>
+      </div>
+    </div>
+
+    <!-- Правая секция: Зеленые кнопки заказов (из фото) -->
+    <div class="flex items-center gap-2.5">
+      <button onclick="openTableGuestsModal()" class="px-4 py-2.5 bg-emerald-500 hover:bg-emerald-600 active:scale-95 text-white font-bold text-xs rounded-2xl shadow-sm transition flex items-center gap-2">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+        <span>Заказ на стол</span>
+      </button>
+
+      <button onclick="startQuickOrder()" class="px-4 py-2.5 bg-emerald-500 hover:bg-emerald-600 active:scale-95 text-white font-bold text-xs rounded-2xl shadow-sm transition flex items-center gap-2">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+        <span>Быстрый заказ</span>
+      </button>
+
+      <!-- Иконка переключения панелей -->
+      <button onclick="toggleSidePanel()" class="w-9 h-9 rounded-xl bg-sky-100 hover:bg-sky-200 active:scale-95 text-sky-700 flex items-center justify-center transition border border-sky-200">
+        <svg id="sidePanelToggleIcon" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 19l-7-7 7-7m8 14l-7-7 7-7"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- ======================================================== -->
+  <!-- 3. ОСНОВНОЙ РАБОЧИЙ ЭКРАН (ЦВЕТ МОРСКОЙ ВОЛНЫ ИЗ ФОТО)     -->
+  <!-- ======================================================== -->
+  <main class="flex-1 flex overflow-hidden">
+    
+    <!-- ЛЕВАЯ ОБЛАСТЬ: МЕНЮ, ГРУППЫ ТОВАРОВ И КАТАЛОГ -->
+    <div class="flex-1 pos-bg-teal flex flex-col min-w-0 relative">
+
+      <!-- Синяя полоса навигации: МЕНЮ, ПОИСК, РЕЖИМЫ (как на фото 2) -->
+      <div class="pos-subbar-teal px-4 py-2 flex items-center justify-between text-white shrink-0 border-b border-sky-600 shadow-md">
+        <div class="flex items-center gap-3">
+          <button onclick="showAllGroupsView()" class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-sky-900/60 hover:bg-sky-900 text-xs font-bold transition">
+            <span>МЕНЮ</span>
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+          </button>
+          
+          <div id="activeGroupBreadcrumb" class="hidden items-center gap-2 text-xs font-bold text-sky-100">
+            <span>/</span>
+            <span id="breadcrumbGroupName" class="bg-white/20 px-2.5 py-1 rounded-lg">Группа</span>
+            <button onclick="showAllGroupsView()" class="text-[10px] text-sky-200 hover:underline">← Назад ко всем</button>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <!-- Поисковая строка -->
+          <div class="relative flex items-center">
+            <input 
+              id="searchMenuInput" 
+              type="text" 
+              placeholder="ПОИСК" 
+              oninput="handleMenuSearch(this.value)"
+              class="w-40 sm:w-56 bg-sky-950/60 border border-sky-400/40 text-white placeholder-sky-300 text-xs font-semibold rounded-xl pl-3 pr-8 py-1.5 focus:w-64 focus:outline-none focus:border-white transition-all">
+            <svg class="w-3.5 h-3.5 text-sky-300 absolute right-2.5 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+          </div>
+
+          <button onclick="openProductEditModal()" class="w-8 h-8 rounded-xl bg-sky-950/60 hover:bg-sky-900 flex items-center justify-center text-sky-200" title="Добавить товар вручную">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Контейнер скролла: Сетка категорий (из фото 2) или сетка товаров -->
+      <div id="catalogContainer" class="flex-1 p-4 overflow-y-auto custom-scroll">
+        <!-- Сюда динамически рендерятся цветные плитки групп или карточки блюд -->
+      </div>
+
+      <!-- Нижний левый кружок с восклицательным знаком (из фото) -->
+      <div class="absolute bottom-4 left-4 z-10 flex items-center gap-2">
+        <button onclick="openHelpTooltip()" class="w-9 h-9 rounded-full bg-rose-500/90 hover:bg-rose-500 text-white flex items-center justify-center font-black shadow-lg shadow-black/30 border border-rose-400 active:scale-95 transition" title="Подсказка по управлению">
+          !
+        </button>
+        <span class="text-[11px] font-semibold text-sky-100 bg-sky-950/80 px-2.5 py-1 rounded-xl backdrop-blur-xs border border-sky-800 hidden sm:inline-block">
+          Удерживайте карточку товара 1.5 сек для настроек цены и удаления
+        </span>
+      </div>
+    </div>
+
+    <!-- ПРАВАЯ ОБЛАСТЬ: СТОЛЫ / ЧЕК ЗАКАЗА (ИЗ ФОТО 1) -->
+    <aside id="sideOrderPanel" class="w-80 sm:w-96 md:w-[420px] bg-slate-100 text-slate-800 flex flex-col shrink-0 border-l border-slate-300 shadow-2xl transition-all duration-300">
+      
+      <!-- Режим 1: Нет открытых столов (точно как на фото 1) -->
+      <div id="noTablesState" class="flex-1 flex flex-col justify-between p-6">
+        <div>
+          <!-- Статистика столов вверху -->
+          <div class="space-y-1 border-b border-slate-200 pb-4">
+            <div class="text-sm font-bold text-slate-900 flex items-center justify-between">
+              <span>На столах:</span>
+              <span id="activeTablesCountBadge" class="font-mono text-base text-slate-900">0</span>
+            </div>
+            <div class="text-xs text-slate-500 flex items-center justify-between">
+              <span>Всего гостей:</span>
+              <span id="totalGuestsCountBadge" class="font-mono">0</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Центральная надпись из фото 1 -->
+        <div class="text-center py-16 space-y-2">
+          <div class="w-14 h-14 mx-auto rounded-2xl bg-slate-200 flex items-center justify-center text-slate-400 mb-3">
+            <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+          </div>
+          <p class="text-sm font-bold text-slate-700">Нет открытых столов.</p>
+          <p class="text-xs text-slate-500">Создайте заказ на стол или начните быстрый заказ.</p>
+          <div class="pt-4 flex flex-col gap-2">
+            <button onclick="startQuickOrder()" class="w-full py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl text-xs font-bold shadow-xs transition">
+              + Открыть быстрый чек
+            </button>
+            <button onclick="openTableGuestsModal()" class="w-full py-2.5 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 rounded-xl text-xs font-bold transition">
+              Выбрать стол и гостей
+            </button>
+          </div>
+        </div>
+
+        <div class="text-[11px] text-center text-slate-400 border-t border-slate-200 pt-3">
+          Зона: <b id="sideCurrentZoneBadge" class="text-slate-700">Зал</b> • Смена #<span id="sideShiftNum">1</span>
+        </div>
+      </div>
+
+      <!-- Режим 2: Активный заказ (Чек заказа) -->
+      <div id="activeOrderState" class="flex-1 flex flex-col hidden">
+        <!-- Шапка открытого чека -->
+        <div class="p-3.5 bg-white border-b border-slate-200 flex items-center justify-between shadow-xs">
+          <div>
+            <div class="flex items-center gap-2">
+              <span id="orderTitleLabel" class="font-extrabold text-sm text-slate-900">Заказ #1042</span>
+              <span id="orderTypeBadge" class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 border border-emerald-300">
+                Быстрый заказ
+              </span>
+            </div>
+            <p class="text-[11px] text-slate-400">Свайп влево — удалить / скидка</p>
+          </div>
+          <button onclick="clearCurrentCart()" class="text-xs font-bold text-rose-500 hover:text-rose-600 bg-rose-50 hover:bg-rose-100 px-2.5 py-1.5 rounded-xl border border-rose-200 transition">
+            Сброс
+          </button>
+        </div>
+
+        <!-- Список строк позиций в чеке -->
+        <div id="cartItemsList" class="flex-1 overflow-y-auto custom-scroll-dark p-3 space-y-2 bg-slate-50/70">
+          <!-- Рендер позиций -->
+        </div>
+
+        <!-- Подвал чека: суммы, скидка и кнопки оплат -->
+        <div class="p-4 bg-white border-t border-slate-200 space-y-3 shadow-lg">
+          <div class="space-y-1 text-xs">
+            <div class="flex justify-between text-slate-500">
+              <span>Сумма позиций:</span>
+              <span id="cartSubtotalText" class="font-mono font-bold text-slate-800">0 ₽</span>
+            </div>
+            <div class="flex justify-between text-amber-600 font-semibold" id="cartDiscountRow">
+              <span>Скидка:</span>
+              <span id="cartDiscountSumText" class="font-mono">-0 ₽</span>
+            </div>
+            <div class="flex justify-between text-slate-400 text-[11px]">
+              <span>В т.ч. НДС (20%):</span>
+              <span id="cartVatText" class="font-mono">0 ₽</span>
+            </div>
+            <div class="flex justify-between items-baseline pt-2 border-t border-slate-200">
+              <span class="text-sm font-extrabold text-slate-900">ИТОГО:</span>
+              <span id="cartTotalSumText" class="text-2xl font-black text-slate-900 font-mono">0 ₽</span>
+            </div>
+          </div>
+
+          <!-- Кнопка скидки на чек -->
+          <button onclick="openOrderDiscountModal()" class="w-full py-2 bg-slate-100 hover:bg-slate-200 active:scale-[0.99] border border-slate-300 text-slate-800 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition">
+            <svg class="w-3.5 h-3.5 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/></svg>
+            Скидка на весь чек (<span id="cartDiscountPercentLabel">0%</span>)
+          </button>
+
+          <!-- Выбор способа оплаты (как в ТЗ) -->
+          <div class="grid grid-cols-2 gap-2 pt-1">
+            <button onclick="startCheckout('CASH')" class="py-3 bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white rounded-2xl font-bold flex flex-col items-center justify-center shadow-md shadow-emerald-700/20 transition">
+              <span class="text-xs sm:text-sm">Наличные</span>
+              <span class="text-[10px] text-emerald-100 font-normal">Со сдачей</span>
+            </button>
+            <button onclick="startCheckout('CARD')" class="py-3 bg-sky-600 hover:bg-sky-500 active:scale-95 text-white rounded-2xl font-bold flex flex-col items-center justify-center shadow-md shadow-sky-700/20 transition">
+              <span class="text-xs sm:text-sm">Безнал / Касса</span>
+              <span class="text-[10px] text-sky-100 font-normal">Терминал / СБП</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+    </aside>
+  </main>
+
+  <!-- ======================================================== -->
+  <!-- 4. МОДАЛЬНОЕ ОКНО: «УКАЖИТЕ КОЛИЧЕСТВО ГОСТЕЙ» (ИЗ ФОТО 2)-->
+  <!-- ======================================================== -->
+  <div id="tableGuestsModal" class="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center hidden z-50 p-4">
+    <div class="bg-white rounded-3xl w-full max-w-sm overflow-hidden shadow-2xl border border-slate-200 animate-pop flex flex-col">
+      <!-- Заголовок модалки -->
+      <div class="p-4 border-b border-slate-200 flex items-center justify-between bg-slate-50">
+        <h3 class="text-sm font-bold text-slate-800">Укажите количество гостей</h3>
+        <button onclick="closeModal('tableGuestsModal')" class="w-8 h-8 rounded-full bg-slate-200 hover:bg-slate-300 text-slate-600 font-bold flex items-center justify-center transition">✕</button>
+      </div>
+
+      <!-- Выбор стола -->
+      <div class="p-3 bg-slate-100 border-b border-slate-200 flex items-center justify-between text-xs">
+        <span class="font-bold text-slate-600">Стол:</span>
+        <select id="selectedTableDropdown" class="bg-white border border-slate-300 rounded-xl px-3 py-1 font-bold text-slate-800 focus:outline-none">
+          <option value="Стол 1">Стол 1 (Терраса)</option>
+          <option value="Стол 2">Стол 2 (Терраса)</option>
+          <option value="Стол 3">Стол 3 (Терраса)</option>
+          <option value="Стол 4">Стол 4 (Зал)</option>
+          <option value="Стол 5">Стол 5 (Зал)</option>
+          <option value="Барная стойка 1">Барная стойка #1</option>
+        </select>
+      </div>
+
+      <!-- Список выбора гостей: Гостей 1 .. Гостей 9 (как на фото) -->
+      <div id="guestsOptionsList" class="p-3 space-y-1.5 max-h-64 overflow-y-auto custom-scroll-dark">
+        <!-- Генерируется из JS -->
+      </div>
+
+      <!-- Большая зеленая кнопка «ОТКРЫТЬ ЗАКАЗ» (точно из фото 2) -->
+      <div class="p-3 bg-slate-50 border-t border-slate-200">
+        <button onclick="confirmOpenTableOrder()" class="w-full py-3.5 bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white font-extrabold text-sm rounded-2xl shadow-lg shadow-emerald-600/30 tracking-wider transition uppercase">
+          ОТКРЫТЬ ЗАКАЗ
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======================================================== -->
+  <!-- 5. МОДАЛЬНОЕ ОКНО: НАСТРОЙКА, КЛАСТЕРИЗАЦИЯ, ЦЕНА, УДАЛЕНИЕ -->
+  <!-- ======================================================== -->
+  <div id="productEditModal" class="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center hidden z-50 p-4">
+    <div class="bg-white rounded-3xl w-full max-w-md p-6 shadow-2xl border border-slate-200 animate-pop space-y-4">
+      <div class="flex items-center justify-between border-b border-slate-200 pb-3">
+        <div>
+          <h3 id="productEditTitle" class="text-base font-bold text-slate-900">Настройка товара</h3>
+          <p class="text-xs text-slate-500">Редактирование цены, названия и категории</p>
+        </div>
+        <button onclick="closeProductEditModal()" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold flex items-center justify-center transition">✕</button>
+      </div>
+
+      <div class="space-y-3 text-slate-800">
+        <div>
+          <label class="text-[11px] font-bold text-slate-500 uppercase">Наименование позиции</label>
+          <input id="editProdNameInput" type="text" class="w-full mt-1 p-3 bg-slate-50 border border-slate-300 rounded-2xl text-xs font-bold text-slate-900 focus:outline-none focus:border-sky-500">
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="text-[11px] font-bold text-slate-500 uppercase">Цена продажи (₽)</label>
+            <input id="editProdPriceInput" type="number" step="any" class="w-full mt-1 p-3 bg-slate-50 border border-slate-300 rounded-2xl text-sm font-black font-mono text-slate-900 focus:outline-none focus:border-sky-500">
+          </div>
+          <div>
+            <label class="text-[11px] font-bold text-slate-500 uppercase">Себестоимость (₽)</label>
+            <input id="editProdCostInput" type="number" step="any" class="w-full mt-1 p-3 bg-slate-50 border border-slate-300 rounded-2xl text-sm font-mono text-slate-900 focus:outline-none focus:border-sky-500">
+          </div>
+        </div>
+
+        <div>
+          <label class="text-[11px] font-bold text-slate-500 uppercase">Группа / Кластеризация</label>
+          <select id="editProdCategorySelect" class="w-full mt-1 p-3 bg-slate-50 border border-slate-300 rounded-2xl text-xs font-bold text-slate-900 focus:outline-none focus:border-sky-500">
+            <!-- Динамически заполняются группы -->
+          </select>
+        </div>
+      </div>
+
+      <div class="flex gap-2 pt-3 border-t border-slate-200">
+        <button id="deleteProductBtn" onclick="deleteCurrentProduct()" class="px-4 py-3 bg-rose-50 text-rose-600 hover:bg-rose-100 rounded-2xl text-xs font-bold transition">
+          Удалить товар
+        </button>
+        <div class="flex-1"></div>
+        <button onclick="closeProductEditModal()" class="px-4 py-3 text-slate-500 hover:bg-slate-100 rounded-2xl text-xs font-semibold">
+          Отмена
+        </button>
+        <button onclick="saveCurrentProduct()" class="px-5 py-3 bg-sky-600 hover:bg-sky-500 text-white rounded-2xl text-xs font-bold shadow-md shadow-sky-600/30 transition">
+          Сохранить
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======================================================== -->
+  <!-- 6. МОДАЛКА: СКИДКА НА ПОЗИЦИЮ (ПРИ СВАЙПЕ ВЛЕВО)          -->
+  <!-- ======================================================== -->
+  <div id="itemDiscountModal" class="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center hidden z-50 p-4">
+    <div class="bg-white rounded-3xl w-full max-w-sm p-6 shadow-2xl border border-slate-200 animate-pop space-y-4">
+      <div class="flex items-center justify-between border-b border-slate-200 pb-3">
+        <h3 id="itemDiscountTitle" class="text-sm font-bold text-slate-900 truncate">Скидка на позицию</h3>
+        <button onclick="closeModal('itemDiscountModal')" class="text-slate-400 hover:text-slate-700 font-bold">✕</button>
+      </div>
+
+      <div>
+        <label class="text-[11px] font-bold text-slate-500 uppercase">Размер скидки (%)</label>
+        <input id="itemDiscountInput" type="number" min="0" max="100" class="w-full mt-1.5 p-3 bg-slate-50 border border-slate-300 rounded-2xl text-xl font-black font-mono text-slate-900 focus:outline-none focus:border-amber-500">
+      </div>
+
+      <div class="grid grid-cols-4 gap-2">
+        <button onclick="setItemDiscountQuick(5)" class="py-2 bg-slate-100 hover:bg-slate-200 text-xs font-bold rounded-xl text-slate-700">5%</button>
+        <button onclick="setItemDiscountQuick(10)" class="py-2 bg-slate-100 hover:bg-slate-200 text-xs font-bold rounded-xl text-slate-700">10%</button>
+        <button onclick="setItemDiscountQuick(20)" class="py-2 bg-slate-100 hover:bg-slate-200 text-xs font-bold rounded-xl text-slate-700">20%</button>
+        <button onclick="setItemDiscountQuick(50)" class="py-2 bg-slate-100 hover:bg-slate-200 text-xs font-bold rounded-xl text-slate-700">50%</button>
+      </div>
+
+      <div class="flex gap-2 pt-2">
+        <button onclick="applyItemDiscountValue(0)" class="px-3 py-2.5 bg-rose-50 text-rose-600 hover:bg-rose-100 rounded-xl text-xs font-bold">
+          Сбросить
+        </button>
+        <button onclick="applyItemDiscountValue()" class="flex-1 py-2.5 bg-amber-500 hover:bg-amber-400 text-slate-950 rounded-xl text-xs font-bold shadow-md transition">
+          Применить
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======================================================== -->
+  <!-- 7. МОДАЛКА: СКИДКА НА ВЕСЬ ЧЕК                            -->
+  <!-- ======================================================== -->
+  <div id="orderDiscountModal" class="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center hidden z-50 p-4">
+    <div class="bg-white rounded-3xl w-full max-w-sm p-6 shadow-2xl border border-slate-200 animate-pop space-y-4">
+      <div class="flex items-center justify-between border-b border-slate-200 pb-3">
+        <h3 class="text-sm font-bold text-slate-900">Скидка на весь чек</h3>
+        <button onclick="closeModal('orderDiscountModal')" class="text-slate-400 hover:text-slate-700 font-bold">✕</button>
+      </div>
+
+      <div>
+        <label class="text-[11px] font-bold text-slate-500 uppercase">Процент скидки (%)</label>
+        <input id="orderDiscountInput" type="number" min="0" max="100" class="w-full mt-1.5 p-3 bg-slate-50 border border-slate-300 rounded-2xl text-xl font-black font-mono text-slate-900 focus:outline-none focus:border-amber-500">
+      </div>
+
+      <div class="grid grid-cols-4 gap-2">
+        <button onclick="setOrderDiscountQuick(5)" class="py-2 bg-slate-100 hover:bg-slate-200 text-xs font-bold rounded-xl text-slate-700">5%</button>
+        <button onclick="setOrderDiscountQuick(10)" class="py-2 bg-slate-100 hover:bg-slate-200 text-xs font-bold rounded-xl text-slate-700">10%</button>
+        <button onclick="setOrderDiscountQuick(15)" class="py-2 bg-slate-100 hover:bg-slate-200 text-xs font-bold rounded-xl text-slate-700">15%</button>
+        <button onclick="setOrderDiscountQuick(20)" class="py-2 bg-slate-100 hover:bg-slate-200 text-xs font-bold rounded-xl text-slate-700">20%</button>
+      </div>
+
+      <div class="flex gap-2 pt-2">
+        <button onclick="applyOrderDiscountValue(0)" class="px-3 py-2.5 bg-rose-50 text-rose-600 hover:bg-rose-100 rounded-xl text-xs font-bold">
+          Сброс
+        </button>
+        <button onclick="applyOrderDiscountValue()" class="flex-1 py-2.5 bg-amber-500 hover:bg-amber-400 text-slate-950 rounded-xl text-xs font-bold shadow-md transition">
+          Применить к чеку
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======================================================== -->
+  <!-- 8. МОДАЛКА ОПЛАТЫ (НАЛИЧНЫЕ СО СДАЧЕЙ / КАРТА / СБП)       -->
+  <!-- ======================================================== -->
+  <div id="paymentModal" class="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center hidden z-50 p-4">
+    <div class="bg-white rounded-3xl w-full max-w-md p-6 shadow-2xl border border-slate-200 animate-pop space-y-4">
+      <div class="flex items-center justify-between border-b border-slate-200 pb-3">
+        <div>
+          <h3 id="paymentModalTitle" class="text-base font-bold text-slate-900">Оплата заказа</h3>
+          <p class="text-xs text-slate-500">К оплате: <b id="paymentFinalSumBadge" class="text-emerald-600 font-mono">0 ₽</b></p>
+        </div>
+        <button onclick="closeModal('paymentModal')" class="text-slate-400 hover:text-slate-700 font-bold">✕</button>
+      </div>
+
+      <!-- Содержимое для наличных -->
+      <div id="cashPayBox" class="space-y-3">
+        <div>
+          <label class="text-[11px] font-bold text-slate-500 uppercase">Внесено наличными (₽)</label>
+          <input 
+            id="cashReceivedInput" 
+            type="number" 
+            step="any" 
+            oninput="recalcCashChange()" 
+            class="w-full mt-1 p-3.5 bg-slate-50 border border-slate-300 rounded-2xl text-2xl font-black font-mono text-slate-900 focus:outline-none focus:border-emerald-500">
+        </div>
+
+        <div id="quickBanknotesRow" class="flex gap-2 flex-wrap">
+          <!-- Быстрые купюры -->
+        </div>
+
+        <div class="p-3.5 bg-emerald-50 rounded-2xl border border-emerald-200 flex justify-between items-center">
+          <span class="text-xs font-bold text-emerald-800">Сдача клиенту:</span>
+          <span id="cashChangeDisplay" class="text-xl font-black font-mono text-emerald-700">0 ₽</span>
+        </div>
+      </div>
+
+      <!-- Содержимое для банковского терминала / СБП -->
+      <div id="cardPayBox" class="space-y-4 text-center py-2 hidden">
+        <div class="w-36 h-36 mx-auto bg-slate-900 p-2 rounded-2xl flex items-center justify-center shadow-md">
+          <svg class="w-full h-full text-white" viewBox="0 0 100 100" fill="currentColor">
+            <rect width="100" height="100" fill="white"/>
+            <path d="M10 10h30v30H10zM15 15v20h20V15zm45-5h30v30H60zM65 15v20h20V15zm-55 45h30v30H10zM15 65v20h20V65zm45 0h10v10H60zm20 0h10v10H80zm-10 10h10v10H70zm10 10h10v10H80zm-20 0h10v10H60zM45 10h10v10H45zm0 20h10v10H45zm0 20h10v10H45zm0 20h10v10H45zm0 20h10v10H45zM20 20h10v10H20zm50 0h10v10H70zm-50 50h10v10H20z" />
+          </svg>
+        </div>
+        <div>
+          <p class="text-xs font-bold text-slate-800">Приложите карту к терминалу или отсканируйте QR</p>
+          <p class="text-[11px] text-slate-500 mt-0.5">СБП подключена к расчетному счету заведения</p>
+        </div>
+      </div>
+
+      <div class="flex gap-2 pt-2">
+        <button onclick="closeModal('paymentModal')" class="flex-1 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-2xl text-xs font-bold transition">
+          Отмена
+        </button>
+        <button id="finalizePaymentBtn" onclick="completePaymentAndFiscalize()" class="flex-1 py-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-2xl text-xs font-bold shadow-lg shadow-emerald-700/30 transition">
+          Пробить чек
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======================================================== -->
+  <!-- 9. ПОЛНОРАЗМЕРНЫЙ ЦЕНТР ОТЧЕТОВ, Z-ОТЧЕТОВ И АНАЛИТИКИ   -->
+  <!-- ======================================================== -->
+  <div id="reportsModal" class="fixed inset-0 bg-black/75 backdrop-blur-sm flex items-center justify-center hidden z-50 p-4">
+    <div class="bg-slate-900 border border-slate-800 rounded-3xl w-full max-w-5xl h-[85vh] flex flex-col shadow-2xl overflow-hidden animate-pop">
+      
+      <!-- Шапка модуля отчетов -->
+      <div class="p-4 bg-slate-950 border-b border-slate-800 flex items-center justify-between shrink-0">
+        <div class="flex items-center gap-3">
+          <div class="w-9 h-9 rounded-xl bg-sky-600 flex items-center justify-center font-black text-white">
+            Q
+          </div>
+          <div>
+            <h3 class="text-sm font-extrabold text-white">Панель управления смены & Аналитика</h3>
+            <p class="text-[11px] text-slate-400">Смена #<span id="repShiftNumber">1</span> • Открыта: <span id="repShiftOpenTime">12:00</span></p>
+          </div>
+        </div>
+
+        <!-- Вкладки внутри отчетов -->
+        <div class="flex items-center bg-slate-900 p-1 rounded-2xl border border-slate-800">
+          <button onclick="switchReportsSubTab('analytics')" id="repTabBtn_analytics" class="px-4 py-1.5 rounded-xl text-xs font-bold transition bg-sky-600 text-white">
+            Графики & KPI
+          </button>
+          <button onclick="switchReportsSubTab('shift')" id="repTabBtn_shift" class="px-4 py-1.5 rounded-xl text-xs font-bold transition text-slate-400 hover:text-white">
+            Смена & Z-отчет
+          </button>
+          <button onclick="switchReportsSubTab('journal')" id="repTabBtn_journal" class="px-4 py-1.5 rounded-xl text-xs font-bold transition text-slate-400 hover:text-white">
+            Журнал чеков
+          </button>
+        </div>
+
+        <button onclick="closeModal('reportsModal')" class="w-8 h-8 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold flex items-center justify-center transition">✕</button>
+      </div>
+
+      <!-- Контент вкладки 1: Графики & Аналитика -->
+      <div id="repSection_analytics" class="flex-1 p-5 overflow-y-auto custom-scroll space-y-5">
+        <!-- KPI плитки -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <div class="bg-slate-950 border border-slate-800 p-4 rounded-2xl">
+            <span class="text-[10px] font-bold text-slate-400 uppercase">Выручка за смену</span>
+            <div id="kpiTotalRevenue" class="text-2xl font-black text-emerald-400 font-mono mt-1">0 ₽</div>
+            <span class="text-[10px] text-slate-500">С учетом всех скидок</span>
+          </div>
+          <div class="bg-slate-950 border border-slate-800 p-4 rounded-2xl">
+            <span class="text-[10px] font-bold text-slate-400 uppercase">Всего чеков</span>
+            <div id="kpiReceiptsCount" class="text-2xl font-black text-sky-400 font-mono mt-1">0</div>
+            <span class="text-[10px] text-slate-500">Пробитых заказов</span>
+          </div>
+          <div class="bg-slate-950 border border-slate-800 p-4 rounded-2xl">
+            <span class="text-[10px] font-bold text-slate-400 uppercase">Средний чек</span>
+            <div id="kpiAvgTicket" class="text-2xl font-black text-violet-400 font-mono mt-1">0 ₽</div>
+            <span class="text-[10px] text-slate-500">Глубина корзины</span>
+          </div>
+          <div class="bg-slate-950 border border-slate-800 p-4 rounded-2xl">
+            <span class="text-[10px] font-bold text-slate-400 uppercase">Скидок выдано</span>
+            <div id="kpiTotalDiscounts" class="text-2xl font-black text-amber-400 font-mono mt-1">0 ₽</div>
+            <span class="text-[10px] text-slate-500">Позиции + чеки</span>
+          </div>
+        </div>
+
+        <!-- 4 графика Chart.js -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="bg-slate-950 border border-slate-800 p-4 rounded-2xl flex flex-col">
+            <h4 class="text-xs font-bold uppercase text-slate-300 mb-2">Продажи по часам</h4>
+            <div class="flex-1 min-h-[200px]">
+              <canvas id="chartHourlySales"></canvas>
+            </div>
+          </div>
+          <div class="bg-slate-950 border border-slate-800 p-4 rounded-2xl flex flex-col">
+            <h4 class="text-xs font-bold uppercase text-slate-300 mb-2">Наличные vs Безнал</h4>
+            <div class="flex-1 min-h-[200px] flex items-center justify-center">
+              <canvas id="chartPaymentSplit"></canvas>
+            </div>
+          </div>
+          <div class="bg-slate-950 border border-slate-800 p-4 rounded-2xl flex flex-col">
+            <h4 class="text-xs font-bold uppercase text-slate-300 mb-2">Кластеризация по категориям</h4>
+            <div class="flex-1 min-h-[200px]">
+              <canvas id="chartCategorySales"></canvas>
+            </div>
+          </div>
+          <div class="bg-slate-950 border border-slate-800 p-4 rounded-2xl flex flex-col">
+            <h4 class="text-xs font-bold uppercase text-slate-300 mb-2">Топ-5 продаваемых блюд</h4>
+            <div class="flex-1 min-h-[200px]">
+              <canvas id="chartTopItems"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Контент вкладки 2: Смена & Z-отчет -->
+      <div id="repSection_shift" class="flex-1 p-5 overflow-y-auto custom-scroll space-y-4 hidden">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div class="bg-slate-950 border border-slate-800 p-4 rounded-2xl">
+            <span class="text-[10px] font-bold text-slate-400 uppercase">Наличных в ящике</span>
+            <div id="shiftDrawerCashDisplay" class="text-2xl font-black text-emerald-400 font-mono mt-1">0 ₽</div>
+            <p class="text-[11px] text-slate-500 mt-1">Включает разменный фонд</p>
+            <div class="flex gap-2 mt-4">
+              <button onclick="promptCashMovement('IN')" class="flex-1 py-2 bg-slate-800 hover:bg-slate-700 text-xs font-bold rounded-xl text-slate-200">
+                + Внесение
+              </button>
+              <button onclick="promptCashMovement('OUT')" class="flex-1 py-2 bg-slate-800 hover:bg-slate-700 text-xs font-bold rounded-xl text-slate-200">
+                - Изъятие
+              </button>
+            </div>
+          </div>
+
+          <div class="bg-slate-950 border border-slate-800 p-4 rounded-2xl">
+            <span class="text-[10px] font-bold text-slate-400 uppercase">Безналичные оплаты</span>
+            <div id="shiftCardRevenueDisplay" class="text-2xl font-black text-sky-400 font-mono mt-1">0 ₽</div>
+            <p class="text-[11px] text-slate-500 mt-1">Эквайринг + QR СБП</p>
+          </div>
+
+          <div class="bg-slate-950 border border-slate-800 p-4 rounded-2xl">
+            <span class="text-[10px] font-bold text-slate-400 uppercase">Суммарная выручка</span>
+            <div id="shiftTotalSalesDisplay" class="text-2xl font-black text-white font-mono mt-1">0 ₽</div>
+            <p class="text-[11px] text-slate-500 mt-1">Кассовая смена открыта</p>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+          <!-- X-отчет -->
+          <div class="bg-slate-950 border border-slate-800 p-5 rounded-2xl flex flex-col justify-between">
+            <div>
+              <h4 class="font-bold text-sm text-white">X-Отчет (Промежуточный без гашения)</h4>
+              <p class="text-xs text-slate-400 mt-1">Снимается для сверки выручки и наличности в кассе без закрытия смены.</p>
+            </div>
+            <button onclick="generatePrintReport('X')" class="mt-4 w-full py-3 bg-slate-800 hover:bg-slate-750 text-white rounded-xl text-xs font-bold transition">
+              Печать X-Отчета
+            </button>
+          </div>
+
+          <!-- Z-отчет -->
+          <div class="bg-slate-950 border border-rose-500/30 p-5 rounded-2xl flex flex-col justify-between">
+            <div>
+              <h4 class="font-bold text-sm text-rose-300">Z-Отчет (Закрытие смены с гашением)</h4>
+              <p class="text-xs text-slate-400 mt-1">Фиксирует выручку смены, обнуляет регистры, переносит остаток и закрывает день.</p>
+            </div>
+            <button onclick="confirmCloseShift()" class="mt-4 w-full py-3 bg-rose-600 hover:bg-rose-500 text-white rounded-xl text-xs font-bold shadow-lg shadow-rose-950/40 transition">
+              Закрыть смену и напечатать Z-Отчет
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Контент вкладки 3: Журнал чеков -->
+      <div id="repSection_journal" class="flex-1 p-5 overflow-y-auto custom-scroll hidden">
+        <h4 class="text-xs font-bold uppercase text-slate-300 mb-3">Чеки текущей смены</h4>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs text-slate-300">
+            <thead class="border-b border-slate-800 text-[10px] text-slate-500 uppercase">
+              <tr>
+                <th class="py-2 px-3"># Чека</th>
+                <th class="py-2 px-3">Время</th>
+                <th class="py-2 px-3">Тип</th>
+                <th class="py-2 px-3">Оплата</th>
+                <th class="py-2 px-3">Скидка</th>
+                <th class="py-2 px-3 text-right">Сумма</th>
+                <th class="py-2 px-3 text-center">Чек</th>
+              </tr>
+            </thead>
+            <tbody id="journalTableBody" class="divide-y divide-slate-800 font-mono">
+              <!-- Заполняется чеками -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======================================================== -->
+  <!-- 10. МОДАЛКА: ТЕРМОЧЕК ДЛЯ ПЕЧАТИ (СТИЛЬ ЛЕНТЫ)            -->
+  <!-- ======================================================== -->
+  <div id="receiptSlipModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center hidden z-50 p-4">
+    <div class="relative max-w-xs w-full animate-pop">
+      <button onclick="closeModal('receiptSlipModal')" class="absolute -top-10 right-0 text-white hover:text-slate-300 text-xs font-bold bg-slate-800 px-3 py-1 rounded-lg">
+        ✕ Закрыть
+      </button>
+      <div id="receiptSlipPaper" class="receipt-paper text-slate-900 p-5 rounded-t-2xl font-mono-receipt text-xs max-h-[75vh] overflow-y-auto custom-scroll shadow-2xl">
+        <!-- Текст термоленты -->
+      </div>
+      <div class="receipt-edge h-3 w-full rotate-180"></div>
+      <button onclick="printThermalPaper()" class="mt-2 w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold shadow-lg">
+        Печать документа
+      </button>
+    </div>
+  </div>
+
+  <!-- ======================================================== -->
+  <!-- 11. ДИАЛОГ ПОДТВЕРЖДЕНИЯ (ВМЕСТО ALERT/CONFIRM)           -->
+  <!-- ======================================================== -->
+  <div id="customDialogModal" class="fixed inset-0 bg-black/70 backdrop-blur-xs flex items-center justify-center hidden z-50 p-4">
+    <div class="bg-white rounded-3xl w-full max-w-sm p-6 shadow-2xl border border-slate-200 animate-pop space-y-4">
+      <h3 id="customDialogTitle" class="text-sm font-bold text-slate-900">Подтверждение</h3>
+      <p id="customDialogMessage" class="text-xs text-slate-600 leading-relaxed"></p>
+      <div class="flex gap-2 pt-2">
+        <button onclick="handleCustomDialogResponse(false)" class="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold">
+          Отмена
+        </button>
+        <button onclick="handleCustomDialogResponse(true)" class="flex-1 py-2.5 bg-rose-600 hover:bg-rose-500 text-white rounded-xl text-xs font-bold">
+          Подтвердить
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Всплывающие подсказки / тосты -->
+  <div id="toastContainer" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+  <!-- ======================================================== -->
+  <!-- СКРИПТЫ, ДАННЫЕ И БИЗНЕС-ЛОГИКА                          -->
+  <!-- ======================================================== -->
+  <script>
+    // Звуковой синтезатор без внешних URL
+    let audioCtx = null;
+    function playBeep(type) {
+      try {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        const now = audioCtx.currentTime;
+
+        if (type === 'tap') {
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(600, now);
+          osc.frequency.exponentialRampToValueAtTime(300, now + 0.04);
+          gain.gain.setValueAtTime(0.1, now);
+          gain.gain.exponentialRampToValueAtTime(0.01, now + 0.04);
+          osc.start(now);
+          osc.stop(now + 0.04);
+        } else if (type === 'success') {
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(523.25, now);
+          osc.frequency.setValueAtTime(783.99, now + 0.06);
+          gain.gain.setValueAtTime(0.15, now);
+          gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+          osc.start(now);
+          osc.stop(now + 0.2);
+        }
+      } catch (e) {}
+    }
+
+    // Каталог групп и цвета точно как на Фото 2
+    const CATEGORIES_CONFIG = [
+      { name: 'Напитки на основе эспрессо', color: '#e75b36', icon: '☕' },
+      { name: 'Авторские напитки "L"', color: '#e75b36', icon: '🥤' },
+      { name: 'Листовые чаи "L"', color: '#ea8c1c', icon: '🍵' },
+      { name: 'Авторские Чаи "L"', color: '#ea8c1c', icon: '🫖' },
+      { name: 'Смузи "L"', color: '#d946ef', icon: '🍹' },
+      { name: 'Милкшейк "L"', color: '#d946ef', icon: '🥛' },
+      { name: 'Холодные напитки "L"', color: '#0284c7', icon: '🧊' },
+      { name: 'Кофе на альтернативном', color: '#0284c7', icon: '🥛' },
+      { name: 'Закуски "L"', color: '#65a30d', icon: '🥪' },
+      { name: 'Десерты "L"', color: '#65a30d', icon: '🍰' },
+      { name: 'Добавки "L"', color: '#64748b', icon: '🍯' },
+      { name: 'Посуда «L»', color: '#64748b', icon: '☕' },
+      { name: 'Витрина "M"', color: '#e11d48', icon: '🍸' },
+      { name: 'Розница "L"', color: '#e11d48', icon: '🛍️' }
+    ];
+
+    // Товары по умолчанию
+    const DEFAULT_PRODUCTS = [
+      { id: 'p1', name: 'Эспрессо', price: 140, cost: 35, category: 'Напитки на основе эспрессо' },
+      { id: 'p2', name: 'Капучино 300мл', price: 220, cost: 55, category: 'Напитки на основе эспрессо' },
+      { id: 'p3', name: 'Латте Макиато 400мл', price: 260, cost: 65, category: 'Напитки на основе эспрессо' },
+      { id: 'p4', name: 'Флэт Уайт', price: 240, cost: 60, category: 'Напитки на основе эспрессо' },
+      { id: 'p5', name: 'Раф Цитрусовый "L"', price: 320, cost: 85, category: 'Авторские напитки "L"' },
+      { id: 'p6', name: 'Бамбл Апельсиновый', price: 340, cost: 95, category: 'Авторские напитки "L"' },
+      { id: 'p7', name: 'Чай Ассам 500мл', price: 190, cost: 30, category: 'Листовые чаи "L"' },
+      { id: 'p8', name: 'Чай Сенча Зеленый', price: 190, cost: 30, category: 'Листовые чаи "L"' },
+      { id: 'p9', name: 'Чай Облепиха-Розмарин', price: 290, cost: 75, category: 'Авторские Чаи "L"' },
+      { id: 'p10', name: 'Смузи Манго-Маракуйя', price: 310, cost: 90, category: 'Смузи "L"' },
+      { id: 'p11', name: 'Милкшейк Клубничный', price: 270, cost: 70, category: 'Милкшейк "L"' },
+      { id: 'p12', name: 'Лимонад Малина-Мята', price: 250, cost: 60, category: 'Холодные напитки "L"' },
+      { id: 'p13', name: 'Капучино на миндальном', price: 290, cost: 85, category: 'Кофе на альтернативном' },
+      { id: 'p14', name: 'Сэндвич с индейкой', price: 320, cost: 120, category: 'Закуски "L"' },
+      { id: 'p15', name: 'Круассан с миндалем', price: 210, cost: 70, category: 'Закуски "L"' },
+      { id: 'p16', name: 'Чизкейк Сан-Себастьян', price: 330, cost: 110, category: 'Десерты "L"' },
+      { id: 'p17', name: 'Сироп Соленая Карамель', price: 50, cost: 10, category: 'Добавки "L"' },
+      { id: 'p18', name: 'Фирменный стакан Tumbler', price: 850, cost: 400, category: 'Посуда «L»' },
+      { id: 'p19', name: 'Кофе в зернах 250г', price: 790, cost: 380, category: 'Розница "L"' }
+    ];
+
+    // Хранилище (Local Database)
+    let products = JSON.parse(localStorage.getItem('qcore_products')) || DEFAULT_PRODUCTS;
+    let currentShift = JSON.parse(localStorage.getItem('qcore_shift')) || {
+      shiftNumber: 1,
+      openedAt: new Date().toISOString(),
+      drawerCash: 3000,
+      cardRevenue: 0,
+      cashRevenue: 0,
+      receipts: []
+    };
+
+    // Состояние сессии
+    let currentZone = 'Зал';
+    let currentViewMode = 'GROUPS'; // 'GROUPS' | 'ITEMS'
+    let selectedCategoryName = null;
+    let currentSearchTerm = '';
+    
+    // Заказ
+    let currentOrder = null; // null если столов нет, или { type: 'QUICK'|'TABLE', table: '...', guests: 2, items: [], discountPercent: 0 }
+    let openTables = []; // массив открытых столов
+
+    // Редактирование / Скидки
+    let editingProductId = null;
+    let targetCartItemUid = null;
+    let activePaymentType = 'CASH';
+
+    // Графики
+    let chartHourly = null;
+    let chartPayment = null;
+    let chartCat = null;
+    let chartTop = null;
+
+    function saveDB() {
+      localStorage.setItem('qcore_products', JSON.stringify(products));
+      localStorage.setItem('qcore_shift', JSON.stringify(currentShift));
+    }
+
+    // Таймер часов
+    setInterval(() => {
+      const now = new Date();
+      document.getElementById('currentClockText').innerText = now.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+    }, 1000);
+
+    // Переключение залов (Зал / Терраса / Бар)
+    function setHallZone(zone) {
+      playBeep('tap');
+      currentZone = zone;
+      ['Зал', 'Терраса', 'БАР'].forEach(z => {
+        const btn = document.getElementById(`zoneBtn_${z}`);
+        if (z === zone) {
+          btn.className = 'px-3.5 py-1.5 rounded-xl text-xs font-bold transition bg-white text-slate-900 shadow-xs';
+        } else {
+          btn.className = 'px-3.5 py-1.5 rounded-xl text-xs font-bold transition text-slate-500 hover:text-slate-900';
+        }
+      });
+      document.getElementById('sideCurrentZoneBadge').innerText = zone;
+      showToast(`Выбрана зона: ${zone}`);
+    }
+
+    // ==========================================
+    // РЕНДЕР КАТАЛОГА (ГРУППЫ ИЗ ФОТО 2 И ТОВАРЫ)
+    // ==========================================
+    function renderCatalog() {
+      const container = document.getElementById('catalogContainer');
+      const breadcrumb = document.getElementById('activeGroupBreadcrumb');
+
+      // Если режим групп и нет поискового запроса:
+      if (currentViewMode === 'GROUPS' && !currentSearchTerm) {
+        breadcrumb.classList.add('hidden');
+        breadcrumb.classList.remove('flex');
+
+        container.innerHTML = `
+          <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3.5">
+            ${CATEGORIES_CONFIG.map(cat => {
+              const count = products.filter(p => p.category === cat.name).length;
+              return `
+                <div 
+                  onclick="selectGroup('${cat.name}')" 
+                  class="rounded-3xl p-4 flex flex-col justify-between shadow-md active:scale-95 transition-transform duration-150 cursor-pointer h-32 select-none relative overflow-hidden"
+                  style="background-color: ${cat.color};"
+                >
+                  <div class="flex items-start justify-between">
+                    <span class="text-3xl">${cat.icon}</span>
+                    <span class="text-[10px] bg-black/20 text-white font-bold px-2 py-0.5 rounded-full">${count} поз.</span>
+                  </div>
+                  <div>
+                    <span class="text-[10px] text-white/80 font-bold uppercase tracking-wider block">Группа</span>
+                    <h4 class="font-extrabold text-white text-xs leading-snug line-clamp-2">${cat.name}</h4>
+                  </div>
+                </div>
+              `;
+            }).join('')}
+          </div>
+        `;
+      } else {
+        // Режим показа товаров в выбранной группе или результат поиска
+        breadcrumb.classList.remove('hidden');
+        breadcrumb.classList.add('flex');
+        document.getElementById('breadcrumbGroupName').innerText = selectedCategoryName || 'Поиск';
+
+        let items = products;
+        if (selectedCategoryName) {
+          items = items.filter(p => p.category === selectedCategoryName);
+        }
+        if (currentSearchTerm) {
+          items = items.filter(p => p.name.toLowerCase().includes(currentSearchTerm));
+        }
+
+        if (items.length === 0) {
+          container.innerHTML = `
+            <div class="py-20 text-center text-sky-200">
+              <p class="text-sm font-bold">В этой группе пока нет позиций</p>
+              <button onclick="openProductEditModal(null, '${selectedCategoryName}')" class="mt-3 px-4 py-2 bg-white/20 hover:bg-white/30 rounded-xl text-xs font-bold text-white">
+                + Добавить блюдо в группу
+              </button>
+            </div>
+          `;
+          return;
+        }
+
+        container.innerHTML = `
+          <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3.5">
+            ${items.map(p => `
+              <div 
+                data-id="${p.id}"
+                onpointerdown="startProductHold('${p.id}', this)"
+                onpointerup="cancelProductHold(this)"
+                onpointercancel="cancelProductHold(this)"
+                onclick="handleProductCardClick('${p.id}')"
+                class="bg-white/95 hover:bg-white text-slate-900 rounded-3xl p-4 flex flex-col justify-between shadow-md active:scale-95 transition cursor-pointer h-32 select-none relative overflow-hidden border border-white/20"
+              >
+                <div>
+                  <span class="text-[10px] font-bold text-sky-700 uppercase tracking-wider block truncate">${p.category}</span>
+                  <h4 class="font-black text-slate-900 text-xs leading-tight line-clamp-2 mt-1">${p.name}</h4>
+                </div>
+
+                <div class="flex items-baseline justify-between pt-1">
+                  <span class="text-base font-black font-mono text-slate-900">${p.price} ₽</span>
+                  <span class="text-[11px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-lg">+ В чек</span>
+                </div>
+
+                <!-- Полоса долгого зажатия (Настройка/Удаление) -->
+                <div class="hold-bar absolute inset-x-0 bottom-0 h-1.5 bg-gradient-to-r from-amber-500 to-rose-500 scale-x-0 origin-left transition-transform duration-[1400ms] pointer-events-none"></div>
+              </div>
+            `).join('')}
+          </div>
+        `;
+      }
+    }
+
+    function showAllGroupsView() {
+      playBeep('tap');
+      currentViewMode = 'GROUPS';
+      selectedCategoryName = null;
+      currentSearchTerm = '';
+      document.getElementById('searchMenuInput').value = '';
+      renderCatalog();
+    }
+
+    function selectGroup(catName) {
+      playBeep('tap');
+      currentViewMode = 'ITEMS';
+      selectedCategoryName = catName;
+      renderCatalog();
+    }
+
+    function handleMenuSearch(query) {
+      currentSearchTerm = query.trim().toLowerCase();
+      if (currentSearchTerm) {
+        currentViewMode = 'ITEMS';
+        selectedCategoryName = null;
+      }
+      renderCatalog();
+    }
+
+    // ==========================================
+    // ЗАЖАТИЕ ПАЛЬЦЕМ НА КАРТОЧКЕ (1.5 СЕКУНДЫ)
+    // ==========================================
+    let holdTimer = null;
+    let holdTriggered = false;
+
+    function startProductHold(id, el) {
+      holdTriggered = false;
+      const bar = el.querySelector('.hold-bar');
+      if (bar) bar.style.transform = 'scaleX(1)';
+
+      holdTimer = setTimeout(() => {
+        holdTriggered = true;
+        if (bar) bar.style.transform = 'scaleX(0)';
+        playBeep('tap');
+        openProductEditModal(id);
+      }, 1400); // 1.4 секунды для комфортной работы
+    }
+
+    function cancelProductHold(el) {
+      clearTimeout(holdTimer);
+      const bar = el.querySelector('.hold-bar');
+      if (bar) bar.style.transform = 'scaleX(0)';
+    }
+
+    function handleProductCardClick(id) {
+      if (holdTriggered) {
+        holdTriggered = false;
+        return;
+      }
+      addProductToActiveOrder(id);
+    }
+
+    // ==========================================
+    // ЛОГИКА ЗАКАЗОВ (СТОЛЫ И БЫСТРЫЙ ЗАКАЗ)
+    // ==========================================
+    function startQuickOrder() {
+      playBeep('tap');
+      if (!currentOrder) {
+        currentOrder = {
+          orderNumber: (currentShift.receipts.length || 0) + 1042,
+          type: 'QUICK',
+          table: 'С собой / Бар',
+          guests: 1,
+          items: [],
+          discountPercent: 0
+        };
+      }
+      renderOrderView();
+      showToast('Открыт быстрый чек');
+    }
+
+    // Модалка гостей из Фото 2
+    let chosenGuestCount = 2;
+
+    function openTableGuestsModal() {
+      playBeep('tap');
+      const list = document.getElementById('guestsOptionsList');
+      chosenGuestCount = 2;
+
+      let html = '';
+      for (let i = 1; i <= 9; i++) {
+        const isSel = i === chosenGuestCount;
+        html += `
+          <div 
+            onclick="setGuestOption(${i})" 
+            id="guestRow_${i}"
+            class="p-2.5 rounded-xl border text-xs font-bold flex items-center justify-between cursor-pointer transition ${isSel ? 'bg-sky-50 border-sky-400 text-sky-900' : 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100'}">
+            <span>Гостей: ${i}</span>
+            ${isSel ? '<span class="text-sky-600 font-extrabold">✓</span>' : ''}
+          </div>
+        `;
+      }
+      list.innerHTML = html;
+      openModal('tableGuestsModal');
+    }
+
+    function setGuestOption(num) {
+      chosenGuestCount = num;
+      for (let i = 1; i <= 9; i++) {
+        const row = document.getElementById(`guestRow_${i}`);
+        if (row) {
+          if (i === num) {
+            row.className = 'p-2.5 rounded-xl border text-xs font-bold flex items-center justify-between cursor-pointer transition bg-sky-50 border-sky-400 text-sky-900';
+            row.innerHTML = `<span>Гостей: ${i}</span><span class="text-sky-600 font-extrabold">✓</span>`;
+          } else {
+            row.className = 'p-2.5 rounded-xl border text-xs font-bold flex items-center justify-between cursor-pointer transition bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100';
+            row.innerHTML = `<span>Гостей: ${i}</span>`;
+          }
+        }
+      }
+    }
+
+    function confirmOpenTableOrder() {
+      playBeep('success');
+      const tableName = document.getElementById('selectedTableDropdown').value;
+
+      currentOrder = {
+        orderNumber: (currentShift.receipts.length || 0) + 1042,
+        type: 'TABLE',
+        table: tableName,
+        guests: chosenGuestCount,
+        items: [],
+        discountPercent: 0
+      };
+
+      closeModal('tableGuestsModal');
+      renderOrderView();
+      showToast(`Открыт ${tableName} (${chosenGuestCount} гостей)`);
+    }
+
+    function addProductToActiveOrder(productId) {
+      const prod = products.find(p => p.id === productId);
+      if (!prod) return;
+
+      // Если заказ еще не был начат, автоматически открываем быстрый
+      if (!currentOrder) {
+        currentOrder = {
+          orderNumber: (currentShift.receipts.length || 0) + 1042,
+          type: 'QUICK',
+          table: 'С собой / Бар',
+          guests: 1,
+          items: [],
+          discountPercent: 0
+        };
+      }
+
+      playBeep('tap');
+      const existing = currentOrder.items.find(i => i.productId === productId && i.discountPercent === 0);
+      if (existing) {
+        existing.qty++;
+      } else {
+        currentOrder.items.push({
+          uid: 'ci_' + Date.now() + Math.random().toString(36).substr(2, 4),
+          productId: prod.id,
+          name: prod.name,
+          price: prod.price,
+          category: prod.category,
+          cost: prod.cost || (prod.price * 0.4),
+          qty: 1,
+          discountPercent: 0
+        });
+      }
+
+      renderOrderView();
+    }
+
+    function renderOrderView() {
+      const noTablesState = document.getElementById('noTablesState');
+      const activeOrderState = document.getElementById('activeOrderState');
+
+      if (!currentOrder) {
+        noTablesState.classList.remove('hidden');
+        activeOrderState.classList.add('hidden');
+        document.getElementById('activeTablesCountBadge').innerText = openTables.length;
+        document.getElementById('totalGuestsCountBadge').innerText = openTables.reduce((a, t) => a + t.guests, 0);
+        return;
+      }
+
+      noTablesState.classList.add('hidden');
+      activeOrderState.classList.remove('hidden');
+
+      document.getElementById('orderTitleLabel').innerText = `Заказ #${currentOrder.orderNumber}`;
+      document.getElementById('orderTypeBadge').innerText = currentOrder.type === 'TABLE' ? `${currentOrder.table} (${currentOrder.guests}г.)` : 'Быстрый заказ';
+
+      const list = document.getElementById('cartItemsList');
+
+      if (currentOrder.items.length === 0) {
+        list.innerHTML = `
+          <div class="py-16 text-center text-slate-400">
+            <svg class="w-8 h-8 mx-auto opacity-40 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
+            <p class="text-xs font-bold text-slate-600">Чек пуст</p>
+            <p class="text-[10px] text-slate-400">Нажмите на блюда в каталоге слева</p>
+          </div>
+        `;
+      } else {
+        list.innerHTML = currentOrder.items.map(item => {
+          const rowPrice = item.price * (1 - item.discountPercent / 100);
+          const lineTotal = Math.round(rowPrice * item.qty);
+
+          return `
+            <div class="relative bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-xs">
+              <!-- Скрытые кнопки свайпа влево (как просил пользователь) -->
+              <div class="absolute inset-0 bg-slate-200 flex justify-end items-stretch">
+                <button onclick="openItemDiscountModal('${item.uid}')" class="px-3.5 bg-amber-500 hover:bg-amber-600 text-slate-950 text-xs font-bold flex items-center gap-1 transition">
+                  % Скидка
+                </button>
+                <button onclick="deleteOrderItem('${item.uid}')" class="px-3.5 bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold flex items-center gap-1 transition">
+                  Удалить
+                </button>
+              </div>
+
+              <!-- Верхняя сдвигаемая карточка -->
+              <div 
+                class="relative bg-white p-3 flex items-center justify-between z-10 transition-transform duration-200"
+                onpointerdown="initSwipeRow(event, this)">
+                
+                <div class="flex-1 min-w-0 pr-2">
+                  <h5 class="text-xs font-bold text-slate-900 truncate">${item.name}</h5>
+                  <div class="text-[11px] text-slate-400 mt-0.5 flex items-center gap-1 font-mono">
+                    <span>${item.price} ₽</span>
+                    ${item.discountPercent > 0 ? `<span class="text-amber-600 font-bold bg-amber-50 px-1 rounded">-${item.discountPercent}%</span>` : ''}
+                  </div>
+                </div>
+
+                <div class="flex items-center gap-2">
+                  <div class="flex items-center border border-slate-200 rounded-xl overflow-hidden bg-slate-50">
+                    <button onclick="changeItemQty('${item.uid}', -1)" class="w-7 h-7 flex items-center justify-center font-bold text-slate-600 hover:bg-slate-200 transition">-</button>
+                    <span class="w-7 text-center text-xs font-bold font-mono text-slate-900">${item.qty}</span>
+                    <button onclick="changeItemQty('${item.uid}', 1)" class="w-7 h-7 flex items-center justify-center font-bold text-slate-600 hover:bg-slate-200 transition">+</button>
+                  </div>
+                  <div class="w-16 text-right font-black font-mono text-xs text-slate-900">
+                    ${lineTotal} ₽
+                  </div>
+                </div>
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+
+      calculateTotals();
+    }
+
+    // Свайп влево по строке чека
+    let swipeStartX = 0;
+    let isSwiping = false;
+
+    function initSwipeRow(e, el) {
+      if (e.target.tagName === 'BUTTON') return;
+      swipeStartX = e.clientX;
+      isSwiping = true;
+
+      const onMove = (me) => {
+        if (!isSwiping) return;
+        const diff = me.clientX - swipeStartX;
+        if (diff < 0 && diff > -180) {
+          el.style.transform = `translateX(${diff}px)`;
+        } else if (diff >= 0 && diff < 30) {
+          el.style.transform = `translateX(0px)`;
+        }
+      };
+
+      const onUp = (ue) => {
+        isSwiping = false;
+        window.removeEventListener('pointermove', onMove);
+        window.removeEventListener('pointerup', onUp);
+
+        const diff = ue.clientX - swipeStartX;
+        if (diff < -60) {
+          el.style.transform = 'translateX(-150px)';
+        } else {
+          el.style.transform = 'translateX(0px)';
+        }
+      };
+
+      window.addEventListener('pointermove', onMove);
+      window.addEventListener('pointerup', onUp);
+    }
+
+    function changeItemQty(uid, delta) {
+      playBeep('tap');
+      const item = currentOrder.items.find(i => i.uid === uid);
+      if (item) {
+        item.qty += delta;
+        if (item.qty <= 0) {
+          currentOrder.items = currentOrder.items.filter(i => i.uid !== uid);
+        }
+        renderOrderView();
+      }
+    }
+
+    function deleteOrderItem(uid) {
+      playBeep('tap');
+      currentOrder.items = currentOrder.items.filter(i => i.uid !== uid);
+      renderOrderView();
+      showToast('Позиция удалена из чека');
+    }
+
+    function calculateTotals() {
+      if (!currentOrder) return { finalTotal: 0, subtotal: 0, discountSum: 0 };
+      let subtotal = 0;
+      let afterItemDiscounts = 0;
+
+      currentOrder.items.forEach(i => {
+        subtotal += i.price * i.qty;
+        const discPrice = i.price * (1 - i.discountPercent / 100);
+        afterItemDiscounts += discPrice * i.qty;
+      });
+
+      const finalTotal = Math.round(afterItemDiscounts * (1 - currentOrder.discountPercent / 100));
+      const discountSum = Math.round(subtotal - finalTotal);
+      const vat = Math.round((finalTotal * 20) / 120);
+
+      document.getElementById('cartSubtotalText').innerText = `${subtotal.toLocaleString('ru-RU')} ₽`;
+      document.getElementById('cartDiscountSumText').innerText = `-${discountSum.toLocaleString('ru-RU')} ₽`;
+      document.getElementById('cartVatText').innerText = `${vat.toLocaleString('ru-RU')} ₽`;
+      document.getElementById('cartTotalSumText').innerText = `${finalTotal.toLocaleString('ru-RU')} ₽`;
+      document.getElementById('cartDiscountPercentLabel').innerText = `${currentOrder.discountPercent}%`;
+
+      return { finalTotal, subtotal, discountSum, vat };
+    }
+
+    function clearCurrentCart() {
+      if (!currentOrder || currentOrder.items.length === 0) {
+        currentOrder = null;
+        renderOrderView();
+        return;
+      }
+      showCustomConfirmDialog(
+        'Сбросить заказ?',
+        'Все выбранные позиции будут очищены из чека.',
+        () => {
+          currentOrder = null;
+          renderOrderView();
+          showToast('Чек очищен');
+        }
+      );
+    }
+
+    // Скидка на позицию
+    function openItemDiscountModal(uid) {
+      playBeep('tap');
+      targetCartItemUid = uid;
+      const it = currentOrder.items.find(i => i.uid === uid);
+      if (!it) return;
+      document.getElementById('itemDiscountTitle').innerText = `Скидка: ${it.name}`;
+      document.getElementById('itemDiscountInput').value = it.discountPercent || 0;
+      openModal('itemDiscountModal');
+    }
+
+    function setItemDiscountQuick(pct) {
+      document.getElementById('itemDiscountInput').value = pct;
+    }
+
+    function applyItemDiscountValue(force = null) {
+      playBeep('tap');
+      const val = force !== null ? force : parseFloat(document.getElementById('itemDiscountInput').value) || 0;
+      const it = currentOrder.items.find(i => i.uid === targetCartItemUid);
+      if (it) {
+        it.discountPercent = Math.min(100, Math.max(0, val));
+      }
+      closeModal('itemDiscountModal');
+      renderOrderView();
+      showToast('Скидка применена к позиции');
+    }
+
+    // Скидка на весь чек
+    function openOrderDiscountModal() {
+      if (!currentOrder || currentOrder.items.length === 0) {
+        showToast('Сначала добавьте блюда в заказ');
+        return;
+      }
+      playBeep('tap');
+      document.getElementById('orderDiscountInput').value = currentOrder.discountPercent || 0;
+      openModal('orderDiscountModal');
+    }
+
+    function setOrderDiscountQuick(pct) {
+      document.getElementById('orderDiscountInput').value = pct;
+    }
+
+    function applyOrderDiscountValue(force = null) {
+      playBeep('tap');
+      const val = force !== null ? force : parseFloat(document.getElementById('orderDiscountInput').value) || 0;
+      currentOrder.discountPercent = Math.min(100, Math.max(0, val));
+      closeModal('orderDiscountModal');
+      renderOrderView();
+      showToast(`Скидка на чек: ${currentOrder.discountPercent}%`);
+    }
+
+    // ==========================================
+    // ОПЛАТА (НАЛИЧНЫЕ СО СДАЧЕЙ / КАРТА)
+    // ==========================================
+    function startCheckout(type) {
+      if (!currentOrder || currentOrder.items.length === 0) {
+        showToast('Чек пуст. Добавьте блюда');
+        return;
+      }
+      playBeep('tap');
+      activePaymentType = type;
+      const { finalTotal } = calculateTotals();
+
+      document.getElementById('paymentFinalSumBadge').innerText = `${finalTotal.toLocaleString('ru-RU')} ₽`;
+      const cashBox = document.getElementById('cashPayBox');
+      const cardBox = document.getElementById('cardPayBox');
+      const title = document.getElementById('paymentModalTitle');
+
+      if (type === 'CASH') {
+        title.innerText = 'Оплата наличными';
+        cashBox.classList.remove('hidden');
+        cardBox.classList.add('hidden');
+
+        // Купюры
+        const row = document.getElementById('quickBanknotesRow');
+        const notes = [finalTotal, 500, 1000, 2000, 5000].filter((v, idx, arr) => v >= finalTotal && arr.indexOf(v) === idx);
+        row.innerHTML = notes.map(n => `
+          <button onclick="setCashInput(${n})" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-xl text-xs font-bold font-mono">
+            ${n === finalTotal ? 'Без сдачи' : n + ' ₽'}
+          </button>
+        `).join('');
+
+        document.getElementById('cashReceivedInput').value = finalTotal;
+        recalcCashChange();
+      } else {
+        title.innerText = 'Оплата по карте / СБП';
+        cashBox.classList.add('hidden');
+        cardBox.classList.remove('hidden');
+      }
+
+      openModal('paymentModal');
+    }
+
+    function setCashInput(amt) {
+      document.getElementById('cashReceivedInput').value = amt;
+      recalcCashChange();
+    }
+
+    function recalcCashChange() {
+      const { finalTotal } = calculateTotals();
+      const rec = parseFloat(document.getElementById('cashReceivedInput').value) || 0;
+      const change = Math.max(0, rec - finalTotal);
+      document.getElementById('cashChangeDisplay').innerText = `${change.toLocaleString('ru-RU')} ₽`;
+
+      const btn = document.getElementById('finalizePaymentBtn');
+      if (activePaymentType === 'CASH' && rec < finalTotal) {
+        btn.disabled = true;
+        btn.classList.add('opacity-50', 'pointer-events-none');
+      } else {
+        btn.disabled = false;
+        btn.classList.remove('opacity-50', 'pointer-events-none');
+      }
+    }
+
+    function completePaymentAndFiscalize() {
+      const { finalTotal, subtotal, discountSum } = calculateTotals();
+      const received = parseFloat(document.getElementById('cashReceivedInput').value) || finalTotal;
+      const change = activePaymentType === 'CASH' ? Math.max(0, received - finalTotal) : 0;
+
+      const receipt = {
+        receiptNumber: currentOrder.orderNumber,
+        timestamp: new Date().toISOString(),
+        paymentType: activePaymentType,
+        table: currentOrder.table,
+        guests: currentOrder.guests,
+        items: JSON.parse(JSON.stringify(currentOrder.items)),
+        subtotal,
+        discountTotal: discountSum,
+        finalTotal,
+        received,
+        change
+      };
+
+      currentShift.receipts.push(receipt);
+      if (activePaymentType === 'CASH') {
+        currentShift.cashRevenue += finalTotal;
+        currentShift.drawerCash += finalTotal;
+      } else {
+        currentShift.cardRevenue += finalTotal;
+      }
+
+      saveDB();
+      playBeep('success');
+      closeModal('paymentModal');
+
+      // Показ термоленты чека
+      showThermalReceiptSlip(receipt);
+
+      // Очистка заказа
+      currentOrder = null;
+      renderOrderView();
+      showToast('Чек успешно оплачен и закрыт!');
+    }
+
+    function showThermalReceiptSlip(r) {
+      const paper = document.getElementById('receiptSlipPaper');
+      const d = new Date(r.timestamp);
+
+      paper.innerHTML = `
+        <div class="text-center pb-2 border-b border-dashed border-slate-400 space-y-0.5">
+          <div class="text-sm font-black tracking-wider">КОФЕЙНЯ "QCORE COFFEE"</div>
+          <div class="text-[10px] text-slate-600">ИНН 7701982741 • ККТ 00049182</div>
+          <div class="text-[10px] text-slate-600">КАССИР: ИДЕГЕЛ ДАЖЫЙ-ООЛ</div>
+          <div class="text-xs font-bold pt-1">КАССОВЫЙ ЧЕК №${r.receiptNumber}</div>
+          <div class="text-[10px] text-slate-500">${d.toLocaleString('ru-RU')}</div>
+        </div>
+
+        <div class="py-2 space-y-1.5">
+          ${r.items.map((it, idx) => `
+            <div class="flex justify-between items-baseline">
+              <span class="truncate pr-1">${idx + 1}. ${it.name}</span>
+              <span class="font-bold shrink-0">${Math.round(it.price * (1 - it.discountPercent / 100) * it.qty)} ₽</span>
+            </div>
+            <div class="text-[10px] text-slate-500 flex justify-between">
+              <span>${it.qty} шт x ${it.price} ₽</span>
+              ${it.discountPercent > 0 ? `<span>скидка -${it.discountPercent}%</span>` : ''}
+            </div>
+          `).join('')}
+        </div>
+
+        <div class="pt-2 border-t border-dashed border-slate-400 space-y-1 text-xs">
+          <div class="flex justify-between">
+            <span>ИТОГО БЕЗ СКИДОК:</span>
+            <span>${r.subtotal} ₽</span>
+          </div>
+          <div class="flex justify-between text-slate-600">
+            <span>СКИДКА:</span>
+            <span>-${r.discountTotal} ₽</span>
+          </div>
+          <div class="flex justify-between text-sm font-black pt-1 border-t border-slate-900">
+            <span>К ОПЛАТЕ:</span>
+            <span>${r.finalTotal} ₽</span>
+          </div>
+          <div class="flex justify-between text-[11px] pt-1 text-slate-600">
+            <span>ВИД ОПЛАТЫ:</span>
+            <span class="font-bold">${r.paymentType === 'CASH' ? 'НАЛИЧНЫЕ' : 'БЕЗНАЛИЧНЫЙ ЭКВАЙРИНГ'}</span>
+          </div>
+          ${r.paymentType === 'CASH' ? `
+            <div class="flex justify-between text-[11px] text-slate-600">
+              <span>ПОЛУЧЕНО:</span>
+              <span>${r.received} ₽</span>
+            </div>
+            <div class="flex justify-between text-[11px] text-slate-600">
+              <span>СДАЧА:</span>
+              <span>${r.change} ₽</span>
+            </div>
+          ` : ''}
+        </div>
+
+        <div class="pt-3 text-center text-[10px] text-slate-500 border-t border-dashed border-slate-400">
+          <div>ФН 9999078901234567 • ФД 0001042</div>
+          <div>СПАСИБО ЗА ВИЗИТ!</div>
+        </div>
+      `;
+
+      openModal('receiptSlipModal');
+    }
+
+    function printThermalPaper() {
+      playBeep('success');
+      showToast('Документ отправлен на печать');
+      closeModal('receiptSlipModal');
+    }
+
+    // ==========================================
+    // РЕДАКТИРОВАНИЕ ТОВАРОВ И КЛАСТЕРИЗАЦИЯ
+    // ==========================================
+    function openProductEditModal(id = null, defaultCat = null) {
+      editingProductId = id;
+      const title = document.getElementById('productEditTitle');
+      const delBtn = document.getElementById('deleteProductBtn');
+      const catSelect = document.getElementById('editProdCategorySelect');
+
+      // Заполняем селект групп
+      catSelect.innerHTML = CATEGORIES_CONFIG.map(c => `
+        <option value="${c.name}">${c.name}</option>
+      `).join('');
+
+      if (id) {
+        const p = products.find(prod => prod.id === id);
+        title.innerText = 'Редактирование товара';
+        document.getElementById('editProdNameInput').value = p.name;
+        document.getElementById('editProdPriceInput').value = p.price;
+        document.getElementById('editProdCostInput').value = p.cost || 0;
+        catSelect.value = p.category;
+        delBtn.classList.remove('hidden');
+      } else {
+        title.innerText = 'Создать новый товар';
+        document.getElementById('editProdNameInput').value = '';
+        document.getElementById('editProdPriceInput').value = '';
+        document.getElementById('editProdCostInput').value = '';
+        catSelect.value = defaultCat || (selectedCategoryName || CATEGORIES_CONFIG[0].name);
+        delBtn.classList.add('hidden');
+      }
+
+      openModal('productEditModal');
+    }
+
+    function closeProductEditModal() {
+      closeModal('productEditModal');
+      editingProductId = null;
+    }
+
+    function saveCurrentProduct() {
+      const name = document.getElementById('editProdNameInput').value.trim();
+      const price = parseFloat(document.getElementById('editProdPriceInput').value) || 0;
+      const cost = parseFloat(document.getElementById('editProdCostInput').value) || 0;
+      const category = document.getElementById('editProdCategorySelect').value;
+
+      if (!name || price <= 0) {
+        showToast('Укажите корректное название и цену');
+        return;
+      }
+
+      if (editingProductId) {
+        const idx = products.findIndex(p => p.id === editingProductId);
+        if (idx !== -1) {
+          products[idx] = { ...products[idx], name, price, cost, category };
+          showToast(`Товар "${name}" обновлен`);
+        }
+      } else {
+        products.push({
+          id: 'p_' + Date.now(),
+          name,
+          price,
+          cost,
+          category
+        });
+        showToast(`Товар "${name}" создан`);
+      }
+
+      saveDB();
+      playBeep('success');
+      closeProductEditModal();
+      renderCatalog();
+    }
+
+    function deleteCurrentProduct() {
+      if (!editingProductId) return;
+      showCustomConfirmDialog(
+        'Удалить этот товар?',
+        'Товар будет безвозвратно удален из меню терминала.',
+        () => {
+          products = products.filter(p => p.id !== editingProductId);
+          saveDB();
+          playBeep('tap');
+          closeProductEditModal();
+          renderCatalog();
+          showToast('Товар удален из меню');
+        }
+      );
+    }
+
+    // ==========================================
+    // ПАНЕЛЬ ОТЧЕТОВ, Z-ОТЧЕТ И АНАЛИТИКА
+    // ==========================================
+    function openReportsModal() {
+      playBeep('tap');
+      document.getElementById('repShiftNumber').innerText = currentShift.shiftNumber;
+      const d = new Date(currentShift.openedAt);
+      document.getElementById('repShiftOpenTime').innerText = d.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+
+      renderReportsData();
+      openModal('reportsModal');
+    }
+
+    function switchReportsSubTab(tab) {
+      playBeep('tap');
+      ['analytics', 'shift', 'journal'].forEach(t => {
+        const btn = document.getElementById(`repTabBtn_${t}`);
+        const sec = document.getElementById(`repSection_${t}`);
+        if (t === tab) {
+          btn.className = 'px-4 py-1.5 rounded-xl text-xs font-bold transition bg-sky-600 text-white';
+          sec.classList.remove('hidden');
+        } else {
+          btn.className = 'px-4 py-1.5 rounded-xl text-xs font-bold transition text-slate-400 hover:text-white';
+          sec.classList.add('hidden');
+        }
+      });
+
+      if (tab === 'analytics') {
+        initAnalyticsCharts();
+      }
+    }
+
+    function renderReportsData() {
+      const rev = currentShift.cashRevenue + currentShift.cardRevenue;
+      const receipts = currentShift.receipts;
+      const count = receipts.length;
+      const avg = count > 0 ? Math.round(rev / count) : 0;
+      const totalDisc = receipts.reduce((a, r) => a + (r.discountTotal || 0), 0);
+
+      document.getElementById('kpiTotalRevenue').innerText = `${rev.toLocaleString('ru-RU')} ₽`;
+      document.getElementById('kpiReceiptsCount').innerText = count;
+      document.getElementById('kpiAvgTicket').innerText = `${avg.toLocaleString('ru-RU')} ₽`;
+      document.getElementById('kpiTotalDiscounts').innerText = `${totalDisc.toLocaleString('ru-RU')} ₽`;
+
+      document.getElementById('shiftDrawerCashDisplay').innerText = `${currentShift.drawerCash.toLocaleString('ru-RU')} ₽`;
+      document.getElementById('shiftCardRevenueDisplay').innerText = `${currentShift.cardRevenue.toLocaleString('ru-RU')} ₽`;
+      document.getElementById('shiftTotalSalesDisplay').innerText = `${rev.toLocaleString('ru-RU')} ₽`;
+
+      // Журнал
+      const tbody = document.getElementById('journalTableBody');
+      if (receipts.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7" class="py-6 text-center text-slate-500">В текущей смене пока нет закрытых чеков</td></tr>`;
+      } else {
+        tbody.innerHTML = receipts.slice().reverse().map(r => `
+          <tr class="hover:bg-slate-800/40">
+            <td class="py-2.5 px-3 text-sky-400 font-bold">#${r.receiptNumber}</td>
+            <td class="py-2.5 px-3 text-slate-400">${new Date(r.timestamp).toLocaleTimeString('ru-RU', {hour:'2-digit', minute:'2-digit'})}</td>
+            <td class="py-2.5 px-3 text-slate-300">${r.table}</td>
+            <td class="py-2.5 px-3">
+              <span class="px-2 py-0.5 rounded text-[10px] font-bold ${r.paymentType === 'CASH' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-sky-500/20 text-sky-400'}">
+                ${r.paymentType === 'CASH' ? 'Наличные' : 'Безнал'}
+              </span>
+            </td>
+            <td class="py-2.5 px-3 text-amber-400">${r.discountTotal > 0 ? `-${r.discountTotal} ₽` : '0 ₽'}</td>
+            <td class="py-2.5 px-3 text-right font-black text-white">${r.finalTotal} ₽</td>
+            <td class="py-2.5 px-3 text-center">
+              <button onclick='showThermalReceiptSlip(${JSON.stringify(r)})' class="px-2 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-[10px]">
+                Показать
+              </button>
+            </td>
+          </tr>
+        `).join('');
+      }
+
+      initAnalyticsCharts();
+    }
+
+    function initAnalyticsCharts() {
+      Chart.defaults.color = '#94a3b8';
+      Chart.defaults.font.family = "'Plus Jakarta Sans', system-ui, sans-serif";
+
+      const receipts = currentShift.receipts;
+      
+      // По часам
+      const hoursMap = {};
+      for (let h = 9; h <= 21; h++) hoursMap[`${h}:00`] = 0;
+      receipts.forEach(r => {
+        const d = new Date(r.timestamp);
+        const k = `${d.getHours()}:00`;
+        hoursMap[k] = (hoursMap[k] || 0) + r.finalTotal;
+      });
+
+      if (chartHourly) chartHourly.destroy();
+      const ctxH = document.getElementById('chartHourlySales').getContext('2d');
+      chartHourly = new Chart(ctxH, {
+        type: 'bar',
+        data: {
+          labels: Object.keys(hoursMap),
+          datasets: [{
+            label: 'Выручка (₽)',
+            data: Object.values(hoursMap),
+            backgroundColor: 'rgba(2, 132, 199, 0.7)',
+            borderColor: '#0284c7',
+            borderRadius: 6
+          }]
+        },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+      });
+
+      // Сплит
+      if (chartPayment) chartPayment.destroy();
+      const ctxP = document.getElementById('chartPaymentSplit').getContext('2d');
+      chartPayment = new Chart(ctxP, {
+        type: 'doughnut',
+        data: {
+          labels: ['Наличные', 'Безнал / СБП'],
+          datasets: [{
+            data: [currentShift.cashRevenue || 1, currentShift.cardRevenue || 2],
+            backgroundColor: ['#10b981', '#0284c7'],
+            borderWidth: 0
+          }]
+        },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
+      });
+
+      // Категории
+      const catMap = {};
+      const itemMap = {};
+      receipts.forEach(r => {
+        r.items.forEach(it => {
+          catMap[it.category] = (catMap[it.category] || 0) + (it.price * it.qty);
+          itemMap[it.name] = (itemMap[it.name] || 0) + it.qty;
+        });
+      });
+
+      if (Object.keys(catMap).length === 0) {
+        catMap['Эспрессо'] = 1400;
+        catMap['Десерты'] = 820;
+        catMap['Чаи'] = 540;
+      }
+      if (Object.keys(itemMap).length === 0) {
+        itemMap['Капучино 300мл'] = 6;
+        itemMap['Круассан'] = 4;
+        itemMap['Раф Цитрусовый'] = 3;
+      }
+
+      if (chartCat) chartCat.destroy();
+      const ctxC = document.getElementById('chartCategorySales').getContext('2d');
+      chartCat = new Chart(ctxC, {
+        type: 'pie',
+        data: {
+          labels: Object.keys(catMap),
+          datasets: [{
+            data: Object.values(catMap),
+            backgroundColor: ['#e75b36', '#ea8c1c', '#d946ef', '#0284c7', '#65a30d', '#e11d48'],
+            borderWidth: 0
+          }]
+        },
+        options: { responsive: true, maintainAspectRatio: false }
+      });
+
+      // Топ блюд
+      if (chartTop) chartTop.destroy();
+      const sorted = Object.entries(itemMap).sort((a,b) => b[1] - a[1]).slice(0, 5);
+      const ctxT = document.getElementById('chartTopItems').getContext('2d');
+      chartTop = new Chart(ctxT, {
+        type: 'bar',
+        data: {
+          labels: sorted.map(s => s[0]),
+          datasets: [{
+            data: sorted.map(s => s[1]),
+            backgroundColor: '#10b981',
+            borderRadius: 6
+          }]
+        },
+        options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+      });
+    }
+
+    function promptCashMovement(type) {
+      const val = prompt(type === 'IN' ? 'Сумма внесения в ящик (₽):' : 'Сумма изъятия из кассы (₽):', '1000');
+      if (val !== null) {
+        const amt = parseFloat(val) || 0;
+        if (amt <= 0) return;
+        if (type === 'OUT' && amt > currentShift.drawerCash) {
+          showToast('Недостаточно наличных в ящике');
+          return;
+        }
+        if (type === 'IN') {
+          currentShift.drawerCash += amt;
+          showToast(`Внесено в кассу: +${amt} ₽`);
+        } else {
+          currentShift.drawerCash -= amt;
+          showToast(`Изъято из кассы: -${amt} ₽`);
+        }
+        saveDB();
+        renderReportsData();
+      }
+    }
+
+    function generatePrintReport(repType) {
+      playBeep('tap');
+      const now = new Date();
+      const isZ = repType === 'Z';
+      const rev = currentShift.cashRevenue + currentShift.cardRevenue;
+      const vat = Math.round((rev * 20) / 120);
+
+      const paper = document.getElementById('receiptSlipPaper');
+      paper.innerHTML = `
+        <div class="text-center pb-2 border-b border-dashed border-slate-400 space-y-0.5">
+          <div class="text-sm font-black tracking-wider">КОФЕЙНЯ "QCORE COFFEE"</div>
+          <div class="text-[10px] text-slate-600">ИНН 7701982741 • ККТ 00049182</div>
+          <div class="text-xs font-bold pt-1 uppercase">${isZ ? 'ОТЧЕТ О ЗАКРЫТИИ СМЕНЫ (Z-ОТЧЕТ)' : 'СВЕРКА ИТОГОВ (X-ОТЧЕТ)'}</div>
+          <div class="text-[10px] text-slate-600">СМЕНА №${currentShift.shiftNumber} ${isZ ? '• ЗАКРЫТА' : '• ОТКРЫТА'}</div>
+          <div class="text-[10px] text-slate-500">${now.toLocaleString('ru-RU')}</div>
+        </div>
+
+        <div class="py-2.5 space-y-1.5 text-xs">
+          <div class="flex justify-between">
+            <span>КОЛИЧЕСТВО ЧЕКОВ:</span>
+            <span class="font-bold">${currentShift.receipts.length}</span>
+          </div>
+          <div class="flex justify-between">
+            <span>ВЫРУЧКА НАЛИЧНЫМИ:</span>
+            <span class="font-bold">${currentShift.cashRevenue} ₽</span>
+          </div>
+          <div class="flex justify-between">
+            <span>ВЫРУЧКА БЕЗНАЛ:</span>
+            <span class="font-bold">${currentShift.cardRevenue} ₽</span>
+          </div>
+          <div class="flex justify-between text-sm font-black pt-1 border-t border-slate-900">
+            <span>ИТОГО ВЫРУЧКА:</span>
+            <span>${rev} ₽</span>
+          </div>
+          <div class="flex justify-between text-slate-600 text-[10px]">
+            <span>В Т.Ч. НДС 20%:</span>
+            <span>${vat} ₽</span>
+          </div>
+          <div class="flex justify-between text-slate-800 text-[11px] pt-1 border-t border-dashed border-slate-400">
+            <span>НАЛИЧНЫХ В ЯЩИКЕ:</span>
+            <span class="font-bold">${currentShift.drawerCash} ₽</span>
+          </div>
+        </div>
+
+        <div class="pt-3 text-center text-[10px] text-slate-500 border-t border-dashed border-slate-400">
+          <div>ФИСКАЛЬНЫЙ РЕЖИМ • ПЕРЕДАНО В ОФД</div>
+          <div class="font-bold text-slate-800">${isZ ? 'СМЕНА ЗАКРЫТА С ГАШЕНИЕМ' : 'БЕЗ ГАШЕНИЯ'}</div>
+        </div>
+      `;
+
+      openModal('receiptSlipModal');
+    }
+
+    function confirmCloseShift() {
+      showCustomConfirmDialog(
+        'Закрыть смену и напечатать Z-отчет?',
+        'Выручка будет зафиксирована в архиве, счетчики продаж будут обнулены, а смена переведена на следующий номер.',
+        () => {
+          generatePrintReport('Z');
+          currentShift = {
+            shiftNumber: currentShift.shiftNumber + 1,
+            openedAt: new Date().toISOString(),
+            drawerCash: currentShift.drawerCash,
+            cardRevenue: 0,
+            cashRevenue: 0,
+            receipts: []
+          };
+          saveDB();
+          renderReportsData();
+          closeModal('reportsModal');
+          showToast('Смена успешно закрыта Z-отчетом!');
+        }
+      );
+    }
+
+    // Вспомогательные окна
+    function openModal(id) { document.getElementById(id).classList.remove('hidden'); }
+    function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+
+    function toggleSidePanel() {
+      const panel = document.getElementById('sideOrderPanel');
+      panel.classList.toggle('hidden');
+    }
+
+    function openHelpTooltip() {
+      showToast('Зажмите карточку любого блюда на 1.5 сек для смены цены или удаления');
+    }
+
+    // Кастомный confirm
+    let dialogCallback = null;
+    function showCustomConfirmDialog(title, msg, onConfirm) {
+      playBeep('tap');
+      document.getElementById('customDialogTitle').innerText = title;
+      document.getElementById('customDialogMessage').innerText = msg;
+      dialogCallback = onConfirm;
+      openModal('customDialogModal');
+    }
+
+    function handleCustomDialogResponse(isOk) {
+      closeModal('customDialogModal');
+      if (isOk && dialogCallback) dialogCallback();
+      dialogCallback = null;
+    }
+
+    // Всплывающие уведомления
+    function showToast(text) {
+      const container = document.getElementById('toastContainer');
+      const toast = document.createElement('div');
+      toast.className = 'bg-slate-900 border border-slate-700 text-white px-4 py-2.5 rounded-2xl shadow-xl text-xs font-bold flex items-center gap-2 animate-pop pointer-events-auto';
+      toast.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-400"></span><span>${text}</span>`;
+      container.appendChild(toast);
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transition = 'all 0.2s ease';
+        setTimeout(() => toast.remove(), 200);
+      }, 2200);
+    }
+
+    // Старт
+    window.onload = function() {
+      renderCatalog();
+      renderOrderView();
+    };
+  </script>
+</body>
+</html>
