@@ -18,7 +18,7 @@
       box-sizing: border-box;
       font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
     }
-    input, textarea {
+    input, textarea, select {
       -webkit-user-select: text;
       user-select: text;
     }
@@ -33,7 +33,7 @@
       background: transparent;
     }
     .custom-scroll::-webkit-scrollbar-thumb {
-      background: rgba(255, 255, 255, 0.2);
+      background: rgba(255, 255, 255, 0.25);
       border-radius: 9999px;
     }
     .custom-scroll-dark::-webkit-scrollbar {
@@ -55,35 +55,49 @@
         0deg,
         #ffffff,
         #ffffff 24px,
-        #fbfbfc 25px
+        #f8fafc 25px
       );
-      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.2);
-    }
-    .receipt-edge {
-      background: radial-gradient(circle, transparent, transparent 50%, #ffffff 50%, #ffffff 100%);
-      background-size: 12px 12px;
+      box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.35);
     }
     @keyframes popIn {
       from { opacity: 0; transform: scale(0.96) translateY(8px); }
       to { opacity: 1; transform: scale(1) translateY(0); }
     }
     .animate-pop {
-      animation: popIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      animation: popIn 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+    @keyframes pulseAlert {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+    }
+    .animate-alert-badge {
+      animation: pulseAlert 2s infinite ease-in-out;
     }
   </style>
 </head>
 <body class="bg-slate-900 text-slate-100 h-screen w-screen overflow-hidden flex flex-col antialiased">
 
   <!-- ======================================================== -->
-  <!-- 1. ВЕРХНИЙ СТАТУС-БАР ПЛАНШЕТА (КАК НА ФОТО)             -->
+  <!-- 1. ВЕРХНИЙ СТАТУС-БАР ПЛАНШЕТА                           -->
   <!-- ======================================================== -->
   <aside class="bg-sky-950 text-sky-200/90 px-4 py-1 text-[11px] font-semibold flex items-center justify-between border-b border-sky-900 shrink-0 select-none">
     <div class="flex items-center gap-2">
-      <span id="currentClockText" class="font-mono text-white">15:54</span>
+      <span id="currentClockText" class="font-mono text-white text-xs">15:54</span>
       <span>•</span>
       <span id="currentDateText">Вс 27 сент.</span>
+      <span class="text-sky-400">•</span>
+      <span id="shiftStatusIndicator" class="bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 px-2 py-0.5 rounded-full text-[10px] font-bold">
+        Смена открыта (#1)
+      </span>
     </div>
+
+    <!-- Индикатор автоматической пересменки 14:00 -->
     <div class="flex items-center gap-3 text-xs">
+      <button onclick="triggerHandoverPrompt(true)" class="flex items-center gap-1.5 px-2.5 py-0.5 bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/30 rounded-full text-[10px] font-bold transition">
+        <span>🕒</span>
+        <span>Тест 14:00 (Пересменка)</span>
+      </button>
+
       <span class="flex items-center gap-1">
         <svg class="w-3.5 h-3.5 text-sky-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.141 0M1.393 9.393c5.857-5.857 15.355-5.857 21.213 0"/></svg>
         <span>Wi-Fi</span>
@@ -96,31 +110,30 @@
   </aside>
 
   <!-- ======================================================== -->
-  <!-- 2. ГЛАВНЫЙ HEADER ТЕРМИНАЛА (БЕЛЫЙ / СВЕТЛЫЙ, ИЗ ФОТО)   -->
+  <!-- 2. ГЛАВНЫЙ HEADER ТЕРМИНАЛА (БЕЛЫЙ / СВЕТЛЫЙ)            -->
   <!-- ======================================================== -->
   <header class="bg-white text-slate-800 px-4 py-2 flex items-center justify-between border-b border-slate-200 shadow-sm shrink-0 z-20">
-    <!-- Левая секция: Аватар, Имя кассира, Шестеренка, Зал -->
     <div class="flex items-center gap-3">
-      <!-- Лого / Аватар со статусом -->
+      <!-- Аватар сотрудника -->
       <div class="relative flex items-center justify-center">
         <div class="w-10 h-10 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-600 font-bold shadow-xs">
           <svg class="w-6 h-6 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
         </div>
-        <span class="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-rose-500 border-2 border-white"></span>
+        <span class="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-emerald-500 border-2 border-white"></span>
       </div>
 
-      <!-- Имя кассира -->
+      <!-- Имя кассира и роль -->
       <div>
         <p class="text-[11px] text-slate-400 font-medium leading-none">Кассир-бариста</p>
         <h2 id="cashierNameDisplay" class="text-sm font-bold text-slate-900 leading-snug">Идегел Дажый-оол</h2>
       </div>
 
-      <!-- Шестеренка (Z-отчет, аналитика, настройки) -->
-      <button onclick="openReportsModal()" class="w-9 h-9 rounded-xl bg-slate-100 hover:bg-slate-200 active:scale-95 text-slate-600 flex items-center justify-center transition border border-slate-200 ml-1" title="Отчеты, Смена и Настройки">
+      <!-- Кнопка перехода в центр отчетов и смен -->
+      <button onclick="openReportsModal()" class="w-9 h-9 rounded-xl bg-slate-100 hover:bg-slate-200 active:scale-95 text-slate-700 flex items-center justify-center transition border border-slate-200 ml-1" title="Отчеты, Смена, Z-отчет и Логи">
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
       </button>
 
-      <!-- Переключатель залов / локаций (как на фото) -->
+      <!-- Переключатель зон зала -->
       <div class="flex items-center gap-1 bg-slate-100 p-1 rounded-2xl border border-slate-200 ml-2">
         <button onclick="setHallZone('Зал')" id="zoneBtn_Зал" class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition bg-white text-slate-900 shadow-xs">
           Зал
@@ -134,7 +147,7 @@
       </div>
     </div>
 
-    <!-- Правая секция: Зеленые кнопки заказов (из фото) -->
+    <!-- Зеленые кнопки заказов -->
     <div class="flex items-center gap-2.5">
       <button onclick="openTableGuestsModal()" class="px-4 py-2.5 bg-emerald-500 hover:bg-emerald-600 active:scale-95 text-white font-bold text-xs rounded-2xl shadow-sm transition flex items-center gap-2">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
@@ -146,43 +159,42 @@
         <span>Быстрый заказ</span>
       </button>
 
-      <!-- Иконка переключения панелей -->
-      <button onclick="toggleSidePanel()" class="w-9 h-9 rounded-xl bg-sky-100 hover:bg-sky-200 active:scale-95 text-sky-700 flex items-center justify-center transition border border-sky-200">
-        <svg id="sidePanelToggleIcon" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 19l-7-7 7-7m8 14l-7-7 7-7"/></svg>
+      <button onclick="toggleSidePanel()" class="w-9 h-9 rounded-xl bg-sky-100 hover:bg-sky-200 active:scale-95 text-sky-700 flex items-center justify-center transition border border-sky-200" title="Свернуть / развернуть чек">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 19l-7-7 7-7m8 14l-7-7 7-7"/></svg>
       </button>
     </div>
   </header>
 
   <!-- ======================================================== -->
-  <!-- 3. ОСНОВНОЙ РАБОЧИЙ ЭКРАН (ЦВЕТ МОРСКОЙ ВОЛНЫ ИЗ ФОТО)     -->
+  <!-- 3. ОСНОВНОЙ РАБОЧИЙ ЭКРАН (ЦВЕТ МОРСКОЙ ВОЛНЫ)           -->
   <!-- ======================================================== -->
   <main class="flex-1 flex overflow-hidden">
     
-    <!-- ЛЕВАЯ ОБЛАСТЬ: МЕНЮ, ГРУППЫ ТОВАРОВ И КАТАЛОГ -->
+    <!-- ЛЕВАЯ ОБЛАСТЬ: МЕНЮ, ГРУППЫ И КАТАЛОГ -->
     <div class="flex-1 pos-bg-teal flex flex-col min-w-0 relative">
 
-      <!-- Синяя полоса навигации: МЕНЮ, ПОИСК, РЕЖИМЫ (как на фото 2) -->
+      <!-- Полоса навигации: МЕНЮ, ДОБАВЛЕНИЕ, ПОИСК -->
       <div class="pos-subbar-teal px-4 py-2 flex items-center justify-between text-white shrink-0 border-b border-sky-600 shadow-md">
         <div class="flex items-center gap-2 overflow-x-auto custom-scroll py-0.5">
           <div id="breadcrumbNav" class="flex items-center gap-1.5 text-xs font-bold text-sky-100">
-            <!-- Динамические хлебные крошки (МЕНЮ / Подгруппа ...) -->
+            <!-- Динамический путь хлебных крошек -->
           </div>
         </div>
 
         <div class="flex items-center gap-2">
-          <!-- Кнопка добавить группу / вкладку -->
-          <button onclick="openGroupEditModal()" class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-sky-900/70 hover:bg-sky-900 active:scale-95 text-xs font-bold text-sky-100 border border-sky-400/30 transition" title="Создать новую группу / вкладку">
+          <!-- Создать вкладку / категорию -->
+          <button onclick="openGroupEditModal()" class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-sky-900/70 hover:bg-sky-900 active:scale-95 text-xs font-bold text-sky-100 border border-sky-400/30 transition" title="Создать новую группу / категорию">
             <svg class="w-3.5 h-3.5 text-sky-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 13h6m-3-3v6m-9 1V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>
-            <span class="hidden sm:inline">+ Вкладка</span>
+            <span>+ Вкладка</span>
           </button>
 
-          <!-- Кнопка добавить позицию -->
+          <!-- Создать позицию / товар -->
           <button onclick="openProductEditModal()" class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-xs font-bold text-white shadow-sm transition" title="Создать товар">
             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-            <span class="hidden sm:inline">+ Позиция</span>
+            <span>+ Позиция</span>
           </button>
 
-          <!-- Поисковая строка -->
+          <!-- Поле поиска -->
           <div class="relative flex items-center">
             <input 
               id="searchMenuInput" 
@@ -195,42 +207,38 @@
         </div>
       </div>
 
-      <!-- Контейнер скролла: Сетка категорий (из фото 2) или сетка товаров -->
+      <!-- Контейнер каталога: группы и карточки позиций -->
       <div id="catalogContainer" class="flex-1 p-4 overflow-y-auto custom-scroll">
-        <!-- Сюда динамически рендерятся цветные плитки групп или карточки блюд -->
+        <!-- Сюда динамически рендерятся группы или товары -->
       </div>
 
-      <!-- Нижний левый кружок с восклицательным знаком (из фото) -->
+      <!-- Нижняя панель подсказки -->
       <div class="absolute bottom-4 left-4 z-10 flex items-center gap-2">
-        <button onclick="openHelpTooltip()" class="w-9 h-9 rounded-full bg-rose-500/90 hover:bg-rose-500 text-white flex items-center justify-center font-black shadow-lg shadow-black/30 border border-rose-400 active:scale-95 transition" title="Подсказка по управлению">
+        <button onclick="showToast('Зажмите карточку группы или товара на 1.4 сек для настроек и удаления')" class="w-9 h-9 rounded-full bg-rose-500/90 hover:bg-rose-500 text-white flex items-center justify-center font-black shadow-lg border border-rose-400 active:scale-95 transition" title="Подсказка">
           !
         </button>
-        <span class="text-[11px] font-semibold text-sky-100 bg-sky-950/80 px-2.5 py-1 rounded-xl backdrop-blur-xs border border-sky-800 hidden sm:inline-block">
-          Удерживайте карточку товара 1.5 сек для настроек цены и удаления
+        <span class="text-[11px] font-semibold text-sky-100 bg-sky-950/80 px-2.5 py-1 rounded-xl border border-sky-800 hidden sm:inline-block">
+          Удерживайте карточку товара или группы 1.4 сек для управления ценой и удалением
         </span>
       </div>
     </div>
 
-    <!-- ПРАВАЯ ОБЛАСТЬ: СТОЛЫ / ЧЕК ЗАКАЗА (ИЗ ФОТО 1) -->
+    <!-- ПРАВАЯ ОБЛАСТЬ: СТОЛЫ / ЧЕК ЗАКАЗА -->
     <aside id="sideOrderPanel" class="w-80 sm:w-96 md:w-[420px] bg-slate-100 text-slate-800 flex flex-col shrink-0 border-l border-slate-300 shadow-2xl transition-all duration-300">
       
-      <!-- Режим 1: Нет открытых столов (точно как на фото 1) -->
+      <!-- Состояние 1: Нет открытых столов -->
       <div id="noTablesState" class="flex-1 flex flex-col justify-between p-6">
-        <div>
-          <!-- Статистика столов вверху -->
-          <div class="space-y-1 border-b border-slate-200 pb-4">
-            <div class="text-sm font-bold text-slate-900 flex items-center justify-between">
-              <span>На столах:</span>
-              <span id="activeTablesCountBadge" class="font-mono text-base text-slate-900">0</span>
-            </div>
-            <div class="text-xs text-slate-500 flex items-center justify-between">
-              <span>Всего гостей:</span>
-              <span id="totalGuestsCountBadge" class="font-mono">0</span>
-            </div>
+        <div class="space-y-1 border-b border-slate-200 pb-4">
+          <div class="text-sm font-bold text-slate-900 flex items-center justify-between">
+            <span>На столах:</span>
+            <span id="activeTablesCountBadge" class="font-mono text-base text-slate-900">0</span>
+          </div>
+          <div class="text-xs text-slate-500 flex items-center justify-between">
+            <span>Всего гостей:</span>
+            <span id="totalGuestsCountBadge" class="font-mono">0</span>
           </div>
         </div>
 
-        <!-- Центральная надпись из фото 1 -->
         <div class="text-center py-16 space-y-2">
           <div class="w-14 h-14 mx-auto rounded-2xl bg-slate-200 flex items-center justify-center text-slate-400 mb-3">
             <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
@@ -238,7 +246,7 @@
           <p class="text-sm font-bold text-slate-700">Нет открытых столов.</p>
           <p class="text-xs text-slate-500">Создайте заказ на стол или начните быстрый заказ.</p>
           <div class="pt-4 flex flex-col gap-2">
-            <button onclick="startQuickOrder()" class="w-full py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl text-xs font-bold shadow-xs transition">
+            <button onclick="startQuickOrder()" class="w-full py-2.5 bg-emerald-500 hover:bg-emerald-600 active:scale-95 text-white rounded-xl text-xs font-bold shadow-xs transition">
               + Открыть быстрый чек
             </button>
             <button onclick="openTableGuestsModal()" class="w-full py-2.5 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 rounded-xl text-xs font-bold transition">
@@ -252,9 +260,8 @@
         </div>
       </div>
 
-      <!-- Режим 2: Активный заказ (Чек заказа) -->
+      <!-- Состояние 2: Активный чек -->
       <div id="activeOrderState" class="flex-1 flex flex-col hidden">
-        <!-- Шапка открытого чека -->
         <div class="p-3.5 bg-white border-b border-slate-200 flex items-center justify-between shadow-xs">
           <div>
             <div class="flex items-center gap-2">
@@ -263,19 +270,19 @@
                 Быстрый заказ
               </span>
             </div>
-            <p class="text-[11px] text-slate-400">Свайп влево — удалить / скидка</p>
+            <p class="text-[11px] text-slate-400">Свайп по строке влево — скидка / удаление</p>
           </div>
           <button onclick="clearCurrentCart()" class="text-xs font-bold text-rose-500 hover:text-rose-600 bg-rose-50 hover:bg-rose-100 px-2.5 py-1.5 rounded-xl border border-rose-200 transition">
             Сброс
           </button>
         </div>
 
-        <!-- Список строк позиций в чеке -->
+        <!-- Список позиций -->
         <div id="cartItemsList" class="flex-1 overflow-y-auto custom-scroll-dark p-3 space-y-2 bg-slate-50/70">
-          <!-- Рендер позиций -->
+          <!-- Строки чека -->
         </div>
 
-        <!-- Подвал чека: суммы, скидка и кнопки оплат -->
+        <!-- Подвал чека с расчетами и оплатой -->
         <div class="p-4 bg-white border-t border-slate-200 space-y-3 shadow-lg">
           <div class="space-y-1 text-xs">
             <div class="flex justify-between text-slate-500">
@@ -296,13 +303,11 @@
             </div>
           </div>
 
-          <!-- Кнопка скидки на чек -->
           <button onclick="openOrderDiscountModal()" class="w-full py-2 bg-slate-100 hover:bg-slate-200 active:scale-[0.99] border border-slate-300 text-slate-800 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition">
             <svg class="w-3.5 h-3.5 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/></svg>
             Скидка на весь чек (<span id="cartDiscountPercentLabel">0%</span>)
           </button>
 
-          <!-- Выбор способа оплаты (как в ТЗ) -->
           <div class="grid grid-cols-2 gap-2 pt-1">
             <button onclick="startCheckout('CASH')" class="py-3 bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white rounded-2xl font-bold flex flex-col items-center justify-center shadow-md shadow-emerald-700/20 transition">
               <span class="text-xs sm:text-sm">Наличные</span>
@@ -315,22 +320,19 @@
           </div>
         </div>
       </div>
-
     </aside>
   </main>
 
   <!-- ======================================================== -->
-  <!-- 4. МОДАЛЬНОЕ ОКНО: «УКАЖИТЕ КОЛИЧЕСТВО ГОСТЕЙ» (ИЗ ФОТО 2)-->
+  <!-- 4. МОДАЛЬНОЕ ОКНО: «УКАЖИТЕ КОЛИЧЕСТВО ГОСТЕЙ»          -->
   <!-- ======================================================== -->
   <div id="tableGuestsModal" class="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center hidden z-50 p-4">
     <div class="bg-white rounded-3xl w-full max-w-sm overflow-hidden shadow-2xl border border-slate-200 animate-pop flex flex-col">
-      <!-- Заголовок модалки -->
       <div class="p-4 border-b border-slate-200 flex items-center justify-between bg-slate-50">
         <h3 class="text-sm font-bold text-slate-800">Укажите количество гостей</h3>
         <button onclick="closeModal('tableGuestsModal')" class="w-8 h-8 rounded-full bg-slate-200 hover:bg-slate-300 text-slate-600 font-bold flex items-center justify-center transition">✕</button>
       </div>
 
-      <!-- Выбор стола -->
       <div class="p-3 bg-slate-100 border-b border-slate-200 flex items-center justify-between text-xs">
         <span class="font-bold text-slate-600">Стол:</span>
         <select id="selectedTableDropdown" class="bg-white border border-slate-300 rounded-xl px-3 py-1 font-bold text-slate-800 focus:outline-none">
@@ -343,14 +345,12 @@
         </select>
       </div>
 
-      <!-- Список выбора гостей: Гостей 1 .. Гостей 9 (как на фото) -->
       <div id="guestsOptionsList" class="p-3 space-y-1.5 max-h-64 overflow-y-auto custom-scroll-dark">
         <!-- Генерируется из JS -->
       </div>
 
-      <!-- Большая зеленая кнопка «ОТКРЫТЬ ЗАКАЗ» (точно из фото 2) -->
       <div class="p-3 bg-slate-50 border-t border-slate-200">
-        <button onclick="confirmOpenTableOrder()" class="w-full py-3.5 bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white font-extrabold text-sm rounded-2xl shadow-lg shadow-emerald-600/30 tracking-wider transition uppercase">
+        <button onclick="confirmOpenTableOrder()" class="w-full py-3.5 bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white font-extrabold text-sm rounded-2xl shadow-lg tracking-wider transition uppercase">
           ОТКРЫТЬ ЗАКАЗ
         </button>
       </div>
@@ -358,7 +358,7 @@
   </div>
 
   <!-- ======================================================== -->
-  <!-- 5. МОДАЛЬНОЕ ОКНО: НАСТРОЙКА, КЛАСТЕРИЗАЦИЯ, ЦЕНА, УДАЛЕНИЕ -->
+  <!-- 5. МОДАЛЬНОЕ ОКНО: ТОВАР (СОЗДАНИЕ / ИЗМЕНЕНИЕ ЦЕНЫ)    -->
   <!-- ======================================================== -->
   <div id="productEditModal" class="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center hidden z-50 p-4">
     <div class="bg-white rounded-3xl w-full max-w-md p-6 shadow-2xl border border-slate-200 animate-pop space-y-4">
@@ -388,9 +388,9 @@
         </div>
 
         <div>
-          <label class="text-[11px] font-bold text-slate-500 uppercase">Группа / Кластеризация</label>
+          <label class="text-[11px] font-bold text-slate-500 uppercase">Родительская группа / Вкладка</label>
           <select id="editProdCategorySelect" class="w-full mt-1 p-3 bg-slate-50 border border-slate-300 rounded-2xl text-xs font-bold text-slate-900 focus:outline-none focus:border-sky-500">
-            <!-- Динамически заполняются группы -->
+            <!-- Заполняется динамически -->
           </select>
         </div>
       </div>
@@ -411,7 +411,60 @@
   </div>
 
   <!-- ======================================================== -->
-  <!-- 6. МОДАЛКА: СКИДКА НА ПОЗИЦИЮ (ПРИ СВАЙПЕ ВЛЕВО)          -->
+  <!-- 6. МОДАЛКА: СОЗДАНИЕ И РЕДАКТИРОВАНИЕ ВКЛАДКИ / ГРУППЫ  -->
+  <!-- ======================================================== -->
+  <div id="groupEditModal" class="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center hidden z-50 p-4">
+    <div class="bg-white rounded-3xl w-full max-w-md p-6 shadow-2xl border border-slate-200 animate-pop space-y-4">
+      <div class="flex items-center justify-between border-b border-slate-200 pb-3">
+        <div>
+          <h3 id="groupEditModalTitle" class="text-base font-bold text-slate-900">Новая вкладка / Группа</h3>
+          <p id="groupEditModalSubtitle" class="text-xs text-slate-500">Настройка категории каталога</p>
+        </div>
+        <button onclick="closeGroupEditModal()" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold flex items-center justify-center transition">✕</button>
+      </div>
+
+      <div class="space-y-3 text-slate-800">
+        <div>
+          <label class="text-[11px] font-bold text-slate-500 uppercase">Название группы / вкладки</label>
+          <input id="editGroupNameInput" type="text" placeholder="например: Горячие напитки" class="w-full mt-1 p-3 bg-slate-50 border border-slate-300 rounded-2xl text-xs font-bold text-slate-900 focus:outline-none focus:border-sky-500">
+        </div>
+
+        <div>
+          <label class="text-[11px] font-bold text-slate-500 uppercase">Родительская группа</label>
+          <div id="groupParentDisplay" class="mt-1 p-3 bg-slate-100 border border-slate-200 rounded-2xl text-xs font-bold text-slate-700 flex items-center justify-between">
+            <span id="groupParentLabel">Без родительской группы (Корень)</span>
+            <span class="text-[10px] bg-slate-200 px-2 py-0.5 rounded text-slate-600 font-mono">автоматически</span>
+          </div>
+        </div>
+
+        <div>
+          <label class="text-[11px] font-bold text-slate-500 uppercase">Цвет плитки</label>
+          <div id="groupColorPalette" class="flex gap-2 mt-1.5 flex-wrap"></div>
+        </div>
+
+        <div>
+          <label class="text-[11px] font-bold text-slate-500 uppercase">Иконка / Эмодзи</label>
+          <div id="groupIconPalette" class="flex gap-2 mt-1.5 flex-wrap"></div>
+        </div>
+      </div>
+
+      <div class="flex gap-2 pt-3 border-t border-slate-200">
+        <button id="deleteGroupBtn" onclick="deleteCurrentGroup()" class="px-4 py-3 bg-rose-50 text-rose-600 hover:bg-rose-100 rounded-2xl text-xs font-bold transition hidden">
+          Удалить группу
+        </button>
+        <div class="flex-1"></div>
+        <button onclick="closeGroupEditModal()" class="px-4 py-3 text-slate-500 hover:bg-slate-100 rounded-2xl text-xs font-semibold">
+          Отмена
+        </button>
+        <button onclick="saveCurrentGroup()" class="px-5 py-3 bg-sky-600 hover:bg-sky-500 text-white rounded-2xl text-xs font-bold shadow-md shadow-sky-600/30 transition">
+          Сохранить
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======================================================== -->
+  <!-- 7. МОДАЛКА: СКИДКА НА ПОЗИЦИЮ (ПРИ СВАЙПЕ ВЛЕВО)        -->
   <!-- ======================================================== -->
   <div id="itemDiscountModal" class="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center hidden z-50 p-4">
     <div class="bg-white rounded-3xl w-full max-w-sm p-6 shadow-2xl border border-slate-200 animate-pop space-y-4">
@@ -444,7 +497,7 @@
   </div>
 
   <!-- ======================================================== -->
-  <!-- 7. МОДАЛКА: СКИДКА НА ВЕСЬ ЧЕК                            -->
+  <!-- 8. МОДАЛКА: СКИДКА НА ВЕСЬ ЧЕК                          -->
   <!-- ======================================================== -->
   <div id="orderDiscountModal" class="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center hidden z-50 p-4">
     <div class="bg-white rounded-3xl w-full max-w-sm p-6 shadow-2xl border border-slate-200 animate-pop space-y-4">
@@ -477,7 +530,7 @@
   </div>
 
   <!-- ======================================================== -->
-  <!-- 8. МОДАЛКА ОПЛАТЫ (НАЛИЧНЫЕ СО СДАЧЕЙ / КАРТА / СБП)       -->
+  <!-- 9. МОДАЛКА ОПЛАТЫ (НАЛИЧНЫЕ СО СДАЧЕЙ / КАРТА / СБП)     -->
   <!-- ======================================================== -->
   <div id="paymentModal" class="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center hidden z-50 p-4">
     <div class="bg-white rounded-3xl w-full max-w-md p-6 shadow-2xl border border-slate-200 animate-pop space-y-4">
@@ -501,9 +554,7 @@
             class="w-full mt-1 p-3.5 bg-slate-50 border border-slate-300 rounded-2xl text-2xl font-black font-mono text-slate-900 focus:outline-none focus:border-emerald-500">
         </div>
 
-        <div id="quickBanknotesRow" class="flex gap-2 flex-wrap">
-          <!-- Быстрые купюры -->
-        </div>
+        <div id="quickBanknotesRow" class="flex gap-2 flex-wrap"></div>
 
         <div class="p-3.5 bg-emerald-50 rounded-2xl border border-emerald-200 flex justify-between items-center">
           <span class="text-xs font-bold text-emerald-800">Сдача клиенту:</span>
@@ -513,15 +564,15 @@
 
       <!-- Содержимое для банковского терминала / СБП -->
       <div id="cardPayBox" class="space-y-4 text-center py-2 hidden">
-        <div class="w-36 h-36 mx-auto bg-slate-900 p-2 rounded-2xl flex items-center justify-center shadow-md">
+        <div class="w-32 h-32 mx-auto bg-slate-900 p-2 rounded-2xl flex items-center justify-center shadow-md">
           <svg class="w-full h-full text-white" viewBox="0 0 100 100" fill="currentColor">
             <rect width="100" height="100" fill="white"/>
             <path d="M10 10h30v30H10zM15 15v20h20V15zm45-5h30v30H60zM65 15v20h20V15zm-55 45h30v30H10zM15 65v20h20V65zm45 0h10v10H60zm20 0h10v10H80zm-10 10h10v10H70zm10 10h10v10H80zm-20 0h10v10H60zM45 10h10v10H45zm0 20h10v10H45zm0 20h10v10H45zm0 20h10v10H45zm0 20h10v10H45zM20 20h10v10H20zm50 0h10v10H70zm-50 50h10v10H20z" />
           </svg>
         </div>
         <div>
-          <p class="text-xs font-bold text-slate-800">Приложите карту к терминалу или отсканируйте QR</p>
-          <p class="text-[11px] text-slate-500 mt-0.5">СБП подключена к расчетному счету заведения</p>
+          <p class="text-xs font-bold text-slate-800">Приложите карту или отсканируйте QR</p>
+          <p class="text-[11px] text-slate-500 mt-0.5">Интеграция с банковским терминалом и СБП активна</p>
         </div>
       </div>
 
@@ -537,38 +588,258 @@
   </div>
 
   <!-- ======================================================== -->
-  <!-- 9. ПОЛНОРАЗМЕРНЫЙ ЦЕНТР ОТЧЕТОВ, Z-ОТЧЕТОВ И АНАЛИТИКИ   -->
+  <!-- 10. МОДАЛЬНОЕ ОКНО ПЕРЕСМЕНКИ (ХЕНДОВЕР / 14:00)         -->
+  <!-- ======================================================== -->
+  <div id="handoverModal" class="fixed inset-0 bg-black/70 backdrop-blur-xs flex items-center justify-center hidden z-50 p-4">
+    <div class="bg-white rounded-3xl w-full max-w-lg p-6 shadow-2xl border border-slate-200 animate-pop space-y-4">
+      <div class="flex items-center justify-between border-b border-slate-200 pb-3">
+        <div class="flex items-center gap-2.5">
+          <div class="w-10 h-10 rounded-2xl bg-amber-100 text-amber-600 flex items-center justify-center font-bold text-xl">
+            🕒
+          </div>
+          <div>
+            <h3 class="text-base font-extrabold text-slate-900">Пересменка кассиров</h3>
+            <p class="text-xs text-slate-500">Сверка кассы и передача смены новому сотруднику</p>
+          </div>
+        </div>
+        <button onclick="closeModal('handoverModal')" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold flex items-center justify-center transition">✕</button>
+      </div>
+
+      <!-- Карточка расчетных данных -->
+      <div class="grid grid-cols-2 gap-3 text-xs">
+        <div class="p-3 bg-slate-50 rounded-2xl border border-slate-200">
+          <span class="text-slate-400 block">Расчетная наличка в ящике:</span>
+          <span id="hoExpectedCashDisplay" class="text-base font-black font-mono text-slate-900">0 ₽</span>
+        </div>
+        <div class="p-3 bg-slate-50 rounded-2xl border border-slate-200">
+          <span class="text-slate-400 block">Безнал за текущую смену:</span>
+          <span id="hoCardSalesDisplay" class="text-base font-black font-mono text-sky-700">0 ₽</span>
+        </div>
+      </div>
+
+      <!-- Ввод фактических наличных -->
+      <div class="space-y-3">
+        <div>
+          <label class="text-[11px] font-bold text-slate-600 uppercase flex items-center justify-between">
+            <span>Фактическая сумма налички в кассе (пересчет):</span>
+            <span class="text-sky-600 font-normal">Посчитайте купюры</span>
+          </label>
+          <input 
+            id="hoActualCashInput" 
+            type="number" 
+            step="any"
+            placeholder="0"
+            oninput="recalcHandoverVariance()" 
+            class="w-full mt-1.5 p-3.5 bg-slate-50 border-2 border-slate-300 rounded-2xl text-2xl font-black font-mono text-slate-900 focus:border-amber-500 focus:outline-none">
+        </div>
+
+        <!-- Плашка выявления расхождения: недосдача / излишек -->
+        <div id="hoVarianceBox" class="p-4 rounded-2xl border flex items-center justify-between bg-slate-50 border-slate-200">
+          <div>
+            <span id="hoVarianceStatusText" class="text-xs font-bold block text-slate-700">Сверка кассы</span>
+            <p id="hoVarianceHintText" class="text-[11px] text-slate-500">Введите фактическую сумму для проверки недостачи</p>
+          </div>
+          <div id="hoVarianceDiffBadge" class="text-lg font-black font-mono text-slate-800">
+            0 ₽
+          </div>
+        </div>
+
+        <!-- Сотрудники: кто сдал / кто принял -->
+        <div class="grid grid-cols-2 gap-3 text-xs">
+          <div>
+            <label class="text-[11px] font-bold text-slate-500 uppercase">Сдал смену:</label>
+            <input id="hoOutgoingCashier" type="text" class="w-full mt-1 p-2.5 bg-slate-50 border border-slate-300 rounded-xl font-bold text-slate-900">
+          </div>
+          <div>
+            <label class="text-[11px] font-bold text-slate-500 uppercase">Принял смену:</label>
+            <input id="hoIncomingCashier" type="text" placeholder="Имя нового кассира" class="w-full mt-1 p-2.5 bg-slate-50 border border-slate-300 rounded-xl font-bold text-slate-900">
+          </div>
+        </div>
+
+        <div>
+          <label class="text-[11px] font-bold text-slate-500 uppercase">Комментарий к пересменке:</label>
+          <input id="hoCommentInput" type="text" placeholder="например: передано 2000 мелкими купюрами" class="w-full mt-1 p-2 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-900">
+        </div>
+      </div>
+
+      <div class="flex gap-2 pt-2 border-t border-slate-200">
+        <button onclick="closeModal('handoverModal')" class="flex-1 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-2xl text-xs font-bold transition">
+          Отложить
+        </button>
+        <button onclick="confirmSubmitHandover()" class="flex-1 py-3 bg-amber-500 hover:bg-amber-400 text-slate-950 rounded-2xl text-xs font-extrabold shadow-lg shadow-amber-500/20 transition">
+          Зафиксировать пересменку
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======================================================== -->
+  <!-- 11. ПОЛНОРАЗМЕРНЫЙ ЦЕНТР ОТЧЕТОВ, Z-ОТЧЕТОВ И АНАЛИТИКИ -->
   <!-- ======================================================== -->
   <div id="reportsModal" class="fixed inset-0 bg-black/75 backdrop-blur-sm flex items-center justify-center hidden z-50 p-4">
-    <div class="bg-slate-900 border border-slate-800 rounded-3xl w-full max-w-5xl h-[85vh] flex flex-col shadow-2xl overflow-hidden animate-pop">
+    <div class="bg-slate-900 border border-slate-800 rounded-3xl w-full max-w-5xl h-[88vh] flex flex-col shadow-2xl overflow-hidden animate-pop">
       
-      <!-- Шапка модуля отчетов -->
+      <!-- Шапка модуля -->
       <div class="p-4 bg-slate-950 border-b border-slate-800 flex items-center justify-between shrink-0">
         <div class="flex items-center gap-3">
           <div class="w-9 h-9 rounded-xl bg-sky-600 flex items-center justify-center font-black text-white">
             Q
           </div>
           <div>
-            <h3 class="text-sm font-extrabold text-white">Панель управления смены & Аналитика</h3>
+            <h3 class="text-sm font-extrabold text-white">Панель управления & Логи операций</h3>
             <p class="text-[11px] text-slate-400">Смена #<span id="repShiftNumber">1</span> • Открыта: <span id="repShiftOpenTime">12:00</span></p>
           </div>
         </div>
 
-        <!-- Вкладки внутри отчетов -->
-      <div class="flex items-center bg-slate-900 p-1 rounded-2xl border border-slate-800">
-        <button onclick="switchReportsSubTab('analytics')" id="repTabBtn_analytics" class="px-4 py-1.5 rounded-xl text-xs font-bold transition bg-sky-600 text-white">
-          Графики & KPI
-        </button>
-        <button onclick="switchReportsSubTab('shift')" id="repTabBtn_shift" class="px-4 py-1.5 rounded-xl text-xs font-bold transition text-slate-400 hover:text-white">
-          Смена & Z-отчет
-        </button>
-        <button onclick="switchReportsSubTab('journal')" id="repTabBtn_journal" class="px-4 py-1.5 rounded-xl text-xs font-bold transition text-slate-400 hover:text-white">
-          Журнал чеков
-        </button>
-        <button onclick="switchReportsSubTab('manage')" id="repTabBtn_manage" class="px-4 py-1.5 rounded-xl text-xs font-bold transition text-slate-400 hover:text-white">
-          Настройки & База
+        <!-- Вкладки внутри модуля -->
+        <div class="flex items-center bg-slate-900 p-1 rounded-2xl border border-slate-800 overflow-x-auto">
+          <button onclick="switchReportsSubTab('analytics')" id="repTabBtn_analytics" class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition bg-sky-600 text-white">
+            Графики & KPI
+          </button>
+          <button onclick="switchReportsSubTab('shift')" id="repTabBtn_shift" class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition text-slate-400 hover:text-white">
+            Смена & Z-отчет
+          </button>
+          <button onclick="switchReportsSubTab('journal')" id="repTabBtn_journal" class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition text-slate-400 hover:text-white">
+            Журнал чеков
+          </button>
+          <button onclick="switchReportsSubTab('auditlog')" id="repTabBtn_auditlog" class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition text-slate-400 hover:text-white">
+            Лог операций
+          </button>
+          <button onclick="switchReportsSubTab('manage')" id="repTabBtn_manage" class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition text-slate-400 hover:text-white">
+            База & Каталог
+          </button>
+        </div>
+
+        <button onclick="closeModal('reportsModal')" class="w-8 h-8 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold flex items-center justify-center ml-2 transition">
+          ✕
         </button>
       </div>
+
+      <!-- Контент вкладки 1: Графики & KPI -->
+      <div id="repSection_analytics" class="flex-1 p-5 overflow-y-auto custom-scroll space-y-5">
+        <!-- Карточки KPI -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <div class="bg-slate-950 border border-slate-800 p-3.5 rounded-2xl">
+            <span class="text-[10px] font-bold text-slate-400 uppercase">Выручка за смену</span>
+            <div id="kpiTotalRevenue" class="text-xl font-black text-white font-mono mt-1">0 ₽</div>
+          </div>
+          <div class="bg-slate-950 border border-slate-800 p-3.5 rounded-2xl">
+            <span class="text-[10px] font-bold text-slate-400 uppercase">Пробито чеков</span>
+            <div id="kpiReceiptsCount" class="text-xl font-black text-sky-400 font-mono mt-1">0</div>
+          </div>
+          <div class="bg-slate-950 border border-slate-800 p-3.5 rounded-2xl">
+            <span class="text-[10px] font-bold text-slate-400 uppercase">Средний чек</span>
+            <div id="kpiAvgTicket" class="text-xl font-black text-emerald-400 font-mono mt-1">0 ₽</div>
+          </div>
+          <div class="bg-slate-950 border border-slate-800 p-3.5 rounded-2xl">
+            <span class="text-[10px] font-bold text-slate-400 uppercase">Скидки гостям</span>
+            <div id="kpiTotalDiscounts" class="text-xl font-black text-amber-400 font-mono mt-1">0 ₽</div>
+          </div>
+        </div>
+
+        <!-- Сетка диаграмм Chart.js -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="bg-slate-950 border border-slate-800 p-4 rounded-2xl">
+            <h4 class="text-xs font-bold text-slate-300 uppercase mb-3 flex items-center justify-between">
+              <span>Продажи по часам</span>
+              <span class="text-[10px] text-slate-500 font-normal">Смена #<span class="repCurrShiftNum">1</span></span>
+            </h4>
+            <div class="h-48 relative">
+              <canvas id="chartHourlySales"></canvas>
+            </div>
+          </div>
+
+          <div class="bg-slate-950 border border-slate-800 p-4 rounded-2xl">
+            <h4 class="text-xs font-bold text-slate-300 uppercase mb-3">Оплата: Наличные vs Безнал</h4>
+            <div class="h-48 relative flex items-center justify-center">
+              <canvas id="chartPaymentSplit"></canvas>
+            </div>
+          </div>
+
+          <div class="bg-slate-950 border border-slate-800 p-4 rounded-2xl">
+            <h4 class="text-xs font-bold text-slate-300 uppercase mb-3">Структура по категориям</h4>
+            <div class="h-48 relative flex items-center justify-center">
+              <canvas id="chartCategorySales"></canvas>
+            </div>
+          </div>
+
+          <div class="bg-slate-950 border border-slate-800 p-4 rounded-2xl">
+            <h4 class="text-xs font-bold text-slate-300 uppercase mb-3">Топ 5 проданных позиций</h4>
+            <div class="h-48 relative">
+              <canvas id="chartTopItems"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Контент вкладки 2: Смена & Z-отчет (Кассовая дисциплина) -->
+      <div id="repSection_shift" class="flex-1 p-5 overflow-y-auto custom-scroll space-y-4 hidden">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          
+          <!-- Денежный ящик -->
+          <div class="bg-slate-950 border border-slate-800 p-4 rounded-2xl space-y-3">
+            <h4 class="text-xs font-bold uppercase text-slate-400">Денежный ящик</h4>
+            <div>
+              <span class="text-xs text-slate-400">Наличные в кассе:</span>
+              <div id="shiftDrawerCashDisplay" class="text-2xl font-black font-mono text-emerald-400">0 ₽</div>
+            </div>
+            <div class="flex gap-2">
+              <button onclick="promptCashMovement('IN')" class="flex-1 py-2 bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-300 border border-emerald-500/40 rounded-xl text-xs font-bold transition">
+                + Внесение
+              </button>
+              <button onclick="promptCashMovement('OUT')" class="flex-1 py-2 bg-rose-600/20 hover:bg-rose-600/30 text-rose-300 border border-rose-500/40 rounded-xl text-xs font-bold transition">
+                - Изъятие
+              </button>
+            </div>
+          </div>
+
+          <!-- Безналичная выручка -->
+          <div class="bg-slate-950 border border-slate-800 p-4 rounded-2xl space-y-3">
+            <h4 class="text-xs font-bold uppercase text-slate-400">Эквайринг & СБП</h4>
+            <div>
+              <span class="text-xs text-slate-400">По терминалу:</span>
+              <div id="shiftCardRevenueDisplay" class="text-2xl font-black font-mono text-sky-400">0 ₽</div>
+            </div>
+            <div class="text-[11px] text-slate-500">
+              Сверка итогов с банком производится автоматически при Z-отчете.
+            </div>
+          </div>
+
+          <!-- Сверка пересменки -->
+          <div class="bg-slate-950 border border-amber-500/30 p-4 rounded-2xl space-y-3">
+            <h4 class="text-xs font-bold uppercase text-amber-300 flex items-center justify-between">
+              <span>Пересменка</span>
+              <span>14:00</span>
+            </h4>
+            <p class="text-[11px] text-slate-400">
+              Посчитайте фактическую наличность, проверьте недосдачу или излишек кассы и передайте смену.
+            </p>
+            <button onclick="closeModal('reportsModal'); openHandoverModal();" class="w-full py-2.5 bg-amber-500 hover:bg-amber-400 text-slate-950 rounded-xl text-xs font-bold transition">
+              Провести пересменку
+            </button>
+          </div>
+        </div>
+
+        <!-- Блок фискальных отчетов -->
+        <div class="bg-slate-950 border border-slate-800 p-5 rounded-2xl space-y-4">
+          <h4 class="text-sm font-bold text-white flex items-center gap-2">
+            <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+            Фискальные отчеты ККТ
+          </h4>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <button onclick="generatePrintReport('X')" class="p-3.5 bg-slate-900 hover:bg-slate-800 border border-slate-700 rounded-xl text-left transition">
+              <span class="text-xs font-bold text-white block">X-Отчет (Сверка без гашения)</span>
+              <span class="text-[10px] text-slate-400">Печать промежуточных итогов без закрытия смены</span>
+            </button>
+
+            <button onclick="initCloseShiftProcess()" class="p-3.5 bg-rose-950/40 hover:bg-rose-900/50 border border-rose-500/40 rounded-xl text-left transition">
+              <span class="text-xs font-bold text-rose-300 block">Z-Отчет (Закрытие смены с пересчетом)</span>
+              <span class="text-[10px] text-rose-400/80">Проверка недостачи/излишка, печать чека и гашение</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
       <!-- Контент вкладки 3: Журнал чеков -->
       <div id="repSection_journal" class="flex-1 p-5 overflow-y-auto custom-scroll hidden">
         <h4 class="text-xs font-bold uppercase text-slate-300 mb-3">Чеки текущей смены</h4>
@@ -585,47 +856,66 @@
                 <th class="py-2 px-3 text-center">Чек</th>
               </tr>
             </thead>
-            <tbody id="journalTableBody" class="divide-y divide-slate-800 font-mono">
-              <!-- Заполняется чеками -->
-            </tbody>
+            <tbody id="journalTableBody" class="divide-y divide-slate-800 font-mono"></tbody>
           </table>
         </div>
       </div>
 
-      <!-- Контент вкладки 4: Настройки и управление базой данных -->
+      <!-- Контент вкладки 4: Лог операций (Аудит, расхождения и действия) -->
+      <div id="repSection_auditlog" class="flex-1 p-5 overflow-y-auto custom-scroll space-y-4 hidden">
+        <div class="flex items-center justify-between flex-wrap gap-2">
+          <div>
+            <h4 class="text-xs font-bold uppercase text-slate-300">Журнал всех операций и событий</h4>
+            <p class="text-[11px] text-slate-500">Фиксация пересменок, расхождений кассы, чеков и смен</p>
+          </div>
+
+          <!-- Фильтр по типам событий -->
+          <div class="flex items-center gap-1 bg-slate-950 p-1 rounded-xl border border-slate-800 text-xs">
+            <button onclick="filterAuditLogs('ALL')" id="auditFilter_ALL" class="px-2.5 py-1 rounded-lg font-bold bg-sky-600 text-white">Все</button>
+            <button onclick="filterAuditLogs('HANDOVER')" id="auditFilter_HANDOVER" class="px-2.5 py-1 rounded-lg font-bold text-slate-400 hover:text-white">Пересменка</button>
+            <button onclick="filterAuditLogs('CHECK')" id="auditFilter_CHECK" class="px-2.5 py-1 rounded-lg font-bold text-slate-400 hover:text-white">Чеки</button>
+            <button onclick="filterAuditLogs('CASH')" id="auditFilter_CASH" class="px-2.5 py-1 rounded-lg font-bold text-slate-400 hover:text-white">Касса</button>
+            <button onclick="filterAuditLogs('SHIFT')" id="auditFilter_SHIFT" class="px-2.5 py-1 rounded-lg font-bold text-slate-400 hover:text-white">Смены / Z</button>
+          </div>
+        </div>
+
+        <div class="space-y-2" id="auditTimelineContainer">
+          <!-- Заполняется событиями -->
+        </div>
+      </div>
+
+      <!-- Контент вкладки 5: Настройки & База -->
       <div id="repSection_manage" class="flex-1 p-5 overflow-y-auto custom-scroll space-y-4 hidden">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <!-- Блок создания структуры -->
           <div class="bg-slate-950 border border-slate-800 p-5 rounded-2xl space-y-3">
             <h4 class="text-sm font-bold text-white flex items-center gap-2">
               <svg class="w-4 h-4 text-sky-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
-              Быстрое создание структуры
+              Создание структуры каталога
             </h4>
             <p class="text-xs text-slate-400">
-              Вы можете создавать вкладки (группы товаров) и отдельные блюда. Созданные в группе товары привязываются к ней автоматически.
+              Если товар создан внутри группы, он автоматически привязывается к ней. В корневом каталоге позиции создаются без группы.
             </p>
             <div class="flex gap-2 pt-2">
               <button onclick="closeModal('reportsModal'); openGroupEditModal();" class="flex-1 py-3 bg-sky-600 hover:bg-sky-500 text-white rounded-xl text-xs font-bold transition">
-                + Новая вкладка / Группа
+                + Новая вкладка
               </button>
               <button onclick="closeModal('reportsModal'); openProductEditModal();" class="flex-1 py-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold transition">
-                + Новая позиция / Товар
+                + Новый товар
               </button>
             </div>
           </div>
 
-          <!-- Блок сброса и очистки данных -->
           <div class="bg-slate-950 border border-rose-500/30 p-5 rounded-2xl space-y-3">
             <h4 class="text-sm font-bold text-rose-300 flex items-center gap-2">
               <svg class="w-4 h-4 text-rose-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-              Очистка и сброс данных
+              Сброс и очистка базы
             </h4>
             <p class="text-xs text-slate-400">
-              Удалить все товары, группы и историю чеков для чистого запуска кассы с нуля.
+              Очистить все созданные группы, товары, историю логов и чеков для запуска кассы с абсолютного нуля.
             </p>
             <div class="pt-2">
-              <button onclick="confirmWipeAllData()" class="w-full py-3 bg-rose-600/90 hover:bg-rose-600 text-white rounded-xl text-xs font-bold shadow-lg shadow-rose-950/40 transition">
-                Удалить все данные (Очистить базу полностью)
+              <button onclick="confirmWipeAllData()" class="w-full py-3 bg-rose-600 hover:bg-rose-500 text-white rounded-xl text-xs font-bold shadow-lg shadow-rose-950/40 transition">
+                Очистить базу полностью (Сброс)
               </button>
             </div>
           </div>
@@ -635,70 +925,98 @@
   </div>
 
   <!-- ======================================================== -->
-  <!-- МОДАЛЬНОЕ ОКНО: СОЗДАНИЕ И РЕДАКТИРОВАНИЕ ВКЛАДКИ / ГРУППЫ -->
+  <!-- 12. МОДАЛКА ЗАКРЫТИЯ СМЕНЫ (Z-ОТЧЕТ С ПЕРЕСЧЕТОМ КАССЫ)  -->
   <!-- ======================================================== -->
-  <div id="groupEditModal" class="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center hidden z-50 p-4">
+  <div id="shiftCloseModal" class="fixed inset-0 bg-black/75 backdrop-blur-xs flex items-center justify-center hidden z-50 p-4">
     <div class="bg-white rounded-3xl w-full max-w-md p-6 shadow-2xl border border-slate-200 animate-pop space-y-4">
       <div class="flex items-center justify-between border-b border-slate-200 pb-3">
         <div>
-          <h3 id="groupEditModalTitle" class="text-base font-bold text-slate-900">Новая вкладка / Группа</h3>
-          <p id="groupEditModalSubtitle" class="text-xs text-slate-500">Настройка категории каталога</p>
+          <h3 class="text-base font-extrabold text-slate-900">Закрытие смены (Z-отчет)</h3>
+          <p class="text-xs text-slate-500">Контрольный пересчет наличности перед гашением</p>
         </div>
-        <button onclick="closeGroupEditModal()" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold flex items-center justify-center transition">✕</button>
+        <button onclick="closeModal('shiftCloseModal')" class="text-slate-400 hover:text-slate-700 font-bold">✕</button>
       </div>
 
-      <div class="space-y-3 text-slate-800">
-        <div>
-          <label class="text-[11px] font-bold text-slate-500 uppercase">Название группы / вкладки</label>
-          <input id="editGroupNameInput" type="text" placeholder="например: Горячие напитки" class="w-full mt-1 p-3 bg-slate-50 border border-slate-300 rounded-2xl text-xs font-bold text-slate-900 focus:outline-none focus:border-sky-500">
-        </div>
-
-        <div>
-          <label class="text-[11px] font-bold text-slate-500 uppercase">Родительская группа</label>
-          <div id="groupParentDisplay" class="mt-1 p-3 bg-slate-100 border border-slate-200 rounded-2xl text-xs font-bold text-slate-700 flex items-center justify-between">
-            <span id="groupParentLabel">Без родительской группы (Корень)</span>
-            <span class="text-[10px] bg-slate-200 px-2 py-0.5 rounded text-slate-600 font-mono">автоматически</span>
-          </div>
-        </div>
-
-        <div>
-          <label class="text-[11px] font-bold text-slate-500 uppercase">Цвет плитки</label>
-          <div id="groupColorPalette" class="flex gap-2 mt-1.5 flex-wrap">
-            <!-- Палитра цветов -->
-          </div>
-        </div>
-
-        <div>
-          <label class="text-[11px] font-bold text-slate-500 uppercase">Иконка / Эмодзи</label>
-          <div id="groupIconPalette" class="flex gap-2 mt-1.5 flex-wrap">
-            <!-- Подборка эмодзи -->
-          </div>
-        </div>
+      <div class="p-3 bg-slate-50 rounded-2xl border border-slate-200 text-xs flex justify-between items-center">
+        <span class="text-slate-500">Расчетная наличность в кассе:</span>
+        <span id="closeShiftExpectedCash" class="font-mono font-black text-sm text-slate-900">0 ₽</span>
       </div>
 
-      <div class="flex gap-2 pt-3 border-t border-slate-200">
-        <button id="deleteGroupBtn" onclick="deleteCurrentGroup()" class="px-4 py-3 bg-rose-50 text-rose-600 hover:bg-rose-100 rounded-2xl text-xs font-bold transition hidden">
-          Удалить группу
-        </button>
-        <div class="flex-1"></div>
-        <button onclick="closeGroupEditModal()" class="px-4 py-3 text-slate-500 hover:bg-slate-100 rounded-2xl text-xs font-semibold">
+      <div>
+        <label class="text-[11px] font-bold text-slate-600 uppercase">Фактическая наличность в ящике (₽):</label>
+        <input 
+          id="closeShiftActualCashInput" 
+          type="number" 
+          step="any" 
+          placeholder="0"
+          oninput="recalcShiftCloseVariance()"
+          class="w-full mt-1.5 p-3.5 bg-slate-50 border-2 border-slate-300 rounded-2xl text-2xl font-black font-mono text-slate-900 focus:border-rose-500 focus:outline-none">
+      </div>
+
+      <div id="closeShiftVarianceBox" class="p-3.5 rounded-2xl border flex justify-between items-center bg-slate-50 border-slate-200">
+        <span id="closeShiftVarianceLabel" class="text-xs font-bold text-slate-700">Расхождение:</span>
+        <span id="closeShiftVarianceDisplay" class="font-mono font-black text-sm text-slate-900">0 ₽</span>
+      </div>
+
+      <div class="flex gap-2 pt-2">
+        <button onclick="closeModal('shiftCloseModal')" class="flex-1 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-2xl text-xs font-bold transition">
           Отмена
         </button>
-        <button onclick="saveCurrentGroup()" class="px-5 py-3 bg-sky-600 hover:bg-sky-500 text-white rounded-2xl text-xs font-bold shadow-md shadow-sky-600/30 transition">
-          Сохранить
+        <button onclick="confirmExecuteZReport()" class="flex-1 py-3 bg-rose-600 hover:bg-rose-500 text-white rounded-2xl text-xs font-extrabold shadow-lg shadow-rose-600/30 transition">
+          Печать Z-отчета и закрыть
         </button>
       </div>
     </div>
   </div>
 
-  <!-- Всплывающие подсказки / тосты -->
+  <!-- ======================================================== -->
+  <!-- 13. МОДАЛКА ТЕРМОЧЕКА / ТЕРМОЛЕНТЫ                      -->
+  <!-- ======================================================== -->
+  <div id="receiptSlipModal" class="fixed inset-0 bg-black/70 backdrop-blur-xs flex items-center justify-center hidden z-50 p-4">
+    <div class="bg-slate-900 rounded-3xl p-5 max-w-sm w-full flex flex-col items-center animate-pop space-y-4">
+      <div id="receiptSlipPaper" class="receipt-paper w-full p-4 rounded-xl text-slate-900 font-mono-receipt text-xs border border-slate-200 max-h-[70vh] overflow-y-auto custom-scroll-dark">
+        <!-- Текст чека -->
+      </div>
+      <div class="flex gap-2 w-full">
+        <button onclick="closeModal('receiptSlipModal')" class="flex-1 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-xs font-bold transition">
+          Закрыть
+        </button>
+        <button onclick="printThermalPaper()" class="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold shadow-md transition">
+          Печать
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======================================================== -->
+  <!-- 14. КАСТОМНЫЙ ДИАЛОГ ПОДТВЕРЖДЕНИЯ (БЕЗ ALERT / CONFIRM) -->
+  <!-- ======================================================== -->
+  <div id="customDialogModal" class="fixed inset-0 bg-black/70 backdrop-blur-xs flex items-center justify-center hidden z-50 p-4">
+    <div class="bg-white rounded-3xl w-full max-w-sm p-6 shadow-2xl border border-slate-200 animate-pop space-y-4 text-slate-900 text-center">
+      <div class="w-12 h-12 mx-auto rounded-2xl bg-amber-100 text-amber-600 flex items-center justify-center font-bold text-2xl">
+        !
+      </div>
+      <h3 id="customDialogTitle" class="text-base font-extrabold text-slate-900">Подтвердите действие</h3>
+      <p id="customDialogMessage" class="text-xs text-slate-500"></p>
+
+      <div class="flex gap-2 pt-2">
+        <button onclick="handleCustomDialogResponse(false)" class="flex-1 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-2xl text-xs font-bold transition">
+          Отмена
+        </button>
+        <button onclick="handleCustomDialogResponse(true)" class="flex-1 py-3 bg-slate-900 hover:bg-slate-800 text-white rounded-2xl text-xs font-bold transition">
+          Подтвердить
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Всплывающие уведомления (Тосты) -->
   <div id="toastContainer" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
 
   <!-- ======================================================== -->
-  <!-- СКРИПТЫ, ДАННЫЕ И БИЗНЕС-ЛОГИКА                          -->
+  <!-- 15. СКРИПТЫ, ДАННЫЕ И БИЗНЕС-ЛОГИКА                      -->
   <!-- ======================================================== -->
   <script>
-    // Звуковой синтезатор без внешних URL
     let audioCtx = null;
     function playBeep(type) {
       try {
@@ -712,9 +1030,9 @@
 
         if (type === 'tap') {
           osc.type = 'sine';
-          osc.frequency.setValueAtTime(600, now);
-          osc.frequency.exponentialRampToValueAtTime(300, now + 0.04);
-          gain.gain.setValueAtTime(0.1, now);
+          osc.frequency.setValueAtTime(580, now);
+          osc.frequency.exponentialRampToValueAtTime(320, now + 0.04);
+          gain.gain.setValueAtTime(0.12, now);
           gain.gain.exponentialRampToValueAtTime(0.01, now + 0.04);
           osc.start(now);
           osc.stop(now + 0.04);
@@ -726,76 +1044,54 @@
           gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
           osc.start(now);
           osc.stop(now + 0.2);
+        } else if (type === 'alert') {
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(440, now);
+          osc.frequency.setValueAtTime(350, now + 0.1);
+          gain.gain.setValueAtTime(0.15, now);
+          gain.gain.exponentialRampToValueAtTime(0.01, now + 0.25);
+          osc.start(now);
+          osc.stop(now + 0.25);
         }
       } catch (e) {}
     }
 
-    // Каталог групп и цвета точно как на Фото 2
-    const CATEGORIES_CONFIG = [
-      { name: 'Напитки на основе эспрессо', color: '#e75b36', icon: '☕' },
-      { name: 'Авторские напитки "L"', color: '#e75b36', icon: '🥤' },
-      { name: 'Листовые чаи "L"', color: '#ea8c1c', icon: '🍵' },
-      { name: 'Авторские Чаи "L"', color: '#ea8c1c', icon: '🫖' },
-      { name: 'Смузи "L"', color: '#d946ef', icon: '🍹' },
-      { name: 'Милкшейк "L"', color: '#d946ef', icon: '🥛' },
-      { name: 'Холодные напитки "L"', color: '#0284c7', icon: '🧊' },
-      { name: 'Кофе на альтернативном', color: '#0284c7', icon: '🥛' },
-      { name: 'Закуски "L"', color: '#65a30d', icon: '🥪' },
-      { name: 'Десерты "L"', color: '#65a30d', icon: '🍰' },
-      { name: 'Добавки "L"', color: '#64748b', icon: '🍯' },
-      { name: 'Посуда «L»', color: '#64748b', icon: '☕' },
-      { name: 'Витрина "M"', color: '#e11d48', icon: '🍸' },
-      { name: 'Розница "L"', color: '#e11d48', icon: '🛍️' }
+    const PRESET_COLORS = [
+      '#e75b36', '#ea8c1c', '#d946ef', '#0284c7', 
+      '#65a30d', '#64748b', '#e11d48', '#8b5cf6', '#059669'
     ];
+    const PRESET_ICONS = ['☕', '🥤', '🍵', '🫖', '🍹', '🥛', '🧊', '🥪', '🍰', '🍯', '🍸', '🛍️', '🍽️', '🥐'];
 
-    // Товары по умолчанию
-    const DEFAULT_PRODUCTS = [
-      { id: 'p1', name: 'Эспрессо', price: 140, cost: 35, category: 'Напитки на основе эспрессо' },
-      { id: 'p2', name: 'Капучино 300мл', price: 220, cost: 55, category: 'Напитки на основе эспрессо' },
-      { id: 'p3', name: 'Латте Макиато 400мл', price: 260, cost: 65, category: 'Напитки на основе эспрессо' },
-      { id: 'p4', name: 'Флэт Уайт', price: 240, cost: 60, category: 'Напитки на основе эспрессо' },
-      { id: 'p5', name: 'Раф Цитрусовый "L"', price: 320, cost: 85, category: 'Авторские напитки "L"' },
-      { id: 'p6', name: 'Бамбл Апельсиновый', price: 340, cost: 95, category: 'Авторские напитки "L"' },
-      { id: 'p7', name: 'Чай Ассам 500мл', price: 190, cost: 30, category: 'Листовые чаи "L"' },
-      { id: 'p8', name: 'Чай Сенча Зеленый', price: 190, cost: 30, category: 'Листовые чаи "L"' },
-      { id: 'p9', name: 'Чай Облепиха-Розмарин', price: 290, cost: 75, category: 'Авторские Чаи "L"' },
-      { id: 'p10', name: 'Смузи Манго-Маракуйя', price: 310, cost: 90, category: 'Смузи "L"' },
-      { id: 'p11', name: 'Милкшейк Клубничный', price: 270, cost: 70, category: 'Милкшейк "L"' },
-      { id: 'p12', name: 'Лимонад Малина-Мята', price: 250, cost: 60, category: 'Холодные напитки "L"' },
-      { id: 'p13', name: 'Капучино на миндальном', price: 290, cost: 85, category: 'Кофе на альтернативном' },
-      { id: 'p14', name: 'Сэндвич с индейкой', price: 320, cost: 120, category: 'Закуски "L"' },
-      { id: 'p15', name: 'Круассан с миндалем', price: 210, cost: 70, category: 'Закуски "L"' },
-      { id: 'p16', name: 'Чизкейк Сан-Себастьян', price: 330, cost: 110, category: 'Десерты "L"' },
-      { id: 'p17', name: 'Сироп Соленая Карамель', price: 50, cost: 10, category: 'Добавки "L"' },
-      { id: 'p18', name: 'Фирменный стакан Tumbler', price: 850, cost: 400, category: 'Посуда «L»' },
-      { id: 'p19', name: 'Кофе в зернах 250г', price: 790, cost: 380, category: 'Розница "L"' }
-    ];
-
-    // Хранилище (Local Database)
-    let products = JSON.parse(localStorage.getItem('qcore_products')) || DEFAULT_PRODUCTS;
+    // Загрузка состояния из localStorage
+    let groups = JSON.parse(localStorage.getItem('qcore_groups')) || [];
+    let products = JSON.parse(localStorage.getItem('qcore_products')) || [];
+    let auditLogs = JSON.parse(localStorage.getItem('qcore_audit_logs')) || [];
     let currentShift = JSON.parse(localStorage.getItem('qcore_shift')) || {
       shiftNumber: 1,
       openedAt: new Date().toISOString(),
-      drawerCash: 3000,
+      drawerCash: 2500, // стартовый разменный фонд
+      initialCash: 2500,
       cardRevenue: 0,
       cashRevenue: 0,
       receipts: []
     };
 
-    // Состояние сессии
+    let activeCashierName = 'Идегел Дажый-оол';
     let currentZone = 'Зал';
-    let currentViewMode = 'GROUPS'; // 'GROUPS' | 'ITEMS'
-    let selectedCategoryName = null;
+    let currentPath = [{ id: null, name: 'МЕНЮ' }];
     let currentSearchTerm = '';
-    
-    // Заказ
-    let currentOrder = null; // null если столов нет, или { type: 'QUICK'|'TABLE', table: '...', guests: 2, items: [], discountPercent: 0 }
-    let openTables = []; // массив открытых столов
+    let currentOrder = null;
+    let openTables = [];
 
-    // Редактирование / Скидки
+    // Редактирование / Оплата
     let editingProductId = null;
+    let editingGroupId = null;
+    let selectedGroupColor = PRESET_COLORS[0];
+    let selectedGroupIcon = PRESET_ICONS[0];
     let targetCartItemUid = null;
     let activePaymentType = 'CASH';
+    let currentAuditFilter = 'ALL';
+    let handoverDismissedToday = false;
 
     // Графики
     let chartHourly = null;
@@ -804,17 +1100,60 @@
     let chartTop = null;
 
     function saveDB() {
+      localStorage.setItem('qcore_groups', JSON.stringify(groups));
       localStorage.setItem('qcore_products', JSON.stringify(products));
       localStorage.setItem('qcore_shift', JSON.stringify(currentShift));
+      localStorage.setItem('qcore_audit_logs', JSON.stringify(auditLogs));
     }
 
-    // Таймер часов
+    function recordAuditLog(type, title, description, badgeType = 'info') {
+      const entry = {
+        id: 'log_' + Date.now() + Math.random().toString(36).substr(2, 4),
+        timestamp: new Date().toISOString(),
+        shiftNumber: currentShift.shiftNumber,
+        cashier: activeCashierName,
+        type, // 'HANDOVER', 'CHECK', 'CASH', 'SHIFT', 'CATALOG'
+        title,
+        description,
+        badgeType // 'success', 'warning', 'danger', 'info'
+      };
+      auditLogs.unshift(entry);
+      saveDB();
+    }
+
+    function getCurrentGroupId() {
+      return currentPath[currentPath.length - 1].id;
+    }
+
+    function getCurrentGroupName() {
+      return currentPath[currentPath.length - 1].name;
+    }
+
     setInterval(() => {
       const now = new Date();
       document.getElementById('currentClockText').innerText = now.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+
+      // Проверка наступления 14:00 для предложения пересменки
+      const hours = now.getHours();
+      const minutes = now.getMinutes();
+
+      if (hours === 14 && minutes === 0 && !handoverDismissedToday) {
+        handoverDismissedToday = true;
+        triggerHandoverPrompt(false);
+      }
     }, 1000);
 
-    // Переключение залов (Зал / Терраса / Бар)
+    function triggerHandoverPrompt(isManual = false) {
+      playBeep('alert');
+      showCustomConfirmDialog(
+        'Время дневной пересменки (14:00)!',
+        'Хотите провести пересчет кассы, проверить наличие недостач или излишков и передать смену?',
+        () => {
+          openHandoverModal();
+        }
+      );
+    }
+
     function setHallZone(zone) {
       playBeep('tap');
       currentZone = zone;
@@ -830,134 +1169,6 @@
       showToast(`Выбрана зона: ${zone}`);
     }
 
-    // ==========================================
-    // РЕНДЕР КАТАЛОГА (ГРУППЫ ИЗ ФОТО 2 И ТОВАРЫ)
-    // ==========================================
-      <div class="space-y-3 text-slate-800">
-        <div>
-          <label class="text-[11px] font-bold text-slate-500 uppercase">Наименование позиции</label>
-          <input id="editProdNameInput" type="text" class="w-full mt-1 p-3 bg-slate-50 border border-slate-300 rounded-2xl text-xs font-bold text-slate-900 focus:outline-none focus:border-sky-500">
-        </div>
-
-        <div class="grid grid-cols-2 gap-3">
-          <div>
-            <label class="text-[11px] font-bold text-slate-500 uppercase">Цена продажи (₽)</label>
-            <input id="editProdPriceInput" type="number" step="any" class="w-full mt-1 p-3 bg-slate-50 border border-slate-300 rounded-2xl text-sm font-black font-mono text-slate-900 focus:outline-none focus:border-sky-500">
-          </div>
-          <div>
-            <label class="text-[11px] font-bold text-slate-500 uppercase">Себестоимость (₽)</label>
-            <input id="editProdCostInput" type="number" step="any" class="w-full mt-1 p-3 bg-slate-50 border border-slate-300 rounded-2xl text-sm font-mono text-slate-900 focus:outline-none focus:border-sky-500">
-          </div>
-        </div>
-
-        <div>
-          <label class="text-[11px] font-bold text-slate-500 uppercase">Родительская группа / Вкладка</label>
-          <select id="editProdCategorySelect" class="w-full mt-1 p-3 bg-slate-50 border border-slate-300 rounded-2xl text-xs font-bold text-slate-900 focus:outline-none focus:border-sky-500">
-            <!-- Динамически заполняются группы + вариант "Без группы" -->
-          </select>
-        </div>
-      </div>
-  <!-- ======================================================== -->
-  <!-- СКРИПТЫ, ДАННЫЕ И БИЗНЕС-ЛОГИКА                          -->
-  <!-- ======================================================== -->
-  <script>
-    // Звуковой синтезатор без внешних URL
-    let audioCtx = null;
-    function playBeep(type) {
-      try {
-        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        if (audioCtx.state === 'suspended') audioCtx.resume();
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-        osc.connect(gain);
-        gain.connect(audioCtx.destination);
-        const now = audioCtx.currentTime;
-
-        if (type === 'tap') {
-          osc.type = 'sine';
-          osc.frequency.setValueAtTime(600, now);
-          osc.frequency.exponentialRampToValueAtTime(300, now + 0.04);
-          gain.gain.setValueAtTime(0.1, now);
-          gain.gain.exponentialRampToValueAtTime(0.01, now + 0.04);
-          osc.start(now);
-          osc.stop(now + 0.04);
-        } else if (type === 'success') {
-          osc.type = 'triangle';
-          osc.frequency.setValueAtTime(523.25, now);
-          osc.frequency.setValueAtTime(783.99, now + 0.06);
-          gain.gain.setValueAtTime(0.15, now);
-          gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
-          osc.start(now);
-          osc.stop(now + 0.2);
-        }
-      } catch (e) {}
-    }
-
-    // Доступные цвета для вкладок
-    const PRESET_COLORS = [
-      '#e75b36', '#ea8c1c', '#d946ef', '#0284c7', 
-      '#65a30d', '#64748b', '#e11d48', '#8b5cf6', '#059669'
-    ];
-    const PRESET_ICONS = ['☕', '🥤', '🍵', '🫖', '🍹', '🥛', '🧊', '🥪', '🍰', '🍯', '🍸', '🛍️', '🍽️', '🥐'];
-
-    // Хранилище: чистый старт (если в localStorage нет, создается пустая база)
-    let groups = JSON.parse(localStorage.getItem('qcore_groups')) || [];
-    let products = JSON.parse(localStorage.getItem('qcore_products')) || [];
-    let currentShift = JSON.parse(localStorage.getItem('qcore_shift')) || {
-      shiftNumber: 1,
-      openedAt: new Date().toISOString(),
-      drawerCash: 0,
-      cardRevenue: 0,
-      cashRevenue: 0,
-      receipts: []
-    };
-
-    // Навигация по каталогу: путь из ID групп. null = корень ("МЕНЮ")
-    let currentPath = [{ id: null, name: 'МЕНЮ' }];
-    let currentSearchTerm = '';
-
-    // Состояние сессии
-    let currentZone = 'Зал';
-    let currentOrder = null;
-    let openTables = [];
-
-    // Редактирование
-    let editingProductId = null;
-    let editingGroupId = null;
-    let selectedGroupColor = PRESET_COLORS[0];
-    let selectedGroupIcon = PRESET_ICONS[0];
-    let targetCartItemUid = null;
-    let activePaymentType = 'CASH';
-
-    // Графики
-    let chartHourly = null;
-    let chartPayment = null;
-    let chartCat = null;
-    let chartTop = null;
-
-    function saveDB() {
-      localStorage.setItem('qcore_groups', JSON.stringify(groups));
-      localStorage.setItem('qcore_products', JSON.stringify(products));
-      localStorage.setItem('qcore_shift', JSON.stringify(currentShift));
-    }
-
-    function getCurrentGroupId() {
-      return currentPath[currentPath.length - 1].id;
-    }
-
-    function getCurrentGroupName() {
-      return currentPath[currentPath.length - 1].name;
-    }
-
-    // Таймер часов
-    setInterval(() => {
-      const now = new Date();
-      document.getElementById('currentClockText').innerText = now.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
-    }, 1000);
-
-    // ==========================================
-    // РЕНДЕР ХЛЕБНЫХ КРОШЕК И КАТАЛОГА
-    // ==========================================
     function renderBreadcrumbs() {
       const nav = document.getElementById('breadcrumbNav');
       nav.innerHTML = currentPath.map((node, idx) => {
@@ -997,7 +1208,6 @@
       const container = document.getElementById('catalogContainer');
       const currentParentId = getCurrentGroupId();
 
-      // Если в строке поиска есть текст — ищем сквозным поиском по всем товарам
       if (currentSearchTerm) {
         const matched = products.filter(p => p.name.toLowerCase().includes(currentSearchTerm));
         if (matched.length === 0) {
@@ -1020,9 +1230,7 @@
         return;
       }
 
-      // Текущие подгруппы на этом уровне
       const childGroups = groups.filter(g => g.parentId === currentParentId);
-      // Текущие товары на этом уровне
       const childProducts = products.filter(p => p.parentId === currentParentId);
 
       if (childGroups.length === 0 && childProducts.length === 0) {
@@ -1033,17 +1241,17 @@
               📂
             </div>
             <p class="text-sm font-bold text-white">
-              ${isRoot ? 'Каталог пуст. Добавьте первые группы или товары' : `В группе "${getCurrentGroupName()}" пока нет содержимого`}
+              ${isRoot ? 'Каталог пуст. Добавьте первые группы или товары' : `В группе "${getCurrentGroupName()}" пока нет позиций`}
             </p>
             <p class="text-xs text-sky-200/80">
-              ${isRoot ? 'Товары созданные здесь будут без родительской группы.' : 'Товары созданные здесь автоматически получат эту группу.'}
+              ${isRoot ? 'Товары, созданные здесь, будут без родительской группы.' : 'Товары, созданные здесь, автоматически получат эту группу.'}
             </p>
             <div class="flex justify-center gap-2 pt-2">
               <button onclick="openGroupEditModal()" class="px-4 py-2.5 bg-white text-slate-900 rounded-xl text-xs font-bold shadow-md hover:bg-slate-100 transition">
-                + Добавить вкладку / группу
+                + Добавить вкладку
               </button>
               <button onclick="openProductEditModal()" class="px-4 py-2.5 bg-emerald-500 text-white rounded-xl text-xs font-bold shadow-md hover:bg-emerald-400 transition">
-                + Добавить позицию / товар
+                + Добавить товар
               </button>
             </div>
           </div>
@@ -1053,7 +1261,6 @@
 
       let html = '<div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3.5">';
 
-      // 1. Сначала отображаем плитки групп
       childGroups.forEach(grp => {
         const itemsCount = products.filter(p => p.parentId === grp.id).length;
         const subGroupsCount = groups.filter(g => g.parentId === grp.id).length;
@@ -1082,7 +1289,6 @@
         `;
       });
 
-      // 2. Затем отображаем карточки блюд/товаров этого уровня
       childProducts.forEach(prod => {
         html += renderProductCardHtml(prod);
       });
@@ -1114,7 +1320,6 @@
             <span class="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-lg border border-emerald-200">+ Чек</span>
           </div>
 
-          <!-- Индикатор зажатия -->
           <div class="hold-bar absolute inset-x-0 bottom-0 h-1.5 bg-gradient-to-r from-amber-500 to-rose-500 scale-x-0 origin-left transition-transform duration-[1400ms] pointer-events-none"></div>
         </div>
       `;
@@ -1125,9 +1330,6 @@
       renderCatalog();
     }
 
-    // ==========================================
-    // ЛОНГ-ТАП (1.4 СЕК) И КЛИКИ
-    // ==========================================
     let holdTimer = null;
     let holdTriggered = false;
 
@@ -1166,16 +1368,12 @@
       }
     }
 
-    // ==========================================
-    // УПРАВЛЕНИЕ ГРУППАМИ / ВКЛАДКАМИ
-    // ==========================================
     function openGroupEditModal(groupId = null) {
       editingGroupId = groupId;
       const title = document.getElementById('groupEditModalTitle');
       const delBtn = document.getElementById('deleteGroupBtn');
       const parentLabel = document.getElementById('groupParentLabel');
 
-      // Палитра цветов
       const colorBox = document.getElementById('groupColorPalette');
       colorBox.innerHTML = PRESET_COLORS.map(c => `
         <button 
@@ -1187,7 +1385,6 @@
         </button>
       `).join('');
 
-      // Палитра иконок
       const iconBox = document.getElementById('groupIconPalette');
       iconBox.innerHTML = PRESET_ICONS.map(ic => `
         <button 
@@ -1264,19 +1461,20 @@
           groups[idx].name = name;
           groups[idx].color = selectedGroupColor;
           groups[idx].icon = selectedGroupIcon;
+          recordAuditLog('CATALOG', 'Изменение группы', `Обновлена группа "${name}"`, 'info');
           showToast(`Группа "${name}" обновлена`);
         }
       } else {
-        // Автоматически присваиваем родительскую группу из текущего экрана
         const parentId = getCurrentGroupId();
         const newGroup = {
           id: 'grp_' + Date.now(),
-          parentId: parentId, // null если в корне, иначе id текущей группы
+          parentId: parentId,
           name: name,
           color: selectedGroupColor,
           icon: selectedGroupIcon
         };
         groups.push(newGroup);
+        recordAuditLog('CATALOG', 'Создание группы', `Создана новая вкладка "${name}"`, 'success');
         showToast(`Вкладка "${name}" создана`);
       }
 
@@ -1290,15 +1488,15 @@
       if (!editingGroupId) return;
       showCustomConfirmDialog(
         'Удалить эту группу?',
-        'Все вложенные подгруппы и товары также будут перемещены в корень или удалены.',
+        'Все вложенные подгруппы и товары этой группы также будут удалены.',
         () => {
-          // Удаляем подгруппы и товары или выносим в корень
+          const grp = groups.find(g => g.id === editingGroupId);
           groups = groups.filter(g => g.id !== editingGroupId && g.parentId !== editingGroupId);
           products = products.filter(p => p.parentId !== editingGroupId);
+          recordAuditLog('CATALOG', 'Удаление группы', `Удалена группа "${grp ? grp.name : ''}" и её позиции`, 'warning');
           saveDB();
           playBeep('tap');
           closeGroupEditModal();
-          // Если мы были внутри удаляемой группы, возвращаемся в корень
           if (getCurrentGroupId() === editingGroupId) {
             currentPath = [{ id: null, name: 'МЕНЮ' }];
           }
@@ -1308,16 +1506,12 @@
       );
     }
 
-    // ==========================================
-    // УПРАВЛЕНИЕ ПОЗИЦИЯМИ / ТОВАРАМИ
-    // ==========================================
     function openProductEditModal(id = null) {
       editingProductId = id;
       const title = document.getElementById('productEditTitle');
       const delBtn = document.getElementById('deleteProductBtn');
       const catSelect = document.getElementById('editProdCategorySelect');
 
-      // Заполняем выбор категории: "Без группы (Корень)" + список всех созданных групп
       let optionsHtml = `<option value="">Без родительской группы (Корень)</option>`;
       groups.forEach(g => {
         optionsHtml += `<option value="${g.id}">📁 ${g.name}</option>`;
@@ -1337,7 +1531,6 @@
         document.getElementById('editProdNameInput').value = '';
         document.getElementById('editProdPriceInput').value = '';
         document.getElementById('editProdCostInput').value = '';
-        // ВАЖНО: Если мы находимся внутри группы — по умолчанию присваивается она! Если в корне — пусто
         catSelect.value = getCurrentGroupId() || '';
         delBtn.classList.add('hidden');
       }
@@ -1364,20 +1557,23 @@
       if (editingProductId) {
         const idx = products.findIndex(p => p.id === editingProductId);
         if (idx !== -1) {
+          const oldPrice = products[idx].price;
           products[idx].name = name;
           products[idx].price = price;
           products[idx].cost = cost;
           products[idx].parentId = parentId;
+          recordAuditLog('CATALOG', 'Изменение товара', `Товар "${name}" изменен (цена: ${oldPrice}₽ -> ${price}₽)`, 'info');
           showToast(`Позиция "${name}" обновлена`);
         }
       } else {
         products.push({
           id: 'p_' + Date.now(),
-          parentId: parentId, // null если в корне, иначе выбранная группа
+          parentId: parentId,
           name: name,
           price: price,
           cost: cost
         });
+        recordAuditLog('CATALOG', 'Создание товара', `Создан товар "${name}" с ценой ${price}₽`, 'success');
         showToast(`Позиция "${name}" добавлена`);
       }
 
@@ -1393,7 +1589,9 @@
         'Удалить этот товар?',
         'Товар будет безвозвратно удален из каталога.',
         () => {
-          products = products.filter(p => p.id !== editingProductId);
+          const p = products.find(prod => prod.id === editingProductId);
+          products = products.filter(prod => prod.id !== editingProductId);
+          recordAuditLog('CATALOG', 'Удаление товара', `Удален товар "${p ? p.name : ''}"`, 'warning');
           saveDB();
           playBeep('tap');
           closeProductEditModal();
@@ -1403,20 +1601,19 @@
       );
     }
 
-    // ==========================================
-    // ПОЛНЫЙ СБРОС И ОЧИСТКА ВСЕХ ДАННЫХ
-    // ==========================================
     function confirmWipeAllData() {
       showCustomConfirmDialog(
         'ОЧИСТИТЬ ВСЮ БАЗУ ДАННЫХ?',
-        'Будут безвозвратно удалены все товары, все группы/вкладки и история чеков. Система вернется к абсолютно чистому состоянию.',
+        'Будут удалены все товары, вкладки, журнал чеков и аудит смен. Система перезапустится с чистого листа.',
         () => {
           groups = [];
           products = [];
+          auditLogs = [];
           currentShift = {
             shiftNumber: 1,
             openedAt: new Date().toISOString(),
-            drawerCash: 0,
+            drawerCash: 2000,
+            initialCash: 2000,
             cardRevenue: 0,
             cashRevenue: 0,
             receipts: []
@@ -1424,17 +1621,73 @@
           currentOrder = null;
           currentPath = [{ id: null, name: 'МЕНЮ' }];
           currentSearchTerm = '';
+          recordAuditLog('SHIFT', 'Полный сброс базы', 'База данных была очищена администратором', 'danger');
           saveDB();
           playBeep('success');
           closeModal('reportsModal');
           renderCatalog();
           renderOrderView();
-          showToast('Все данные успешно очищены');
+          showToast('Все данные очищены');
         }
       );
     }
 
-    // Заказ: переопределение для структуры без жестких категорий
+    function startQuickOrder() {
+      playBeep('tap');
+      currentOrder = {
+        orderNumber: (currentShift.receipts.length || 0) + 1042,
+        type: 'QUICK',
+        table: 'Быстрый заказ',
+        guests: 1,
+        items: [],
+        discountPercent: 0
+      };
+      renderOrderView();
+      showToast('Открыт быстрый чек');
+    }
+
+    function openTableGuestsModal() {
+      playBeep('tap');
+      const list = document.getElementById('guestsOptionsList');
+      list.innerHTML = [1,2,3,4,5,6,7,8,9].map(n => `
+        <button onclick="selectGuestCount(${n})" id="guestOpt_${n}" class="w-full py-2.5 px-4 rounded-xl text-xs font-bold transition flex items-center justify-between ${n === 2 ? 'bg-emerald-500 text-white shadow-sm' : 'bg-slate-100 hover:bg-slate-200 text-slate-700'}">
+          <span>Гостей: ${n}</span>
+          <span class="text-[10px] font-normal opacity-80">выбрать</span>
+        </button>
+      `).join('');
+      openModal('tableGuestsModal');
+    }
+
+    let selectedGuestsCount = 2;
+    function selectGuestCount(n) {
+      playBeep('tap');
+      selectedGuestsCount = n;
+      for (let i = 1; i <= 9; i++) {
+        const btn = document.getElementById(`guestOpt_${i}`);
+        if (btn) {
+          btn.className = i === n
+            ? 'w-full py-2.5 px-4 rounded-xl text-xs font-bold transition flex items-center justify-between bg-emerald-500 text-white shadow-sm'
+            : 'w-full py-2.5 px-4 rounded-xl text-xs font-bold transition flex items-center justify-between bg-slate-100 hover:bg-slate-200 text-slate-700';
+        }
+      }
+    }
+
+    function confirmOpenTableOrder() {
+      const table = document.getElementById('selectedTableDropdown').value;
+      currentOrder = {
+        orderNumber: (currentShift.receipts.length || 0) + 1042,
+        type: 'TABLE',
+        table: table,
+        guests: selectedGuestsCount,
+        items: [],
+        discountPercent: 0
+      };
+      playBeep('success');
+      closeModal('tableGuestsModal');
+      renderOrderView();
+      showToast(`Открыт заказ: ${table} (${selectedGuestsCount} гостя)`);
+    }
+
     function addProductToActiveOrder(productId) {
       const prod = products.find(p => p.id === productId);
       if (!prod) return;
@@ -1506,7 +1759,6 @@
 
           return `
             <div class="relative bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-xs">
-              <!-- Скрытые кнопки свайпа влево (как просил пользователь) -->
               <div class="absolute inset-0 bg-slate-200 flex justify-end items-stretch">
                 <button onclick="openItemDiscountModal('${item.uid}')" class="px-3.5 bg-amber-500 hover:bg-amber-600 text-slate-950 text-xs font-bold flex items-center gap-1 transition">
                   % Скидка
@@ -1516,7 +1768,6 @@
                 </button>
               </div>
 
-              <!-- Верхняя сдвигаемая карточка -->
               <div 
                 class="relative bg-white p-3 flex items-center justify-between z-10 transition-transform duration-200"
                 onpointerdown="initSwipeRow(event, this)">
@@ -1548,7 +1799,6 @@
       calculateTotals();
     }
 
-    // Свайп влево по строке чека
     let swipeStartX = 0;
     let isSwiping = false;
 
@@ -1644,7 +1894,6 @@
       );
     }
 
-    // Скидка на позицию
     function openItemDiscountModal(uid) {
       playBeep('tap');
       targetCartItemUid = uid;
@@ -1671,7 +1920,6 @@
       showToast('Скидка применена к позиции');
     }
 
-    // Скидка на весь чек
     function openOrderDiscountModal() {
       if (!currentOrder || currentOrder.items.length === 0) {
         showToast('Сначала добавьте блюда в заказ');
@@ -1695,9 +1943,6 @@
       showToast(`Скидка на чек: ${currentOrder.discountPercent}%`);
     }
 
-    // ==========================================
-    // ОПЛАТА (НАЛИЧНЫЕ СО СДАЧЕЙ / КАРТА)
-    // ==========================================
     function startCheckout(type) {
       if (!currentOrder || currentOrder.items.length === 0) {
         showToast('Чек пуст. Добавьте блюда');
@@ -1717,7 +1962,6 @@
         cashBox.classList.remove('hidden');
         cardBox.classList.add('hidden');
 
-        // Купюры
         const row = document.getElementById('quickBanknotesRow');
         const notes = [finalTotal, 500, 1000, 2000, 5000].filter((v, idx, arr) => v >= finalTotal && arr.indexOf(v) === idx);
         row.innerHTML = notes.map(n => `
@@ -1785,17 +2029,21 @@
         currentShift.cardRevenue += finalTotal;
       }
 
+      recordAuditLog(
+        'CHECK', 
+        `Пробит чек #${receipt.receiptNumber}`, 
+        `Сумма: ${finalTotal}₽ (${activePaymentType === 'CASH' ? 'Наличные' : 'Безнал'}), позиций: ${receipt.items.length}`,
+        'success'
+      );
+
       saveDB();
       playBeep('success');
       closeModal('paymentModal');
 
-      // Показ термоленты чека
       showThermalReceiptSlip(receipt);
-
-      // Очистка заказа
       currentOrder = null;
       renderOrderView();
-      showToast('Чек успешно оплачен и закрыт!');
+      showToast('Чек успешно закрыт и фискализирован!');
     }
 
     function showThermalReceiptSlip(r) {
@@ -1806,7 +2054,7 @@
         <div class="text-center pb-2 border-b border-dashed border-slate-400 space-y-0.5">
           <div class="text-sm font-black tracking-wider">КОФЕЙНЯ "QCORE COFFEE"</div>
           <div class="text-[10px] text-slate-600">ИНН 7701982741 • ККТ 00049182</div>
-          <div class="text-[10px] text-slate-600">КАССИР: ИДЕГЕЛ ДАЖЫЙ-ООЛ</div>
+          <div class="text-[10px] text-slate-600">КАССИР: ${activeCashierName.toUpperCase()}</div>
           <div class="text-xs font-bold pt-1">КАССОВЫЙ ЧЕК №${r.receiptNumber}</div>
           <div class="text-[10px] text-slate-500">${d.toLocaleString('ru-RU')}</div>
         </div>
@@ -1868,276 +2116,178 @@
       closeModal('receiptSlipModal');
     }
 
-    // ==========================================
-    // РЕДАКТИРОВАНИЕ ТОВАРОВ И КЛАСТЕРИЗАЦИЯ
-    // ==========================================
-    function openProductEditModal(id = null, defaultCat = null) {
-      editingProductId = id;
-      const title = document.getElementById('productEditTitle');
-      const delBtn = document.getElementById('deleteProductBtn');
-      const catSelect = document.getElementById('editProdCategorySelect');
+    function openHandoverModal() {
+      playBeep('tap');
+      document.getElementById('hoExpectedCashDisplay').innerText = `${currentShift.drawerCash.toLocaleString('ru-RU')} ₽`;
+      document.getElementById('hoCardSalesDisplay').innerText = `${currentShift.cardRevenue.toLocaleString('ru-RU')} ₽`;
+      document.getElementById('hoActualCashInput').value = '';
+      document.getElementById('hoOutgoingCashier').value = activeCashierName;
+      document.getElementById('hoIncomingCashier').value = '';
+      document.getElementById('hoCommentInput').value = '';
+      recalcHandoverVariance();
+      openModal('handoverModal');
+    }
 
-      // Заполняем селект групп
-      catSelect.innerHTML = CATEGORIES_CONFIG.map(c => `
-        <option value="${c.name}">${c.name}</option>
-      `).join('');
+    function recalcHandoverVariance() {
+      const expected = currentShift.drawerCash;
+      const actualVal = document.getElementById('hoActualCashInput').value;
+      const actual = actualVal === '' ? expected : (parseFloat(actualVal) || 0);
+      const diff = Math.round(actual - expected);
 
-      if (id) {
-        const p = products.find(prod => prod.id === id);
-        title.innerText = 'Редактирование товара';
-        document.getElementById('editProdNameInput').value = p.name;
-        document.getElementById('editProdPriceInput').value = p.price;
-        document.getElementById('editProdCostInput').value = p.cost || 0;
-        catSelect.value = p.category;
-        delBtn.classList.remove('hidden');
+      const box = document.getElementById('hoVarianceBox');
+      const statusText = document.getElementById('hoVarianceStatusText');
+      const hintText = document.getElementById('hoVarianceHintText');
+      const diffBadge = document.getElementById('hoVarianceDiffBadge');
+
+      diffBadge.innerText = `${diff > 0 ? '+' : ''}${diff.toLocaleString('ru-RU')} ₽`;
+
+      if (diff === 0) {
+        box.className = 'p-4 rounded-2xl border flex items-center justify-between bg-emerald-50 border-emerald-200';
+        statusText.innerText = 'Всё сошлось идеально!';
+        statusText.className = 'text-xs font-extrabold block text-emerald-800';
+        hintText.innerText = 'Сумма в денежном ящике полностью совпадает с учетной';
+        diffBadge.className = 'text-lg font-black font-mono text-emerald-700';
+      } else if (diff < 0) {
+        box.className = 'p-4 rounded-2xl border flex items-center justify-between bg-rose-50 border-rose-200';
+        statusText.innerText = `ВНИМАНИЕ: Недосдача (${diff} ₽)`;
+        statusText.className = 'text-xs font-extrabold block text-rose-800';
+        hintText.innerText = 'В кассе не хватает денег по сравнению с продажами';
+        diffBadge.className = 'text-lg font-black font-mono text-rose-700';
       } else {
-        title.innerText = 'Создать новый товар';
-        document.getElementById('editProdNameInput').value = '';
-        document.getElementById('editProdPriceInput').value = '';
-        document.getElementById('editProdCostInput').value = '';
-        catSelect.value = defaultCat || (selectedCategoryName || CATEGORIES_CONFIG[0].name);
-        delBtn.classList.add('hidden');
+        box.className = 'p-4 rounded-2xl border flex items-center justify-between bg-amber-50 border-amber-200';
+        statusText.innerText = `Излишек в кассе (+${diff} ₽)`;
+        statusText.className = 'text-xs font-extrabold block text-amber-800';
+        hintText.innerText = 'В ящике больше денег, чем зафиксировано по чекам';
+        diffBadge.className = 'text-lg font-black font-mono text-amber-700';
       }
-
-      openModal('productEditModal');
     }
 
-    function closeProductEditModal() {
-      closeModal('productEditModal');
-      editingProductId = null;
-    }
-
-    function saveCurrentProduct() {
-      const name = document.getElementById('editProdNameInput').value.trim();
-      const price = parseFloat(document.getElementById('editProdPriceInput').value) || 0;
-      const cost = parseFloat(document.getElementById('editProdCostInput').value) || 0;
-      const category = document.getElementById('editProdCategorySelect').value;
-
-      if (!name || price <= 0) {
-        showToast('Укажите корректное название и цену');
+    function confirmSubmitHandover() {
+      const actualVal = document.getElementById('hoActualCashInput').value;
+      if (actualVal === '') {
+        showToast('Введите фактическую сумму налички в ящике');
         return;
       }
 
-      if (editingProductId) {
-        const idx = products.findIndex(p => p.id === editingProductId);
-        if (idx !== -1) {
-          products[idx] = { ...products[idx], name, price, cost, category };
-          showToast(`Товар "${name}" обновлен`);
-        }
-      } else {
-        products.push({
-          id: 'p_' + Date.now(),
-          name,
-          price,
-          cost,
-          category
-        });
-        showToast(`Товар "${name}" создан`);
+      const actualCash = parseFloat(actualVal) || 0;
+      const expectedCash = currentShift.drawerCash;
+      const diff = actualCash - expectedCash;
+      const outgoing = document.getElementById('hoOutgoingCashier').value.trim() || activeCashierName;
+      const incoming = document.getElementById('hoIncomingCashier').value.trim();
+      const comment = document.getElementById('hoCommentInput').value.trim();
+
+      if (!incoming) {
+        showToast('Укажите имя принимающего смену кассира');
+        return;
       }
+
+      let outcomeType = 'info';
+      let outcomeDesc = `Пересменка: сдал ${outgoing}, принял ${incoming}. `;
+      if (diff === 0) {
+        outcomeType = 'success';
+        outcomeDesc += `Касса сошлась ровно (${actualCash}₽).`;
+      } else if (diff < 0) {
+        outcomeType = 'danger';
+        outcomeDesc += `НЕХВАТКА (недосдача): ${diff}₽. Ожидалось: ${expectedCash}₽, факт: ${actualCash}₽.`;
+      } else {
+        outcomeType = 'warning';
+        outcomeDesc += `ИЗЛИШЕК: +${diff}₽. Ожидалось: ${expectedCash}₽, факт: ${actualCash}₽.`;
+      }
+
+      if (comment) outcomeDesc += ` Комментарий: "${comment}"`;
+
+      // Корректируем фактическую наличность в ящике
+      currentShift.drawerCash = actualCash;
+      activeCashierName = incoming;
+      document.getElementById('cashierNameDisplay').innerText = incoming;
+
+      recordAuditLog('HANDOVER', 'Акт дневной пересменки', outcomeDesc, outcomeType);
+      saveDB();
+      playBeep('success');
+      closeModal('handoverModal');
+      showToast(`Смена передана сотруднику ${incoming}!`);
+    }
+
+    function initCloseShiftProcess() {
+      playBeep('tap');
+      closeModal('reportsModal');
+      document.getElementById('closeShiftExpectedCash').innerText = `${currentShift.drawerCash.toLocaleString('ru-RU')} ₽`;
+      document.getElementById('closeShiftActualCashInput').value = '';
+      recalcShiftCloseVariance();
+      openModal('shiftCloseModal');
+    }
+
+    function recalcShiftCloseVariance() {
+      const expected = currentShift.drawerCash;
+      const val = document.getElementById('closeShiftActualCashInput').value;
+      const actual = val === '' ? expected : (parseFloat(val) || 0);
+      const diff = actual - expected;
+
+      const box = document.getElementById('closeShiftVarianceBox');
+      const label = document.getElementById('closeShiftVarianceLabel');
+      const disp = document.getElementById('closeShiftVarianceDisplay');
+
+      disp.innerText = `${diff > 0 ? '+' : ''}${diff.toLocaleString('ru-RU')} ₽`;
+
+      if (diff === 0) {
+        box.className = 'p-3.5 rounded-2xl border flex justify-between items-center bg-emerald-50 border-emerald-200';
+        label.innerText = 'Касса сошлась идеально:';
+        label.className = 'text-xs font-bold text-emerald-800';
+        disp.className = 'font-mono font-black text-sm text-emerald-700';
+      } else if (diff < 0) {
+        box.className = 'p-3.5 rounded-2xl border flex justify-between items-center bg-rose-50 border-rose-200';
+        label.innerText = `Недосдача (дефицит):`;
+        label.className = 'text-xs font-bold text-rose-800';
+        disp.className = 'font-mono font-black text-sm text-rose-700';
+      } else {
+        box.className = 'p-3.5 rounded-2xl border flex justify-between items-center bg-amber-50 border-amber-200';
+        label.innerText = `Излишек кассы:`;
+        label.className = 'text-xs font-bold text-amber-800';
+        disp.className = 'font-mono font-black text-sm text-amber-700';
+      }
+    }
+
+    function confirmExecuteZReport() {
+      const val = document.getElementById('closeShiftActualCashInput').value;
+      const actualCash = val === '' ? currentShift.drawerCash : (parseFloat(val) || 0);
+      const expectedCash = currentShift.drawerCash;
+      const diff = actualCash - expectedCash;
+
+      let varianceText = 'Без расхождений';
+      if (diff < 0) varianceText = `Недосдача: ${diff} ₽`;
+      if (diff > 0) varianceText = `Излишек: +${diff} ₽`;
+
+      generatePrintReport('Z', actualCash, diff);
+
+      recordAuditLog(
+        'SHIFT', 
+        `Закрытие смены №${currentShift.shiftNumber} (Z-отчет)`, 
+        `Чеков: ${currentShift.receipts.length}, Выручка: ${currentShift.cashRevenue + currentShift.cardRevenue}₽. Итог пересчета: ${varianceText}.`,
+        diff < 0 ? 'danger' : 'success'
+      );
+
+      // Переход к новой смене
+      currentShift = {
+        shiftNumber: currentShift.shiftNumber + 1,
+        openedAt: new Date().toISOString(),
+        drawerCash: actualCash, // остаток переходит в разменный фонд
+        initialCash: actualCash,
+        cardRevenue: 0,
+        cashRevenue: 0,
+        receipts: []
+      };
 
       saveDB();
       playBeep('success');
-      closeProductEditModal();
-      renderCatalog();
-    }
-
-    function deleteCurrentProduct() {
-      if (!editingProductId) return;
-      showCustomConfirmDialog(
-        'Удалить этот товар?',
-        'Товар будет безвозвратно удален из меню терминала.',
-        () => {
-          products = products.filter(p => p.id !== editingProductId);
-          saveDB();
-          playBeep('tap');
-          closeProductEditModal();
-          renderCatalog();
-          showToast('Товар удален из меню');
-        }
-      );
-    }
-
-    // ==========================================
-    // ПАНЕЛЬ ОТЧЕТОВ, Z-ОТЧЕТ И АНАЛИТИКА
-    // ==========================================
-    function openReportsModal() {
-      playBeep('tap');
-      document.getElementById('repShiftNumber').innerText = currentShift.shiftNumber;
-      const d = new Date(currentShift.openedAt);
-      document.getElementById('repShiftOpenTime').innerText = d.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
-
-      renderReportsData();
-      openModal('reportsModal');
-    }
-
-    function switchReportsSubTab(tab) {
-      playBeep('tap');
-      ['analytics', 'shift', 'journal', 'manage'].forEach(t => {
-        const btn = document.getElementById(`repTabBtn_${t}`);
-        const sec = document.getElementById(`repSection_${t}`);
-        if (t === tab) {
-          btn.className = 'px-4 py-1.5 rounded-xl text-xs font-bold transition bg-sky-600 text-white';
-          sec.classList.remove('hidden');
-        } else {
-          btn.className = 'px-4 py-1.5 rounded-xl text-xs font-bold transition text-slate-400 hover:text-white';
-          sec.classList.add('hidden');
-        }
-      });
-
-      if (tab === 'analytics') {
-        initAnalyticsCharts();
-      }
-    }
-
-    function renderReportsData() {
-      const rev = currentShift.cashRevenue + currentShift.cardRevenue;
-      const receipts = currentShift.receipts;
-      const count = receipts.length;
-      const avg = count > 0 ? Math.round(rev / count) : 0;
-      const totalDisc = receipts.reduce((a, r) => a + (r.discountTotal || 0), 0);
-
-      document.getElementById('kpiTotalRevenue').innerText = `${rev.toLocaleString('ru-RU')} ₽`;
-      document.getElementById('kpiReceiptsCount').innerText = count;
-      document.getElementById('kpiAvgTicket').innerText = `${avg.toLocaleString('ru-RU')} ₽`;
-      document.getElementById('kpiTotalDiscounts').innerText = `${totalDisc.toLocaleString('ru-RU')} ₽`;
-
-      document.getElementById('shiftDrawerCashDisplay').innerText = `${currentShift.drawerCash.toLocaleString('ru-RU')} ₽`;
-      document.getElementById('shiftCardRevenueDisplay').innerText = `${currentShift.cardRevenue.toLocaleString('ru-RU')} ₽`;
-      document.getElementById('shiftTotalSalesDisplay').innerText = `${rev.toLocaleString('ru-RU')} ₽`;
-
-      // Журнал
-      const tbody = document.getElementById('journalTableBody');
-      if (receipts.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="7" class="py-6 text-center text-slate-500">В текущей смене пока нет закрытых чеков</td></tr>`;
-      } else {
-        tbody.innerHTML = receipts.slice().reverse().map(r => `
-          <tr class="hover:bg-slate-800/40">
-            <td class="py-2.5 px-3 text-sky-400 font-bold">#${r.receiptNumber}</td>
-            <td class="py-2.5 px-3 text-slate-400">${new Date(r.timestamp).toLocaleTimeString('ru-RU', {hour:'2-digit', minute:'2-digit'})}</td>
-            <td class="py-2.5 px-3 text-slate-300">${r.table}</td>
-            <td class="py-2.5 px-3">
-              <span class="px-2 py-0.5 rounded text-[10px] font-bold ${r.paymentType === 'CASH' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-sky-500/20 text-sky-400'}">
-                ${r.paymentType === 'CASH' ? 'Наличные' : 'Безнал'}
-              </span>
-            </td>
-            <td class="py-2.5 px-3 text-amber-400">${r.discountTotal > 0 ? `-${r.discountTotal} ₽` : '0 ₽'}</td>
-            <td class="py-2.5 px-3 text-right font-black text-white">${r.finalTotal} ₽</td>
-            <td class="py-2.5 px-3 text-center">
-              <button onclick='showThermalReceiptSlip(${JSON.stringify(r)})' class="px-2 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-[10px]">
-                Показать
-              </button>
-            </td>
-          </tr>
-        `).join('');
-      }
-
-      initAnalyticsCharts();
-    }
-
-    function initAnalyticsCharts() {
-      Chart.defaults.color = '#94a3b8';
-      Chart.defaults.font.family = "'Plus Jakarta Sans', system-ui, sans-serif";
-
-      const receipts = currentShift.receipts;
-      
-      // По часам
-      const hoursMap = {};
-      for (let h = 9; h <= 21; h++) hoursMap[`${h}:00`] = 0;
-      receipts.forEach(r => {
-        const d = new Date(r.timestamp);
-        const k = `${d.getHours()}:00`;
-        hoursMap[k] = (hoursMap[k] || 0) + r.finalTotal;
-      });
-
-      if (chartHourly) chartHourly.destroy();
-      const ctxH = document.getElementById('chartHourlySales').getContext('2d');
-      chartHourly = new Chart(ctxH, {
-        type: 'bar',
-        data: {
-          labels: Object.keys(hoursMap),
-          datasets: [{
-            label: 'Выручка (₽)',
-            data: Object.values(hoursMap),
-            backgroundColor: 'rgba(2, 132, 199, 0.7)',
-            borderColor: '#0284c7',
-            borderRadius: 6
-          }]
-        },
-        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
-      });
-
-      // Сплит
-      if (chartPayment) chartPayment.destroy();
-      const ctxP = document.getElementById('chartPaymentSplit').getContext('2d');
-      chartPayment = new Chart(ctxP, {
-        type: 'doughnut',
-        data: {
-          labels: ['Наличные', 'Безнал / СБП'],
-          datasets: [{
-            data: [currentShift.cashRevenue || 1, currentShift.cardRevenue || 2],
-            backgroundColor: ['#10b981', '#0284c7'],
-            borderWidth: 0
-          }]
-        },
-        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
-      });
-
-      // Категории
-      const catMap = {};
-      const itemMap = {};
-      receipts.forEach(r => {
-        r.items.forEach(it => {
-          catMap[it.category] = (catMap[it.category] || 0) + (it.price * it.qty);
-          itemMap[it.name] = (itemMap[it.name] || 0) + it.qty;
-        });
-      });
-
-      if (Object.keys(catMap).length === 0) {
-        catMap['Эспрессо'] = 1400;
-        catMap['Десерты'] = 820;
-        catMap['Чаи'] = 540;
-      }
-      if (Object.keys(itemMap).length === 0) {
-        itemMap['Капучино 300мл'] = 6;
-        itemMap['Круассан'] = 4;
-        itemMap['Раф Цитрусовый'] = 3;
-      }
-
-      if (chartCat) chartCat.destroy();
-      const ctxC = document.getElementById('chartCategorySales').getContext('2d');
-      chartCat = new Chart(ctxC, {
-        type: 'pie',
-        data: {
-          labels: Object.keys(catMap),
-          datasets: [{
-            data: Object.values(catMap),
-            backgroundColor: ['#e75b36', '#ea8c1c', '#d946ef', '#0284c7', '#65a30d', '#e11d48'],
-            borderWidth: 0
-          }]
-        },
-        options: { responsive: true, maintainAspectRatio: false }
-      });
-
-      // Топ блюд
-      if (chartTop) chartTop.destroy();
-      const sorted = Object.entries(itemMap).sort((a,b) => b[1] - a[1]).slice(0, 5);
-      const ctxT = document.getElementById('chartTopItems').getContext('2d');
-      chartTop = new Chart(ctxT, {
-        type: 'bar',
-        data: {
-          labels: sorted.map(s => s[0]),
-          datasets: [{
-            data: sorted.map(s => s[1]),
-            backgroundColor: '#10b981',
-            borderRadius: 6
-          }]
-        },
-        options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
-      });
+      closeModal('shiftCloseModal');
+      document.getElementById('shiftStatusIndicator').innerText = `Смена открыта (#${currentShift.shiftNumber})`;
+      document.getElementById('sideShiftNum').innerText = currentShift.shiftNumber;
+      showToast('Смена успешно закрыта с гашением!');
     }
 
     function promptCashMovement(type) {
-      const val = prompt(type === 'IN' ? 'Сумма внесения в ящик (₽):' : 'Сумма изъятия из кассы (₽):', '1000');
+      const promptText = type === 'IN' ? 'Сумма внесения в денежный ящик (₽):' : 'Сумма изъятия (инкассация) из кассы (₽):';
+      const val = prompt(promptText, '1000');
       if (val !== null) {
         const amt = parseFloat(val) || 0;
         if (amt <= 0) return;
@@ -2145,11 +2295,14 @@
           showToast('Недостаточно наличных в ящике');
           return;
         }
+
         if (type === 'IN') {
           currentShift.drawerCash += amt;
+          recordAuditLog('CASH', 'Внесение наличных', `Внесено +${amt}₽ в кассу.`, 'info');
           showToast(`Внесено в кассу: +${amt} ₽`);
         } else {
           currentShift.drawerCash -= amt;
+          recordAuditLog('CASH', 'Инкассация (изъятие)', `Изъято -${amt}₽ из денежного ящика.`, 'warning');
           showToast(`Изъято из кассы: -${amt} ₽`);
         }
         saveDB();
@@ -2157,7 +2310,7 @@
       }
     }
 
-    function generatePrintReport(repType) {
+    function generatePrintReport(repType, actualCash = null, diff = 0) {
       playBeep('tap');
       const now = new Date();
       const isZ = repType === 'Z';
@@ -2197,8 +2350,14 @@
           </div>
           <div class="flex justify-between text-slate-800 text-[11px] pt-1 border-t border-dashed border-slate-400">
             <span>НАЛИЧНЫХ В ЯЩИКЕ:</span>
-            <span class="font-bold">${currentShift.drawerCash} ₽</span>
+            <span class="font-bold">${actualCash !== null ? actualCash : currentShift.drawerCash} ₽</span>
           </div>
+          ${isZ && diff !== 0 ? `
+            <div class="flex justify-between text-[11px] ${diff < 0 ? 'text-rose-600 font-bold' : 'text-amber-600 font-bold'}">
+              <span>${diff < 0 ? 'НЕДОСДАЧА:' : 'ИЗЛИШЕК:'}</span>
+              <span>${diff > 0 ? '+' : ''}${diff} ₽</span>
+            </div>
+          ` : ''}
         </div>
 
         <div class="pt-3 text-center text-[10px] text-slate-500 border-t border-dashed border-slate-400">
@@ -2210,29 +2369,233 @@
       openModal('receiptSlipModal');
     }
 
-    function confirmCloseShift() {
-      showCustomConfirmDialog(
-        'Закрыть смену и напечатать Z-отчет?',
-        'Выручка будет зафиксирована в архиве, счетчики продаж будут обнулены, а смена переведена на следующий номер.',
-        () => {
-          generatePrintReport('Z');
-          currentShift = {
-            shiftNumber: currentShift.shiftNumber + 1,
-            openedAt: new Date().toISOString(),
-            drawerCash: currentShift.drawerCash,
-            cardRevenue: 0,
-            cashRevenue: 0,
-            receipts: []
-          };
-          saveDB();
-          renderReportsData();
-          closeModal('reportsModal');
-          showToast('Смена успешно закрыта Z-отчетом!');
-        }
-      );
+    function openReportsModal() {
+      playBeep('tap');
+      document.getElementById('repShiftNumber').innerText = currentShift.shiftNumber;
+      document.querySelectorAll('.repCurrShiftNum').forEach(el => el.innerText = currentShift.shiftNumber);
+      const d = new Date(currentShift.openedAt);
+      document.getElementById('repShiftOpenTime').innerText = d.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+
+      renderReportsData();
+      renderAuditTimeline();
+      openModal('reportsModal');
     }
 
-    // Вспомогательные окна
+    function switchReportsSubTab(tab) {
+      playBeep('tap');
+      ['analytics', 'shift', 'journal', 'auditlog', 'manage'].forEach(t => {
+        const btn = document.getElementById(`repTabBtn_${t}`);
+        const sec = document.getElementById(`repSection_${t}`);
+        if (t === tab) {
+          btn.className = 'px-3.5 py-1.5 rounded-xl text-xs font-bold transition bg-sky-600 text-white';
+          sec.classList.remove('hidden');
+        } else {
+          btn.className = 'px-3.5 py-1.5 rounded-xl text-xs font-bold transition text-slate-400 hover:text-white';
+          sec.classList.add('hidden');
+        }
+      });
+
+      if (tab === 'analytics') initAnalyticsCharts();
+      if (tab === 'auditlog') renderAuditTimeline();
+    }
+
+    function renderReportsData() {
+      const rev = currentShift.cashRevenue + currentShift.cardRevenue;
+      const receipts = currentShift.receipts;
+      const count = receipts.length;
+      const avg = count > 0 ? Math.round(rev / count) : 0;
+      const totalDisc = receipts.reduce((a, r) => a + (r.discountTotal || 0), 0);
+
+      document.getElementById('kpiTotalRevenue').innerText = `${rev.toLocaleString('ru-RU')} ₽`;
+      document.getElementById('kpiReceiptsCount').innerText = count;
+      document.getElementById('kpiAvgTicket').innerText = `${avg.toLocaleString('ru-RU')} ₽`;
+      document.getElementById('kpiTotalDiscounts').innerText = `${totalDisc.toLocaleString('ru-RU')} ₽`;
+
+      document.getElementById('shiftDrawerCashDisplay').innerText = `${currentShift.drawerCash.toLocaleString('ru-RU')} ₽`;
+      document.getElementById('shiftCardRevenueDisplay').innerText = `${currentShift.cardRevenue.toLocaleString('ru-RU')} ₽`;
+
+      const tbody = document.getElementById('journalTableBody');
+      if (receipts.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7" class="py-6 text-center text-slate-500">В текущей смене пока нет чеков</td></tr>`;
+      } else {
+        tbody.innerHTML = receipts.slice().reverse().map(r => `
+          <tr class="hover:bg-slate-800/40">
+            <td class="py-2.5 px-3 text-sky-400 font-bold">#${r.receiptNumber}</td>
+            <td class="py-2.5 px-3 text-slate-400">${new Date(r.timestamp).toLocaleTimeString('ru-RU', {hour:'2-digit', minute:'2-digit'})}</td>
+            <td class="py-2.5 px-3 text-slate-300">${r.table}</td>
+            <td class="py-2.5 px-3">
+              <span class="px-2 py-0.5 rounded text-[10px] font-bold ${r.paymentType === 'CASH' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-sky-500/20 text-sky-400'}">
+                ${r.paymentType === 'CASH' ? 'Наличные' : 'Безнал'}
+              </span>
+            </td>
+            <td class="py-2.5 px-3 text-amber-400">${r.discountTotal > 0 ? `-${r.discountTotal} ₽` : '0 ₽'}</td>
+            <td class="py-2.5 px-3 text-right font-black text-white">${r.finalTotal} ₽</td>
+            <td class="py-2.5 px-3 text-center">
+              <button onclick='showThermalReceiptSlip(${JSON.stringify(r)})' class="px-2 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-[10px]">
+                Показать
+              </button>
+            </td>
+          </tr>
+        `).join('');
+      }
+
+      initAnalyticsCharts();
+    }
+
+    function filterAuditLogs(filterType) {
+      playBeep('tap');
+      currentAuditFilter = filterType;
+      ['ALL', 'HANDOVER', 'CHECK', 'CASH', 'SHIFT'].forEach(f => {
+        const btn = document.getElementById(`auditFilter_${f}`);
+        if (btn) {
+          btn.className = f === filterType 
+            ? 'px-2.5 py-1 rounded-lg font-bold bg-sky-600 text-white' 
+            : 'px-2.5 py-1 rounded-lg font-bold text-slate-400 hover:text-white';
+        }
+      });
+      renderAuditTimeline();
+    }
+
+    function renderAuditTimeline() {
+      const container = document.getElementById('auditTimelineContainer');
+      let filtered = auditLogs;
+      if (currentAuditFilter !== 'ALL') {
+        filtered = auditLogs.filter(l => l.type === currentAuditFilter);
+      }
+
+      if (filtered.length === 0) {
+        container.innerHTML = `
+          <div class="py-12 text-center text-slate-500">
+            <p class="text-xs">В журнале пока нет событий по выбранному фильтру</p>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = filtered.map(log => {
+        let badgeColor = 'bg-sky-500/20 text-sky-300 border-sky-500/30';
+        if (log.badgeType === 'danger') badgeColor = 'bg-rose-500/20 text-rose-300 border-rose-500/30';
+        if (log.badgeType === 'warning') badgeColor = 'bg-amber-500/20 text-amber-300 border-amber-500/30';
+        if (log.badgeType === 'success') badgeColor = 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30';
+
+        const timeStr = new Date(log.timestamp).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+
+        return `
+          <div class="p-3 bg-slate-950 border border-slate-800 rounded-2xl flex items-start justify-between gap-3 text-xs">
+            <div class="space-y-1">
+              <div class="flex items-center gap-2">
+                <span class="px-2 py-0.5 rounded-full text-[10px] font-bold border ${badgeColor}">
+                  ${log.title}
+                </span>
+                <span class="text-slate-400 font-mono text-[11px]">${timeStr}</span>
+                <span class="text-slate-600">• Смена #${log.shiftNumber}</span>
+              </div>
+              <p class="text-slate-300 font-medium text-xs pt-0.5">${log.description}</p>
+            </div>
+            <span class="text-[10px] text-slate-500 shrink-0 font-bold bg-slate-900 px-2 py-1 rounded-lg">
+              ${log.cashier}
+            </span>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function initAnalyticsCharts() {
+      Chart.defaults.color = '#94a3b8';
+      Chart.defaults.font.family = "'Plus Jakarta Sans', system-ui, sans-serif";
+
+      const receipts = currentShift.receipts;
+      
+      const hoursMap = {};
+      for (let h = 9; h <= 21; h++) hoursMap[`${h}:00`] = 0;
+      receipts.forEach(r => {
+        const d = new Date(r.timestamp);
+        const k = `${d.getHours()}:00`;
+        hoursMap[k] = (hoursMap[k] || 0) + r.finalTotal;
+      });
+
+      if (chartHourly) chartHourly.destroy();
+      const ctxH = document.getElementById('chartHourlySales').getContext('2d');
+      chartHourly = new Chart(ctxH, {
+        type: 'bar',
+        data: {
+          labels: Object.keys(hoursMap),
+          datasets: [{
+            label: 'Выручка (₽)',
+            data: Object.values(hoursMap),
+            backgroundColor: 'rgba(2, 132, 199, 0.7)',
+            borderColor: '#0284c7',
+            borderRadius: 6
+          }]
+        },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+      });
+
+      if (chartPayment) chartPayment.destroy();
+      const ctxP = document.getElementById('chartPaymentSplit').getContext('2d');
+      chartPayment = new Chart(ctxP, {
+        type: 'doughnut',
+        data: {
+          labels: ['Наличные', 'Безнал / СБП'],
+          datasets: [{
+            data: [currentShift.cashRevenue || 1, currentShift.cardRevenue || 1],
+            backgroundColor: ['#10b981', '#0284c7'],
+            borderWidth: 0
+          }]
+        },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
+      });
+
+      const catMap = {};
+      const itemMap = {};
+      receipts.forEach(r => {
+        r.items.forEach(it => {
+          catMap[it.category] = (catMap[it.category] || 0) + (it.price * it.qty);
+          itemMap[it.name] = (itemMap[it.name] || 0) + it.qty;
+        });
+      });
+
+      if (Object.keys(catMap).length === 0) {
+        catMap['Эспрессо'] = 1400;
+        catMap['Десерты'] = 820;
+      }
+      if (Object.keys(itemMap).length === 0) {
+        itemMap['Капучино 300мл'] = 5;
+        itemMap['Круассан'] = 3;
+      }
+
+      if (chartCat) chartCat.destroy();
+      const ctxC = document.getElementById('chartCategorySales').getContext('2d');
+      chartCat = new Chart(ctxC, {
+        type: 'pie',
+        data: {
+          labels: Object.keys(catMap),
+          datasets: [{
+            data: Object.values(catMap),
+            backgroundColor: ['#e75b36', '#ea8c1c', '#d946ef', '#0284c7', '#65a30d', '#e11d48'],
+            borderWidth: 0
+          }]
+        },
+        options: { responsive: true, maintainAspectRatio: false }
+      });
+
+      if (chartTop) chartTop.destroy();
+      const sorted = Object.entries(itemMap).sort((a,b) => b[1] - a[1]).slice(0, 5);
+      const ctxT = document.getElementById('chartTopItems').getContext('2d');
+      chartTop = new Chart(ctxT, {
+        type: 'bar',
+        data: {
+          labels: sorted.map(s => s[0]),
+          datasets: [{
+            data: sorted.map(s => s[1]),
+            backgroundColor: '#10b981',
+            borderRadius: 6
+          }]
+        },
+        options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+      });
+    }
+
     function openModal(id) { document.getElementById(id).classList.remove('hidden'); }
     function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
 
@@ -2241,14 +2604,9 @@
       panel.classList.toggle('hidden');
     }
 
-    function openHelpTooltip() {
-      showToast('Зажмите карточку любого блюда на 1.5 сек для смены цены или удаления');
-    }
-
-    // Кастомный confirm
     let dialogCallback = null;
     function showCustomConfirmDialog(title, msg, onConfirm) {
-      playBeep('tap');
+      playBeep('alert');
       document.getElementById('customDialogTitle').innerText = title;
       document.getElementById('customDialogMessage').innerText = msg;
       dialogCallback = onConfirm;
@@ -2261,7 +2619,6 @@
       dialogCallback = null;
     }
 
-    // Всплывающие уведомления
     function showToast(text) {
       const container = document.getElementById('toastContainer');
       const toast = document.createElement('div');
@@ -2272,10 +2629,9 @@
         toast.style.opacity = '0';
         toast.style.transition = 'all 0.2s ease';
         setTimeout(() => toast.remove(), 200);
-      }, 2200);
+      }, 2400);
     }
 
-    // Старт
     window.onload = function() {
       renderCatalog();
       renderOrderView();
