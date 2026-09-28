@@ -3,8 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>COFFEEMAN POS</title>
+  <title>COFFEEMAN</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="style.css">
   <style>
     :root {
       --bg-screen: #f8fafc;
@@ -20,10 +21,10 @@
       color: var(--text-main);
       font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif;
       -webkit-tap-highlight-color: transparent;
-      overscroll-behavior: none;
+      overscroll-behavior-y: none;
     }
 
-    /* Фоновые градиентные сферы */
+    /* Фоновые пассивные градиентные сферы */
     .ambient-sphere-1 {
       position: fixed;
       width: 280px;
@@ -57,7 +58,7 @@
       100% { transform: translate(-20px, 15px) scale(0.95); }
     }
 
-    /* Пар от кофе */
+    /* Анимация поднимающегося пара кофе */
     @keyframes steamRise {
       0% { transform: translateY(0) scaleX(1); opacity: 0; }
       15% { opacity: 0.6; }
@@ -70,16 +71,17 @@
     .steam-line-2 { animation: steamRise 3.2s infinite ease-out 0.8s; }
     .steam-line-3 { animation: steamRise 2.8s infinite ease-out 1.6s; }
 
+    /* iOS Card Style */
     .app-card {
       background: rgba(255, 255, 255, 0.95);
-      backdrop-filter: blur(16px);
+      backdrop-blur: 16px;
       border-radius: 24px;
       box-shadow: 0 10px 30px -4px rgba(15, 23, 42, 0.05);
       border: 1px solid rgba(226, 232, 240, 0.8);
       transition: transform 0.15s ease, box-shadow 0.15s ease;
     }
 
-    /* Холст карты зала с явным запретом стандартных жестов браузера */
+    /* Карта зала */
     .hall-map-canvas {
       background-color: #fafaf9;
       background-image: 
@@ -88,25 +90,28 @@
         linear-gradient(to bottom, #f1f5f9 1px, transparent 1px);
       background-size: 20px 20px, 80px 80px, 80px 80px;
       touch-action: none !important;
+      -webkit-user-drag: none;
       user-select: none;
       -webkit-user-select: none;
+      overscroll-behavior: contain;
     }
 
     .map-table-btn {
       position: absolute;
       user-select: none;
       -webkit-user-select: none;
+      touch-action: manipulation;
       cursor: pointer;
       transform-origin: center center;
-      transition: transform 0.1s ease, box-shadow 0.15s ease;
+      transition: transform 0.12s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.15s ease;
       z-index: 30;
       box-shadow: 0 6px 16px rgba(15, 23, 42, 0.08);
-      touch-action: none;
     }
     .map-table-btn:active {
-      transform: scale(0.94);
+      transform: scale(0.92);
     }
 
+    /* Декорации карты */
     .window-glass {
       background: repeating-linear-gradient(90deg, rgba(186, 230, 253, 0.5), rgba(186, 230, 253, 0.5) 16px, rgba(56, 189, 248, 0.7) 16px, rgba(56, 189, 248, 0.7) 20px);
       border: 2px solid #38bdf8;
@@ -130,6 +135,7 @@
       border-radius: 10px 10px 0 0;
     }
 
+    /* Нижний скользящий островок-переключатель */
     .sliding-nav-pill {
       position: absolute;
       top: 4px;
@@ -147,6 +153,7 @@
 </head>
 <body class="w-full h-[100dvh] flex flex-col overflow-hidden select-none fixed inset-0">
 
+  <!-- Ambient Glow на фоне -->
   <div class="ambient-sphere-1"></div>
   <div class="ambient-sphere-2"></div>
 
@@ -158,17 +165,14 @@
     </div>
   </div>
 
-  <!-- ШАПКА -->
-  <header class="bg-white/80 backdrop-blur-md border-b border-slate-100 px-4 py-2.5 shrink-0 z-30 flex items-center justify-between shadow-xs relative">
+  <!-- ШАПКА ПРИЛОЖЕНИЯ -->
+  <header class="bg-white/80 backdrop-blur-md border-b border-slate-100 px-4 py-2.5 pt-safe shrink-0 z-30 flex items-center justify-between shadow-2xs relative">
     <div class="flex items-center gap-2.5 min-w-0">
-      <button onclick="switchAppTab('map', 0)" class="w-9 h-9 rounded-2xl bg-orange-500 text-white font-black flex items-center justify-center text-sm shadow-md shadow-orange-500/20 active:scale-95 transition">
+      <a href="index.html" class="w-9 h-9 rounded-2xl bg-orange-500 text-white font-black flex items-center justify-center text-sm shadow-md shadow-orange-500/20 active:scale-95 transition">
         ☕
-      </button>
+      </a>
       <div class="leading-none min-w-0">
-        <h1 class="font-extrabold text-sm text-slate-900 tracking-tight flex items-center gap-1.5">
-          <span>COFFEEMAN</span>
-          <span id="cloudStatusBadge" class="text-[9px] font-mono px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-700">● LIVE</span>
-        </h1>
+        <h1 class="font-extrabold text-sm text-slate-900 tracking-tight">COFFEEMAN</h1>
         <p id="headerWaiterName" class="text-[11px] text-slate-500 mt-0.5 truncate font-medium">Официант: —</p>
       </div>
     </div>
@@ -180,17 +184,17 @@
         👤
       </button>
 
-      <span id="connectionDot" class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" title="Сервер подключен"></span>
+      <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" title="В сети"></span>
     </div>
   </header>
 
-  <!-- ОСНОВНАЯ ОБЛАСТЬ -->
+  <!-- ОСНОВНАЯ ОБЛАСТЬ ЭКРАНА -->
   <main class="flex-1 flex flex-col min-h-0 overflow-hidden relative p-2.5 sm:p-3 z-10">
 
     <!-- ЭКРАН 1: КАРТА ЗАЛА -->
     <section id="view-tables" class="flex-1 flex flex-col min-h-0 overflow-hidden relative">
-      <div id="hallMapContainer" class="flex-1 hall-map-canvas app-card relative overflow-hidden cursor-grab active:cursor-grabbing">
-        <div id="hallMapWorld" class="absolute top-0 left-0 w-[2400px] h-[1800px] origin-top-left transition-transform duration-75 will-change-transform">
+      <div id="hallMapContainer" class="flex-1 hall-map-canvas app-card relative overflow-hidden cursor-grab active:cursor-grabbing select-none" style="touch-action: none;">
+        <div id="hallMapWorld" class="absolute top-0 left-0 w-[4000px] h-[3000px] origin-top-left transition-transform duration-75 pointer-events-auto" style="touch-action: none;">
           <div id="layerObstacles" class="absolute inset-0 pointer-events-none z-10"></div>
           <div id="layerTables" class="absolute inset-0 pointer-events-auto z-30"></div>
         </div>
@@ -224,12 +228,12 @@
       </div>
     </section>
 
-    <!-- ЭКРАН 2: АКТИВНЫЕ ЗАКАЗЫ -->
+    <!-- ЭКРАН 2: АКТИВНЫЕ ЗАКАЗЫ С СОРТИРОВКОЙ -->
     <section id="view-active-orders" class="hidden flex-1 app-card p-3 sm:p-4 flex flex-col min-h-0 space-y-3 overflow-hidden">
       <div class="flex items-center justify-between pb-2 border-b border-slate-100 shrink-0">
         <div>
           <h2 class="font-black text-sm sm:text-base text-slate-900">Активные заказы</h2>
-          <p class="text-[11px] text-slate-400">Синхронизируются в реальном времени</p>
+          <p class="text-[11px] text-slate-400">Все столы с открытыми чеками</p>
         </div>
         <span id="activeOrdersTotalBadge" class="bg-orange-50 text-orange-600 border border-orange-200 font-mono text-xs px-2.5 py-0.5 rounded-full font-bold">0 столов</span>
       </div>
@@ -294,14 +298,20 @@
           </div>
 
           <!-- Категории меню -->
-          <div class="flex items-center gap-1.5 overflow-x-auto pb-2.5 scrollbar-hide text-xs font-bold shrink-0" id="categoryPillsList">
+          <div class="flex items-center gap-1.5 overflow-x-auto pb-2.5 scrollbar-hide text-xs font-bold shrink-0">
             <button onclick="selectCategory('all')" class="cat-pill px-3.5 py-1.5 rounded-full bg-orange-500 text-white shrink-0" data-cat="all">⚡ Все</button>
             <button onclick="selectCategory('coffee_classic')" class="cat-pill px-3.5 py-1.5 rounded-full bg-slate-100 text-slate-600 shrink-0" data-cat="coffee_classic">☕ Кофе</button>
             <button onclick="selectCategory('coffee_author')" class="cat-pill px-3.5 py-1.5 rounded-full bg-slate-100 text-slate-600 shrink-0" data-cat="coffee_author">✨ Авторский</button>
             <button onclick="selectCategory('tea')" class="cat-pill px-3.5 py-1.5 rounded-full bg-slate-100 text-slate-600 shrink-0" data-cat="tea">🫖 Чай</button>
             <button onclick="selectCategory('breakfast')" class="cat-pill px-3.5 py-1.5 rounded-full bg-slate-100 text-slate-600 shrink-0" data-cat="breakfast">🍳 Завтраки</button>
             <button onclick="selectCategory('snacks')" class="cat-pill px-3.5 py-1.5 rounded-full bg-slate-100 text-slate-600 shrink-0" data-cat="snacks">🥪 Закуски</button>
+            <button onclick="selectCategory('salads')" class="cat-pill px-3.5 py-1.5 rounded-full bg-slate-100 text-slate-600 shrink-0" data-cat="salads">🥗 Салаты</button>
+            <button onclick="selectCategory('soups')" class="cat-pill px-3.5 py-1.5 rounded-full bg-slate-100 text-slate-600 shrink-0" data-cat="soups">🍲 Супы</button>
+            <button onclick="selectCategory('pastas')" class="cat-pill px-3.5 py-1.5 rounded-full bg-slate-100 text-slate-600 shrink-0" data-cat="pastas">🍝 Пасты</button>
+            <button onclick="selectCategory('hot')" class="cat-pill px-3.5 py-1.5 rounded-full bg-slate-100 text-slate-600 shrink-0" data-cat="hot">🥩 Горячее</button>
+            <button onclick="selectCategory('lunch')" class="cat-pill px-3.5 py-1.5 rounded-full bg-slate-100 text-slate-600 shrink-0" data-cat="lunch">🍱 Ланчи</button>
             <button onclick="selectCategory('desserts')" class="cat-pill px-3.5 py-1.5 rounded-full bg-slate-100 text-slate-600 shrink-0" data-cat="desserts">🍰 Десерты</button>
+            <button onclick="selectCategory('smoothies')" class="cat-pill px-3.5 py-1.5 rounded-full bg-slate-100 text-slate-600 shrink-0" data-cat="smoothies">🥤 Смузи</button>
             <button onclick="selectCategory('cold_drinks')" class="cat-pill px-3.5 py-1.5 rounded-full bg-slate-100 text-slate-600 shrink-0" data-cat="cold_drinks">🍹 Напитки</button>
           </div>
 
@@ -345,12 +355,14 @@
 
   </main>
 
-  <!-- ТАББАР -->
+  <!-- НИЖНИЙ ПЛАВАЮЩИЙ ТАББАР С АНИМАЦИЕЙ СКОЛЬЗЯЩЕЙ ТАБЛЕТКИ -->
   <div class="px-4 pb-3 pt-1 shrink-0 z-40">
     <nav class="max-w-md mx-auto bg-white/90 backdrop-blur-md border border-slate-200/80 p-1 rounded-full shadow-lg flex items-center relative select-none">
       
+      <!-- Скользящий оранжевый шарик/таблетка -->
       <div id="slidingNavPill" class="sliding-nav-pill" style="transform: translateX(0%);"></div>
 
+      <!-- Вкладки (4 шт) -->
       <button onclick="switchAppTab('map', 0)" class="nav-tab-btn flex-1 py-2 flex flex-col items-center justify-center gap-0.5 relative z-10 transition-colors text-white font-black" data-tab-index="0">
         <span class="text-base leading-none">🗺️</span>
         <span class="text-[10px] leading-none">Зал</span>
@@ -376,33 +388,37 @@
         </div>
         <span class="text-[10px] leading-none">Чек</span>
       </button>
+
     </nav>
   </div>
 
-  <!-- МОДАЛКА ПРИВЕТСТВИЯ -->
+  <!-- МОДАЛКА ПРИВЕТСТВИЯ С АНИМИРОВАННОЙ ЧАШКОЙ КОФЕ И ПАРОМ -->
   <div id="welcomeModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-md z-50 flex items-center justify-center p-4">
     <div class="bg-white max-w-xs sm:max-w-sm w-full rounded-3xl p-6 shadow-2xl text-center space-y-4 relative overflow-hidden border border-slate-100">
+      
+      <!-- Анимированный кофе с клубящимся дымом -->
       <div class="relative w-20 h-20 mx-auto flex items-center justify-center">
+        <!-- SVG струи пара -->
         <svg class="absolute -top-3 w-12 h-10 overflow-visible pointer-events-none" viewBox="0 0 40 40">
           <path class="steam-line-1" d="M12,30 Q16,18 10,8 Q8,2 14,0" fill="none" stroke="#f97316" stroke-width="2.5" stroke-linecap="round"/>
           <path class="steam-line-2" d="M20,30 Q24,16 18,8 Q16,2 22,0" fill="none" stroke="#fb923c" stroke-width="2.5" stroke-linecap="round"/>
           <path class="steam-line-3" d="M28,30 Q32,18 26,8 Q24,2 30,0" fill="none" stroke="#fdba74" stroke-width="2.5" stroke-linecap="round"/>
         </svg>
+
+        <!-- Чашка -->
         <div class="w-14 h-14 rounded-2xl bg-gradient-to-tr from-orange-500 to-amber-400 text-white flex items-center justify-center text-2xl shadow-lg shadow-orange-500/30 relative z-10">
           ☕
         </div>
       </div>
 
       <div>
-        <h3 class="font-black text-lg text-slate-900">Смена официанта</h3>
-        <p class="text-xs text-slate-400 mt-0.5">Выберите имя или укажите новое</p>
+        <h3 class="font-black text-lg text-slate-900">Добро пожаловать!</h3>
+        <p class="text-xs text-slate-400 mt-0.5">Выберите ваше имя или введите новое</p>
       </div>
 
+      <!-- Быстрый выбор имён (динамически подтягиваются из базы) -->
       <div id="quickWaitersList" class="flex flex-wrap justify-center gap-1.5 text-xs font-semibold">
-        <button onclick="pickWaiterName('Алексей')" class="px-3 py-1.5 rounded-full bg-slate-100 hover:bg-orange-50 hover:text-orange-600 transition">Алексей</button>
-        <button onclick="pickWaiterName('Мария')" class="px-3 py-1.5 rounded-full bg-slate-100 hover:bg-orange-50 hover:text-orange-600 transition">Мария</button>
-        <button onclick="pickWaiterName('Даниил')" class="px-3 py-1.5 rounded-full bg-slate-100 hover:bg-orange-50 hover:text-orange-600 transition">Даниил</button>
-        <button onclick="pickWaiterName('Екатерина')" class="px-3 py-1.5 rounded-full bg-slate-100 hover:bg-orange-50 hover:text-orange-600 transition">Екатерина</button>
+        <!-- Генерируется из базы -->
       </div>
 
       <div class="relative">
@@ -448,7 +464,7 @@
 
       <div class="shrink-0 pt-1 flex items-center gap-2">
         <button onclick="skipAndAddDish()" class="w-1/3 py-2.5 rounded-2xl bg-slate-100 text-slate-600 font-bold text-xs active:scale-95 transition">
-          Без допов
+          Пропустить
         </button>
         <button onclick="confirmDishWithModifiers()" class="flex-1 py-2.5 bg-orange-500 hover:bg-orange-600 text-white font-black rounded-2xl text-xs shadow-md transition active:scale-95 flex items-center justify-center gap-1.5">
           <span>В чек</span>
@@ -486,7 +502,7 @@
         <button onclick="closeModal('guestsModal')" class="w-7 h-7 rounded-full bg-slate-100 text-slate-400 font-bold flex items-center justify-center text-xs">✕</button>
       </div>
 
-      <div class="grid grid-cols-3 gap-2" id="guestsSelectorGrid">
+      <div class="grid grid-cols-3 gap-2">
         <button onclick="setTempGuests(1)" class="guest-btn p-2.5 rounded-2xl bg-slate-50 border border-slate-200 text-slate-800 font-bold flex flex-col items-center">
           <span class="text-base font-black">1</span><span class="text-[10px] text-slate-400">гость</span>
         </button>
@@ -508,7 +524,7 @@
       </div>
 
       <button onclick="confirmGuestSelection()" class="w-full py-3 bg-orange-500 hover:bg-orange-600 text-white font-black rounded-2xl text-xs shadow-md transition active:scale-95">
-        Сохранить персоны →
+        Открыть заказ стола →
       </button>
     </div>
   </div>
@@ -529,11 +545,11 @@
           <span id="cashierModalTotalSum" class="font-mono font-black text-lg text-orange-600">0 ₽</span>
         </div>
         <div class="grid grid-cols-2 gap-1.5">
-          <button onclick="copyReceiptToClipboard()" class="py-2.5 bg-slate-100 text-slate-700 text-xs font-bold rounded-2xl active:scale-95 transition">
+          <button onclick="copyReceiptToClipboard()" class="py-2.5 bg-slate-100 text-slate-700 text-xs font-bold rounded-2xl active:scale-95">
             Копировать
           </button>
-          <button onclick="completeAndFreeTable()" class="py-2.5 bg-emerald-500 text-white text-xs font-bold rounded-2xl active:scale-95 transition">
-            Оплачено (Освободить)
+          <button onclick="completeAndFreeTable()" class="py-2.5 bg-emerald-500 text-white text-xs font-bold rounded-2xl active:scale-95">
+            Свободен
           </button>
         </div>
       </div>
@@ -568,1070 +584,18 @@
     </div>
   </div>
 
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-    import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-    import { getFirestore, doc, setDoc, deleteDoc, onSnapshot, collection } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-
-    /* Инициализация Firebase по строгим правилам */
-    const appId = typeof __app_id !== 'undefined' ? __app_id : 'check-list-c0458';
-    const fallbackConfig = {
-      apiKey: "AIzaSyBVEvKgcprZx2TBCnkQxsgo5IFVJdNaGRE",
-      authDomain: "check-list-c0458.firebaseapp.com",
-      databaseURL: "https://check-list-c0458-default-rtdb.firebaseio.com",
-      projectId: "check-list-c0458",
-      storageBucket: "check-list-c0458.firebasestorage.app",
-      messagingSenderId: "34268049423",
-      appId: "1:34268049423:web:0e6d5bbb3389b72192737a"
-    };
-
-    const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : fallbackConfig;
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getFirestore(app);
-
-    let currentUser = null;
-    let serverOrdersMap = {}; // tableId -> order data
-    let currentWaiter = sessionStorage.getItem('coffeeman_waiter') || 'Алексей';
-
-    const DISH_CATALOG = [
-      { id: "c1", name: "Капучино", price: 220, category: "coffee_classic", icon: "☕", hasModifiers: true },
-      { id: "c2", name: "Латте Макиато", price: 240, category: "coffee_classic", icon: "🥛", hasModifiers: true },
-      { id: "c3", name: "Эспрессо", price: 150, category: "coffee_classic", icon: "⚡", hasModifiers: true },
-      { id: "c4", name: "Американо", price: 180, category: "coffee_classic", icon: "☕", hasModifiers: true },
-      { id: "c5", name: "Флэт Уайт", price: 260, category: "coffee_classic", icon: "✨", hasModifiers: true },
-      { id: "c6", name: "Раф Цитрусовый", price: 290, category: "coffee_author", icon: "🍊", hasModifiers: true },
-      { id: "c7", name: "Лавандовый Раф", price: 290, category: "coffee_author", icon: "💜", hasModifiers: true },
-      { id: "c8", name: "Солёная Карамель Латте", price: 310, category: "coffee_author", icon: "🍯", hasModifiers: true },
-      { id: "t1", name: "Чай Сенча Зелёный", price: 210, category: "tea", icon: "🍵", hasModifiers: false },
-      { id: "t2", name: "Чай Эрл Грей", price: 210, category: "tea", icon: "🫖", hasModifiers: false },
-      { id: "t3", name: "Облепиховый Чай с Мёдом", price: 280, category: "tea", icon: "🍊", hasModifiers: false },
-      { id: "b1", name: "Бенедикт с лососем", price: 420, category: "breakfast", icon: "🍳", hasModifiers: true },
-      { id: "b2", name: "Сырники со сметаной", price: 320, category: "breakfast", icon: "🥞", hasModifiers: true },
-      { id: "b3", name: "Круассан с ветчиной", price: 290, category: "breakfast", icon: "🥐", hasModifiers: true },
-      { id: "s1", name: "Брускетта с томатами", price: 260, category: "snacks", icon: "🥖", hasModifiers: false },
-      { id: "s2", name: "Клаб Сэндвич", price: 350, category: "snacks", icon: "🥪", hasModifiers: true },
-      { id: "d1", name: "Чизкейк Нью-Йорк", price: 260, category: "desserts", icon: "🍰", hasModifiers: false },
-      { id: "d2", name: "Тирамису Классик", price: 280, category: "desserts", icon: "🍫", hasModifiers: false },
-      { id: "d3", name: "Морковный торт", price: 240, category: "desserts", icon: "🥕", hasModifiers: false },
-      { id: "cd1", name: "Лимонад Малина-Мята", price: 250, category: "cold_drinks", icon: "🍹", hasModifiers: false },
-      { id: "cd2", name: "Айс Латте", price: 260, category: "cold_drinks", icon: "🧊", hasModifiers: true }
-    ];
-
-    const MODIFIER_OPTIONS = {
-      milks: [
-        { name: "Обычное (3.2%)", price: 0 },
-        { name: "Овсяное", price: 50 },
-        { name: "Миндальное", price: 60 },
-        { name: "Кокосовое", price: 60 },
-        { name: "Безлактозное", price: 40 }
-      ],
-      syrups: [
-        { name: "Без сиропа", price: 0 },
-        { name: "Ваниль", price: 40 },
-        { name: "Карамель", price: 40 },
-        { name: "Кокос", price: 40 },
-        { name: "Лесной орех", price: 40 }
-      ],
-      extras: [
-        { name: "Доп. шот эспрессо", price: 60 },
-        { name: "Взбитые сливки", price: 45 },
-        { name: "Маршмеллоу", price: 40 }
-      ]
-    };
-
-    // Сетка зала со столами
-    const TABLES_LAYOUT = [
-      { id: 1, name: "Стол 1", type: "round", x: 120, y: 140, w: 90, h: 90, maxGuests: 2 },
-      { id: 2, name: "Стол 2", type: "round", x: 260, y: 140, w: 90, h: 90, maxGuests: 2 },
-      { id: 3, name: "Стол 3", type: "round", x: 400, y: 140, w: 90, h: 90, maxGuests: 2 },
-      { id: 4, name: "Стол 4", type: "rect", x: 120, y: 300, w: 140, h: 100, maxGuests: 4 },
-      { id: 5, name: "Стол 5", type: "rect", x: 320, y: 300, w: 140, h: 100, maxGuests: 4 },
-      { id: 6, name: "Стол 6", type: "rect", x: 520, y: 300, w: 140, h: 100, maxGuests: 4 },
-      { id: 7, name: "Диван 1", type: "sofa", x: 120, y: 480, w: 180, h: 110, maxGuests: 6 },
-      { id: 8, name: "Диван 2", type: "sofa", x: 360, y: 480, w: 180, h: 110, maxGuests: 6 },
-      { id: 9, name: "VIP 1", type: "round", x: 600, y: 480, w: 110, h: 110, maxGuests: 6 },
-      { id: 10, name: "Бар 1", type: "bar", x: 740, y: 140, w: 70, h: 70, maxGuests: 1 },
-      { id: 11, name: "Бар 2", type: "bar", x: 740, y: 240, w: 70, h: 70, maxGuests: 1 },
-      { id: 12, name: "Бар 3", type: "bar", x: 740, y: 340, w: 70, h: 70, maxGuests: 1 }
-    ];
-
-    let currentSelectedTableId = 1;
-    let currentSelectedCategory = 'all';
-    let activeOrdersFilter = 'all';
-    let tempSelectedGuests = 2;
-    let currentModDish = null;
-    let selectedModifiers = { milk: null, syrup: null, extras: [] };
-
-    async function initFirebaseSync() {
-      try {
-        if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-          await signInWithCustomToken(auth, __initial_auth_token);
-        } else {
-          await signInAnonymously(auth);
+  <script>
+    // Защита и плавный свайп/перетаскивание карты на Android (блокировка системных жестов браузера)
+    (function initAndroidTouchFix() {
+      const container = document.getElementById('hallMapContainer');
+      if (!container) return;
+      container.addEventListener('touchmove', (e) => {
+        if (e.target.closest('#hallMapContainer')) {
+          e.preventDefault();
         }
-        currentUser = auth.currentUser;
-        updateConnectionStatus(true);
-        setupRealtimeOrdersListener();
-      } catch (err) {
-        console.error("Auth error:", err);
-        updateConnectionStatus(false);
-      }
-    }
-
-    function updateConnectionStatus(isOnline) {
-      const dot = document.getElementById('connectionDot');
-      const badge = document.getElementById('cloudStatusBadge');
-      if (dot && badge) {
-        if (isOnline) {
-          dot.className = "w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse";
-          badge.textContent = "● СЕРВЕР";
-          badge.className = "text-[9px] font-mono px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-700";
-        } else {
-          dot.className = "w-2.5 h-2.5 rounded-full bg-rose-500";
-          badge.textContent = "● ОФФЛАЙН";
-          badge.className = "text-[9px] font-mono px-1.5 py-0.5 rounded-full bg-rose-100 text-rose-700";
-        }
-      }
-    }
-
-    function setupRealtimeOrdersListener() {
-      if (!currentUser) return;
-      // Строгое следование Правилу 1: /artifacts/{appId}/public/data/orders
-      const ordersCol = collection(db, 'artifacts', appId, 'public', 'data', 'orders');
-      
-      onSnapshot(ordersCol, (snapshot) => {
-        const newMap = {};
-        snapshot.forEach((docSnap) => {
-          newMap[docSnap.id] = docSnap.data();
-        });
-        serverOrdersMap = newMap;
-        renderMapTables();
-        renderActiveOrdersList();
-        renderCurrentOrderView();
-        updateTopStats();
-      }, (error) => {
-        console.error("Firestore Orders sync error:", error);
-        showToast("Ошибка связи с сервером", "⚠️");
-      });
-    }
-
-    // Сохранить заказ стола в базу данных
-    async function syncTableOrderToServer(tableId, orderData) {
-      if (!currentUser) return;
-      try {
-        const orderRef = doc(db, 'artifacts', appId, 'public', 'data', 'orders', String(tableId));
-        if (!orderData || !orderData.items || orderData.items.length === 0) {
-          await deleteDoc(orderRef);
-        } else {
-          await setDoc(orderRef, {
-            ...orderData,
-            updatedAt: Date.now(),
-            tableId: tableId
-          });
-        }
-      } catch (e) {
-        console.error("Failed to sync order:", e);
-        showToast("Ошибка сохранения заказа", "❌");
-      }
-    }
-
-    /*
-      РЕШЕНИЕ ПРОБЛЕМЫ СКРОЛЛА НА ANDROID:
-      1. Запрет touch-action и preventDefault во время перемещения
-      2. Поддержка одного пальца (Pan/Скролл) без конфликта с системным жестом "Назад" и "Обновить"
-      3. Поддержка двух пальцев (Pinch-to-zoom)
-      4. Порог отрыва пальца (dragThreshold = 8px): клик по столу не блокируется, но сдвиг больше 8px считается прокруткой.
-    */
-    const mapContainer = document.getElementById('hallMapContainer');
-    const mapWorld = document.getElementById('hallMapWorld');
-
-    let mapScale = 1.0;
-    let mapPanX = 20;
-    let mapPanY = 20;
-    let isDraggingMap = false;
-    let dragStartX = 0;
-    let dragStartY = 0;
-    let initialPinchDistance = null;
-    let initialScale = 1.0;
-    let touchMovedDistance = 0;
-    const DRAG_THRESHOLD = 8;
-
-    function applyMapTransform() {
-      mapWorld.style.transform = `translate3d(${mapPanX}px, ${mapPanY}px, 0px) scale(${mapScale})`;
-      document.getElementById('mapZoomDisplay').textContent = `${Math.round(mapScale * 100)}%`;
-    }
-
-    function getTouchDistance(t1, t2) {
-      const dx = t1.clientX - t2.clientX;
-      const dy = t1.clientY - t2.clientY;
-      return Math.sqrt(dx * dx + dy * dy);
-    }
-
-    // Обработка мыши (Desktop)
-    mapContainer.addEventListener('mousedown', (e) => {
-      if (e.target.closest('.map-table-btn')) return;
-      isDraggingMap = true;
-      dragStartX = e.clientX - mapPanX;
-      dragStartY = e.clientY - mapPanY;
-      mapContainer.classList.add('cursor-grabbing');
-    });
-
-    window.addEventListener('mousemove', (e) => {
-      if (!isDraggingMap) return;
-      mapPanX = e.clientX - dragStartX;
-      mapPanY = e.clientY - dragStartY;
-      applyMapTransform();
-    });
-
-    window.addEventListener('mouseup', () => {
-      isDraggingMap = false;
-      mapContainer.classList.remove('cursor-grabbing');
-    });
-
-    mapContainer.addEventListener('wheel', (e) => {
-      e.preventDefault();
-      const delta = e.deltaY < 0 ? 0.08 : -0.08;
-      mapScale = Math.min(Math.max(0.4, mapScale + delta), 2.2);
-      applyMapTransform();
-    }, { passive: false });
-
-    // Сенсорное управление для Android и мобильных экранов
-    mapContainer.addEventListener('touchstart', (e) => {
-      touchMovedDistance = 0;
-      if (e.touches.length === 1) {
-        isDraggingMap = true;
-        dragStartX = e.touches[0].clientX - mapPanX;
-        dragStartY = e.touches[0].clientY - mapPanY;
-      } else if (e.touches.length === 2) {
-        isDraggingMap = false;
-        initialPinchDistance = getTouchDistance(e.touches[0], e.touches[1]);
-        initialScale = mapScale;
-      }
-    }, { passive: false });
-
-    mapContainer.addEventListener('touchmove', (e) => {
-      e.preventDefault(); // Защита от скролла страницы и pull-to-refresh на Android Chrome
-      if (e.touches.length === 1 && isDraggingMap) {
-        const curX = e.touches[0].clientX;
-        const curY = e.touches[0].clientY;
-        const deltaX = Math.abs(curX - (dragStartX + mapPanX));
-        const deltaY = Math.abs(curY - (dragStartY + mapPanY));
-        touchMovedDistance += deltaX + deltaY;
-
-        mapPanX = curX - dragStartX;
-        mapPanY = curY - dragStartY;
-        applyMapTransform();
-      } else if (e.touches.length === 2 && initialPinchDistance) {
-        const currentDistance = getTouchDistance(e.touches[0], e.touches[1]);
-        const factor = currentDistance / initialPinchDistance;
-        mapScale = Math.min(Math.max(0.4, initialScale * factor), 2.2);
-        applyMapTransform();
-      }
-    }, { passive: false });
-
-    mapContainer.addEventListener('touchend', (e) => {
-      if (e.touches.length === 0) {
-        isDraggingMap = false;
-        initialPinchDistance = null;
-      } else if (e.touches.length === 1) {
-        isDraggingMap = true;
-        dragStartX = e.touches[0].clientX - mapPanX;
-        dragStartY = e.touches[0].clientY - mapPanY;
-        initialPinchDistance = null;
-      }
-    });
-
-    window.zoomMap = function(delta) {
-      mapScale = Math.min(Math.max(0.4, mapScale + delta), 2.2);
-      applyMapTransform();
-    };
-
-    window.resetMapView = function() {
-      mapScale = 1.0;
-      mapPanX = 20;
-      mapPanY = 20;
-      applyMapTransform();
-    };
-
-    function renderHallObstacles() {
-      const layer = document.getElementById('layerObstacles');
-      layer.innerHTML = `
-        <div class="window-glass absolute top-6 left-12 w-[680px] h-3"></div>
-        <div class="absolute top-2 left-14 text-[10px] font-bold text-sky-500 tracking-wider uppercase">Окно на улицу</div>
-        <div class="plant-divider absolute top-[430px] left-12 w-[720px] h-3"></div>
-        <div class="absolute top-[438px] left-14 text-[10px] font-bold text-emerald-600 tracking-wider uppercase">Зона живых растений</div>
-        <div class="absolute top-12 left-[730px] w-20 h-[380px] border-2 border-dashed border-amber-300 rounded-2xl bg-amber-50/40 flex items-center justify-center p-2 text-center pointer-events-none">
-          <span class="text-xs font-black text-amber-700 writing-vertical rotate-90">БАРНАЯ СТОЙКА</span>
-        </div>
-      `;
-    }
-
-    function renderMapTables() {
-      const layer = document.getElementById('layerTables');
-      layer.innerHTML = '';
-
-      TABLES_LAYOUT.forEach(table => {
-        const order = serverOrdersMap[table.id];
-        const isBusy = !!(order && order.items && order.items.length > 0);
-        const orderSum = isBusy ? order.items.reduce((s, it) => s + (it.price * it.qty), 0) : 0;
-        const kitchenStatus = order ? (order.status || 'new') : 'free';
-
-        const btn = document.createElement('div');
-        btn.className = `map-table-btn flex flex-col items-center justify-center p-1.5 transition-all text-center ${
-          table.type === 'round' ? 'rounded-full' : table.type === 'sofa' ? 'sofa-item' : 'rounded-2xl'
-        } ${
-          isBusy 
-            ? 'bg-amber-50 border-2 border-orange-500 text-orange-950 shadow-md shadow-orange-500/20' 
-            : 'bg-white border-2 border-slate-200 text-slate-800 hover:border-slate-300'
-        }`;
-
-        btn.style.left = `${table.x}px`;
-        btn.style.top = `${table.y}px`;
-        btn.style.width = `${table.w}px`;
-        btn.style.height = `${table.h}px`;
-
-        let statusBadge = '';
-        if (isBusy) {
-          if (kitchenStatus === 'cooking') {
-            statusBadge = '<span class="text-[9px] px-1 rounded-full bg-amber-100 text-amber-800 font-bold">Готовится</span>';
-          } else if (kitchenStatus === 'served') {
-            statusBadge = '<span class="text-[9px] px-1 rounded-full bg-emerald-100 text-emerald-700 font-bold">Подано</span>';
-          } else {
-            statusBadge = '<span class="text-[9px] px-1 rounded-full bg-orange-100 text-orange-700 font-bold">В цех</span>';
-          }
-        }
-
-        btn.innerHTML = `
-          <div class="font-black text-xs leading-none">${table.name}</div>
-          <div class="text-[10px] text-slate-500 mt-0.5 leading-none flex items-center gap-0.5">
-            <span>👥</span><span>${order?.guests || table.maxGuests}</span>
-          </div>
-          ${isBusy ? `<div class="font-mono font-black text-xs text-orange-600 mt-1 leading-none">${orderSum} ₽</div>` : '<div class="text-[9px] text-emerald-600 font-semibold mt-1">Свободен</div>'}
-          <div class="mt-0.5">${statusBadge}</div>
-        `;
-
-        // Надежный обработчик клика для телефонов: если было смещение меньше 8px - открываем стол
-        btn.addEventListener('click', (e) => {
-          if (touchMovedDistance > DRAG_THRESHOLD) return;
-          openTableOrder(table.id);
-        });
-
-        layer.appendChild(btn);
-      });
-    }
-
-    function updateTopStats() {
-      let busy = 0;
-      let totalSum = 0;
-      TABLES_LAYOUT.forEach(t => {
-        const ord = serverOrdersMap[t.id];
-        if (ord && ord.items && ord.items.length > 0) {
-          busy++;
-          totalSum += ord.items.reduce((s, i) => s + (i.price * i.qty), 0);
-        }
-      });
-      const free = TABLES_LAYOUT.length - busy;
-      document.getElementById('mapFreeCount').textContent = free;
-      document.getElementById('mapBusyCount').textContent = busy;
-      document.getElementById('mapSumTotal').textContent = `${totalSum.toLocaleString()} ₽`;
-      document.getElementById('activeOrdersTotalBadge').textContent = `${busy} столов`;
-
-      const navBadge = document.getElementById('navOrdersBadge');
-      if (busy > 0) {
-        navBadge.classList.remove('hidden');
-      } else {
-        navBadge.classList.add('hidden');
-      }
-    }
-
-    window.openTableOrder = function(tableId) {
-      currentSelectedTableId = tableId;
-      const order = serverOrdersMap[tableId];
-
-      if (!order) {
-        // Если стол новый — предлагаем выбрать гостей
-        openGuestsModal(tableId);
-      } else {
-        // Иначе сразу переходим в меню стола
-        document.getElementById('headerTableBadge').textContent = `№${tableId}`;
-        document.getElementById('headerTableBadge').classList.remove('hidden');
-        switchAppTab('menu', 2);
-      }
-    };
-
-    window.switchAppTab = function(tabName, tabIndex) {
-      const tabs = ['map', 'orders', 'menu', 'cart'];
-      const pill = document.getElementById('slidingNavPill');
-      pill.style.transform = `translateX(${tabIndex * 100}%)`;
-
-      document.querySelectorAll('.nav-tab-btn').forEach((btn, idx) => {
-        if (idx === tabIndex) {
-          btn.classList.add('text-white', 'font-black');
-          btn.classList.remove('text-slate-500', 'font-medium');
-        } else {
-          btn.classList.remove('text-white', 'font-black');
-          btn.classList.add('text-slate-500', 'font-medium');
-        }
-      });
-
-      document.getElementById('view-tables').classList.add('hidden');
-      document.getElementById('view-active-orders').classList.add('hidden');
-      document.getElementById('view-order').classList.add('hidden');
-
-      const menuCol = document.getElementById('orderMenuColumn');
-      const cartCol = document.getElementById('orderCartColumn');
-
-      if (tabName === 'map') {
-        document.getElementById('view-tables').classList.remove('hidden');
-        document.getElementById('headerTableBadge').classList.add('hidden');
-      } else if (tabName === 'orders') {
-        document.getElementById('view-active-orders').classList.remove('hidden');
-        renderActiveOrdersList();
-      } else if (tabName === 'menu') {
-        document.getElementById('view-order').classList.remove('hidden');
-        document.getElementById('headerTableBadge').textContent = `№${currentSelectedTableId}`;
-        document.getElementById('headerTableBadge').classList.remove('hidden');
-        menuCol.classList.remove('hidden');
-        if (window.innerWidth < 1024) {
-          cartCol.classList.add('hidden');
-        } else {
-          cartCol.classList.remove('hidden');
-        }
-        renderDishesCatalog();
-        renderCurrentOrderView();
-      } else if (tabName === 'cart') {
-        document.getElementById('view-order').classList.remove('hidden');
-        document.getElementById('headerTableBadge').textContent = `№${currentSelectedTableId}`;
-        document.getElementById('headerTableBadge').classList.remove('hidden');
-        if (window.innerWidth < 1024) {
-          menuCol.classList.add('hidden');
-          cartCol.classList.remove('hidden');
-        } else {
-          menuCol.classList.remove('hidden');
-          cartCol.classList.remove('hidden');
-        }
-        renderCurrentOrderView();
-      }
-    };
-
-    window.goToTablesView = function() {
-      switchAppTab('map', 0);
-    };
-
-    function renderDishesCatalog() {
-      const container = document.getElementById('dishesList');
-      const query = (document.getElementById('searchInput').value || '').trim().toLowerCase();
-      
-      const filtered = DISH_CATALOG.filter(dish => {
-        const matchesCategory = (currentSelectedCategory === 'all' || dish.category === currentSelectedCategory);
-        const matchesQuery = dish.name.toLowerCase().includes(query);
-        return matchesCategory && matchesQuery;
-      });
-
-      if (filtered.length === 0) {
-        container.innerHTML = `
-          <div class="col-span-full py-8 text-center text-slate-400 text-xs">
-            Ничего не найдено. Нажмите <b>«Своя»</b>, чтобы ввести позицию вручную.
-          </div>
-        `;
-        return;
-      }
-
-      container.innerHTML = filtered.map(dish => `
-        <div onclick="onDishCardClicked('${dish.id}')" 
-             class="bg-white border border-slate-200/90 hover:border-orange-400 p-2.5 rounded-2xl flex flex-col justify-between cursor-pointer active:scale-95 transition shadow-xs">
-          <div class="flex items-start justify-between">
-            <span class="text-2xl">${dish.icon}</span>
-            <span class="font-mono text-xs font-black text-orange-600">${dish.price} ₽</span>
-          </div>
-          <div class="mt-2">
-            <h4 class="font-bold text-xs text-slate-900 leading-tight">${dish.name}</h4>
-            <span class="text-[10px] text-slate-400">${dish.hasModifiers ? 'Модификаторы +' : 'Стандарт'}</span>
-          </div>
-        </div>
-      `).join('');
-    }
-
-    window.selectCategory = function(cat) {
-      currentSelectedCategory = cat;
-      document.querySelectorAll('.cat-pill').forEach(btn => {
-        if (btn.dataset.cat === cat) {
-          btn.className = "cat-pill px-3.5 py-1.5 rounded-full bg-orange-500 text-white shrink-0";
-        } else {
-          btn.className = "cat-pill px-3.5 py-1.5 rounded-full bg-slate-100 text-slate-600 shrink-0";
-        }
-      });
-      renderDishesCatalog();
-    };
-
-    window.onSearchChange = function() {
-      const val = document.getElementById('searchInput').value;
-      const clearBtn = document.getElementById('clearSearchBtn');
-      if (val) clearBtn.classList.remove('hidden');
-      else clearBtn.classList.add('hidden');
-      renderDishesCatalog();
-    };
-
-    window.clearSearchInput = function() {
-      document.getElementById('searchInput').value = '';
-      document.getElementById('clearSearchBtn').classList.add('hidden');
-      renderDishesCatalog();
-    };
-
-    window.onDishCardClicked = function(dishId) {
-      const dish = DISH_CATALOG.find(d => d.id === dishId);
-      if (!dish) return;
-
-      if (dish.hasModifiers) {
-        openModifiersModal(dish);
-      } else {
-        addItemToTableOrder(currentSelectedTableId, {
-          id: dish.id,
-          name: dish.name,
-          price: dish.price,
-          qty: 1,
-          comment: ''
-        });
-      }
-    };
-
-    async function addItemToTableOrder(tableId, item) {
-      let currentOrder = serverOrdersMap[tableId] || {
-        tableId: tableId,
-        guests: 2,
-        waiter: currentWaiter,
-        status: 'new',
-        createdAt: Date.now(),
-        items: []
-      };
-
-      const existingIndex = currentOrder.items.findIndex(i => 
-        i.name === item.name && (i.comment || '') === (item.comment || '') && i.price === item.price
-      );
-
-      if (existingIndex > -1) {
-        currentOrder.items[existingIndex].qty += item.qty;
-      } else {
-        currentOrder.items.push(item);
-      }
-
-      await syncTableOrderToServer(tableId, currentOrder);
-      showToast(`+ ${item.name}`, "☕");
-    }
-
-    async function changeItemQuantity(tableId, itemIndex, delta) {
-      const order = serverOrdersMap[tableId];
-      if (!order || !order.items[itemIndex]) return;
-
-      order.items[itemIndex].qty += delta;
-      if (order.items[itemIndex].qty <= 0) {
-        order.items.splice(itemIndex, 1);
-      }
-
-      await syncTableOrderToServer(tableId, order);
-    }
-
-    window.clearCurrentOrder = async function() {
-      if (!serverOrdersMap[currentSelectedTableId]) return;
-      await syncTableOrderToServer(currentSelectedTableId, null);
-      showToast("Чек стола удалён", "🗑️");
-    };
-
-    window.sendNewItemsToKitchen = async function() {
-      const order = serverOrdersMap[currentSelectedTableId];
-      if (!order || !order.items || order.items.length === 0) {
-        showToast("Заказ пуст", "⚠️");
-        return;
-      }
-      order.status = 'cooking';
-      await syncTableOrderToServer(currentSelectedTableId, order);
-      showToast("Отправлено в цех кухни 🚀", "👨‍🍳");
-    };
-
-    // Отрисовка чека текущего стола
-    function renderCurrentOrderView() {
-      const tableDef = TABLES_LAYOUT.find(t => t.id === currentSelectedTableId);
-      const order = serverOrdersMap[currentSelectedTableId];
-
-      document.getElementById('activeOrderTitle').textContent = tableDef ? tableDef.name : `Стол ${currentSelectedTableId}`;
-      const guests = order ? order.guests : 2;
-      document.getElementById('activeOrderSubtitle').textContent = `${guests} персоны • ${order?.waiter || currentWaiter}`;
-      document.getElementById('btnGuestsDisplay').textContent = guests;
-      document.getElementById('ticketPersonsBadge').textContent = `${guests} персоны`;
-
-      const container = document.getElementById('ticketItemsContainer');
-      const countBadge = document.getElementById('mobileCartCountBadge');
-      const itemsCountText = document.getElementById('cartItemsCountText');
-      const totalPriceText = document.getElementById('ticketTotalPrice');
-      const statusBadge = document.getElementById('ticketKitchenStatusBadge');
-
-      if (!order || !order.items || order.items.length === 0) {
-        container.innerHTML = `
-          <div class="h-full flex flex-col items-center justify-center text-center p-6 text-slate-300">
-            <span class="text-3xl mb-1">🛒</span>
-            <p class="text-xs font-semibold">Чек пуст</p>
-            <p class="text-[10px]">Выберите блюда из меню слева</p>
-          </div>
-        `;
-        totalPriceText.textContent = "0 ₽";
-        itemsCountText.textContent = "0 поз.";
-        statusBadge.textContent = "Пусто";
-        statusBadge.className = "text-[10px] font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600";
-        countBadge.classList.add('hidden');
-        return;
-      }
-
-      let total = 0;
-      let totalItemsCount = 0;
-
-      container.innerHTML = order.items.map((item, index) => {
-        const itemSum = item.price * item.qty;
-        total += itemSum;
-        totalItemsCount += item.qty;
-
-        return `
-          <div class="bg-slate-50 border border-slate-200/70 p-2.5 rounded-2xl flex items-center justify-between gap-2">
-            <div class="min-w-0 flex-1">
-              <h5 class="font-bold text-xs text-slate-900 truncate">${item.name}</h5>
-              ${item.comment ? `<p class="text-[10px] text-orange-600 font-medium truncate">${item.comment}</p>` : ''}
-              <span class="font-mono text-xs font-black text-slate-700">${item.price} ₽</span>
-            </div>
-
-            <div class="flex items-center gap-1.5 shrink-0">
-              <button onclick="changeOrderItemQty(${index}, -1)" class="w-6 h-6 rounded-full bg-white border border-slate-200 text-slate-700 font-bold flex items-center justify-center text-xs active:scale-95">-</button>
-              <span class="font-mono font-bold text-xs min-w-[16px] text-center">${item.qty}</span>
-              <button onclick="changeOrderItemQty(${index}, 1)" class="w-6 h-6 rounded-full bg-white border border-slate-200 text-slate-700 font-bold flex items-center justify-center text-xs active:scale-95">+</button>
-            </div>
-          </div>
-        `;
-      }).join('');
-
-      totalPriceText.textContent = `${total.toLocaleString()} ₽`;
-      itemsCountText.textContent = `${totalItemsCount} поз.`;
-
-      countBadge.textContent = totalItemsCount;
-      countBadge.classList.remove('hidden');
-
-      if (order.status === 'cooking') {
-        statusBadge.textContent = "В процессе кухни";
-        statusBadge.className = "text-[10px] font-semibold px-2 py-0.5 rounded-full bg-amber-100 text-amber-700";
-      } else if (order.status === 'served') {
-        statusBadge.textContent = "Подано гостям";
-        statusBadge.className = "text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700";
-      } else {
-        statusBadge.textContent = "Новый чек";
-        statusBadge.className = "text-[10px] font-semibold px-2 py-0.5 rounded-full bg-orange-100 text-orange-700";
-      }
-    }
-
-    window.changeOrderItemQty = function(itemIndex, delta) {
-      changeItemQuantity(currentSelectedTableId, itemIndex, delta);
-    };
-
-    window.filterActiveOrders = function(status) {
-      activeOrdersFilter = status;
-      document.querySelectorAll('.order-filter-btn').forEach(btn => {
-        btn.className = "order-filter-btn px-3 py-1.5 rounded-full bg-slate-100 text-slate-600 transition";
-      });
-      const activeBtn = document.getElementById(`order-filter-${status}`);
-      if (activeBtn) {
-        activeBtn.className = "order-filter-btn px-3 py-1.5 rounded-full bg-orange-500 text-white shadow-xs transition";
-      }
-      renderActiveOrdersList();
-    };
-
-    function renderActiveOrdersList() {
-      const container = document.getElementById('activeOrdersListContainer');
-      const activeTables = TABLES_LAYOUT.filter(t => {
-        const ord = serverOrdersMap[t.id];
-        if (!ord || !ord.items || ord.items.length === 0) return false;
-        if (activeOrdersFilter === 'all') return true;
-        return ord.status === activeOrdersFilter;
-      });
-
-      if (activeTables.length === 0) {
-        container.innerHTML = `
-          <div class="h-48 flex flex-col items-center justify-center text-center text-slate-300">
-            <span class="text-3xl mb-1">☕</span>
-            <p class="text-xs font-semibold">Нет заказов с выбранным фильтром</p>
-          </div>
-        `;
-        return;
-      }
-
-      container.innerHTML = activeTables.map(t => {
-        const ord = serverOrdersMap[t.id];
-        const sum = ord.items.reduce((s, i) => s + (i.price * i.qty), 0);
-        const count = ord.items.reduce((s, i) => s + i.qty, 0);
-
-        return `
-          <div class="bg-white border border-slate-200/90 rounded-2xl p-3 flex items-center justify-between shadow-xs">
-            <div class="min-w-0">
-              <div class="flex items-center gap-2">
-                <span class="font-black text-sm text-slate-900">${t.name}</span>
-                <span class="text-[10px] font-mono px-2 py-0.5 rounded-full ${
-                  ord.status === 'served' ? 'bg-emerald-100 text-emerald-700' :
-                  ord.status === 'cooking' ? 'bg-amber-100 text-amber-800' : 'bg-orange-100 text-orange-700'
-                }">${ord.status === 'served' ? 'Подано' : ord.status === 'cooking' ? 'Готовится' : 'Новый'}</span>
-              </div>
-              <p class="text-[11px] text-slate-400 mt-0.5">${count} поз. • ${ord.waiter || 'Официант'}</p>
-              <p class="font-mono text-xs font-black text-orange-600 mt-1">${sum.toLocaleString()} ₽</p>
-            </div>
-
-            <div class="flex items-center gap-2">
-              <button onclick="markOrderServed(${t.id})" class="px-2.5 py-1.5 rounded-xl bg-emerald-50 text-emerald-600 font-bold text-xs active:scale-95">
-                ✓ Подано
-              </button>
-              <button onclick="openTableOrder(${t.id})" class="px-3 py-1.5 rounded-xl bg-orange-500 text-white font-bold text-xs active:scale-95">
-                Открыть
-              </button>
-            </div>
-          </div>
-        `;
-      }).join('');
-    }
-
-    window.markOrderServed = async function(tableId) {
-      const order = serverOrdersMap[tableId];
-      if (!order) return;
-      order.status = 'served';
-      await syncTableOrderToServer(tableId, order);
-      showToast(`Стол №${tableId} помечен как «Подано»`, "✨");
-    };
-
-    function openModifiersModal(dish) {
-      currentModDish = dish;
-      selectedModifiers = { milk: null, syrup: null, extras: [] };
-      document.getElementById('modModalDishName').textContent = dish.name;
-      document.getElementById('modModalBasePrice').textContent = `${dish.price} ₽`;
-      document.getElementById('modModalComment').value = '';
-
-      const content = document.getElementById('modModalContent');
-      content.innerHTML = `
-        <div>
-          <label class="font-bold text-slate-700 block mb-1">Молоко:</label>
-          <div class="grid grid-cols-2 gap-1.5">
-            ${MODIFIER_OPTIONS.milks.map((m, idx) => `
-              <button type="button" onclick="selectModMilk('${m.name}', ${m.price})" 
-                      class="mod-milk-btn p-2 rounded-xl text-left border ${idx === 0 ? 'border-orange-500 bg-orange-50 text-orange-600' : 'border-slate-200 bg-white text-slate-700'}">
-                <div class="font-bold truncate">${m.name}</div>
-                <div class="text-[10px] text-slate-400">${m.price > 0 ? `+${m.price} ₽` : '0 ₽'}</div>
-              </button>
-            `).join('')}
-          </div>
-        </div>
-
-        <div>
-          <label class="font-bold text-slate-700 block mb-1">Сироп:</label>
-          <div class="grid grid-cols-2 gap-1.5">
-            ${MODIFIER_OPTIONS.syrups.map((s, idx) => `
-              <button type="button" onclick="selectModSyrup('${s.name}', ${s.price})" 
-                      class="mod-syrup-btn p-2 rounded-xl text-left border ${idx === 0 ? 'border-orange-500 bg-orange-50 text-orange-600' : 'border-slate-200 bg-white text-slate-700'}">
-                <div class="font-bold truncate">${s.name}</div>
-                <div class="text-[10px] text-slate-400">${s.price > 0 ? `+${s.price} ₽` : '0 ₽'}</div>
-              </button>
-            `).join('')}
-          </div>
-        </div>
-      `;
-
-      recalculateModTotal();
-      document.getElementById('itemModifiersModal').classList.remove('hidden');
-    }
-
-    window.selectModMilk = function(name, price) {
-      selectedModifiers.milk = { name, price };
-      document.querySelectorAll('.mod-milk-btn').forEach(btn => {
-        if (btn.innerText.includes(name)) {
-          btn.className = "mod-milk-btn p-2 rounded-xl text-left border border-orange-500 bg-orange-50 text-orange-600";
-        } else {
-          btn.className = "mod-milk-btn p-2 rounded-xl text-left border border-slate-200 bg-white text-slate-700";
-        }
-      });
-      recalculateModTotal();
-    };
-
-    window.selectModSyrup = function(name, price) {
-      selectedModifiers.syrup = { name, price };
-      document.querySelectorAll('.mod-syrup-btn').forEach(btn => {
-        if (btn.innerText.includes(name)) {
-          btn.className = "mod-syrup-btn p-2 rounded-xl text-left border border-orange-500 bg-orange-50 text-orange-600";
-        } else {
-          btn.className = "mod-syrup-btn p-2 rounded-xl text-left border border-slate-200 bg-white text-slate-700";
-        }
-      });
-      recalculateModTotal();
-    };
-
-    function recalculateModTotal() {
-      if (!currentModDish) return;
-      let total = currentModDish.price;
-      if (selectedModifiers.milk) total += selectedModifiers.milk.price;
-      if (selectedModifiers.syrup) total += selectedModifiers.syrup.price;
-      document.getElementById('modModalTotalPrice').textContent = `${total} ₽`;
-    }
-
-    window.appendQuickComment = function(tag) {
-      const input = document.getElementById('modModalComment');
-      if (input.value) {
-        input.value += `, ${tag}`;
-      } else {
-        input.value = tag;
-      }
-    };
-
-    window.clearModalComment = function() {
-      document.getElementById('modModalComment').value = '';
-    };
-
-    window.skipAndAddDish = function() {
-      if (!currentModDish) return;
-      addItemToTableOrder(currentSelectedTableId, {
-        id: currentModDish.id,
-        name: currentModDish.name,
-        price: currentModDish.price,
-        qty: 1,
-        comment: ''
-      });
-      closeModal('itemModifiersModal');
-    };
-
-    window.confirmDishWithModifiers = function() {
-      if (!currentModDish) return;
-      let total = currentModDish.price;
-      const details = [];
-      if (selectedModifiers.milk && selectedModifiers.milk.price > 0) {
-        total += selectedModifiers.milk.price;
-        details.push(selectedModifiers.milk.name);
-      }
-      if (selectedModifiers.syrup && selectedModifiers.syrup.price > 0) {
-        total += selectedModifiers.syrup.price;
-        details.push(`сироп ${selectedModifiers.syrup.name}`);
-      }
-      const note = document.getElementById('modModalComment').value.trim();
-      if (note) details.push(note);
-
-      addItemToTableOrder(currentSelectedTableId, {
-        id: `${currentModDish.id}_${Date.now()}`,
-        name: currentModDish.name,
-        price: total,
-        qty: 1,
-        comment: details.join(', ')
-      });
-      closeModal('itemModifiersModal');
-    };
-
-    window.openGuestsModalForCurrentTable = function() {
-      openGuestsModal(currentSelectedTableId);
-    };
-
-    function openGuestsModal(tableId) {
-      currentSelectedTableId = tableId;
-      tempSelectedGuests = serverOrdersMap[tableId]?.guests || 2;
-      highlightGuestButton(tempSelectedGuests);
-      document.getElementById('guestsModal').classList.remove('hidden');
-    }
-
-    window.setTempGuests = function(num) {
-      tempSelectedGuests = num;
-      highlightGuestButton(num);
-    };
-
-    function highlightGuestButton(num) {
-      const btns = document.querySelectorAll('#guestsSelectorGrid .guest-btn');
-      btns.forEach((b, index) => {
-        if (index + 1 === num) {
-          b.className = "guest-btn p-2.5 rounded-2xl border-2 border-orange-500 bg-orange-50 text-orange-600 font-bold flex flex-col items-center";
-        } else {
-          b.className = "guest-btn p-2.5 rounded-2xl bg-slate-50 border border-slate-200 text-slate-800 font-bold flex flex-col items-center";
-        }
-      });
-    }
-
-    window.confirmGuestSelection = async function() {
-      let ord = serverOrdersMap[currentSelectedTableId];
-      if (!ord) {
-        ord = {
-          tableId: currentSelectedTableId,
-          guests: tempSelectedGuests,
-          waiter: currentWaiter,
-          status: 'new',
-          createdAt: Date.now(),
-          items: []
-        };
-      } else {
-        ord.guests = tempSelectedGuests;
-      }
-
-      await syncTableOrderToServer(currentSelectedTableId, ord);
-      closeModal('guestsModal');
-      document.getElementById('headerTableBadge').textContent = `№${currentSelectedTableId}`;
-      document.getElementById('headerTableBadge').classList.remove('hidden');
-      switchAppTab('menu', 2);
-    };
-
-    // Пересадка стола
-    window.openTransferTableModal = function() {
-      const container = document.getElementById('transferAvailableTablesContainer');
-      document.getElementById('transferModalFromText').textContent = `Текущий Стол №${currentSelectedTableId}`;
-      
-      const freeTables = TABLES_LAYOUT.filter(t => t.id !== currentSelectedTableId && !serverOrdersMap[t.id]);
-      if (freeTables.length === 0) {
-        container.innerHTML = `<div class="col-span-3 text-center text-xs text-slate-400 py-4">Нет свободных столов</div>`;
-      } else {
-        container.innerHTML = freeTables.map(t => `
-          <button onclick="executeTransfer(${t.id})" class="p-3 rounded-2xl bg-slate-50 border border-slate-200 hover:border-orange-500 font-black text-xs text-slate-800 active:scale-95 transition">
-            ${t.name}
-          </button>
-        `).join('');
-      }
-
-      document.getElementById('transferTableModal').classList.remove('hidden');
-    };
-
-    window.executeTransfer = async function(targetTableId) {
-      const currentOrd = serverOrdersMap[currentSelectedTableId];
-      if (!currentOrd) return;
-
-      // Создаем заказ на новом столе и удаляем со старого
-      await syncTableOrderToServer(targetTableId, { ...currentOrd, tableId: targetTableId });
-      await syncTableOrderToServer(currentSelectedTableId, null);
-
-      closeModal('transferTableModal');
-      showToast(`Заказ перенесен на Стол ${targetTableId}`, "🔄");
-      currentSelectedTableId = targetTableId;
-      renderCurrentOrderView();
-    };
-
-    // Счёт кассы
-    window.openCashierCheckoutModal = function() {
-      const order = serverOrdersMap[currentSelectedTableId];
-      if (!order || !order.items || order.items.length === 0) {
-        showToast("Заказ пуст", "⚠️");
-        return;
-      }
-
-      document.getElementById('cashierModalTableTag').textContent = `Счёт: Стол №${currentSelectedTableId}`;
-      let total = 0;
-      const lines = order.items.map(it => {
-        const sum = it.price * it.qty;
-        total += sum;
-        return `
-          <div class="flex justify-between border-b border-dashed border-slate-200 pb-1">
-            <span>${it.name} x${it.qty}</span>
-            <span class="font-bold">${sum} ₽</span>
-          </div>
-        `;
-      }).join('');
-
-      document.getElementById('cashierReceiptLines').innerHTML = lines;
-      document.getElementById('cashierModalTotalSum').textContent = `${total.toLocaleString()} ₽`;
-      document.getElementById('cashierCheckoutModal').classList.remove('hidden');
-    };
-
-    window.copyReceiptToClipboard = function() {
-      const order = serverOrdersMap[currentSelectedTableId];
-      if (!order) return;
-      let text = `=== ЧЕК СТОЛ №${currentSelectedTableId} ===\nОфициант: ${order.waiter || currentWaiter}\n`;
-      let total = 0;
-      order.items.forEach(it => {
-        const sum = it.price * it.qty;
-        total += sum;
-        text += `${it.name} x${it.qty} = ${sum} ₽\n`;
-      });
-      text += `--------------------\nИТОГО: ${total} ₽`;
-
-      const dummy = document.createElement("textarea");
-      document.body.appendChild(dummy);
-      dummy.value = text;
-      dummy.select();
-      document.execCommand("copy");
-      document.body.removeChild(dummy);
-
-      showToast("Чек скопирован в буфер", "📋");
-    };
-
-    window.completeAndFreeTable = async function() {
-      await syncTableOrderToServer(currentSelectedTableId, null);
-      closeModal('cashierCheckoutModal');
-      showToast(`Стол №${currentSelectedTableId} оплачен и свободен`, "✅");
-      switchAppTab('map', 0);
-    };
-
-    // Своя позиция
-    window.openCustomDishModal = function() {
-      document.getElementById('customDishName').value = '';
-      document.getElementById('customDishPrice').value = '';
-      document.getElementById('customDishQty').value = '1';
-      document.getElementById('customDishModal').classList.remove('hidden');
-    };
-
-    window.saveCustomDishToOrder = function() {
-      const name = document.getElementById('customDishName').value.trim();
-      const price = parseFloat(document.getElementById('customDishPrice').value);
-      const qty = parseInt(document.getElementById('customDishQty').value, 10) || 1;
-
-      if (!name || isNaN(price) || price <= 0) {
-        showToast("Укажите название и корректную цену", "⚠️");
-        return;
-      }
-
-      addItemToTableOrder(currentSelectedTableId, {
-        id: `custom_${Date.now()}`,
-        name: name,
-        price: price,
-        qty: qty,
-        comment: 'Своя позиция'
-      });
-
-      closeModal('customDishModal');
-    };
-
-    window.openWelcomeModal = function() {
-      document.getElementById('welcomeModal').classList.remove('hidden');
-    };
-
-    window.pickWaiterName = function(name) {
-      document.getElementById('waiterCustomNameInput').value = name;
-    };
-
-    window.confirmWaiterLogin = function() {
-      const custom = document.getElementById('waiterCustomNameInput').value.trim();
-      if (custom) {
-        currentWaiter = custom;
-        sessionStorage.setItem('coffeeman_waiter', custom);
-      }
-      document.getElementById('headerWaiterName').textContent = `Официант: ${currentWaiter}`;
-      closeModal('welcomeModal');
-      showToast(`Смена открыта: ${currentWaiter}`, "☕");
-    };
-
-    window.closeModal = function(id) {
-      document.getElementById(id).classList.add('hidden');
-    };
-
-    function showToast(text, icon = "🔔") {
-      const toast = document.getElementById('toast');
-      document.getElementById('toastIcon').textContent = icon;
-      document.getElementById('toastMsg').textContent = text;
-      toast.classList.remove('opacity-0', '-translate-y-4');
-      toast.classList.add('opacity-100', 'translate-y-0');
-
-      setTimeout(() => {
-        toast.classList.remove('opacity-100', 'translate-y-0');
-        toast.classList.add('opacity-0', '-translate-y-4');
-      }, 2400);
-    }
-
-    // Инициализация при загрузке окна
-    window.onload = function() {
-      renderHallObstacles();
-      renderMapTables();
-      applyMapTransform();
-      document.getElementById('headerWaiterName').textContent = `Официант: ${currentWaiter}`;
-      initFirebaseSync();
-    };
+      }, { passive: false });
+    })();
   </script>
+  <script type="module" src="waiter.js"></script>
 </body>
 </html>
