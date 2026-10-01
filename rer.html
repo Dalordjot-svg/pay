@@ -1,0 +1,1248 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Терминал благодарности | Осенние чаевые СБП</title>
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- QRCode.js CDN -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  
+  <!-- Google Fonts: Inter & Outfit -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Outfit:wght@600;700;800;900&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            display: ['Outfit', 'sans-serif']
+          },
+          colors: {
+            autumn: {
+              50: '#fffaf4',
+              100: '#ffedd6',
+              200: '#ffd7ad',
+              300: '#ffb673',
+              400: '#ff8f33',
+              500: '#FF6B00',
+              600: '#e05300',
+              700: '#b33c00',
+              800: '#852900',
+              900: '#4d1600'
+            },
+            amberWarm: {
+              300: '#fcd34d',
+              400: '#fbbf24',
+              500: '#f59e0b',
+              600: '#d97706'
+            }
+          }
+        }
+      }
+    };
+  </script>
+
+  <style>
+    body {
+      touch-action: manipulation;
+      user-select: none;
+      -webkit-user-select: none;
+      background-color: #fff9f2;
+    }
+
+    /* Фоновая сетка микро-точек */
+    .bg-autumn-grid {
+      background-image: radial-gradient(rgba(255, 107, 0, 0.18) 1.5px, transparent 1.5px);
+      background-size: 24px 24px;
+    }
+
+    /* Премиальная стеклянная карточка с объемной тенью */
+    .glass-kiosk-panel {
+      background: rgba(255, 255, 255, 0.94);
+      backdrop-filter: blur(28px);
+      -webkit-backdrop-filter: blur(28px);
+      border: 2px solid rgba(255, 226, 196, 0.85);
+      box-shadow: 0 30px 60px -15px rgba(255, 107, 0, 0.13), 0 12px 30px -8px rgba(184, 59, 0, 0.08);
+    }
+
+    /* Карточки сумм чаевых */
+    .tip-pill {
+      background: #ffffff;
+      border: 2px solid #fee8d6;
+      transition: all 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .tip-pill:hover {
+      border-color: #ffb673;
+      transform: translateY(-4px) scale(1.02);
+      box-shadow: 0 16px 32px -8px rgba(255, 107, 0, 0.22);
+    }
+    .tip-pill.active {
+      border-color: #FF6B00;
+      background: linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%);
+      transform: translateY(-3px) scale(1.03);
+      box-shadow: 0 0 0 4px rgba(255, 107, 0, 0.28), 0 20px 38px -10px rgba(255, 107, 0, 0.35);
+    }
+
+    /* Главная кнопка действия */
+    .autumn-glow-action {
+      background: linear-gradient(135deg, #FF6B00 0%, #ea580c 50%, #c2410c 100%);
+      box-shadow: 0 14px 34px -8px rgba(255, 107, 0, 0.5);
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .autumn-glow-action:hover {
+      box-shadow: 0 18px 42px -6px rgba(255, 107, 0, 0.65);
+      transform: translateY(-2px);
+    }
+    .autumn-glow-action:active {
+      transform: scale(0.97);
+    }
+
+    /* АГРЕССИВНОЕ ПРИВЛЕЧЕНИЕ ВНИМАНИЯ (Attract Mode) */
+    @keyframes attractPulseRadar {
+      0% {
+        box-shadow: 0 0 0 0 rgba(255, 107, 0, 0.7), 0 0 30px rgba(255, 107, 0, 0.3);
+      }
+      50% {
+        box-shadow: 0 0 0 24px rgba(255, 107, 0, 0), 0 0 50px rgba(255, 143, 51, 0.5);
+      }
+      100% {
+        box-shadow: 0 0 0 0 rgba(255, 107, 0, 0), 0 0 30px rgba(255, 107, 0, 0.3);
+      }
+    }
+
+    @keyframes attractWiggle {
+      0%, 100% { transform: rotate(0deg) scale(1); }
+      20% { transform: rotate(-3deg) scale(1.04); }
+      40% { transform: rotate(3deg) scale(1.04); }
+      60% { transform: rotate(-2deg) scale(1.02); }
+      80% { transform: rotate(2deg) scale(1.02); }
+    }
+
+    @keyframes attractBadgePop {
+      0%, 100% { transform: translateY(0) scale(1); }
+      50% { transform: translateY(-7px) scale(1.06); filter: drop-shadow(0 10px 18px rgba(255,107,0,0.4)); }
+    }
+
+    @keyframes glowHalo {
+      0%, 100% { opacity: 0.45; transform: scale(1); }
+      50% { opacity: 0.9; transform: scale(1.12); }
+    }
+
+    .attract-mode-active .attract-target {
+      animation: attractPulseRadar 2.2s infinite ease-out;
+    }
+    .attract-mode-active .attract-wiggle {
+      animation: attractWiggle 3.5s infinite ease-in-out;
+    }
+    .attract-mode-active .attract-banner {
+      animation: attractBadgePop 2.8s infinite ease-in-out;
+    }
+
+    /* Анимация проявления текста */
+    @keyframes smoothFadeSlide {
+      0% {
+        opacity: 0;
+        transform: translateY(14px) scale(0.96);
+        filter: blur(5px);
+      }
+      100% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+        filter: blur(0);
+      }
+    }
+    .animate-smooth-text {
+      animation: smoothFadeSlide 0.65s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    /* Струя пара из кофе */
+    @keyframes steamRise {
+      0% { opacity: 0.2; transform: translateY(0) scaleX(1); }
+      50% { opacity: 0.7; transform: translateY(-10px) scaleX(1.3); }
+      100% { opacity: 0; transform: translateY(-20px) scaleX(1.6); }
+    }
+    .steam-line {
+      animation: steamRise 2.4s ease-out infinite;
+    }
+
+    /* Ошибка PIN-кода */
+    @keyframes pinShake {
+      0%, 100% { transform: translateX(0); }
+      20%, 60% { transform: translateX(-10px); }
+      40%, 80% { transform: translateX(10px); }
+    }
+    .shake-error {
+      animation: pinShake 0.4s ease-in-out;
+    }
+
+    .custom-scroll::-webkit-scrollbar {
+      width: 6px;
+    }
+    .custom-scroll::-webkit-scrollbar-thumb {
+      background: #ffb673;
+      border-radius: 99px;
+    }
+  </style>
+</head>
+<body class="min-h-screen text-neutral-800 flex flex-col justify-between relative overflow-x-hidden font-sans attract-mode-active" id="terminalBody">
+
+  <!-- Фоновая матрица теплых точек -->
+  <div class="fixed inset-0 bg-autumn-grid pointer-events-none z-0 opacity-80"></div>
+  
+  <!-- Декоративные теплые световые пятна (амбиентный осенний свет) -->
+  <div class="fixed -top-36 -left-36 w-[520px] h-[520px] rounded-full bg-gradient-to-br from-amberWarm-300/35 to-autumn-500/25 blur-3xl pointer-events-none z-0" style="animation: glowHalo 7s ease-in-out infinite;"></div>
+  <div class="fixed top-1/4 -right-40 w-[540px] h-[540px] rounded-full bg-gradient-to-br from-autumn-400/25 to-amberWarm-500/25 blur-3xl pointer-events-none z-0" style="animation: glowHalo 8s ease-in-out infinite 2s;"></div>
+  <div class="fixed -bottom-40 left-1/3 w-[600px] h-[600px] rounded-full bg-gradient-to-tr from-autumn-300/20 to-orange-500/15 blur-3xl pointer-events-none z-0"></div>
+
+  <!-- Холст для анимированных синусоидальных волн, парящих листьев и золотых искр -->
+  <canvas id="autumnCanvas" class="fixed inset-0 pointer-events-none z-0"></canvas>
+
+  <header class="relative z-10 w-full px-6 md:px-10 py-4 flex items-center justify-between border-b border-autumn-200/70 bg-white/80 backdrop-blur-xl">
+    <div class="flex items-center gap-4">
+      <div class="relative w-13 h-13 p-3 rounded-2xl bg-gradient-to-tr from-autumn-600 via-autumn-500 to-amberWarm-400 text-white flex items-center justify-center font-black text-2xl shadow-lg shadow-autumn-500/35 attract-wiggle">
+        ☕
+        <!-- Пар из чашки -->
+        <div class="absolute -top-3 left-1/2 -translate-x-1/2 flex gap-1">
+          <span class="w-1 h-3 bg-autumn-400 rounded-full steam-line" style="animation-delay: 0s;"></span>
+          <span class="w-1 h-4 bg-autumn-400 rounded-full steam-line" style="animation-delay: 0.6s;"></span>
+          <span class="w-1 h-3 bg-autumn-400 rounded-full steam-line" style="animation-delay: 1.2s;"></span>
+        </div>
+      </div>
+      <div>
+        <div class="flex items-center gap-2.5">
+          <h1 id="baristaNameDisplay" class="font-display font-black text-neutral-900 text-xl md:text-2xl leading-none">Уютная Кофейня</h1>
+          <span class="px-3 py-1 rounded-full text-[11px] font-extrabold tracking-wider uppercase bg-autumn-100 text-autumn-700 border border-autumn-200 shadow-sm flex items-center gap-1.5">
+            <span>🍁</span>
+            <span>Экран благодарности</span>
+          </span>
+        </div>
+        <p class="text-xs text-neutral-500 flex items-center gap-2 font-medium mt-1">
+          <span id="networkStatusDot" class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+          <span id="networkStatusText" class="font-semibold text-neutral-600">Терминал готов к моментальной оплате по СБП</span>
+        </p>
+      </div>
+    </div>
+
+    <!-- Правые кнопки управления -->
+    <div class="flex items-center gap-3">
+      <!-- Переключатель режима агрессивного привлечения внимания (Attract Mode) -->
+      <button id="toggleAttractModeBtn" title="Режим яркого привлечения гостей" class="px-3.5 py-2.5 rounded-2xl bg-autumn-50 border border-autumn-300 text-autumn-700 hover:bg-autumn-100 font-bold text-xs flex items-center gap-2 shadow-sm transition active:scale-95">
+        <span class="text-base animate-spin" style="animation-duration: 6s;">✨</span>
+        <span class="hidden sm:inline">Внимание: <strong id="attractModeLabel">ВКЛ</strong></span>
+      </button>
+
+      <!-- Разворот на весь экран -->
+      <button id="fullscreenBtn" title="Полноэкранный режим терминала" class="p-2.5 rounded-2xl bg-white border border-neutral-200 text-neutral-600 hover:text-autumn-600 hover:border-autumn-300 shadow-sm transition active:scale-95">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4h-4"/>
+        </svg>
+      </button>
+
+      <!-- Защищенная кнопка сервисных настроек (PIN: 0506) -->
+      <button id="openPinModalBtn" title="Панель администратора" class="p-2.5 rounded-2xl bg-white border border-neutral-200 text-neutral-500 hover:text-autumn-600 hover:border-autumn-300 shadow-sm transition active:scale-95 flex items-center gap-1.5 text-xs font-bold">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+        </svg>
+        <span class="hidden sm:inline">Настройки</span>
+      </button>
+    </div>
+  </header>
+
+  <main class="relative z-10 w-full max-w-7xl mx-auto px-4 md:px-8 py-4 flex-1 flex flex-col justify-center">
+    
+    <!-- Верхний динамический бейдж привлечения внимания с плавной сменой текста -->
+    <div class="mb-5 text-center min-h-[54px] flex items-center justify-center">
+      <div id="gratitudeBadge" class="inline-flex items-center gap-3 py-2.5 px-7 rounded-full bg-white/95 border-2 border-autumn-300 shadow-md text-neutral-800 text-sm md:text-base font-bold attract-banner">
+        <span class="text-autumn-500 text-xl" id="gratitudeIcon">🍁</span>
+        <span id="gratitudeMessage">Согрейте бариста чашечкой кофе и тёплыми словами!</span>
+        <span class="text-autumn-500 text-xl">☕</span>
+      </div>
+    </div>
+
+    <!-- Основная сетка терминала (Большой адаптивный киоск) -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
+      
+      <!-- ЛЕВАЯ КОЛОНКА: Выбор размера чаевых и своя сумма -->
+      <div class="lg:col-span-7 glass-kiosk-panel rounded-3xl p-6 md:p-9 flex flex-col justify-between">
+        <div>
+          <!-- Верхняя строка карточки -->
+          <div class="flex items-center justify-between mb-5">
+            <div>
+              <h2 class="text-xl md:text-3xl font-display font-black text-neutral-900 flex items-center gap-2.5">
+                <span>Поблагодарить бариста</span>
+                <span class="text-autumn-500">🧡</span>
+              </h2>
+              <p class="text-xs md:text-sm text-neutral-500 mt-1 font-medium">Выберите комфортную сумму или укажите свою</p>
+            </div>
+            
+            <div class="hidden sm:flex flex-col items-end">
+              <span class="text-[11px] font-black uppercase tracking-wider text-autumn-700 bg-autumn-100/90 px-3 py-1.5 rounded-xl border border-autumn-200">
+                СБП через ЮKassa
+              </span>
+              <span class="text-[10px] text-neutral-400 mt-0.5">Динамический QR НСПК • 0% гостю</span>
+            </div>
+          </div>
+
+          <!-- Сетка фиксированных сумм чаевых -->
+          <div class="grid grid-cols-3 gap-3.5 mb-6">
+            <button data-amount="50" class="tip-pill p-4 md:p-5 rounded-3xl flex flex-col items-center justify-center group active:scale-95">
+              <span class="text-2xl mb-1 group-hover:scale-125 transition-transform">🍪</span>
+              <span class="font-display font-black text-2xl md:text-3xl text-neutral-900 group-hover:text-autumn-600 transition-colors">50 ₽</span>
+              <span class="text-xs text-neutral-400 font-semibold mt-0.5">К чаю</span>
+            </button>
+            <button data-amount="100" class="tip-pill active p-4 md:p-5 rounded-3xl flex flex-col items-center justify-center group active:scale-95">
+              <span class="text-2xl mb-1 group-hover:scale-125 transition-transform">☕</span>
+              <span class="font-display font-black text-2xl md:text-3xl text-autumn-600 transition-colors">100 ₽</span>
+              <span class="text-xs text-autumn-600/90 font-bold mt-0.5">На кофе</span>
+            </button>
+            <button data-amount="150" class="tip-pill p-4 md:p-5 rounded-3xl flex flex-col items-center justify-center group active:scale-95">
+              <span class="text-2xl mb-1 group-hover:scale-125 transition-transform">🥐</span>
+              <span class="font-display font-black text-2xl md:text-3xl text-neutral-900 group-hover:text-autumn-600 transition-colors">150 ₽</span>
+              <span class="text-xs text-neutral-400 font-semibold mt-0.5">Круассан</span>
+            </button>
+            <button data-amount="200" class="tip-pill p-4 md:p-5 rounded-3xl flex flex-col items-center justify-center group active:scale-95">
+              <span class="text-2xl mb-1 group-hover:scale-125 transition-transform">🍰</span>
+              <span class="font-display font-black text-2xl md:text-3xl text-neutral-900 group-hover:text-autumn-600 transition-colors">200 ₽</span>
+              <span class="text-xs text-neutral-400 font-semibold mt-0.5">Десерт</span>
+            </button>
+            <button data-amount="300" class="tip-pill p-4 md:p-5 rounded-3xl flex flex-col items-center justify-center group active:scale-95">
+              <span class="text-2xl mb-1 group-hover:scale-125 transition-transform">🧡</span>
+              <span class="font-display font-black text-2xl md:text-3xl text-neutral-900 group-hover:text-autumn-600 transition-colors">300 ₽</span>
+              <span class="text-xs text-neutral-400 font-semibold mt-0.5">От души</span>
+            </button>
+            <button data-amount="500" class="tip-pill p-4 md:p-5 rounded-3xl flex flex-col items-center justify-center group active:scale-95">
+              <span class="text-2xl mb-1 group-hover:scale-125 transition-transform">🍁</span>
+              <span class="font-display font-black text-2xl md:text-3xl text-neutral-900 group-hover:text-autumn-600 transition-colors">500 ₽</span>
+              <span class="text-xs text-neutral-400 font-semibold mt-0.5">Респект</span>
+            </button>
+          </div>
+
+          <!-- Блок указания своей произвольной суммы -->
+          <div class="bg-gradient-to-r from-autumn-50/90 via-white to-amberWarm-50/80 p-4 md:p-5 rounded-3xl border-2 border-autumn-200">
+            <div class="flex items-center justify-between mb-2.5">
+              <label for="customAmountInput" class="text-xs md:text-sm font-bold text-neutral-700 flex items-center gap-1.5">
+                <span>Или укажите любую свою сумму:</span>
+                <span class="text-neutral-400 text-xs font-normal">(от 10 до 25 000 ₽)</span>
+              </label>
+              <!-- Быстрые добавки к текущей сумме -->
+              <div class="flex gap-1.5">
+                <button type="button" class="quick-add-btn px-2.5 py-1 rounded-xl bg-white border border-autumn-300 text-xs font-bold text-autumn-700 hover:bg-autumn-100 transition active:scale-90" data-add="50">+50</button>
+                <button type="button" class="quick-add-btn px-2.5 py-1 rounded-xl bg-white border border-autumn-300 text-xs font-bold text-autumn-700 hover:bg-autumn-100 transition active:scale-90" data-add="100">+100</button>
+                <button type="button" class="quick-add-btn px-2.5 py-1 rounded-xl bg-white border border-autumn-300 text-xs font-bold text-autumn-700 hover:bg-autumn-100 transition active:scale-90" data-add="200">+200</button>
+              </div>
+            </div>
+
+            <div class="relative flex items-center">
+              <input type="number" id="customAmountInput" min="10" max="25000" placeholder="Введите сумму..." class="w-full py-4 px-5 pl-12 pr-32 rounded-2xl bg-white border-2 border-neutral-200 font-display font-extrabold text-xl text-neutral-900 focus:outline-none focus:border-autumn-500 focus:ring-4 focus:ring-autumn-500/20 transition shadow-inner">
+              <span class="absolute left-4.5 text-autumn-500 font-display font-black text-2xl">₽</span>
+              <button id="applyCustomBtn" class="absolute right-2 px-5 py-2.5 rounded-xl bg-autumn-500 hover:bg-autumn-600 text-white text-xs md:text-sm font-extrabold transition active:scale-95 shadow-md shadow-autumn-500/25">
+                Применить
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Нижняя панель подтверждения и генерации -->
+        <div class="mt-6 pt-5 border-t border-autumn-100 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div class="text-left w-full sm:w-auto">
+            <span class="text-xs text-neutral-400 uppercase tracking-wider font-extrabold block">Сумма к оплате:</span>
+            <div class="font-display font-black text-neutral-900 text-3xl md:text-4xl flex items-baseline gap-1">
+              <span id="currentAmountBadge">100</span>
+              <span class="text-autumn-500 text-3xl">₽</span>
+            </div>
+          </div>
+
+          <button id="refreshPaymentBtn" class="w-full sm:w-auto px-8 py-4 rounded-2xl autumn-glow-action text-white font-display font-black text-lg flex items-center justify-center gap-3">
+            <span>Сформировать QR</span>
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="lg:col-span-5 glass-kiosk-panel rounded-3xl p-6 md:p-9 flex flex-col items-center justify-center text-center relative min-h-[460px]">
+        
+        <!-- Состояние 1: Отображение QR-кода СБП -->
+        <div id="qrDisplayWrapper" class="flex flex-col items-center w-full">
+          
+          <!-- Осенний мерцающий бейдж СБП (входит в систему привлечения внимания) -->
+          <div class="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full bg-gradient-to-r from-autumn-100 via-amberWarm-100 to-autumn-100 border-2 border-autumn-300 text-autumn-900 text-xs md:text-sm font-extrabold mb-4 shadow-sm attract-wiggle">
+            <span class="w-2.5 h-2.5 rounded-full bg-autumn-500 animate-ping"></span>
+            <span id="qrBadgeLabel">СБП ЮKassa • Динамический QR</span>
+          </div>
+
+          <!-- Рамка QR-кода с эффектом радара привлечения внимания -->
+          <div class="relative p-4 md:p-5 bg-white rounded-3xl shadow-xl border-2 border-autumn-300 mb-4 attract-target transition-all">
+            <div id="qrcodeBox" class="w-[220px] h-[220px] md:w-[240px] md:h-[240px] flex items-center justify-center overflow-hidden rounded-2xl bg-white"></div>
+            
+            <!-- Официальная фирменная плашка СБП по центру -->
+            <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+              <div class="w-13 h-13 px-2 py-1.5 rounded-2xl bg-white shadow-2xl border-2 border-autumn-300 flex items-center justify-center">
+                <svg class="w-9 h-7" viewBox="0 0 120 70" fill="none">
+                  <!-- Стилизованный трехцветный треугольник СБП -->
+                  <path d="M15 15 L50 35 L15 55 Z" fill="#F86900"/>
+                  <path d="M52 15 L87 35 L52 55 Z" fill="#00A0E3"/>
+                  <path d="M33 4 L68 24 L33 44 Z" fill="#84BD00"/>
+                  <text x="88" y="42" font-family="'Outfit', sans-serif" font-weight="900" font-size="28" fill="#1D1D1B">СБП</text>
+                </svg>
+              </div>
+            </div>
+          </div>
+
+          <!-- Сумма в правом окне -->
+          <div class="font-display font-black text-3xl md:text-4xl text-neutral-900 mb-1 flex items-baseline justify-center gap-1.5">
+            <span id="qrAmountDisplay">100</span>
+            <span class="text-autumn-500 text-3xl">₽</span>
+          </div>
+          
+          <p class="text-xs md:text-sm text-neutral-700 font-extrabold mb-1">
+            Наведите камеру смартфона или приложение банка
+          </p>
+          
+          <!-- Логотипы банковских систем СБП -->
+          <div class="flex items-center justify-center gap-2 mt-2 pt-2 border-t border-autumn-100 w-full max-w-[300px]">
+            <span class="px-2 py-0.5 rounded-md bg-neutral-100 text-[10px] font-bold text-neutral-600">Сбер</span>
+            <span class="px-2 py-0.5 rounded-md bg-neutral-100 text-[10px] font-bold text-neutral-600">Т-Банк</span>
+            <span class="px-2 py-0.5 rounded-md bg-neutral-100 text-[10px] font-bold text-neutral-600">ВТБ</span>
+            <span class="px-2 py-0.5 rounded-md bg-neutral-100 text-[10px] font-bold text-neutral-600">Альфа</span>
+            <span class="text-[10px] text-neutral-400 font-semibold">+200 банков</span>
+          </div>
+
+        </div>
+
+        <!-- Состояние 2: Загрузка -->
+        <div id="qrLoadingWrapper" class="hidden flex-col items-center justify-center py-12">
+          <div class="relative w-20 h-20 mb-4">
+            <div class="w-20 h-20 border-4 border-autumn-100 rounded-full"></div>
+            <div class="w-20 h-20 border-4 border-autumn-500 border-t-transparent rounded-full animate-spin absolute inset-0"></div>
+          </div>
+          <p class="font-display font-black text-neutral-800 text-lg">Запрос СБП QR в ЮKassa...</p>
+          <p class="text-xs text-neutral-400 mt-1">Генерируем одноразовую платёжную ссылку НСПК</p>
+        </div>
+
+        <!-- Состояние 3: Ошибка связи -->
+        <div id="errorStateWrapper" class="hidden flex flex-col items-center justify-center py-8 px-4">
+          <div class="w-18 h-18 rounded-3xl bg-red-50 text-red-500 flex items-center justify-center text-4xl mb-4 border border-red-100 shadow-sm">
+            🍂
+          </div>
+          <h3 class="font-extrabold text-neutral-900 text-base mb-2">
+            Не удалось получить СБП QR от ЮKassa
+          </h3>
+          <p id="errorMessageDetail" class="text-xs md:text-sm text-red-600 font-semibold mb-5 leading-relaxed bg-red-50/90 py-3 px-4 rounded-2xl border border-red-200">
+            Проверьте адрес Cloudflare Worker и ключи Shop ID в настройках терминала (PIN: 0506)
+          </p>
+          <div class="flex gap-2">
+            <button id="retryPaymentBtn" class="px-5 py-2.5 rounded-xl bg-neutral-900 text-white text-xs font-bold hover:bg-neutral-800 transition active:scale-95 shadow-md">
+              🔄 Попробовать снова
+            </button>
+            <button id="openSettingsFromErrorBtn" class="px-5 py-2.5 rounded-xl bg-autumn-500 text-white text-xs font-bold hover:bg-autumn-600 transition active:scale-95 shadow-md">
+              ⚙️ Настроить ЮKassa
+            </button>
+          </div>
+        </div>
+
+        <!-- Состояние 4: Успешная оплата -->
+        <div id="successStateWrapper" class="hidden flex flex-col items-center justify-center py-10">
+          <div class="w-24 h-24 rounded-full bg-gradient-to-tr from-amberWarm-400 via-autumn-500 to-autumn-600 text-white flex items-center justify-center text-5xl mb-4 animate-bounce shadow-2xl shadow-autumn-500/40">
+            🍁
+          </div>
+          <h3 class="font-display font-black text-neutral-900 text-3xl mb-1">Спасибо огромное!</h3>
+          <p class="text-sm md:text-base text-neutral-600 max-w-[320px] leading-relaxed">
+            Ваше душевное тепло и улыбка согревают нас в этот осенний день! ☕✨
+          </p>
+        </div>
+
+      </div>
+
+    </div>
+  </main>
+
+  <footer class="relative z-10 w-full py-4 px-8 text-center flex flex-col sm:flex-row items-center justify-between text-xs text-neutral-500 border-t border-autumn-200/60 bg-white/70 backdrop-blur-md">
+    <div class="flex items-center gap-2 justify-center font-medium">
+      <span class="text-autumn-500 text-base">🍁</span>
+      <span>Быстрая и безопасная оплата через <strong>Систему Быстрых Платежей (СБП)</strong></span>
+    </div>
+    <div class="mt-1.5 sm:mt-0 font-bold text-neutral-600 flex items-center gap-3">
+      <span>Терминал чаевых</span>
+      <span class="w-1.5 h-1.5 rounded-full bg-neutral-300"></span>
+      <span id="footerModeInfo" class="text-autumn-600 font-extrabold">Режим: Прямой СБП</span>
+    </div>
+  </footer>
+
+  <!-- МОДАЛЬНОЕ ОКНО 1: Ввод служебного PIN-кода (0506) БЕЗ подсказок -->
+  <div id="pinModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/55 backdrop-blur-md p-4">
+    <div class="bg-white rounded-3xl w-full max-w-xs p-6 shadow-2xl border-2 border-autumn-200 text-center relative animate-in fade-in zoom-in duration-200">
+      
+      <button id="closePinModalBtn" class="absolute top-4 right-4 p-2 text-neutral-400 hover:text-neutral-700 transition">
+        ✕
+      </button>
+
+      <div class="w-13 h-13 rounded-2xl bg-autumn-50 text-autumn-600 flex items-center justify-center text-3xl mx-auto mb-3 shadow-inner">
+        🔒
+      </div>
+      
+      <h3 class="font-extrabold text-lg text-neutral-900 mb-0.5">Служебный доступ</h3>
+      <p class="text-xs text-neutral-400 mb-5">Введите PIN-код для входа в панель</p>
+
+      <!-- 4 Точки индикатора PIN-кода -->
+      <div id="pinDotsContainer" class="flex items-center justify-center gap-4 mb-6">
+        <div class="pin-dot w-4 h-4 rounded-full border-2 border-neutral-300 transition-all duration-150"></div>
+        <div class="pin-dot w-4 h-4 rounded-full border-2 border-neutral-300 transition-all duration-150"></div>
+        <div class="pin-dot w-4 h-4 rounded-full border-2 border-neutral-300 transition-all duration-150"></div>
+        <div class="pin-dot w-4 h-4 rounded-full border-2 border-neutral-300 transition-all duration-150"></div>
+      </div>
+
+      <!-- Сенсорная клавиатура терминала -->
+      <div class="grid grid-cols-3 gap-2.5">
+        <button class="pin-num-key py-3.5 rounded-2xl bg-neutral-50 hover:bg-autumn-50 font-display font-black text-xl text-neutral-800 border border-neutral-200 active:scale-95 transition" data-num="1">1</button>
+        <button class="pin-num-key py-3.5 rounded-2xl bg-neutral-50 hover:bg-autumn-50 font-display font-black text-xl text-neutral-800 border border-neutral-200 active:scale-95 transition" data-num="2">2</button>
+        <button class="pin-num-key py-3.5 rounded-2xl bg-neutral-50 hover:bg-autumn-50 font-display font-black text-xl text-neutral-800 border border-neutral-200 active:scale-95 transition" data-num="3">3</button>
+        <button class="pin-num-key py-3.5 rounded-2xl bg-neutral-50 hover:bg-autumn-50 font-display font-black text-xl text-neutral-800 border border-neutral-200 active:scale-95 transition" data-num="4">4</button>
+        <button class="pin-num-key py-3.5 rounded-2xl bg-neutral-50 hover:bg-autumn-50 font-display font-black text-xl text-neutral-800 border border-neutral-200 active:scale-95 transition" data-num="5">5</button>
+        <button class="pin-num-key py-3.5 rounded-2xl bg-neutral-50 hover:bg-autumn-50 font-display font-black text-xl text-neutral-800 border border-neutral-200 active:scale-95 transition" data-num="6">6</button>
+        <button class="pin-num-key py-3.5 rounded-2xl bg-neutral-50 hover:bg-autumn-50 font-display font-black text-xl text-neutral-800 border border-neutral-200 active:scale-95 transition" data-num="7">7</button>
+        <button class="pin-num-key py-3.5 rounded-2xl bg-neutral-50 hover:bg-autumn-50 font-display font-black text-xl text-neutral-800 border border-neutral-200 active:scale-95 transition" data-num="8">8</button>
+        <button class="pin-num-key py-3.5 rounded-2xl bg-neutral-50 hover:bg-autumn-50 font-display font-black text-xl text-neutral-800 border border-neutral-200 active:scale-95 transition" data-num="9">9</button>
+        <button id="pinClearBtn" class="py-3.5 rounded-2xl bg-neutral-100 hover:bg-neutral-200 font-bold text-xs text-neutral-500 active:scale-95 transition">Сброс</button>
+        <button class="pin-num-key py-3.5 rounded-2xl bg-neutral-50 hover:bg-autumn-50 font-display font-black text-xl text-neutral-800 border border-neutral-200 active:scale-95 transition" data-num="0">0</button>
+        <button id="pinBackspaceBtn" class="py-3.5 rounded-2xl bg-neutral-100 hover:bg-neutral-200 font-bold text-lg text-neutral-600 active:scale-95 transition">⌫</button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- МОДАЛЬНОЕ ОКНО 2: Настройки терминала и СБП (только при вводе 0506) -->
+  <div id="settingsModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/55 backdrop-blur-md p-4">
+    <div class="bg-white rounded-3xl w-full max-w-lg p-6 shadow-2xl border-2 border-autumn-200 custom-scroll max-h-[90vh] overflow-y-auto">
+      <div class="flex items-center justify-between pb-4 border-b border-neutral-100 mb-4">
+        <h3 class="font-extrabold text-lg text-neutral-900 flex items-center gap-2">
+          <span>⚙️</span> Интеграция ЮKassa (СБП QR)
+        </h3>
+        <button id="closeSettingsBtn" class="p-1.5 rounded-lg text-neutral-400 hover:text-neutral-700">
+          ✕
+        </button>
+      </div>
+
+      <div class="space-y-4 text-left">
+        
+        <!-- Описание принципа работы -->
+        <div class="bg-autumn-50/90 p-3.5 rounded-2xl border border-autumn-200 text-xs text-neutral-700 leading-relaxed">
+          <p class="font-bold text-autumn-800 mb-1 flex items-center gap-1.5">
+            <span>⚡</span> Принцип работы СБП через ЮKassa:
+          </p>
+          <p class="text-[11px] text-neutral-600">
+            Терминал запрашивает через Worker у ЮKassa платёж с типом <code>confirmation.type = 'qr'</code>. ЮKassa возвращает ссылку СБП (<code>confirmation_data</code>), сайт мгновенно рисует QR-код, а после оплаты гостем экран благодарит автоматически.
+          </p>
+        </div>
+
+        <!-- Поля ЮKassa и Cloudflare Worker -->
+        <div class="space-y-3">
+          <div>
+            <label class="block text-xs font-bold text-neutral-600 mb-1">URL твоего Cloudflare Worker:</label>
+            <input type="url" id="workerUrlInput" placeholder="https://my-yookassa-worker.workers.dev" class="w-full text-xs font-mono py-2.5 px-3 rounded-xl bg-neutral-50 border border-neutral-200 focus:outline-none focus:border-autumn-500">
+            <p class="text-[10px] text-neutral-400 mt-1">Воркер принимает POST на /create-payment и опрашивает /payment-status</p>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-bold text-neutral-600 mb-1">Shop ID:</label>
+              <input type="text" id="shopIdInput" placeholder="123456" class="w-full text-xs font-mono py-2.5 px-3 rounded-xl bg-neutral-50 border border-neutral-200 focus:outline-none focus:border-autumn-500">
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-neutral-600 mb-1">Secret Key:</label>
+              <input type="password" id="secretKeyInput" placeholder="live_... или test_..." class="w-full text-xs font-mono py-2.5 px-3 rounded-xl bg-neutral-50 border border-neutral-200 focus:outline-none focus:border-autumn-500">
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-neutral-600 mb-1">Название кофейни / Имя бариста:</label>
+            <input type="text" id="venueNameInput" placeholder="Уютная Кофейня" class="w-full text-xs py-2.5 px-3 rounded-xl bg-neutral-50 border border-neutral-200 focus:outline-none focus:border-autumn-500">
+          </div>
+        </div>
+
+        <!-- Кнопка тестирования связи с воркером -->
+        <button id="testWorkerBtn" class="w-full py-2.5 rounded-xl bg-neutral-100 hover:bg-neutral-200 text-neutral-800 text-xs font-bold transition flex items-center justify-center gap-2">
+          <span>🔍 Проверить статус воркера</span>
+        </button>
+        <div id="workerTestStatus" class="hidden text-xs p-2.5 rounded-xl text-center font-mono"></div>
+
+        <!-- Готовый код воркера под капотом -->
+        <details class="text-xs bg-neutral-50 p-3 rounded-xl border border-neutral-200">
+          <summary class="font-bold text-autumn-700 cursor-pointer select-none">
+            📄 Показать правильный код для Cloudflare Worker (с поддержкой СБП)
+          </summary>
+          <p class="text-[11px] text-neutral-500 mt-2 mb-2">
+            Воркер передает в ЮKassa <code>payment_method_data: { type: 'sbp' }</code> и возвращает полученный <code>confirmation_data</code> (ссылку СБП):
+          </p>
+          <pre class="bg-neutral-900 text-amberWarm-300 p-3 rounded-xl text-[10px] overflow-x-auto font-mono max-h-40 leading-relaxed custom-scroll">
+export default {
+  async fetch(req) {
+    const cors = {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET,POST,OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type'
+    };
+    if (req.method === 'OPTIONS') return new Response(null, { headers: cors });
+
+    const url = new URL(req.url);
+    if (url.pathname === '/create-payment') {
+      const { amount, shopId, secretKey, description } = await req.json();
+      const auth = btoa(`${shopId}:${secretKey}`);
+      const idempotenceKey = crypto.randomUUID();
+
+      const yooRes = await fetch('https://api.yookassa.ru/v3/payments', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Idempotence-Key': idempotenceKey,
+          'Authorization': `Basic ${auth}`
+        },
+        body: JSON.stringify({
+          amount: { value: Number(amount).toFixed(2), currency: 'RUB' },
+          payment_method_data: { type: 'sbp' },
+          confirmation: { type: 'qr' },
+          capture: true,
+          description: description || 'Чаевые СБП'
+        })
+      });
+      const data = await yooRes.json();
+      return new Response(JSON.stringify(data), {
+        status: yooRes.status,
+        headers: { ...cors, 'Content-Type': 'application/json' }
+      });
+    }
+
+    if (url.pathname === '/payment-status') {
+      const paymentId = url.searchParams.get('paymentId');
+      const shopId = url.searchParams.get('shopId');
+      const secretKey = url.searchParams.get('secretKey');
+      const auth = btoa(`${shopId}:${secretKey}`);
+
+      const yooRes = await fetch(`https://api.yookassa.ru/v3/payments/${paymentId}`, {
+        headers: { 'Authorization': `Basic ${auth}` }
+      });
+      const data = await yooRes.json();
+      return new Response(JSON.stringify(data), {
+        status: yooRes.status,
+        headers: { ...cors, 'Content-Type': 'application/json' }
+      });
+    }
+
+    return new Response('OK', { headers: cors });
+  }
+};</pre>
+        </details>
+
+        <div class="pt-4 border-t border-neutral-100 flex items-center justify-end gap-2">
+          <button id="saveSettingsBtn" class="px-6 py-2.5 rounded-xl bg-autumn-500 text-white font-extrabold text-xs hover:bg-autumn-600 transition shadow-md shadow-autumn-500/25">
+            Сохранить настройки
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const STORAGE_KEY = 'tips_terminal_autumn_sbp_v6';
+    const ADMIN_PIN = '0506'; // Секретный служебный пароль (нигде в интерфейсе не отображается)
+
+    let currentAmount = 100;
+    let enteredPin = '';
+    let qrCodeInstance = null;
+    let pollingInterval = null;
+    let activePaymentId = null;
+    let isAttractMode = true;
+    let idleTimer = null;
+    let audioCtx = null;
+
+    // Сохраненное состояние терминала
+    const state = {
+      workerUrl: localStorage.getItem(`${STORAGE_KEY}_url`) || '',
+      shopId: localStorage.getItem(`${STORAGE_KEY}_shopId`) || '',
+      secretKey: localStorage.getItem(`${STORAGE_KEY}_secretKey`) || '',
+      venueName: localStorage.getItem(`${STORAGE_KEY}_venue`) || 'Уютная Кофейня'
+    };
+
+    const gratitudeMessages = [
+      { text: "Согрейте бариста чашечкой кофе и тёплыми словами! ☕", icon: "🍂" },
+      { text: "Каждая чашка согрета вашей заботой и душевным теплом! 🍁", icon: "✨" },
+      { text: "Спасибо за теплоту ваших искренних улыбок в эти дни! 🧡", icon: "🧣" },
+      { text: "Ваша поддержка вдохновляет нас варить лучший кофе! 🌟", icon: "☕" },
+      { text: "Пусть этот осенний день будет полон приятных чудес! 💛", icon: "🍁" }
+    ];
+    let gratitudeIndex = 0;
+
+    function playTone(freq = 600, duration = 0.08, type = 'sine') {
+      try {
+        if (!audioCtx) {
+          const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+          if (AudioContextClass) audioCtx = new AudioContextClass();
+        }
+        if (!audioCtx) return;
+        if (audioCtx.state === 'suspended') {
+          audioCtx.resume();
+        }
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = type;
+        osc.frequency.value = freq;
+        gain.gain.setValueAtTime(0.05, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + duration);
+      } catch (e) {}
+    }
+
+    const baristaNameDisplay = document.getElementById('baristaNameDisplay');
+    const networkStatusDot = document.getElementById('networkStatusDot');
+    const networkStatusText = document.getElementById('networkStatusText');
+    const gratitudeBadge = document.getElementById('gratitudeBadge');
+    const gratitudeMessage = document.getElementById('gratitudeMessage');
+    const gratitudeIcon = document.getElementById('gratitudeIcon');
+    const currentAmountBadge = document.getElementById('currentAmountBadge');
+    const qrAmountDisplay = document.getElementById('qrAmountDisplay');
+    const qrcodeBox = document.getElementById('qrcodeBox');
+    const customAmountInput = document.getElementById('customAmountInput');
+    const applyCustomBtn = document.getElementById('applyCustomBtn');
+    const footerModeInfo = document.getElementById('footerModeInfo');
+
+    const qrDisplayWrapper = document.getElementById('qrDisplayWrapper');
+    const qrLoadingWrapper = document.getElementById('qrLoadingWrapper');
+    const errorStateWrapper = document.getElementById('errorStateWrapper');
+    const successStateWrapper = document.getElementById('successStateWrapper');
+    const errorMessageDetail = document.getElementById('errorMessageDetail');
+
+    const terminalBody = document.getElementById('terminalBody');
+    const toggleAttractModeBtn = document.getElementById('toggleAttractModeBtn');
+    const attractModeLabel = document.getElementById('attractModeLabel');
+
+    function setAttractMode(enabled) {
+      isAttractMode = enabled;
+      attractModeLabel.textContent = enabled ? 'ВКЛ' : 'ВЫКЛ';
+      if (enabled) {
+        terminalBody.classList.add('attract-mode-active');
+        toggleAttractModeBtn.className = 'px-3.5 py-2.5 rounded-2xl bg-autumn-50 border border-autumn-300 text-autumn-700 hover:bg-autumn-100 font-bold text-xs flex items-center gap-2 shadow-sm transition active:scale-95';
+      } else {
+        terminalBody.classList.remove('attract-mode-active');
+        toggleAttractModeBtn.className = 'px-3.5 py-2.5 rounded-2xl bg-white border border-neutral-200 text-neutral-500 hover:bg-neutral-50 font-bold text-xs flex items-center gap-2 shadow-sm transition active:scale-95';
+      }
+    }
+
+    toggleAttractModeBtn.addEventListener('click', () => {
+      playTone(540, 0.05);
+      setAttractMode(!isAttractMode);
+    });
+
+    function resetIdleTimer() {
+      clearTimeout(idleTimer);
+      idleTimer = setTimeout(() => {
+        setAttractMode(true);
+      }, 20000);
+    }
+    ['touchstart', 'mousedown', 'keydown'].forEach(evt => {
+      window.addEventListener(evt, resetIdleTimer, { passive: true });
+    });
+
+    function syncStateToUI() {
+      baristaNameDisplay.textContent = state.venueName;
+      document.getElementById('venueNameInput').value = state.venueName;
+      document.getElementById('workerUrlInput').value = state.workerUrl;
+      document.getElementById('shopIdInput').value = state.shopId;
+      document.getElementById('secretKeyInput').value = state.secretKey;
+      footerModeInfo.textContent = 'ЮKassa СБП (Прямая ссылка НСПК)';
+    }
+
+    function updateAmountDisplays() {
+      currentAmountBadge.textContent = currentAmount;
+      qrAmountDisplay.textContent = currentAmount;
+    }
+
+    document.querySelectorAll('.tip-pill').forEach(pill => {
+      pill.addEventListener('click', () => {
+        playTone(560, 0.06);
+        document.querySelectorAll('.tip-pill').forEach(c => {
+          c.classList.remove('active');
+          const amtSpan = c.querySelector('span:nth-child(2)');
+          if (amtSpan) {
+            amtSpan.className = 'font-display font-black text-2xl md:text-3xl text-neutral-900 group-hover:text-autumn-600 transition-colors';
+          }
+        });
+
+        pill.classList.add('active');
+        const activeSpan = pill.querySelector('span:nth-child(2)');
+        if (activeSpan) {
+          activeSpan.className = 'font-display font-black text-2xl md:text-3xl text-autumn-600 transition-colors';
+        }
+
+        currentAmount = parseInt(pill.dataset.amount, 10);
+        customAmountInput.value = '';
+        updateAmountDisplays();
+        requestPaymentQr();
+      });
+    });
+
+    function applyCustomAmount() {
+      const val = parseInt(customAmountInput.value, 10);
+      if (val && val >= 10 && val <= 25000) {
+        playTone(640, 0.08);
+        currentAmount = val;
+        document.querySelectorAll('.tip-pill').forEach(c => {
+          c.classList.remove('active');
+          const amtSpan = c.querySelector('span:nth-child(2)');
+          if (amtSpan) {
+            amtSpan.className = 'font-display font-black text-2xl md:text-3xl text-neutral-900 group-hover:text-autumn-600 transition-colors';
+          }
+        });
+        updateAmountDisplays();
+        requestPaymentQr();
+      }
+    }
+
+    applyCustomBtn.addEventListener('click', applyCustomAmount);
+    customAmountInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') applyCustomAmount();
+    });
+
+    document.querySelectorAll('.quick-add-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        playTone(480, 0.04);
+        const addVal = parseInt(btn.dataset.add, 10);
+        const currentVal = parseInt(customAmountInput.value, 10) || currentAmount || 0;
+        customAmountInput.value = Math.min(25000, currentVal + addVal);
+        applyCustomAmount();
+      });
+    });
+
+    document.getElementById('refreshPaymentBtn').addEventListener('click', () => {
+      playTone(580, 0.06);
+      requestPaymentQr();
+    });
+    document.getElementById('retryPaymentBtn').addEventListener('click', () => {
+      requestPaymentQr();
+    });
+    document.getElementById('openSettingsFromErrorBtn').addEventListener('click', () => {
+      resetPin();
+      pinModal.classList.remove('hidden');
+    });
+
+    const pinModal = document.getElementById('pinModal');
+    const openPinModalBtn = document.getElementById('openPinModalBtn');
+    const closePinModalBtn = document.getElementById('closePinModalBtn');
+    const pinDots = document.querySelectorAll('.pin-dot');
+    const pinDotsContainer = document.getElementById('pinDotsContainer');
+    const settingsModal = document.getElementById('settingsModal');
+
+    function updatePinDots() {
+      pinDots.forEach((dot, idx) => {
+        if (idx < enteredPin.length) {
+          dot.className = 'pin-dot w-4 h-4 rounded-full bg-autumn-500 border-2 border-autumn-500 scale-110 shadow-sm transition-all duration-150';
+        } else {
+          dot.className = 'pin-dot w-4 h-4 rounded-full border-2 border-neutral-300 transition-all duration-150';
+        }
+      });
+    }
+
+    function resetPin() {
+      enteredPin = '';
+      updatePinDots();
+    }
+
+    function checkPin() {
+      if (enteredPin === ADMIN_PIN) {
+        playTone(840, 0.14);
+        pinModal.classList.add('hidden');
+        resetPin();
+        openAdminSettings();
+      } else {
+        playTone(200, 0.25, 'sawtooth');
+        pinDots.forEach(dot => {
+          dot.className = 'pin-dot w-4 h-4 rounded-full bg-red-500 border-2 border-red-500 transition-all';
+        });
+        pinDotsContainer.classList.add('shake-error');
+        setTimeout(() => {
+          pinDotsContainer.classList.remove('shake-error');
+          resetPin();
+        }, 420);
+      }
+    }
+
+    openPinModalBtn.addEventListener('click', () => {
+      resetPin();
+      pinModal.classList.remove('hidden');
+    });
+
+    closePinModalBtn.addEventListener('click', () => {
+      pinModal.classList.add('hidden');
+      resetPin();
+    });
+
+    document.querySelectorAll('.pin-num-key').forEach(btn => {
+      btn.addEventListener('click', () => {
+        if (enteredPin.length < 4) {
+          playTone(450 + enteredPin.length * 60, 0.04);
+          enteredPin += btn.dataset.num;
+          updatePinDots();
+          if (enteredPin.length === 4) {
+            setTimeout(checkPin, 120);
+          }
+        }
+      });
+    });
+
+    document.getElementById('pinBackspaceBtn').addEventListener('click', () => {
+      if (enteredPin.length > 0) {
+        playTone(340, 0.04);
+        enteredPin = enteredPin.slice(0, -1);
+        updatePinDots();
+      }
+    });
+
+    document.getElementById('pinClearBtn').addEventListener('click', () => {
+      playTone(300, 0.04);
+      resetPin();
+    });
+
+    function openAdminSettings() {
+      syncStateToUI();
+      settingsModal.classList.remove('hidden');
+    }
+
+    document.getElementById('closeSettingsBtn').addEventListener('click', () => {
+      settingsModal.classList.add('hidden');
+    });
+
+    document.getElementById('saveSettingsBtn').addEventListener('click', () => {
+      state.workerUrl = document.getElementById('workerUrlInput').value.trim().replace(/\/+$/, '');
+      state.shopId = document.getElementById('shopIdInput').value.trim();
+      state.secretKey = document.getElementById('secretKeyInput').value.trim();
+      state.venueName = document.getElementById('venueNameInput').value.trim() || 'Уютная Кофейня';
+
+      localStorage.setItem(`${STORAGE_KEY}_url`, state.workerUrl);
+      localStorage.setItem(`${STORAGE_KEY}_shopId`, state.shopId);
+      localStorage.setItem(`${STORAGE_KEY}_secretKey`, state.secretKey);
+      localStorage.setItem(`${STORAGE_KEY}_venue`, state.venueName);
+
+      syncStateToUI();
+      settingsModal.classList.add('hidden');
+      requestPaymentQr();
+    });
+
+    const testWorkerBtn = document.getElementById('testWorkerBtn');
+    const workerTestStatus = document.getElementById('workerTestStatus');
+
+    testWorkerBtn.addEventListener('click', async () => {
+      const url = document.getElementById('workerUrlInput').value.trim().replace(/\/+$/, '');
+      if (!url) {
+        workerTestStatus.className = 'text-xs p-2.5 rounded-xl text-center font-mono bg-red-100 text-red-700 block';
+        workerTestStatus.textContent = '❌ Сначала введите URL Cloudflare Worker';
+        return;
+      }
+
+      workerTestStatus.className = 'text-xs p-2.5 rounded-xl text-center font-mono bg-neutral-100 text-neutral-600 block';
+      workerTestStatus.textContent = '⏳ Проверяем ответ воркера...';
+
+      try {
+        const res = await fetch(url, { method: 'GET' });
+        if (res.ok) {
+          workerTestStatus.className = 'text-xs p-2.5 rounded-xl text-center font-mono bg-emerald-100 text-emerald-800 block';
+          workerTestStatus.textContent = '✅ Связь с воркером успешна (HTTP 200)';
+        } else {
+          workerTestStatus.className = 'text-xs p-2.5 rounded-xl text-center font-mono bg-amber-100 text-amber-800 block';
+          workerTestStatus.textContent = `⚠️ Ответ воркера: HTTP ${res.status}`;
+        }
+      } catch (err) {
+        workerTestStatus.className = 'text-xs p-2.5 rounded-xl text-center font-mono bg-red-100 text-red-700 block';
+        workerTestStatus.textContent = `❌ Ошибка соединения: ${err.message}`;
+      }
+    });
+
+    function showState(mode) {
+      qrDisplayWrapper.classList.add('hidden');
+      qrLoadingWrapper.classList.add('hidden');
+      errorStateWrapper.classList.add('hidden');
+      successStateWrapper.classList.add('hidden');
+
+      if (mode === 'qr') {
+        qrDisplayWrapper.classList.remove('hidden');
+        networkStatusDot.className = 'w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse';
+        networkStatusText.textContent = 'СБП QR получен из ЮKassa и готов к оплате';
+      }
+      if (mode === 'loading') {
+        qrLoadingWrapper.classList.remove('hidden');
+      }
+      if (mode === 'error') {
+        qrcodeBox.innerHTML = '';
+        errorStateWrapper.classList.remove('hidden');
+        networkStatusDot.className = 'w-2.5 h-2.5 rounded-full bg-red-500';
+        networkStatusText.textContent = 'Ошибка получения СБП ссылки из ЮKassa';
+      }
+      if (mode === 'success') {
+        successStateWrapper.classList.remove('hidden');
+        networkStatusDot.className = 'w-2.5 h-2.5 rounded-full bg-emerald-500';
+        networkStatusText.textContent = 'Оплата чаевых успешно завершена!';
+      }
+    }
+
+    async function requestPaymentQr() {
+      if (pollingInterval) clearInterval(pollingInterval);
+
+      const cleanWorkerUrl = state.workerUrl.trim().replace(/\/+$/, '');
+
+      if (!cleanWorkerUrl || !state.shopId.trim() || !state.secretKey.trim()) {
+        errorMessageDetail.textContent = 'Терминал не настроен: укажите Worker URL, Shop ID и Secret Key в настройках (PIN: 0506)';
+        showState('error');
+        return;
+      }
+
+      showState('loading');
+
+      const targetEndpoint = `${cleanWorkerUrl}/create-payment`;
+      const payload = {
+        amount: currentAmount,
+        shopId: state.shopId.trim(),
+        secretKey: state.secretKey.trim(),
+        description: `Чаевые для ${state.venueName} (${currentAmount} руб)`
+      };
+
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 12000);
+
+        const res = await fetch(targetEndpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+          signal: controller.signal
+        });
+        clearTimeout(timeoutId);
+
+        if (!res.ok) {
+          const errText = await res.text().catch(() => '');
+          throw new Error(`ЮKassa / Worker вернул статус ${res.status}: ${errText.slice(0, 100)}`);
+        }
+
+        const data = await res.json();
+        
+        // Ссылка СБП (НСПК) в ЮKassa передается в confirmation_data
+        const sbpLink = data?.confirmation?.confirmation_data || data?.confirmation?.confirmation_url || data?.sbp_url;
+        activePaymentId = data?.id;
+
+        if (!sbpLink) {
+          throw new Error('ЮKassa не прислала confirmation_data или confirmation_url со ссылкой СБП');
+        }
+
+        // Рендер графического QR-кода из полученной ссылки
+        qrcodeBox.innerHTML = '';
+        qrCodeInstance = new QRCode(qrcodeBox, {
+          text: sbpLink,
+          width: 240,
+          height: 240,
+          colorDark: "#1a1816",
+          colorLight: "#ffffff",
+          correctLevel: QRCode.CorrectLevel.M
+        });
+
+        document.getElementById('qrBadgeLabel').textContent = 'СБП ЮKassa • Динамический QR';
+        showState('qr');
+        
+        startPolling(cleanWorkerUrl, activePaymentId);
+
+      } catch (err) {
+        console.error('Ошибка создания СБП платежа ЮKassa:', err);
+        errorMessageDetail.textContent = `Ошибка: ${err.message}`;
+        showState('error');
+      }
+    }
+
+    function startPolling(baseUrl, paymentId) {
+      if (!paymentId) return;
+      pollingInterval = setInterval(async () => {
+        try {
+          const checkUrl = `${baseUrl}/payment-status?paymentId=${paymentId}&shopId=${encodeURIComponent(state.shopId)}&secretKey=${encodeURIComponent(state.secretKey)}`;
+          const res = await fetch(checkUrl);
+          if (!res.ok) return;
+          const statusData = await res.json();
+
+          if (statusData.status === 'succeeded') {
+            clearInterval(pollingInterval);
+            playTone(880, 0.25);
+            showState('success');
+            setTimeout(() => {
+              requestPaymentQr();
+            }, 6000);
+          }
+        } catch (e) {}
+      }, 2800);
+    }
+
+    const canvas = document.getElementById('autumnCanvas');
+    const ctx = canvas.getContext('2d');
+    let width = (canvas.width = window.innerWidth);
+    let height = (canvas.height = window.innerHeight);
+
+    window.addEventListener('resize', () => {
+      width = canvas.width = window.innerWidth;
+      height = canvas.height = window.innerHeight;
+    });
+
+    const autumnLeaves = Array.from({ length: 32 }, () => ({
+      x: Math.random() * width,
+      y: Math.random() * height,
+      size: Math.random() * 16 + 12,
+      speedX: Math.random() * 1.1 - 0.3,
+      speedY: Math.random() * 0.8 + 0.4,
+      rotation: Math.random() * Math.PI * 2,
+      rotSpeed: (Math.random() - 0.5) * 0.035,
+      oscillation: Math.random() * Math.PI * 2,
+      color: [
+        'rgba(255, 107, 0, 0.38)',
+        'rgba(245, 158, 11, 0.42)',
+        'rgba(234, 88, 12, 0.35)',
+        'rgba(217, 119, 6, 0.32)',
+        'rgba(180, 83, 9, 0.28)'
+      ][Math.floor(Math.random() * 5)]
+    }));
+
+    const goldenEmbers = Array.from({ length: 30 }, () => ({
+      x: Math.random() * width,
+      y: height - Math.random() * 320,
+      radius: Math.random() * 3 + 1,
+      speedY: Math.random() * 0.55 + 0.25,
+      alpha: Math.random() * 0.55 + 0.15,
+      pulse: Math.random() * Math.PI
+    }));
+
+    let waveStep = 0;
+
+    function drawAutumnLeaf(context, x, y, size, angle, color) {
+      context.save();
+      context.translate(x, y);
+      context.rotate(angle);
+      context.beginPath();
+      context.moveTo(0, -size);
+      context.bezierCurveTo(size * 0.75, -size * 0.55, size * 0.95, size * 0.45, 0, size);
+      context.bezierCurveTo(-size * 0.95, size * 0.45, -size * 0.75, -size * 0.55, 0, -size);
+      context.fillStyle = color;
+      context.fill();
+
+      context.beginPath();
+      context.moveTo(0, -size * 0.85);
+      context.lineTo(0, size * 0.75);
+      context.strokeStyle = 'rgba(255, 255, 255, 0.4)';
+      context.lineWidth = 1.2;
+      context.stroke();
+      context.restore();
+    }
+
+    function animateAutumnCanvas() {
+      ctx.clearRect(0, 0, width, height);
+      waveStep += 0.014;
+
+      goldenEmbers.forEach(p => {
+        p.y -= p.speedY;
+        p.pulse += 0.025;
+        const currentAlpha = p.alpha + Math.sin(p.pulse) * 0.15;
+        if (p.y < height - 360) {
+          p.y = height + 10;
+          p.x = Math.random() * width;
+        }
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(255, 140, 20, ${Math.max(0.08, currentAlpha)})`;
+        ctx.fill();
+      });
+
+      autumnLeaves.forEach(leaf => {
+        leaf.oscillation += 0.022;
+        leaf.y += leaf.speedY;
+        leaf.x += Math.sin(leaf.oscillation) * 0.85 + leaf.speedX;
+        leaf.rotation += leaf.rotSpeed;
+
+        if (leaf.y > height + 25) {
+          leaf.y = -25;
+          leaf.x = Math.random() * width;
+        }
+        if (leaf.x > width + 25) leaf.x = -25;
+        if (leaf.x < -25) leaf.x = width + 25;
+
+        drawAutumnLeaf(ctx, leaf.x, leaf.y, leaf.size, leaf.rotation, leaf.color);
+      });
+
+      // Волна 1 (нижний шлейф)
+      ctx.beginPath();
+      ctx.moveTo(0, height);
+      for (let x = 0; x <= width; x += 15) {
+        const y = height - 130 + Math.sin(x * 0.003 + waveStep) * 30;
+        ctx.lineTo(x, y);
+      }
+      ctx.lineTo(width, height);
+      ctx.fillStyle = 'rgba(255, 107, 0, 0.06)';
+      ctx.fill();
+
+      // Волна 2 (янтарная)
+      ctx.beginPath();
+      ctx.moveTo(0, height);
+      for (let x = 0; x <= width; x += 15) {
+        const y = height - 85 + Math.cos(x * 0.006 + waveStep * 1.3) * 24;
+        ctx.lineTo(x, y);
+      }
+      ctx.lineTo(width, height);
+      ctx.fillStyle = 'rgba(245, 158, 11, 0.09)';
+      ctx.fill();
+
+      // Волна 3 (оранжевый гребень)
+      ctx.beginPath();
+      ctx.moveTo(0, height);
+      for (let x = 0; x <= width; x += 15) {
+        const y = height - 45 + Math.sin(x * 0.008 + waveStep * 1.6) * 16;
+        ctx.lineTo(x, y);
+      }
+      ctx.lineTo(width, height);
+      ctx.fillStyle = 'rgba(255, 143, 51, 0.11)';
+      ctx.fill();
+
+      requestAnimationFrame(animateAutumnCanvas);
+    }
+    animateAutumnCanvas();
+
+    setInterval(() => {
+      gratitudeBadge.style.transition = 'all 0.5s ease-out';
+      gratitudeBadge.style.opacity = '0';
+      gratitudeBadge.style.transform = 'translateY(-8px) scale(0.96)';
+      
+      setTimeout(() => {
+        gratitudeIndex = (gratitudeIndex + 1) % gratitudeMessages.length;
+        gratitudeMessage.textContent = gratitudeMessages[gratitudeIndex].text;
+        gratitudeIcon.textContent = gratitudeMessages[gratitudeIndex].icon;
+        
+        gratitudeBadge.style.transform = 'translateY(8px) scale(0.96)';
+        requestAnimationFrame(() => {
+          gratitudeBadge.style.opacity = '1';
+          gratitudeBadge.style.transform = 'translateY(0) scale(1)';
+        });
+      }, 500);
+    }, 6000);
+
+    document.getElementById('fullscreenBtn').addEventListener('click', () => {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(() => {});
+      } else {
+        document.exitFullscreen().catch(() => {});
+      }
+    });
+
+    syncStateToUI();
+    updateAmountDisplays();
+    requestPaymentQr();
+  </script>
+</body>
+</html>
