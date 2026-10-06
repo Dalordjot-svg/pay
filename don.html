@@ -284,6 +284,12 @@
             <i class="fa-solid fa-fire text-amber-400 text-xs"></i>
             <span class="hidden sm:inline">Хиты</span>
           </button>
+
+          <!-- Custom Item Button -->
+          <button onclick="openCustomItemModal()" class="touch-press h-10 px-2.5 sm:px-3.5 rounded-xl bg-gradient-to-r from-amber-500/20 to-amber-600/30 hover:from-amber-500 hover:to-amber-600 text-amber-300 hover:text-slate-950 font-black text-xs flex items-center gap-1.5 border border-amber-500/60 shadow shrink-0 transition-all">
+            <i class="fa-solid fa-circle-plus text-xs"></i>
+            <span>Своя позиция</span>
+          </button>
         </div>
 
         <!-- Horizontal Scrollable Categories -->
@@ -400,6 +406,19 @@
       </div>
 
       <div class="py-2.5 overflow-y-auto space-y-3 flex-1">
+        <!-- Dish Description / Note for Chef -->
+        <div>
+          <label class="block text-xs font-bold uppercase text-slate-300 tracking-wider mb-1">
+            Описание / примечание к порции:
+          </label>
+          <input 
+            type="text" 
+            id="optDishCustomDescInput" 
+            placeholder="Например: без соуса, двойная обжарка, половина порции..." 
+            class="w-full bg-[#1C2430] border border-[#2D394A] rounded-xl px-2.5 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-400"
+          />
+        </div>
+
         <!-- Variants / Sizes -->
         <div id="optVariantsSection" class="space-y-1 hidden">
           <span class="text-xs font-bold text-slate-300 uppercase tracking-wider block">Размер / Основа:</span>
@@ -414,7 +433,7 @@
 
         <!-- Quick Kitchen Wishes -->
         <div class="space-y-1.5">
-          <span class="text-xs font-bold text-slate-300 uppercase tracking-wider block">Пожелания повару:</span>
+          <span class="text-xs font-bold text-slate-300 uppercase tracking-wider block">Пожелания повару / бариста:</span>
           <div class="flex flex-wrap gap-1" id="optQuickChips">
             <button type="button" onclick="appendDishNote('Без лука')" class="px-2 py-0.5 rounded-lg bg-[#1C2430] hover:bg-[#283446] border border-[#2D394A] text-[11px] text-slate-300">Без лука</button>
             <button type="button" onclick="appendDishNote('Без сахара')" class="px-2 py-0.5 rounded-lg bg-[#1C2430] hover:bg-[#283446] border border-[#2D394A] text-[11px] text-slate-300">Без сахара</button>
@@ -425,7 +444,7 @@
           <input 
             type="text" 
             id="optCustomNoteInput" 
-            placeholder="Свой комментарий к этому блюду..." 
+            placeholder="Свой комментарий / пожелание к этому блюду..." 
             class="w-full bg-[#1C2430] border border-[#2D394A] rounded-xl px-2.5 py-1.5 text-xs text-amber-200 placeholder-slate-500 focus:outline-none focus:border-amber-400"
           />
         </div>
@@ -440,6 +459,265 @@
           <i class="fa-solid fa-plus text-xs"></i>
           <span>Добавить в чек</span>
         </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: СВОЯ ПОЗИЦИЯ (ПРОИЗВОЛЬНЫЙ ТОВАР, ТУМБЛЕР/ГАЛОЧКА ЦЕНЫ, ОПИСАНИЕ И ДОБАВКИ) -->
+  <div id="customItemModal" class="fixed inset-0 bg-black/85 backdrop-blur-sm z-50 hidden flex items-center justify-center p-3">
+    <div class="bg-[#141922] border-2 border-amber-500/70 rounded-3xl w-full max-w-lg shadow-2xl p-4 sm:p-5 text-white flex flex-col max-h-[92vh]">
+      
+      <div class="flex items-center justify-between pb-2.5 border-b border-[#222C3A]">
+        <div class="flex items-center gap-2">
+          <div class="w-8 h-8 rounded-xl bg-amber-500 text-slate-950 flex items-center justify-center font-black text-sm">
+            <i class="fa-solid fa-pen-to-square"></i>
+          </div>
+          <div>
+            <h3 class="text-base font-black text-white">Своя позиция в заказ</h3>
+            <p class="text-xs text-slate-400">Произвольное блюдо, напиток или спецпожелание</p>
+          </div>
+        </div>
+        <button onclick="closeCustomItemModal()" class="w-7 h-7 rounded-full bg-[#1F2734] text-slate-400 hover:text-white flex items-center justify-center">
+          <i class="fa-solid fa-xmark text-xs"></i>
+        </button>
+      </div>
+
+      <div class="py-3 overflow-y-auto space-y-3.5 flex-1">
+        <!-- Item Name -->
+        <div>
+          <label class="block text-xs font-black uppercase text-amber-400 tracking-wider mb-1">
+            Название товара / позиции: *
+          </label>
+          <input 
+            type="text" 
+            id="customItemNameInput" 
+            placeholder="Например: Авторский кофе от бариста, Доп. гарнир, Вода с мятой..." 
+            class="w-full bg-[#1C2430] border border-[#2D394A] focus:border-amber-400 rounded-xl px-3 py-2 text-xs font-bold text-white placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-amber-500/40"
+          />
+        </div>
+
+        <!-- Item Description -->
+        <div>
+          <label class="block text-xs font-black uppercase text-slate-300 tracking-wider mb-1">
+            Описание позиции (состав, порция):
+          </label>
+          <input 
+            type="text" 
+            id="customItemDescInput" 
+            placeholder="Например: 250 мл, без глютена, фирменный рецепт гостя..." 
+            class="w-full bg-[#1C2430] border border-[#2D394A] focus:border-amber-400 rounded-xl px-3 py-2 text-xs font-medium text-white placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-amber-500/40"
+          />
+        </div>
+
+        <!-- Checkbox / Toggle: Указать сумму или нет -->
+        <div class="bg-[#0F131A] border border-[#222C3A] rounded-2xl p-3 flex items-center justify-between gap-3">
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="text-xs font-black text-white block">Указать стоимость</span>
+              <span id="customPriceStatusBadge" class="text-[10px] font-mono font-bold bg-amber-500/20 text-amber-300 px-2 py-0.5 rounded border border-amber-500/40">Платное</span>
+            </div>
+            <span id="customPriceHint" class="text-[11px] text-slate-400">Снимите галочку, чтобы пробить без указания суммы (0 ₽)</span>
+          </div>
+          <label class="relative inline-flex items-center cursor-pointer">
+            <input type="checkbox" id="customItemSpecifyPriceCheck" checked onchange="handleCustomSpecifyPriceToggle()" class="sr-only peer">
+            <div class="w-11 h-6 bg-[#253041] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-500"></div>
+          </label>
+        </div>
+
+        <!-- Price Input (Hidden if toggle OFF) -->
+        <div id="customItemPriceRow">
+          <label class="block text-xs font-black uppercase text-slate-300 tracking-wider mb-1">
+            Стоимость позиции (в рублях):
+          </label>
+          <div class="relative">
+            <input 
+              type="number" 
+              id="customItemPriceInput" 
+              value="150" 
+              min="0"
+              step="10"
+              oninput="updateCustomItemSummary()"
+              class="w-full bg-[#1C2430] border border-[#2D394A] focus:border-amber-400 rounded-xl px-3 py-2 text-sm font-mono font-black text-amber-400 placeholder-slate-500 focus:outline-none"
+            />
+            <span class="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-black text-slate-400">₽</span>
+          </div>
+        </div>
+
+        <!-- Quick Universal Add-ons for custom item -->
+        <div>
+          <span class="text-xs font-black uppercase text-slate-300 tracking-wider block mb-1.5">
+            Добавки к позиции:
+          </span>
+          <div class="grid grid-cols-2 gap-1.5" id="customItemAddonsGrid"></div>
+        </div>
+
+        <!-- Extra Custom Addon input -->
+        <div class="bg-[#181F2A] p-2.5 rounded-xl border border-[#263242] space-y-2">
+          <span class="text-[11px] font-bold text-amber-300 block">+ Добавить свою индивидуальную добавку:</span>
+          <div class="flex gap-1.5">
+            <input 
+              type="text" 
+              id="customItemNewAddonName" 
+              placeholder="Название добавки..." 
+              class="flex-1 bg-[#12161E] border border-[#2C384A] rounded-lg px-2 py-1 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-400"
+            />
+            <input 
+              type="number" 
+              id="customItemNewAddonPrice" 
+              placeholder="Цена (0 если б/п)" 
+              class="w-28 bg-[#12161E] border border-[#2C384A] rounded-lg px-2 py-1 text-xs text-amber-300 font-mono placeholder-slate-500 focus:outline-none focus:border-amber-400"
+            />
+            <button type="button" onclick="addNewAddonToCustomItemDraft()" class="px-2.5 py-1 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black rounded-lg text-xs">
+              <i class="fa-solid fa-plus"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Notes / Wishes -->
+        <div>
+          <span class="text-xs font-black uppercase text-slate-300 tracking-wider block mb-1">
+            Пожелания повару / бариста:
+          </span>
+          <div class="flex flex-wrap gap-1 mb-1.5">
+            <button type="button" onclick="appendCustomItemNote('Срочно')" class="px-2 py-0.5 rounded-lg bg-[#1C2430] hover:bg-[#283446] border border-[#2D394A] text-[11px] text-slate-300">Срочно</button>
+            <button type="button" onclick="appendCustomItemNote('По готовности')" class="px-2 py-0.5 rounded-lg bg-[#1C2430] hover:bg-[#283446] border border-[#2D394A] text-[11px] text-slate-300">По готовности</button>
+            <button type="button" onclick="appendCustomItemNote('В стакан с собой')" class="px-2 py-0.5 rounded-lg bg-[#1C2430] hover:bg-[#283446] border border-[#2D394A] text-[11px] text-slate-300">В стакан с собой</button>
+            <button type="button" onclick="appendCustomItemNote('Без сахара')" class="px-2 py-0.5 rounded-lg bg-[#1C2430] hover:bg-[#283446] border border-[#2D394A] text-[11px] text-slate-300">Без сахара</button>
+          </div>
+          <input 
+            type="text" 
+            id="customItemNoteInput" 
+            placeholder="Комментарий / пожелание к позиции..." 
+            class="w-full bg-[#1C2430] border border-[#2D394A] rounded-xl px-2.5 py-1.5 text-xs text-amber-200 placeholder-slate-500 focus:outline-none focus:border-amber-400"
+          />
+        </div>
+      </div>
+
+      <div class="pt-2.5 border-t border-[#222C3A] flex items-center justify-between">
+        <div>
+          <span class="text-[10px] text-slate-400 block">Итоговая цена:</span>
+          <span class="text-lg font-black font-mono text-amber-400" id="customItemFinalPriceDisplay">150 ₽</span>
+        </div>
+        <div class="flex gap-2">
+          <button onclick="closeCustomItemModal()" class="touch-press px-3.5 py-2 rounded-xl border border-[#2D394A] text-slate-300 font-bold text-xs hover:bg-[#202937]">
+            Отмена
+          </button>
+          <button onclick="confirmAndAddCustomItem()" class="touch-press px-4 py-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-black rounded-xl text-xs flex items-center gap-1.5 shadow-lg shadow-amber-950/40">
+            <i class="fa-solid fa-plus text-xs"></i>
+            <span>В чек</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: РЕДАКТИРОВАНИЕ ПОЗИЦИИ ИЗ ЧЕКА (КЛИК ПО ТОВАРУ) -->
+  <div id="editBillItemModal" class="fixed inset-0 bg-black/85 backdrop-blur-sm z-50 hidden flex items-center justify-center p-3">
+    <div class="bg-[#141922] border-2 border-amber-500/70 rounded-3xl w-full max-w-lg shadow-2xl p-4 sm:p-5 text-white flex flex-col max-h-[92vh]">
+      
+      <div class="flex items-center justify-between pb-2.5 border-b border-[#222C3A]">
+        <div class="flex items-center gap-2">
+          <div class="w-8 h-8 rounded-xl bg-amber-500 text-slate-950 flex items-center justify-center font-black text-sm">
+            <i class="fa-solid fa-pen-to-square"></i>
+          </div>
+          <div>
+            <h3 class="text-base font-black text-white" id="editItemModalTitle">Редактирование позиции</h3>
+            <p class="text-xs text-slate-400">Изменение количества, описания, добавок и пожеланий</p>
+          </div>
+        </div>
+        <button onclick="closeEditBillItemModal()" class="w-7 h-7 rounded-full bg-[#1F2734] text-slate-400 hover:text-white flex items-center justify-center">
+          <i class="fa-solid fa-xmark text-xs"></i>
+        </button>
+      </div>
+
+      <div class="py-3 overflow-y-auto space-y-3.5 flex-1">
+        <!-- Quantity Stepper -->
+        <div class="bg-[#0F131A] p-3 rounded-2xl border border-[#222C3A] flex items-center justify-between">
+          <span class="text-xs font-bold uppercase text-slate-300">Количество порций:</span>
+          <div class="flex items-center gap-3">
+            <button onclick="adjustEditModalQty(-1)" class="w-9 h-9 rounded-xl bg-[#1C2430] hover:bg-[#253041] border border-[#2D394A] text-white text-lg font-black flex items-center justify-center">-</button>
+            <span id="editModalQtyDisplay" class="font-mono font-black text-xl text-amber-400 w-8 text-center">1</span>
+            <button onclick="adjustEditModalQty(1)" class="w-9 h-9 rounded-xl bg-[#1C2430] hover:bg-[#253041] border border-[#2D394A] text-white text-lg font-black flex items-center justify-center">+</button>
+          </div>
+        </div>
+
+        <!-- Description Input -->
+        <div>
+          <label class="block text-xs font-black uppercase text-slate-300 tracking-wider mb-1">
+            Описание / примечание к позиции:
+          </label>
+          <input 
+            type="text" 
+            id="editItemDescInput" 
+            placeholder="Описание состава, порции или спецификации..." 
+            class="w-full bg-[#1C2430] border border-[#2D394A] focus:border-amber-400 rounded-xl px-3 py-2 text-xs font-medium text-white placeholder-slate-500 focus:outline-none"
+          />
+        </div>
+
+        <!-- Price Section for Custom Items -->
+        <div id="editCustomPriceSection" class="hidden space-y-2 bg-[#0F131A] p-3 rounded-2xl border border-[#222C3A]">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold text-slate-300">Указать стоимость позиции:</span>
+            <label class="relative inline-flex items-center cursor-pointer">
+              <input type="checkbox" id="editItemSpecifyPriceCheck" onchange="handleEditSpecifyPriceToggle()" class="sr-only peer">
+              <div class="w-11 h-6 bg-[#253041] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-500"></div>
+            </label>
+          </div>
+          <div id="editItemPriceInputWrap">
+            <label class="block text-[11px] text-slate-400 mb-1">Цена за единицу (₽):</label>
+            <input 
+              type="number" 
+              id="editItemPriceInput" 
+              min="0" 
+              step="10" 
+              oninput="recalcEditModalTotal()"
+              class="w-full bg-[#1C2430] border border-[#2D394A] focus:border-amber-400 rounded-xl px-3 py-1.5 text-sm font-mono font-bold text-amber-400 focus:outline-none"
+            />
+          </div>
+        </div>
+
+        <!-- Add-ons Selection -->
+        <div>
+          <span class="text-xs font-black uppercase text-slate-300 tracking-wider block mb-1.5">
+            Добавки и топпинги к блюду:
+          </span>
+          <div class="grid grid-cols-2 gap-1.5 max-h-36 overflow-y-auto" id="editItemAddonsGrid"></div>
+        </div>
+
+        <!-- Kitchen Wishes -->
+        <div>
+          <span class="text-xs font-black uppercase text-slate-300 tracking-wider block mb-1">
+            Пожелания повару / бариста:
+          </span>
+          <div class="flex flex-wrap gap-1 mb-1.5">
+            <button type="button" onclick="appendEditItemNote('Без лука')" class="px-2 py-0.5 rounded-lg bg-[#1C2430] hover:bg-[#283446] border border-[#2D394A] text-[11px] text-slate-300">Без лука</button>
+            <button type="button" onclick="appendEditItemNote('Без сахара')" class="px-2 py-0.5 rounded-lg bg-[#1C2430] hover:bg-[#283446] border border-[#2D394A] text-[11px] text-slate-300">Без сахара</button>
+            <button type="button" onclick="appendEditItemNote('Срочно')" class="px-2 py-0.5 rounded-lg bg-[#1C2430] hover:bg-[#283446] border border-[#2D394A] text-[11px] text-slate-300">Срочно</button>
+            <button type="button" onclick="appendEditItemNote('По готовности')" class="px-2 py-0.5 rounded-lg bg-[#1C2430] hover:bg-[#283446] border border-[#2D394A] text-[11px] text-slate-300">По готовности</button>
+          </div>
+          <input 
+            type="text" 
+            id="editItemCustomNoteInput" 
+            placeholder="Комментарий / пожелание..." 
+            class="w-full bg-[#1C2430] border border-[#2D394A] rounded-xl px-2.5 py-1.5 text-xs text-amber-200 placeholder-slate-500 focus:outline-none focus:border-amber-400"
+          />
+        </div>
+      </div>
+
+      <div class="pt-2.5 border-t border-[#222C3A] flex items-center justify-between">
+        <div>
+          <span class="text-[10px] text-slate-400 block">Итоговая сумма:</span>
+          <span class="text-lg font-black font-mono text-amber-400" id="editModalTotalPriceDisplay">0 ₽</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <button onclick="deleteEditedItemFromBill()" class="touch-press px-3 py-2 rounded-xl bg-rose-950/40 border border-rose-900/60 text-rose-300 text-xs font-bold hover:bg-rose-900/60">
+            <i class="fa-solid fa-trash-can mr-1"></i> Удалить
+          </button>
+          <button onclick="saveEditedBillItem()" class="touch-press px-4 py-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-black rounded-xl text-xs flex items-center gap-1.5 shadow-lg shadow-amber-950/40">
+            <i class="fa-solid fa-check text-xs"></i>
+            <span>Сохранить</span>
+          </button>
+        </div>
       </div>
     </div>
   </div>
@@ -873,6 +1151,20 @@
       { id: 'coffee', label: 'Кофе', icon: 'fa-mug-hot' },
       { id: 'drinks', label: 'Авторский & Холодный', icon: 'fa-glass-water-droplet' },
       { id: 'tea', label: 'Чаи & Лимонады', icon: 'fa-lemon' }
+    ];
+
+    /* UNIVERSAL ADDONS CATALOG FOR ANY DISH OR CUSTOM ITEM */
+    const UNIVERSAL_ADDONS = [
+      { name: 'Сироп в ассортименте', price: 80 },
+      { name: 'Альтернативное молоко', price: 50 },
+      { name: 'Сыр Чеддер', price: 50 },
+      { name: 'Хрустящий бекон', price: 70 },
+      { name: 'Сметана домашняя', price: 40 },
+      { name: 'Халапеньо острый', price: 40 },
+      { name: 'Шарик мороженого', price: 80 },
+      { name: 'Фирменный соус', price: 50 },
+      { name: 'Мёд натуральный', price: 40 },
+      { name: 'Свежая зелень', price: 30 }
     ];
   </script>
 
@@ -1319,8 +1611,6 @@
       let html = '';
 
       filtered.forEach(dish => {
-        const hasOptions = (dish.variants && dish.variants.length > 0) || (dish.addons && dish.addons.length > 0);
-
         html += `
           <div class="bg-[#141922] hover:bg-[#181F2A] border border-[#222C3A] hover:border-amber-500/50 rounded-2xl p-2.5 flex flex-col justify-between shadow-sm transition-all group">
             <div>
@@ -1335,12 +1625,11 @@
               <span class="text-sm font-black font-mono text-amber-400">${dish.price} ₽</span>
               
               <div class="flex items-center gap-1">
-                ${hasOptions ? `
-                  <button onclick="openDishOptionsModal('${dish.id}')" class="touch-press h-7 px-2 rounded-lg bg-[#202937] hover:bg-[#283446] text-amber-300 text-[10px] font-bold border border-[#313F53] flex items-center gap-1 shadow">
-                    <i class="fa-solid fa-sliders text-[9px]"></i>
-                    <span>Опции</span>
-                  </button>
-                ` : ''}
+                <!-- Universal Options and Add-ons for EVERY dish -->
+                <button onclick="openDishOptionsModal('${dish.id}')" class="touch-press h-7 px-2 rounded-lg bg-[#202937] hover:bg-[#283446] text-amber-300 text-[10px] font-bold border border-[#313F53] flex items-center gap-1 shadow">
+                  <i class="fa-solid fa-sliders text-[9px]"></i>
+                  <span>+ Добавки</span>
+                </button>
 
                 <button onclick="quickAddDishDirectly('${dish.id}')" class="touch-press h-7 px-2.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs flex items-center gap-1 shadow-md shadow-amber-950/30">
                   <i class="fa-solid fa-plus text-[10px]"></i>
@@ -1375,6 +1664,7 @@
         table.items.push({
           dishId: dish.id,
           title: dish.title,
+          desc: dish.desc || '',
           unitPrice: dish.price,
           quantity: 1,
           option: null,
@@ -1388,7 +1678,7 @@
       showToast(`+1 «${dish.title}»`);
     }
 
-    /* RENDER BILL ITEMS LIST */
+    /* RENDER BILL ITEMS LIST (NOW CLICKABLE TO EDIT) */
     function renderBillItemsList() {
       const table = tablesState[activeTableId];
       const container = document.getElementById('billItemsScrollList');
@@ -1420,38 +1710,53 @@
         totalSum += lineSum;
 
         let badges = '';
+        if (item.desc) {
+          badges += `<span class="bg-[#121720] text-slate-400 text-[9px] px-1.5 py-0.5 rounded border border-[#202734] mr-1 mb-0.5 inline-block"><i class="fa-solid fa-circle-info mr-1 text-[8px] text-slate-500"></i>${item.desc}</span>`;
+        }
         if (item.option) {
           badges += `<span class="bg-[#202937] text-amber-300 text-[9px] font-bold px-1.5 py-0.5 rounded border border-[#2E3C50] mr-1 mb-0.5 inline-block">${item.option}</span>`;
         }
-        item.addons.forEach(a => {
-          badges += `<span class="bg-[#181F2A] text-slate-300 text-[9px] font-semibold px-1.5 py-0.5 rounded border border-[#273344] mr-1 mb-0.5 inline-block">+ ${a.name}</span>`;
-        });
+        if (item.addons && item.addons.length > 0) {
+          item.addons.forEach(a => {
+            badges += `<span class="bg-[#181F2A] text-slate-300 text-[9px] font-semibold px-1.5 py-0.5 rounded border border-[#273344] mr-1 mb-0.5 inline-block">+ ${a.name}</span>`;
+          });
+        }
         if (item.customNote) {
           badges += `<span class="bg-rose-950/40 text-rose-300 text-[9px] font-bold px-1.5 py-0.5 rounded border border-rose-900/60 mr-1 mb-0.5 inline-block"><i class="fa-solid fa-kitchen-set mr-1"></i>${item.customNote}</span>`;
         }
 
         html += `
-          <div class="bg-[#181F2A] border border-[#242E3D] rounded-xl p-2 flex flex-col gap-1 shadow-sm">
-            <div class="flex items-start justify-between gap-1">
-              <div class="flex-1">
-                <span class="font-extrabold text-xs text-white leading-snug">${item.title}</span>
-                <div class="text-[10px] text-amber-400 font-mono font-bold">${item.unitPrice} ₽ <span class="text-slate-500 font-normal">/ шт.</span></div>
+          <div class="bg-[#181F2A] hover:bg-[#1E2634] border border-[#242E3D] hover:border-amber-500/50 rounded-xl p-2 flex flex-col gap-1 shadow-sm transition group">
+            
+            <!-- Clickable item header to edit -->
+            <div onclick="openEditBillItemModal(${index})" class="cursor-pointer flex items-start justify-between gap-1">
+              <div class="flex-1 min-w-0">
+                <div class="flex items-center gap-1.5">
+                  <span class="font-extrabold text-xs text-white leading-snug group-hover:text-amber-300 transition">${item.title}</span>
+                  <i class="fa-solid fa-pen text-[9px] text-slate-500 group-hover:text-amber-400"></i>
+                </div>
+                <div class="text-[10px] text-amber-400 font-mono font-bold mt-0.5">
+                  ${item.unitPrice === 0 ? '<span class="text-slate-400">Без суммы (0 ₽)</span>' : `${item.unitPrice} ₽ <span class="text-slate-500 font-normal">/ шт.</span>`}
+                </div>
               </div>
-              <button onclick="removeBillItem(${index})" class="touch-press text-slate-500 hover:text-rose-400 p-0.5 text-xs">
+              <button onclick="event.stopPropagation(); removeBillItem(${index})" title="Удалить" class="touch-press text-slate-500 hover:text-rose-400 p-0.5 text-xs">
                 <i class="fa-solid fa-xmark"></i>
               </button>
             </div>
 
-            ${badges ? `<div class="flex flex-wrap">${badges}</div>` : ''}
+            ${badges ? `<div onclick="openEditBillItemModal(${index})" class="cursor-pointer flex flex-wrap mt-0.5">${badges}</div>` : ''}
 
+            <!-- Footer Controls -->
             <div class="flex items-center justify-between pt-1 border-t border-[#1F2734]">
               <div class="flex items-center bg-[#1D2532] rounded-lg p-0.5 border border-[#2D394A]">
-                <button onclick="adjustBillQty(${index}, -1)" class="touch-press w-5 h-5 rounded bg-[#273344] hover:bg-amber-500 hover:text-slate-950 font-black text-xs text-white flex items-center justify-center">-</button>
+                <button onclick="event.stopPropagation(); adjustBillQty(${index}, -1)" class="touch-press w-5 h-5 rounded bg-[#273344] hover:bg-amber-500 hover:text-slate-950 font-black text-xs text-white flex items-center justify-center">-</button>
                 <span class="w-6 text-center font-black text-xs text-amber-400 font-mono">${item.quantity}</span>
-                <button onclick="adjustBillQty(${index}, 1)" class="touch-press w-5 h-5 rounded bg-[#273344] hover:bg-amber-500 hover:text-slate-950 font-black text-xs text-white flex items-center justify-center">+</button>
+                <button onclick="event.stopPropagation(); adjustBillQty(${index}, 1)" class="touch-press w-5 h-5 rounded bg-[#273344] hover:bg-amber-500 hover:text-slate-950 font-black text-xs text-white flex items-center justify-center">+</button>
               </div>
 
-              <span class="font-mono font-black text-xs text-white">${lineSum} ₽</span>
+              <span onclick="openEditBillItemModal(${index})" class="cursor-pointer font-mono font-black text-xs text-white group-hover:text-amber-400">
+                ${lineSum === 0 ? '0 ₽' : `${lineSum} ₽`}
+              </span>
             </div>
           </div>
         `;
@@ -1502,20 +1807,23 @@
   </script>
 
   <script>
-    /* MODIFIERS MODAL */
+    /* MODIFIERS MODAL WITH UNIVERSAL TOPPINGS FOR ALL DISHES */
     function openDishOptionsModal(dishId) {
       const dish = COFFEEMAN_MENU.find(d => d.id === dishId);
       if (!dish) return;
 
+      const availableAddons = (dish.addons && dish.addons.length > 0) ? dish.addons : UNIVERSAL_ADDONS;
+
       modalDraftDish = {
         dish: dish,
         selectedVariant: dish.variants && dish.variants.length > 0 ? dish.variants[0] : null,
+        availableAddons: availableAddons,
         selectedAddons: [],
         customNote: ''
       };
 
       document.getElementById('optDishTitle').textContent = dish.title;
-      document.getElementById('optDishDesc').textContent = dish.desc || '';
+      document.getElementById('optDishDesc').textContent = dish.desc || 'Любые добавки и пожелания к блюду';
       document.getElementById('optCustomNoteInput').value = '';
 
       const varSec = document.getElementById('optVariantsSection');
@@ -1537,23 +1845,20 @@
         varSec.classList.add('hidden');
       }
 
+      // Universal and dish-specific addons for ANY item
       const addSec = document.getElementById('optAddonsSection');
       const addGrid = document.getElementById('optAddonsGrid');
-      if (dish.addons && dish.addons.length > 0) {
-        addSec.classList.remove('hidden');
-        let aHtml = '';
-        dish.addons.forEach((a, idx) => {
-          aHtml += `
-            <button type="button" onclick="toggleDraftAddon(${idx})" id="draftAddonBtn-${idx}" class="p-1.5 rounded-xl border border-[#2D394A] bg-[#1C2430] text-slate-300 text-left text-xs font-bold transition flex items-center justify-between">
-              <span>+ ${a.name}</span>
-              <span class="font-mono text-[10px] text-amber-400 font-extrabold">+${a.price} ₽</span>
-            </button>
-          `;
-        });
-        addGrid.innerHTML = aHtml;
-      } else {
-        addSec.classList.add('hidden');
-      }
+      addSec.classList.remove('hidden');
+      let aHtml = '';
+      availableAddons.forEach((a, idx) => {
+        aHtml += `
+          <button type="button" onclick="toggleDraftAddon(${idx})" id="draftAddonBtn-${idx}" class="p-1.5 rounded-xl border border-[#2D394A] bg-[#1C2430] text-slate-300 text-left text-xs font-bold transition flex items-center justify-between">
+            <span>+ ${a.name}</span>
+            <span class="font-mono text-[10px] text-amber-400 font-extrabold">+${a.price} ₽</span>
+          </button>
+        `;
+      });
+      addGrid.innerHTML = aHtml;
 
       updateDraftModalTotal();
       document.getElementById('dishOptionsModal').classList.remove('hidden');
@@ -1575,8 +1880,8 @@
     }
 
     function toggleDraftAddon(idx) {
-      if (!modalDraftDish || !modalDraftDish.dish.addons) return;
-      const addon = modalDraftDish.dish.addons[idx];
+      if (!modalDraftDish || !modalDraftDish.availableAddons) return;
+      const addon = modalDraftDish.availableAddons[idx];
       const foundIdx = modalDraftDish.selectedAddons.findIndex(a => a.name === addon.name);
       const btn = document.getElementById(`draftAddonBtn-${idx}`);
 
@@ -1617,11 +1922,13 @@
 
       let basePrice = modalDraftDish.selectedVariant ? modalDraftDish.selectedVariant.price : modalDraftDish.dish.price;
       const addonsSum = modalDraftDish.selectedAddons.reduce((s, a) => s + a.price, 0);
+      const customDesc = document.getElementById('optDishCustomDescInput').value.trim();
       const customNote = document.getElementById('optCustomNoteInput').value.trim();
 
       table.items.push({
         dishId: modalDraftDish.dish.id,
         title: modalDraftDish.dish.title,
+        desc: customDesc || modalDraftDish.dish.desc || '',
         unitPrice: basePrice + addonsSum,
         quantity: 1,
         option: modalDraftDish.selectedVariant ? modalDraftDish.selectedVariant.name : null,
@@ -1633,6 +1940,348 @@
       closeDishOptionsModal();
       renderBillItemsList();
       showToast(`Блюдо с опциями добавлено!`);
+    }
+
+    /* CUSTOM DISH («СВОЁ БЛЮДО») STATE & FUNCTIONS */
+    let customItemDraft = {
+      name: '',
+      desc: '',
+      specifyPrice: true,
+      basePrice: 150,
+      addonsList: [...UNIVERSAL_ADDONS],
+      selectedAddons: [],
+      note: ''
+    };
+
+    function openCustomItemModal() {
+      customItemDraft = {
+        name: '',
+        desc: '',
+        specifyPrice: true,
+        basePrice: 150,
+        addonsList: [...UNIVERSAL_ADDONS],
+        selectedAddons: [],
+        note: ''
+      };
+
+      document.getElementById('customItemNameInput').value = '';
+      document.getElementById('customItemDescInput').value = '';
+      document.getElementById('customItemPriceInput').value = 150;
+      document.getElementById('customItemSpecifyPriceCheck').checked = true;
+      document.getElementById('customItemNoteInput').value = '';
+      document.getElementById('customItemNewAddonName').value = '';
+      document.getElementById('customItemNewAddonPrice').value = '';
+
+      handleCustomSpecifyPriceToggle();
+      renderCustomItemAddonsGrid();
+      updateCustomItemSummary();
+      document.getElementById('customItemModal').classList.remove('hidden');
+      setTimeout(() => {
+        const inp = document.getElementById('customItemNameInput');
+        if (inp) inp.focus();
+      }, 100);
+    }
+
+    function closeCustomItemModal() {
+      document.getElementById('customItemModal').classList.add('hidden');
+    }
+
+    function handleCustomSpecifyPriceToggle() {
+      const check = document.getElementById('customItemSpecifyPriceCheck');
+      const priceRow = document.getElementById('customItemPriceRow');
+      const badge = document.getElementById('customPriceStatusBadge');
+      const hint = document.getElementById('customPriceHint');
+
+      customItemDraft.specifyPrice = check.checked;
+
+      if (customItemDraft.specifyPrice) {
+        priceRow.classList.remove('hidden');
+        badge.textContent = 'Платное';
+        badge.className = 'text-[10px] font-mono font-bold bg-amber-500/20 text-amber-300 px-2 py-0.5 rounded border border-amber-500/40';
+        hint.textContent = 'Сумма будет учтена в общем чеке';
+      } else {
+        priceRow.classList.add('hidden');
+        badge.textContent = 'Без суммы (0 ₽)';
+        badge.className = 'text-[10px] font-mono font-bold bg-slate-700 text-slate-300 px-2 py-0.5 rounded border border-slate-600';
+        hint.textContent = 'Сумма не указывается (только название и добавки)';
+      }
+      updateCustomItemSummary();
+    }
+
+    function renderCustomItemAddonsGrid() {
+      const grid = document.getElementById('customItemAddonsGrid');
+      let html = '';
+
+      customItemDraft.addonsList.forEach((a, idx) => {
+        const isSelected = customItemDraft.selectedAddons.some(sa => sa.name === a.name);
+        const btnStyle = isSelected
+          ? 'border-amber-500 bg-amber-500/20 text-amber-300'
+          : 'border-[#2D394A] bg-[#1C2430] text-slate-300';
+
+        html += `
+          <button type="button" onclick="toggleCustomDraftAddon(${idx})" class="p-1.5 rounded-xl border ${btnStyle} text-left text-xs font-bold transition flex items-center justify-between">
+            <span class="truncate mr-1">+ ${a.name}</span>
+            <span class="font-mono text-[10px] text-amber-400 shrink-0 font-extrabold">${customItemDraft.specifyPrice ? `+${a.price} ₽` : '0 ₽'}</span>
+          </button>
+        `;
+      });
+
+      grid.innerHTML = html;
+    }
+
+    function toggleCustomDraftAddon(idx) {
+      const addon = customItemDraft.addonsList[idx];
+      const foundIdx = customItemDraft.selectedAddons.findIndex(a => a.name === addon.name);
+
+      if (foundIdx >= 0) {
+        customItemDraft.selectedAddons.splice(foundIdx, 1);
+      } else {
+        customItemDraft.selectedAddons.push(addon);
+      }
+      renderCustomItemAddonsGrid();
+      updateCustomItemSummary();
+    }
+
+    function addNewAddonToCustomItemDraft() {
+      const nameInp = document.getElementById('customItemNewAddonName');
+      const priceInp = document.getElementById('customItemNewAddonPrice');
+      const name = nameInp.value.trim();
+      const price = parseFloat(priceInp.value) || 0;
+
+      if (!name) {
+        showToast('Введите название добавки');
+        return;
+      }
+
+      const newAddon = { name: name, price: price };
+      customItemDraft.addonsList.unshift(newAddon);
+      customItemDraft.selectedAddons.push(newAddon);
+
+      nameInp.value = '';
+      priceInp.value = '';
+      renderCustomItemAddonsGrid();
+      updateCustomItemSummary();
+      showToast(`Добавка «${name}» добавлена`);
+    }
+
+    function appendCustomItemNote(txt) {
+      const inp = document.getElementById('customItemNoteInput');
+      inp.value = inp.value ? inp.value + ', ' + txt : txt;
+    }
+
+    function updateCustomItemSummary() {
+      if (!customItemDraft.specifyPrice) {
+        document.getElementById('customItemFinalPriceDisplay').textContent = '0 ₽ (Без суммы)';
+        return;
+      }
+
+      const priceInp = document.getElementById('customItemPriceInput');
+      let base = parseFloat(priceInp.value) || 0;
+      const addonsSum = customItemDraft.selectedAddons.reduce((s, a) => s + (a.price || 0), 0);
+      const total = base + addonsSum;
+      document.getElementById('customItemFinalPriceDisplay').textContent = `${total} ₽`;
+    }
+
+    function confirmAndAddCustomItem() {
+      const name = document.getElementById('customItemNameInput').value.trim();
+      if (!name) {
+        showToast('Укажите название блюда!');
+        document.getElementById('customItemNameInput').focus();
+        return;
+      }
+
+      const table = tablesState[activeTableId];
+      if (table.status === 'free') {
+        table.status = 'occupied';
+      }
+
+      let finalUnitPrice = 0;
+      if (customItemDraft.specifyPrice) {
+        const base = parseFloat(document.getElementById('customItemPriceInput').value) || 0;
+        const addonsSum = customItemDraft.selectedAddons.reduce((s, a) => s + (a.price || 0), 0);
+        finalUnitPrice = base + addonsSum;
+      }
+
+      const desc = document.getElementById('customItemDescInput').value.trim();
+      const note = document.getElementById('customItemNoteInput').value.trim();
+
+      table.items.push({
+        dishId: `custom_${Date.now()}`,
+        isCustom: true,
+        title: name,
+        desc: desc,
+        specifyPrice: customItemDraft.specifyPrice,
+        unitPrice: finalUnitPrice,
+        quantity: 1,
+        option: !customItemDraft.specifyPrice ? 'Без указания суммы' : null,
+        addons: [...customItemDraft.selectedAddons],
+        customNote: note
+      });
+
+      table.isRecordedInCash = false;
+      closeCustomItemModal();
+      renderBillItemsList();
+      showToast(`Своё блюдо «${name}» добавлено в чек!`);
+    }
+
+    /* BILL ITEM EDIT MODAL LOGIC (CLICK ON ITEM TO EDIT) */
+    let editingItemIndex = null;
+    let editingDraft = null;
+
+    function openEditBillItemModal(index) {
+      const table = tablesState[activeTableId];
+      const item = table.items[index];
+      if (!item) return;
+
+      editingItemIndex = index;
+      editingDraft = {
+        title: item.title,
+        desc: item.desc || '',
+        isCustom: !!item.isCustom,
+        specifyPrice: item.specifyPrice !== undefined ? item.specifyPrice : (item.unitPrice > 0),
+        unitPrice: item.unitPrice,
+        quantity: item.quantity,
+        option: item.option,
+        addons: item.addons ? [...item.addons] : [],
+        customNote: item.customNote || ''
+      };
+
+      document.getElementById('editItemModalTitle').textContent = `Редактирование: ${item.title}`;
+      document.getElementById('editModalQtyDisplay').textContent = editingDraft.quantity;
+      document.getElementById('editItemDescInput').value = editingDraft.desc;
+      document.getElementById('editItemCustomNoteInput').value = editingDraft.customNote;
+
+      const priceSec = document.getElementById('editCustomPriceSection');
+      const priceCheck = document.getElementById('editItemSpecifyPriceCheck');
+      const priceInp = document.getElementById('editItemPriceInput');
+
+      if (editingDraft.isCustom) {
+        priceSec.classList.remove('hidden');
+        priceCheck.checked = editingDraft.specifyPrice;
+        priceInp.value = editingDraft.unitPrice;
+        handleEditSpecifyPriceToggle();
+      } else {
+        priceSec.classList.add('hidden');
+      }
+
+      renderEditModalAddonsGrid();
+      recalcEditModalTotal();
+      document.getElementById('editBillItemModal').classList.remove('hidden');
+    }
+
+    function closeEditBillItemModal() {
+      document.getElementById('editBillItemModal').classList.add('hidden');
+      editingItemIndex = null;
+      editingDraft = null;
+    }
+
+    function adjustEditModalQty(delta) {
+      if (!editingDraft) return;
+      editingDraft.quantity = Math.max(1, editingDraft.quantity + delta);
+      document.getElementById('editModalQtyDisplay').textContent = editingDraft.quantity;
+      recalcEditModalTotal();
+    }
+
+    function handleEditSpecifyPriceToggle() {
+      if (!editingDraft) return;
+      const check = document.getElementById('editItemSpecifyPriceCheck');
+      const wrap = document.getElementById('editItemPriceInputWrap');
+      editingDraft.specifyPrice = check.checked;
+
+      if (editingDraft.specifyPrice) {
+        wrap.classList.remove('hidden');
+      } else {
+        wrap.classList.add('hidden');
+      }
+      recalcEditModalTotal();
+    }
+
+    function renderEditModalAddonsGrid() {
+      const grid = document.getElementById('editItemAddonsGrid');
+      let html = '';
+
+      UNIVERSAL_ADDONS.forEach(addon => {
+        const isSelected = editingDraft.addons.some(a => a.name === addon.name);
+        const style = isSelected 
+          ? 'border-amber-500 bg-amber-500/20 text-amber-300' 
+          : 'border-[#2D394A] bg-[#1C2430] text-slate-300';
+
+        html += `
+          <button type="button" onclick="toggleEditModalAddon('${addon.name}', ${addon.price})" class="p-1.5 rounded-xl border ${style} text-left text-xs font-bold transition flex items-center justify-between">
+            <span class="truncate mr-1">+ ${addon.name}</span>
+            <span class="font-mono text-[10px] text-amber-400 font-extrabold">+${addon.price} ₽</span>
+          </button>
+        `;
+      });
+
+      grid.innerHTML = html;
+    }
+
+    function toggleEditModalAddon(name, price) {
+      if (!editingDraft) return;
+      const idx = editingDraft.addons.findIndex(a => a.name === name);
+      if (idx >= 0) {
+        editingDraft.addons.splice(idx, 1);
+      } else {
+        editingDraft.addons.push({ name: name, price: price });
+      }
+      renderEditModalAddonsGrid();
+      recalcEditModalTotal();
+    }
+
+    function appendEditItemNote(txt) {
+      const inp = document.getElementById('editItemCustomNoteInput');
+      inp.value = inp.value ? inp.value + ', ' + txt : txt;
+    }
+
+    function recalcEditModalTotal() {
+      if (!editingDraft) return;
+      let unit = editingDraft.unitPrice;
+
+      if (editingDraft.isCustom) {
+        if (!editingDraft.specifyPrice) {
+          unit = 0;
+        } else {
+          unit = parseFloat(document.getElementById('editItemPriceInput').value) || 0;
+        }
+      }
+
+      const total = unit * editingDraft.quantity;
+      document.getElementById('editModalTotalPriceDisplay').textContent = `${total} ₽`;
+    }
+
+    function saveEditedBillItem() {
+      if (editingItemIndex === null) return;
+      const table = tablesState[activeTableId];
+      const item = table.items[editingItemIndex];
+      if (!item) return;
+
+      item.desc = document.getElementById('editItemDescInput').value.trim();
+      item.customNote = document.getElementById('editItemCustomNoteInput').value.trim();
+      item.quantity = editingDraft.quantity;
+      item.addons = [...editingDraft.addons];
+
+      if (item.isCustom) {
+        item.specifyPrice = editingDraft.specifyPrice;
+        if (!item.specifyPrice) {
+          item.unitPrice = 0;
+          item.option = 'Без указания суммы';
+        } else {
+          item.unitPrice = parseFloat(document.getElementById('editItemPriceInput').value) || 0;
+          item.option = null;
+        }
+      }
+
+      table.isRecordedInCash = false;
+      closeEditBillItemModal();
+      renderBillItemsList();
+      showToast(`Позиция «${item.title}» обновлена!`);
+    }
+
+    function deleteEditedItemFromBill() {
+      if (editingItemIndex === null) return;
+      removeBillItem(editingItemIndex);
+      closeEditBillItemModal();
     }
 
     /* KITCHEN DISPATCH */
