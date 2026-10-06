@@ -1,67 +1,4 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>COFFEEMAN — Планшет Официанта & Касса</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          colors: {
-            brand: {
-              400: '#F59E0B',
-              500: '#D97706',
-              600: '#B45309',
-              900: '#451A03'
-            },
-            pos: {
-              dark: '#0F1216',
-              panel: '#181C22',
-              card: '#222831',
-              cardHover: '#2B333E',
-              border: '#313A47',
-              highlight: '#F59E0B',
-              accent: '#10B981'
-            }
-          },
-          fontFamily: {
-            sans: ['"Manrope"', 'sans-serif'],
-            mono: ['"JetBrains Mono"', 'monospace']
-          }
-        }
-      }
-    }
-  </script>
-  <style>
-    * {
-      -webkit-tap-highlight-color: transparent;
-      user-select: none;
-      box-sizing: border-box;
-    }
-    input, textarea {
-      user-select: text;
-    }
-    /* Sleek touch scrollbar */
-    ::-webkit-scrollbar {
-      width: 7px;
-      height: 7px;
-    }
-    ::-webkit-scrollbar-track {
-      background: #0F1216;
-    }
-    ::-webkit-scrollbar-thumb {
-      background: #394452;
-      border-radius: 9999px;
-    }
-    ::-webkit-scrollbar-thumb:hover {
-      background: #505F73;
-    }
+<!-- ... existing code ... -->
     .touch-press:active {
       transform: scale(0.97);
     }
@@ -73,48 +10,21 @@
       from { opacity: 0; transform: translateY(6px); }
       to { opacity: 1; transform: translateY(0); }
     }
+    /* Rigid split-screen tablet layout fix */
+    .pos-screen-layout {
+      height: calc(100vh - 4rem);
+      max-height: calc(100vh - 4rem);
+    }
   </style>
 </head>
-<body class="bg-[#0D1014] text-slate-100 min-h-screen flex flex-col font-sans antialiased overflow-hidden text-base">
+<body class="bg-[#0D1014] text-slate-100 min-h-screen h-screen flex flex-col font-sans antialiased overflow-hidden text-base">
 
   <!-- TOP TABLET APP BAR -->
-  <header class="h-16 bg-[#161B22] border-b border-[#2C3542] px-4 flex items-center justify-between shadow-lg z-30 shrink-0">
+  <header class="h-16 bg-[#161B22] border-b border-[#2C3542] px-3 sm:px-4 flex items-center justify-between shadow-lg z-30 shrink-0">
     
     <!-- Cafe Identity & Waiter Profile -->
     <div class="flex items-center gap-3.5">
-      <div class="w-11 h-11 rounded-2xl bg-gradient-to-tr from-amber-600 to-amber-400 flex items-center justify-center text-slate-950 font-black text-xl shadow-md">
-        ☕
-      </div>
-      <div>
-        <div class="flex items-center gap-2">
-          <span class="text-base font-extrabold tracking-wider text-amber-400 uppercase">COFFEEMAN</span>
-          <span class="text-[11px] bg-amber-500/20 text-amber-300 font-bold px-2 py-0.5 rounded-md border border-amber-500/30">POS ТЕРМИНАЛ</span>
-        </div>
-        <div class="text-xs text-slate-400 font-medium flex items-center gap-2">
-          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-          <span>Официант: <strong class="text-slate-200">Анна В.</strong></span>
-          <span class="text-slate-600">|</span>
-          <span id="posLiveClock" class="font-mono text-amber-300 font-bold">--:--:--</span>
-        </div>
-      </div>
-    </div>
-
-    <!-- 3 STEP-BY-STEP TAB BUTTONS (Clear flow as requested) -->
-    <nav class="flex items-center bg-[#0D1014] p-1.5 rounded-2xl border border-[#2B3442] shadow-inner gap-1">
-      
-      <!-- Step 1: Active Tables -->
-      <button onclick="switchScreen('tables')" id="navBtn-tables" class="touch-press px-4 py-2 rounded-xl text-xs sm:text-sm font-extrabold flex items-center gap-2 transition-all bg-amber-500 text-slate-950 shadow-md">
-        <i class="fa-solid fa-table-cells text-sm"></i>
-        <span>1. Активные столы</span>
-        <span id="navTablesBadge" class="bg-slate-900/30 text-slate-950 text-[11px] px-1.5 py-0.2 rounded-full font-black">0</span>
-      </button>
-
-      <!-- Step 2: New Order / Table & Guests -->
-      <button onclick="switchScreen('new-order')" id="navBtn-new-order" class="touch-press px-4 py-2 rounded-xl text-xs sm:text-sm font-bold flex items-center gap-2 transition-all text-slate-300 hover:text-white hover:bg-[#202731]">
-        <i class="fa-solid fa-user-plus text-sm text-amber-400"></i>
-        <span>2. Выбор стола и гостей</span>
-      </button>
-
+<!-- ... existing code ... -->
       <!-- Step 3: Cash POS / Dishes Input -->
       <button onclick="switchScreen('pos')" id="navBtn-pos" class="touch-press px-4 py-2 rounded-xl text-xs sm:text-sm font-bold flex items-center gap-2 transition-all text-slate-300 hover:text-white hover:bg-[#202731]">
         <i class="fa-solid fa-cash-register text-sm text-emerald-400"></i>
@@ -123,8 +33,14 @@
       </button>
     </nav>
 
-    <!-- Quick Shift Statistics / Day Summary -->
+    <!-- Quick Shift Statistics / Day Summary & Cash Journal -->
     <div class="flex items-center gap-2">
+      <button onclick="openCashJournalModal()" class="touch-press h-10 px-3 bg-[#232B36] hover:bg-[#2F3A48] text-emerald-400 border border-[#3B4756] rounded-xl text-xs font-bold flex items-center gap-1.5 shadow" title="Кассовая лента смены">
+        <i class="fa-solid fa-file-invoice-dollar"></i>
+        <span class="hidden lg:inline">Журнал кассы</span>
+        <span id="headerJournalBadge" class="bg-emerald-500/20 text-emerald-300 text-[10px] px-1.5 py-0.5 rounded-md border border-emerald-500/40 font-mono font-bold">0</span>
+      </button>
+
       <button onclick="openShiftModal()" class="touch-press h-10 px-3.5 bg-[#232B36] hover:bg-[#2F3A48] text-slate-200 border border-[#3B4756] rounded-xl text-xs font-bold flex items-center gap-2 shadow">
         <i class="fa-solid fa-chart-pie text-amber-400"></i>
         <span class="hidden md:inline">Смена & Выручка</span>
@@ -133,176 +49,14 @@
   </header>
 
   <main class="flex-1 flex overflow-hidden relative">
-
-    <!-- ============================================================ -->
-    <!-- SCREEN 1: СТРАНИЦА С АКТИВНЫМИ СТОЛАМИ (Зал 12 столов + С собой) -->
-    <!-- ============================================================ -->
-    <section id="screen-tables" class="flex-1 flex flex-col p-4 sm:p-6 overflow-y-auto bg-[#0F1216] fade-step">
-      
-      <!-- Screen 1 Banner Header -->
-      <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-5 border-b border-[#262F3C] gap-4">
-        <div>
-          <div class="flex items-center gap-3">
-            <h1 class="text-2xl sm:text-3xl font-black text-white tracking-tight">Карта столов зала</h1>
-            <span class="bg-amber-500/20 text-amber-300 border border-amber-500/40 text-xs font-extrabold px-3 py-1 rounded-xl">
-              12 столов + На вынос
-            </span>
-          </div>
-          <p class="text-slate-400 text-sm mt-1">
-            Нажмите на свободный стол, чтобы <strong>указать гостей и начать заказ</strong>, или выберите занятый для редактирования счёта.
-          </p>
-        </div>
-
-        <!-- Filter / Quick Action -->
-        <div class="flex items-center gap-2">
-          <button onclick="startNewTableSetup()" class="touch-press h-12 px-5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-black rounded-2xl text-sm flex items-center gap-2 shadow-lg shadow-amber-950/40">
-            <i class="fa-solid fa-circle-plus text-base"></i>
-            <span>Открыть новый стол</span>
-          </button>
-        </div>
-      </div>
-
-      <!-- Quick Status Badges Legend -->
-      <div class="flex flex-wrap items-center justify-between gap-3 py-3 text-xs text-slate-400 font-semibold">
-        <div class="flex items-center gap-4">
-          <span class="flex items-center gap-2"><span class="w-3.5 h-3.5 rounded-lg bg-[#222831] border border-[#3E4A5B]"></span> Свободен</span>
-          <span class="flex items-center gap-2"><span class="w-3.5 h-3.5 rounded-lg bg-emerald-500 text-black flex items-center justify-center text-[10px] font-bold"><i class="fa-solid fa-check"></i></span> Занят / Обслуживается</span>
-          <span class="flex items-center gap-2"><span class="w-3.5 h-3.5 rounded-lg bg-amber-500 text-black flex items-center justify-center text-[10px] font-bold"><i class="fa-solid fa-receipt"></i></span> Запросил счёт</span>
-          <span class="flex items-center gap-2"><span class="w-3.5 h-3.5 rounded-lg bg-sky-500 text-black flex items-center justify-center text-[10px] font-bold"><i class="fa-solid fa-credit-card"></i></span> Оплачен</span>
-        </div>
-        <div id="roomSummaryText" class="text-slate-300 font-mono text-sm">
-          Занято: 0 из 12 | Гостей: 0
-        </div>
-      </div>
-
-      <!-- Prominent TAKEAWAY (С СОБОЙ) Card Banner -->
-      <div class="mb-4">
-        <div onclick="selectTakeawayFromList()" class="touch-press cursor-pointer bg-gradient-to-r from-[#1B2129] to-[#252D37] border-2 border-[#394555] hover:border-amber-500 rounded-3xl p-4 sm:p-5 flex items-center justify-between transition-all shadow-xl">
-          <div class="flex items-center gap-4">
-            <div class="w-14 h-14 rounded-2xl bg-amber-500/20 text-amber-400 border border-amber-500/40 flex items-center justify-center text-2xl font-black shadow-inner">
-              <i class="fa-solid fa-bag-shopping"></i>
-            </div>
-            <div>
-              <div class="flex items-center gap-2">
-                <span class="text-lg font-black text-white">ЗАКАЗ «С СОБОЙ» / НА ВЫНОС</span>
-                <span id="takeawayStatusBadge" class="text-xs font-bold px-2.5 py-0.5 rounded-full bg-slate-800 text-slate-300 border border-slate-700">Свободен</span>
-              </div>
-              <p class="text-xs text-slate-400 mt-0.5">Быстрое оформление упаковки блюд и напитков на вынос без посадки за стол</p>
-            </div>
-          </div>
-          <div class="text-right">
-            <div id="takeawaySumDisplay" class="text-2xl font-black font-mono text-amber-400">0 ₽</div>
-            <div id="takeawayItemsDisplay" class="text-xs text-slate-400 font-bold">0 позиций в заказе</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- 12 TABLES GRID (Clear, Large, Finger-Friendly Tablet Cards) -->
-      <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 flex-1" id="screen1TablesGrid">
-        <!-- Rendered in JS dynamically -->
-      </div>
-    </section>
-
-    <!-- ============================================================ -->
-    <!-- SCREEN 2: СТРАНИЦА ДЛЯ СОЗДАНИЯ ЗАКАЗА (Где столы и номер, персоны) -->
-    <!-- ============================================================ -->
-    <section id="screen-new-order" class="hidden flex-1 flex flex-col p-4 sm:p-6 overflow-y-auto bg-[#0F1216] fade-step">
-      
-      <!-- Step 2 Navigation Breadcrumb Header -->
-      <div class="flex items-center justify-between pb-4 border-b border-[#262F3C]">
-        <div class="flex items-center gap-3">
-          <button onclick="switchScreen('tables')" class="touch-press w-10 h-10 rounded-2xl bg-[#222831] hover:bg-[#2C3440] text-slate-200 border border-[#374251] flex items-center justify-center text-sm font-bold">
-            <i class="fa-solid fa-arrow-left"></i>
-          </button>
-          <div>
-            <h2 class="text-2xl font-black text-white flex items-center gap-2">
-              <span>Этап 2: Параметры посадки стола</span>
-              <span class="text-xs bg-amber-500/20 text-amber-300 font-extrabold px-2.5 py-1 rounded-xl border border-amber-500/30">Обязательно</span>
-            </h2>
-            <p class="text-xs text-slate-400">Выберите номер столика и укажите точное количество персон перед открытием меню</p>
-          </div>
-        </div>
-
-        <button onclick="switchScreen('tables')" class="text-xs text-slate-400 hover:text-white px-3 py-1.5 rounded-xl border border-transparent hover:border-[#354050]">
-          Отмена
-        </button>
-      </div>
-
-      <!-- Two Column Layout for Step 2 -->
-      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 my-auto max-w-5xl mx-auto w-full py-4">
-        
-        <!-- Left: Table Selection Picker -->
-        <div class="lg:col-span-6 bg-[#161B22] border border-[#2B3442] rounded-3xl p-5 shadow-2xl flex flex-col">
-          <label class="text-xs font-black uppercase tracking-wider text-amber-400 mb-3 flex items-center justify-between">
-            <span><i class="fa-solid fa-chair mr-1.5"></i> 1. Выберите столик:</span>
-            <span id="step2SelectedTableLabel" class="text-white text-sm font-black bg-amber-500/30 px-2.5 py-0.5 rounded-lg border border-amber-500/50">Стол #1</span>
-          </label>
-
-          <!-- 12 Tables Quick Selector Pills -->
-          <div class="grid grid-cols-3 sm:grid-cols-4 gap-2.5 mb-4" id="step2TablesPickerGrid">
-            <!-- Injected via JS -->
-          </div>
-
-          <!-- Or Takeaway Button -->
-          <button type="button" onclick="setStep2Table('takeaway')" id="step2TakeawayBtn" class="touch-press w-full py-3 px-4 rounded-2xl border border-[#394555] bg-[#202731] hover:bg-[#28313E] text-slate-200 font-bold text-xs flex items-center justify-between transition">
-            <span class="flex items-center gap-2">
-              <i class="fa-solid fa-bag-shopping text-amber-400 text-sm"></i>
-              <span>Заказ «С собой» (без столика)</span>
-            </span>
-            <span class="text-[10px] text-amber-300 font-mono">Takeaway</span>
-          </button>
-        </div>
-
-        <!-- Right: Guests Count Stepper & Presets -->
-        <div class="lg:col-span-6 bg-[#161B22] border border-[#2B3442] rounded-3xl p-5 shadow-2xl flex flex-col justify-between">
-          <div>
-            <label class="text-xs font-black uppercase tracking-wider text-amber-400 mb-3 block">
-              <i class="fa-solid fa-users mr-1.5"></i> 2. Количество персон:
-            </label>
-
-            <!-- Large Stepper Display -->
-            <div class="bg-[#0F1216] rounded-3xl p-4 border border-[#262F3C] flex items-center justify-between mb-4">
-              <button onclick="adjustStep2Guests(-1)" class="touch-press w-16 h-16 rounded-2xl bg-[#222831] hover:bg-[#2E3643] text-amber-300 border border-[#394556] text-3xl font-black flex items-center justify-center shadow-lg">
-                -
-              </button>
-              <div class="text-center">
-                <span id="step2GuestsBigNumber" class="text-6xl font-black font-mono text-amber-400 tracking-tighter">2</span>
-                <span class="block text-xs font-bold text-slate-400 mt-1 uppercase" id="step2GuestsLabelWord">персоны</span>
-              </div>
-              <button onclick="adjustStep2Guests(1)" class="touch-press w-16 h-16 rounded-2xl bg-[#222831] hover:bg-[#2E3643] text-amber-300 border border-[#394556] text-3xl font-black flex items-center justify-center shadow-lg">
-                +
-              </button>
-            </div>
-
-            <!-- Quick Preset Person Buttons -->
-            <div class="grid grid-cols-4 gap-2 mb-4">
-              <button onclick="setStep2Guests(1)" class="touch-press py-3 rounded-xl bg-[#222831] hover:bg-amber-500 hover:text-slate-950 font-extrabold text-sm border border-[#354152] transition">1 чел</button>
-              <button onclick="setStep2Guests(2)" class="touch-press py-3 rounded-xl bg-[#222831] hover:bg-amber-500 hover:text-slate-950 font-extrabold text-sm border border-[#354152] transition">2 чел</button>
-              <button onclick="setStep2Guests(3)" class="touch-press py-3 rounded-xl bg-[#222831] hover:bg-amber-500 hover:text-slate-950 font-extrabold text-sm border border-[#354152] transition">3 чел</button>
-              <button onclick="setStep2Guests(4)" class="touch-press py-3 rounded-xl bg-[#222831] hover:bg-amber-500 hover:text-slate-950 font-extrabold text-sm border border-[#354152] transition">4 чел</button>
-              <button onclick="setStep2Guests(5)" class="touch-press py-3 rounded-xl bg-[#222831] hover:bg-amber-500 hover:text-slate-950 font-extrabold text-sm border border-[#354152] transition">5 чел</button>
-              <button onclick="setStep2Guests(6)" class="touch-press py-3 rounded-xl bg-[#222831] hover:bg-amber-500 hover:text-slate-950 font-extrabold text-sm border border-[#354152] transition">6 чел</button>
-              <button onclick="setStep2Guests(7)" class="touch-press py-3 rounded-xl bg-[#222831] hover:bg-amber-500 hover:text-slate-950 font-extrabold text-sm border border-[#354152] transition">7 чел</button>
-              <button onclick="setStep2Guests(8)" class="touch-press py-3 rounded-xl bg-[#222831] hover:bg-amber-500 hover:text-slate-950 font-extrabold text-sm border border-[#354152] transition">8+ чел</button>
-            </div>
-          </div>
-
-          <!-- Confirm & Jump to Step 3 POS Input -->
-          <button onclick="confirmStep2AndOpenPOS()" class="touch-press w-full h-16 bg-gradient-to-r from-amber-500 via-amber-400 to-amber-500 hover:from-amber-400 hover:to-amber-300 text-slate-950 font-black text-lg rounded-2xl flex items-center justify-center gap-3 shadow-xl shadow-amber-950/40">
-            <span>Перейти к записи в кассу</span>
-            <i class="fa-solid fa-arrow-right text-xl"></i>
-          </button>
-        </div>
-      </div>
-    </section>
-
+<!-- ... existing code ... -->
     <!-- ============================================================ -->
     <!-- SCREEN 3: СТРАНИЦА С ВЫБОРОМ ЗАПИСИ В КАССУ (Быстрый ввод и чек) -->
     <!-- ============================================================ -->
-    <section id="screen-pos" class="hidden flex-1 flex flex-row overflow-hidden bg-[#0D1014] fade-step">
+    <section id="screen-pos" class="hidden flex-1 flex flex-col md:flex-row overflow-hidden bg-[#0D1014] fade-step pos-screen-layout relative">
       
       <!-- CENTER: Fast Search Bar + Category Pills + Dishes Touch Grid -->
-      <div class="flex-1 flex flex-col min-w-0 border-r border-[#262F3C] overflow-hidden">
+      <div class="flex-1 flex flex-col min-w-0 border-r border-[#262F3C] overflow-hidden h-full">
         
         <!-- PROMINENT FAST SEARCH & TABLE SELECTOR BAR -->
         <div class="p-3 bg-[#161B22] border-b border-[#28323F] flex items-center gap-3 shrink-0 shadow-md">
@@ -346,7 +100,13 @@
           <!-- Quick Hits Filter Button -->
           <button onclick="togglePopularFilter()" id="posHitsFilterBtn" class="touch-press h-12 px-3 sm:px-4 rounded-2xl bg-[#222831] border border-[#364252] text-amber-300 hover:border-amber-500 font-extrabold text-xs sm:text-sm flex items-center gap-1.5 whitespace-nowrap shadow">
             <i class="fa-solid fa-fire text-amber-400"></i>
-            <span>Хиты меню</span>
+            <span class="hidden sm:inline">Хиты меню</span>
+          </button>
+
+          <!-- Mobile Quick Bill Toggle (Visible on smaller tablet screens) -->
+          <button onclick="toggleMobileBillDrawer()" class="md:hidden touch-press h-12 px-3 rounded-2xl bg-amber-500 text-slate-950 font-black text-xs flex items-center gap-1.5 shadow">
+            <i class="fa-solid fa-receipt"></i>
+            <span id="mobileBillBadgeCount">0</span>
           </button>
         </div>
 
@@ -356,8 +116,8 @@
         </div>
 
         <!-- Dishes Grid (Finger-friendly cards with instant add & options) -->
-        <div class="flex-1 overflow-y-auto p-3 sm:p-4" id="posDishesContainer">
-          <div id="posDishesGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3">
+        <div class="flex-1 overflow-y-auto p-3 sm:p-4 min-h-0" id="posDishesContainer">
+          <div id="posDishesGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
             <!-- Dishes injected via JS -->
           </div>
 
@@ -375,11 +135,11 @@
         </div>
       </div>
 
-      <!-- RIGHT: Active Bill Column with Order Management Buttons -->
-      <aside class="w-80 sm:w-96 bg-[#161B22] flex flex-col shrink-0 shadow-2xl z-20">
+      <!-- RIGHT: Active Bill Column with Order Management Buttons (Locked height, NO overflowing down) -->
+      <aside id="posBillAside" class="fixed inset-y-16 right-0 z-40 md:static md:inset-auto w-80 sm:w-96 bg-[#161B22] flex flex-col shrink-0 shadow-2xl h-full border-l border-[#2C3645] transform translate-x-full md:translate-x-0 transition-transform duration-200">
         
         <!-- Bill Header -->
-        <div class="p-3.5 bg-[#1C222B] border-b border-[#2B3543] flex items-center justify-between">
+        <div class="p-3.5 bg-[#1C222B] border-b border-[#2B3543] flex items-center justify-between shrink-0">
           <div class="flex items-center gap-2.5">
             <div class="w-9 h-9 rounded-xl bg-amber-500/20 text-amber-400 border border-amber-500/40 flex items-center justify-center font-black text-sm">
               <i class="fa-solid fa-receipt"></i>
@@ -390,158 +150,177 @@
             </div>
           </div>
 
-          <!-- Clear/Cancel Entire Order -->
-          <button onclick="promptResetOrder()" title="Очистить заказ" class="touch-press text-xs text-rose-400 hover:text-rose-300 px-2.5 py-1.5 rounded-xl bg-rose-950/40 border border-rose-900/60 font-bold transition">
-            <i class="fa-solid fa-trash-can mr-1"></i> Сброс
-          </button>
+          <div class="flex items-center gap-1.5">
+            <!-- Mobile Close Aside Button -->
+            <button onclick="toggleMobileBillDrawer(false)" class="md:hidden touch-press text-slate-400 hover:text-white p-2">
+              <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+            <!-- Clear/Cancel Entire Order -->
+            <button onclick="promptResetOrder()" title="Очистить заказ" class="touch-press text-xs text-rose-400 hover:text-rose-300 px-2.5 py-1.5 rounded-xl bg-rose-950/40 border border-rose-900/60 font-bold transition">
+              <i class="fa-solid fa-trash-can mr-1"></i> Сброс
+            </button>
+          </div>
         </div>
 
         <!-- Note to Chef / Table Instructions -->
-        <div class="px-3 py-2 bg-[#12161C] border-b border-[#252E3A]">
+        <div class="px-3 py-2 bg-[#12161C] border-b border-[#252E3A] shrink-0">
           <input 
             type="text" 
             id="billGeneralNoteInput" 
             onchange="updateOrderGeneralNote(this.value)"
-            placeholder="Комментарий кухне (VIP, аллергии, очерёдность)..." 
+            placeholder="Комментарий кухне (VIP, аллергии, подача)..." 
             class="w-full bg-[#1B222B] border border-[#2E3846] text-xs text-amber-200 placeholder-slate-500 rounded-xl px-3 py-1.5 focus:outline-none focus:border-amber-400"
           />
         </div>
 
-        <!-- Scrollable Bill Items List -->
-        <div class="flex-1 overflow-y-auto p-3 space-y-2" id="billItemsScrollList">
+        <!-- Scrollable Bill Items List (Strict min-h-0 and internal scroll) -->
+        <div class="flex-1 overflow-y-auto p-3 space-y-2 min-h-0" id="billItemsScrollList">
           <!-- Rendered in JS -->
         </div>
 
         <!-- Bill Footer with Summary & Full Action Buttons -->
-        <div class="p-3.5 bg-[#1C222B] border-t border-[#2C3645] space-y-3">
+        <div class="p-3.5 bg-[#1C222B] border-t border-[#2C3645] space-y-2.5 shrink-0">
           
           <!-- Summary Box -->
-          <div class="bg-[#12161C] rounded-2xl p-3 border border-[#262F3C] space-y-1">
+          <div class="bg-[#12161C] rounded-2xl p-2.5 border border-[#262F3C] space-y-1">
             <div class="flex justify-between text-xs text-slate-400">
-              <span>Количество блюд:</span>
+              <span>Всего блюд в чеке:</span>
               <span id="billItemsTotalCount" class="font-bold text-slate-200">0 шт.</span>
             </div>
             <div class="flex justify-between items-baseline pt-1 border-t border-[#232B36]">
-              <span class="text-sm font-black text-slate-200 uppercase">Итого к оплате:</span>
-              <span id="billFinalTotalSum" class="text-2xl font-black font-mono text-amber-400">0 ₽</span>
+              <span class="text-xs sm:text-sm font-black text-slate-200 uppercase">Итого к оплате:</span>
+              <span id="billFinalTotalSum" class="text-xl sm:text-2xl font-black font-mono text-amber-400">0 ₽</span>
             </div>
           </div>
 
-          <!-- PRIMARY ACTION BUTTONS (Precheck, Send to Kitchen, Close & Pay) -->
+          <!-- PRIMARY ACTION: EXPLICIT «ЗАПИСЬ В КАССУ» BUTTON -->
+          <button onclick="openRecordToCashModal()" class="touch-press w-full h-12 bg-gradient-to-r from-amber-500 via-amber-400 to-amber-500 hover:from-amber-400 hover:to-amber-300 text-slate-950 font-black text-sm rounded-2xl flex items-center justify-center gap-2 shadow-lg shadow-amber-950/40">
+            <i class="fa-solid fa-cash-register text-base"></i>
+            <span>Запись в кассу (вывести позиции)</span>
+          </button>
+
+          <!-- SECONDARY ACTION BUTTONS (Precheck & Kitchen) -->
           <div class="grid grid-cols-2 gap-2">
-            
             <!-- Send to Kitchen Button -->
-            <button onclick="sendOrderToKitchen()" class="touch-press h-12 bg-[#242D38] hover:bg-[#2D3846] text-amber-300 font-extrabold rounded-2xl border border-[#3C4A5C] flex items-center justify-center gap-2 text-xs transition shadow">
-              <i class="fa-solid fa-bell-concierge text-sm"></i>
+            <button onclick="sendOrderToKitchen()" class="touch-press h-10 bg-[#242D38] hover:bg-[#2D3846] text-amber-300 font-extrabold rounded-xl border border-[#3C4A5C] flex items-center justify-center gap-2 text-xs transition shadow">
+              <i class="fa-solid fa-bell-concierge text-xs"></i>
               <span>На кухню</span>
             </button>
 
             <!-- Pre-check / Print Bill -->
-            <button onclick="openPrecheckModal()" class="touch-press h-12 bg-[#242D38] hover:bg-[#2D3846] text-slate-200 font-extrabold rounded-2xl border border-[#3C4A5C] flex items-center justify-center gap-2 text-xs transition shadow">
-              <i class="fa-solid fa-print text-amber-400 text-sm"></i>
+            <button onclick="openPrecheckModal()" class="touch-press h-10 bg-[#242D38] hover:bg-[#2D3846] text-slate-200 font-extrabold rounded-xl border border-[#3C4A5C] flex items-center justify-center gap-2 text-xs transition shadow">
+              <i class="fa-solid fa-print text-amber-400 text-xs"></i>
               <span>Пречек</span>
             </button>
           </div>
 
           <!-- BIG CLOSE ORDER & PAY BUTTON -->
-          <button onclick="openPaymentModal()" class="touch-press w-full h-14 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-slate-950 font-black text-base rounded-2xl flex items-center justify-center gap-2 shadow-xl shadow-emerald-950/40">
-            <i class="fa-solid fa-circle-check text-lg"></i>
+          <button onclick="openPaymentModal()" class="touch-press w-full h-12 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-slate-950 font-black text-sm rounded-2xl flex items-center justify-center gap-2 shadow-xl shadow-emerald-950/40">
+            <i class="fa-solid fa-circle-check text-base"></i>
             <span>Закрыть заказ / Оплатить</span>
           </button>
         </div>
       </aside>
     </section>
   </main>
-
+<!-- ... existing code ... -->
   <!-- ============================================================ -->
   <!-- MODAL: ВЫБОР ДОБАВОК, МОДИФИКАТОРОВ И ПОЖЕЛАНИЙ К БЛЮДУ -->
   <!-- ============================================================ -->
-  <div id="dishOptionsModal" class="fixed inset-0 bg-black/85 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-    <div class="bg-[#181D24] border-2 border-[#333E4E] rounded-3xl w-full max-w-lg shadow-2xl overflow-hidden flex flex-col max-h-[92vh] animate-in fade-in zoom-in duration-150">
+<!-- ... existing code ... -->
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- MODAL: ЗАПИСЬ В КАССУ — ВЫВОД ВСЕХ ПОЗИЦИЙ И ФИКСАЦИЯ В КАССОВОЙ СМЕНЕ -->
+  <!-- ============================================================ -->
+  <div id="recordToCashModal" class="fixed inset-0 bg-black/85 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-[#181D24] border-2 border-amber-500/80 rounded-3xl w-full max-w-2xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh] animate-in fade-in zoom-in duration-150">
       
-      <!-- Dish Modal Header -->
-      <div class="p-4 bg-[#202731] border-b border-[#2C3645] flex items-start justify-between">
-        <div>
-          <span id="optCategoryBadge" class="text-[11px] font-extrabold text-amber-400 uppercase tracking-wider">Утро в кофемане</span>
-          <h3 id="optDishTitle" class="text-xl font-black text-white mt-0.5">Блин с фаршем из говядины</h3>
-          <p id="optDishDesc" class="text-xs text-slate-400 mt-1 leading-relaxed">Подаётся со сметаной</p>
+      <!-- Record Modal Header -->
+      <div class="p-4 bg-[#202731] border-b border-[#2C3645] flex items-center justify-between shrink-0">
+        <div class="flex items-center gap-3">
+          <div class="w-11 h-11 rounded-2xl bg-amber-500 text-slate-950 flex items-center justify-center text-xl font-black shadow-md">
+            <i class="fa-solid fa-cash-register"></i>
+          </div>
+          <div>
+            <div class="flex items-center gap-2">
+              <h3 class="text-lg font-black text-white">Запись в кассу</h3>
+              <span id="rtcModalStatusBadge" class="text-[10px] bg-amber-500/20 text-amber-300 font-bold px-2 py-0.5 rounded-lg border border-amber-500/40">Подготовка позиций</span>
+            </div>
+            <p class="text-xs text-slate-400 mt-0.5" id="rtcModalSubtitle">Стол #1 • 2 персоны • Официант: Анна В.</p>
+          </div>
         </div>
-        <button onclick="closeDishOptionsModal()" class="w-9 h-9 rounded-full bg-[#2C3543] text-slate-300 hover:text-white flex items-center justify-center">
+        <button onclick="closeRecordToCashModal()" class="w-9 h-9 rounded-full bg-[#2C3543] text-slate-300 hover:text-white flex items-center justify-center">
           <i class="fa-solid fa-xmark"></i>
         </button>
       </div>
 
-      <!-- Dish Options Scrollable Body -->
-      <div class="p-5 overflow-y-auto flex-1 space-y-4 text-xs">
+      <!-- Record Modal Body: Table of All Positions in the Order -->
+      <div class="p-4 sm:p-5 overflow-y-auto flex-1 space-y-4">
         
-        <!-- VARIATION RADIO OPTIONS (e.g., meat doneness, soup type, size) -->
-        <div id="optVariationsBox" class="space-y-2">
-          <label class="font-black text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
-            <i class="fa-solid fa-layer-group"></i> 1. Выберите вариант / размер:
-          </label>
-          <div id="optVariationsGrid" class="grid grid-cols-2 gap-2">
-            <!-- Injected via JS -->
+        <div class="bg-[#12161C] border border-[#2B3544] rounded-2xl p-3 flex flex-wrap items-center justify-between gap-3 text-xs">
+          <div>
+            <span class="text-slate-400 block text-[11px]">Номер документа кассы:</span>
+            <span class="font-mono font-bold text-amber-400" id="rtcDocNumber">CHK-0001</span>
+          </div>
+          <div>
+            <span class="text-slate-400 block text-[11px]">Время открытия чека:</span>
+            <span class="font-mono text-slate-200" id="rtcOpenTime">--:--</span>
+          </div>
+          <div>
+            <span class="text-slate-400 block text-[11px]">Всего строк:</span>
+            <span class="font-mono font-bold text-slate-200" id="rtcLinesCount">0 поз.</span>
+          </div>
+          <div>
+            <span class="text-slate-400 block text-[11px]">Тип обслуживания:</span>
+            <span class="font-bold text-emerald-400" id="rtcServeType">Зал</span>
           </div>
         </div>
 
-        <!-- ADD-ONS / TOPPINGS CHECKBOXES -->
-        <div class="space-y-2 pt-2 border-t border-[#262F3D]">
-          <div class="flex items-center justify-between">
-            <label class="font-black text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
-              <i class="fa-solid fa-circle-plus"></i> 2. Добавки и топпинги:
-            </label>
-            <span class="text-[10px] text-slate-400">можно несколько</span>
-          </div>
-          <div id="optAddonsGrid" class="grid grid-cols-2 gap-2">
-            <!-- Injected via JS -->
-          </div>
+        <!-- Complete Items Breakdown Table -->
+        <div class="overflow-x-auto rounded-2xl border border-[#2D3847] bg-[#161B22]">
+          <table class="w-full text-left text-xs">
+            <thead class="bg-[#202732] text-slate-400 font-extrabold uppercase text-[10px] border-b border-[#2D3847]">
+              <tr>
+                <th class="py-2.5 px-3">№</th>
+                <th class="py-2.5 px-3">Наименование блюда / Опции</th>
+                <th class="py-2.5 px-3 text-center">Кол-во</th>
+                <th class="py-2.5 px-3 text-right">Цена</th>
+                <th class="py-2.5 px-3 text-right">Сумма</th>
+              </tr>
+            </thead>
+            <tbody id="rtcItemsTableBody" class="divide-y divide-[#252E3C] text-slate-200">
+              <!-- Rendered via JS -->
+            </tbody>
+          </table>
         </div>
 
-        <!-- KITCHEN WISHES & CHIPS -->
-        <div class="space-y-2 pt-2 border-t border-[#262F3D]">
-          <label class="font-black text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
-            <i class="fa-solid fa-pen-to-square"></i> 3. Указания кухне / бариста:
-          </label>
-          <div class="flex flex-wrap gap-1.5 mb-2">
-            <button type="button" onclick="appendDishNote('Без лука')" class="touch-press px-2.5 py-1.5 bg-[#222933] hover:bg-[#2C3542] text-slate-300 rounded-xl border border-[#333E4D] font-bold text-xs">Без лука</button>
-            <button type="button" onclick="appendDishNote('Без сахара')" class="touch-press px-2.5 py-1.5 bg-[#222933] hover:bg-[#2C3542] text-slate-300 rounded-xl border border-[#333E4D] font-bold text-xs">Без сахара</button>
-            <button type="button" onclick="appendDishNote('Горячим')" class="touch-press px-2.5 py-1.5 bg-[#222933] hover:bg-[#2C3542] text-slate-300 rounded-xl border border-[#333E4D] font-bold text-xs">Горячим</button>
-            <button type="button" onclick="appendDishNote('Соус отдельно')" class="touch-press px-2.5 py-1.5 bg-[#222933] hover:bg-[#2C3542] text-slate-300 rounded-xl border border-[#333E4D] font-bold text-xs">Соус отдельно</button>
-            <button type="button" onclick="appendDishNote('С собой упаковать')" class="touch-press px-2.5 py-1.5 bg-[#222933] hover:bg-[#2C3542] text-slate-300 rounded-xl border border-[#333E4D] font-bold text-xs">Упаковать с собой</button>
-          </div>
-          <input 
-            type="text" 
-            id="optDishNoteInput" 
-            placeholder="Свой комментарий: без специй, мало льда, хрустящий..." 
-            class="w-full bg-[#12151B] border border-[#2B3543] rounded-xl px-3.5 py-2 text-xs text-amber-200 placeholder-slate-500 focus:outline-none focus:border-amber-400"
-          />
-        </div>
-
-        <!-- Quantity Stepper Inside Options Modal -->
-        <div class="flex items-center justify-between pt-2 border-t border-[#262F3D]">
-          <span class="font-black text-white text-sm">Количество порций:</span>
-          <div class="flex items-center bg-[#202731] rounded-2xl p-1 border border-[#323D4D]">
-            <button onclick="adjustModalQty(-1)" class="touch-press w-10 h-10 rounded-xl bg-[#2A3442] hover:bg-amber-500 hover:text-slate-950 font-black text-lg text-white flex items-center justify-center">-</button>
-            <span id="optDishQtyDisplay" class="w-12 text-center font-black text-amber-400 font-mono text-lg">1</span>
-            <button onclick="adjustModalQty(1)" class="touch-press w-10 h-10 rounded-xl bg-[#2A3442] hover:bg-amber-500 hover:text-slate-950 font-black text-lg text-white flex items-center justify-center">+</button>
+        <!-- Kitchen Note if Present -->
+        <div id="rtcKitchenNoteBox" class="hidden p-3 rounded-xl bg-amber-950/20 border border-amber-800/40 text-xs text-amber-200 flex items-start gap-2">
+          <i class="fa-solid fa-kitchen-set mt-0.5 text-amber-400"></i>
+          <div>
+            <span class="font-bold">Комментарий к столу:</span>
+            <span id="rtcKitchenNoteText" class="ml-1 text-slate-300"></span>
           </div>
         </div>
 
       </div>
 
-      <!-- Dish Modal Footer -->
-      <div class="p-4 bg-[#202731] border-t border-[#2C3645] flex items-center justify-between">
+      <!-- Record Modal Footer with Totals and Confirmation Buttons -->
+      <div class="p-4 bg-[#202731] border-t border-[#2C3645] flex flex-col sm:flex-row sm:items-center justify-between gap-3 shrink-0">
         <div>
-          <span class="text-[10px] text-slate-400 uppercase font-bold block">Сумма за позицию:</span>
-          <span id="optCalculatedTotal" class="text-2xl font-black font-mono text-amber-400">0 ₽</span>
+          <span class="text-[11px] text-slate-400 uppercase font-bold block">Сумма заказа к фиксации:</span>
+          <span id="rtcTotalSumDisplay" class="text-2xl font-black font-mono text-amber-400">0 ₽</span>
         </div>
         <div class="flex items-center gap-2">
-          <button onclick="closeDishOptionsModal()" class="touch-press px-4 py-3 rounded-xl border border-[#343F4F] text-slate-300 font-bold text-xs hover:bg-[#28323F]">
-            Отмена
+          <button onclick="closeRecordToCashModal()" class="touch-press px-4 py-2.5 rounded-xl border border-[#343F4F] text-slate-300 font-bold text-xs hover:bg-[#28323F]">
+            Вернуться
           </button>
-          <button onclick="confirmDishFromModal()" class="touch-press px-6 py-3 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-black rounded-xl text-xs flex items-center gap-2 shadow-lg">
-            <i class="fa-solid fa-plus text-sm"></i>
-            <span>Записать в кассу</span>
+          <button onclick="confirmRecordIntoCashRegister()" class="touch-press px-5 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-black rounded-xl text-xs flex items-center gap-2 shadow-lg shadow-emerald-950/40">
+            <i class="fa-solid fa-check-double text-sm"></i>
+            <span>Зафиксировать запись в кассу</span>
           </button>
         </div>
       </div>
@@ -549,39 +328,31 @@
   </div>
 
   <!-- ============================================================ -->
-  <!-- MODAL: ПЕЧАТЬ ПРЕЧЕКА (Гостевой счёт) -->
+  <!-- MODAL: КАССОВЫЙ ЖУРНАЛ СМЕНЫ (Все записи в кассу) -->
   <!-- ============================================================ -->
-  <div id="precheckModal" class="fixed inset-0 bg-black/85 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-    <div class="bg-white text-slate-950 rounded-3xl w-full max-w-sm shadow-2xl p-6 font-mono text-xs flex flex-col max-h-[92vh] animate-in fade-in zoom-in duration-150">
-      <div class="text-center pb-3 border-b-2 border-dashed border-slate-300">
-        <h2 class="text-2xl font-black tracking-widest uppercase font-serif">COFFEEMAN</h2>
-        <p class="text-[11px] text-slate-600 font-sans">Кофейня & Ресторан • с 2008 года</p>
-        <p class="text-xs font-black mt-2 text-slate-900" id="receiptTableTitle">СТОЛИК #1</p>
-        <p class="text-[11px] text-slate-600" id="receiptTime">--:--</p>
-        <p class="text-[11px] text-slate-700 font-bold" id="receiptGuestTitle">Персон: 2</p>
-      </div>
-
-      <!-- Receipt items container -->
-      <div class="py-3 flex-1 overflow-y-auto space-y-2 border-b-2 border-dashed border-slate-300" id="receiptLinesContainer">
-        <!-- Rendered in JS -->
-      </div>
-
-      <!-- Receipt Footer -->
-      <div class="pt-3 space-y-1">
-        <div class="flex justify-between font-black text-base">
-          <span>ИТОГО К ОПЛАТЕ:</span>
-          <span id="receiptTotalAmount">0 ₽</span>
+  <div id="cashJournalModal" class="fixed inset-0 bg-black/85 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-[#181D24] border-2 border-[#333E4E] rounded-3xl w-full max-w-2xl shadow-2xl p-5 text-white flex flex-col max-h-[92vh] animate-in fade-in zoom-in duration-150">
+      
+      <div class="flex items-center justify-between pb-3 border-b border-[#2C3645]">
+        <div class="flex items-center gap-2">
+          <i class="fa-solid fa-file-invoice-dollar text-emerald-400 text-lg"></i>
+          <div>
+            <h3 class="font-extrabold text-sm text-white">Журнал записей в кассу</h3>
+            <p class="text-[11px] text-slate-400">Лента зафиксированных чеков текущей смены</p>
+          </div>
         </div>
-        <p class="text-center text-[10px] text-slate-500 pt-3 font-sans">
-          Спасибо, что выбрали «Кофеман»!<br>Вознаграждение официанту остаётся на ваше усмотрение.
-        </p>
+        <button onclick="closeCashJournalModal()" class="text-slate-400 hover:text-white">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
       </div>
 
-      <div class="pt-4 flex gap-2 font-sans">
-        <button onclick="window.print()" class="touch-press flex-1 bg-slate-950 text-white font-black py-3 rounded-xl text-xs hover:bg-slate-800 flex items-center justify-center gap-1.5 shadow">
-          <i class="fa-solid fa-print"></i> Распечатать чек
-        </button>
-        <button onclick="closePrecheckModal()" class="touch-press px-4 py-3 bg-slate-200 text-slate-800 font-bold rounded-xl text-xs hover:bg-slate-300">
+      <div class="py-3 flex-1 overflow-y-auto space-y-3" id="cashJournalListContainer">
+        <!-- Rendered via JS -->
+      </div>
+
+      <div class="pt-3 border-t border-[#2C3645] flex items-center justify-between">
+        <span class="text-xs text-slate-400">Всего записей: <strong id="journalTotalEntries" class="text-white">0</strong></span>
+        <button onclick="closeCashJournalModal()" class="touch-press px-4 py-2 bg-[#262F3C] text-slate-200 rounded-xl text-xs font-bold hover:bg-[#323D4D]">
           Закрыть
         </button>
       </div>
@@ -589,767 +360,11 @@
   </div>
 
   <!-- ============================================================ -->
-  <!-- MODAL: ОПЛАТА И ЗАКРЫТИЕ ЗАКАЗА В КАССЕ -->
+  <!-- MODAL: ПЕЧАТЬ ПРЕЧЕКА (Гостевой счёт) -->
   <!-- ============================================================ -->
-  <div id="paymentModal" class="fixed inset-0 bg-black/85 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-    <div class="bg-[#181D24] border-2 border-[#333E4E] rounded-3xl w-full max-w-md shadow-2xl p-6 text-white animate-in fade-in zoom-in duration-150">
-      
-      <div class="flex items-center justify-between pb-3 border-b border-[#2C3645]">
-        <div class="flex items-center gap-2">
-          <div class="w-10 h-10 rounded-2xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 flex items-center justify-center text-lg font-bold">
-            <i class="fa-solid fa-cash-register"></i>
-          </div>
-          <div>
-            <h3 class="font-black text-base">Закрытие заказа</h3>
-            <p class="text-xs text-slate-400" id="paymentModalTableSubtitle">Столик #1</p>
-          </div>
-        </div>
-        <button onclick="closePaymentModal()" class="text-slate-400 hover:text-white">
-          <i class="fa-solid fa-xmark text-lg"></i>
-        </button>
-      </div>
-
-      <div class="my-5 text-center">
-        <span class="text-xs font-bold text-slate-400 uppercase">Сумма к оплате</span>
-        <div id="paymentModalSumDisplay" class="text-4xl font-black font-mono text-emerald-400 mt-1">0 ₽</div>
-      </div>
-
-      <div class="space-y-2 mb-6">
-        <span class="text-xs font-bold text-slate-400 uppercase block mb-1">Способ оплаты:</span>
-        <div class="grid grid-cols-2 gap-2">
-          <button onclick="executeCloseOrder('Безналичный расчёт (Карта / QR)')" class="touch-press py-3.5 px-3 rounded-2xl bg-[#222933] hover:bg-emerald-600 hover:text-slate-950 border border-[#343F50] font-black text-xs flex flex-col items-center gap-1.5 transition">
-            <i class="fa-solid fa-credit-card text-xl text-emerald-400"></i>
-            <span>Банковская карта / QR</span>
-          </button>
-          <button onclick="executeCloseOrder('Наличные')" class="touch-press py-3.5 px-3 rounded-2xl bg-[#222933] hover:bg-emerald-600 hover:text-slate-950 border border-[#343F50] font-black text-xs flex flex-col items-center gap-1.5 transition">
-            <i class="fa-solid fa-money-bill-wave text-xl text-amber-400"></i>
-            <span>Наличные деньги</span>
-          </button>
-        </div>
-      </div>
-
-      <button onclick="closePaymentModal()" class="touch-press w-full py-3 bg-[#262F3C] hover:bg-[#303B4B] text-slate-300 font-bold rounded-xl text-xs">
-        Отмена
-      </button>
-    </div>
-  </div>
-
-  <!-- ============================================================ -->
-  <!-- MODAL: СВОДКА СМЕНЫ ОФИЦИАНТА -->
-  <!-- ============================================================ -->
-  <div id="shiftModal" class="fixed inset-0 bg-black/85 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-    <div class="bg-[#181D24] border-2 border-[#333E4E] rounded-3xl w-full max-w-md shadow-2xl p-6 text-white animate-in fade-in zoom-in duration-150">
-      <div class="flex items-center justify-between pb-3 border-b border-[#2C3645]">
-        <h3 class="font-extrabold text-sm text-amber-400 flex items-center gap-2">
-          <i class="fa-solid fa-chart-pie"></i> Сводка смены официанта
-        </h3>
-        <button onclick="closeShiftModal()" class="text-slate-400 hover:text-white">
-          <i class="fa-solid fa-xmark"></i>
-        </button>
-      </div>
-      <div class="grid grid-cols-2 gap-3 my-5">
-        <div class="bg-[#202731] p-3.5 rounded-2xl border border-[#2F3947]">
-          <div class="text-[11px] text-slate-400 font-bold">Занято столов</div>
-          <div class="text-2xl font-black text-amber-300 mt-1" id="statOccupiedTables">0 / 12</div>
-        </div>
-        <div class="bg-[#202731] p-3.5 rounded-2xl border border-[#2F3947]">
-          <div class="text-[11px] text-slate-400 font-bold">Гостей в зале</div>
-          <div class="text-2xl font-black text-emerald-400 mt-1" id="statTotalGuests">0 чел.</div>
-        </div>
-        <div class="bg-[#202731] p-3.5 rounded-2xl border border-[#2F3947]">
-          <div class="text-[11px] text-slate-400 font-bold">Открытые счета</div>
-          <div class="text-2xl font-black font-mono text-amber-400 mt-1" id="statOpenOrdersSum">0 ₽</div>
-        </div>
-        <div class="bg-[#202731] p-3.5 rounded-2xl border border-[#2F3947]">
-          <div class="text-[11px] text-slate-400 font-bold">Закрыто & Оплачено</div>
-          <div class="text-2xl font-black font-mono text-emerald-400 mt-1" id="statPaidRevenue">0 ₽</div>
-        </div>
-      </div>
-      <button onclick="closeShiftModal()" class="touch-press w-full bg-[#262F3C] hover:bg-[#303B4B] text-slate-200 font-bold py-3 rounded-2xl text-xs">
-        Закрыть сводку
-      </button>
-    </div>
-  </div>
-
-  <!-- FLOATING TOAST NOTIFICATION (Strictly no alert()) -->
-  <div id="toastNotification" class="fixed bottom-6 right-6 z-50 transform translate-y-24 opacity-0 transition-all duration-300 bg-amber-400 text-slate-950 px-4 py-3 rounded-2xl font-black text-xs sm:text-sm shadow-2xl flex items-center gap-2.5 pointer-events-none">
-    <i class="fa-solid fa-circle-check text-base"></i>
-    <span id="toastMsg">Готово</span>
-  </div>
-
-  <script>
-    /* Complete Coffeeman Menu extracted verbatim from the user's photos */
-    const COFFEEMAN_MENU = [
-      // 1. Утро в «Кофемане» (Фото 1)
-      {
-        id: 'br_kasha',
-        category: 'breakfast',
-        categoryName: 'Утро в Кофемане',
-        title: 'Каша / на альтерн. молоке',
-        desc: 'пшённая / овсяная / рисовая; подаётся с фруктами и грецким орехом',
-        basePrice: 360,
-        isPopular: true,
-        options: [
-          { name: 'Овсяная каша', priceDelta: 0 },
-          { name: 'Рисовая каша', priceDelta: 0 },
-          { name: 'Пшённая каша', priceDelta: 0 },
-          { name: 'На кокосовом молоке', priceDelta: 50 },
-          { name: 'На миндальном молоке', priceDelta: 50 }
-        ],
-        availableAddons: ['nuts', 'honey', 'berries', 'ice_cream']
-      },
-      {
-        id: 'br_pancake_meat',
-        category: 'breakfast',
-        categoryName: 'Утро в Кофемане',
-        title: 'Блин с фаршем из говядины и яйцом',
-        desc: 'блин с фаршем из говядины подаётся со сметаной',
-        basePrice: 390,
-        isPopular: true,
-        options: [],
-        availableAddons: ['extra_sour_cream', 'extra_cheese', 'bacon']
-      },
-      {
-        id: 'br_pancake_salmon',
-        category: 'breakfast',
-        categoryName: 'Утро в Кофемане',
-        title: 'Блин с лососем и крем-сыром',
-        desc: 'с начинкой из лосося и сливочного крем-сыра',
-        basePrice: 420,
-        options: [],
-        availableAddons: ['extra_salmon', 'extra_cream_cheese', 'avocado']
-      },
-      {
-        id: 'br_pancake_curd',
-        category: 'breakfast',
-        categoryName: 'Утро в Кофемане',
-        title: 'Блин с творогом и ягодным муссом',
-        desc: 'с начинкой из творога и ягодным муссом',
-        basePrice: 380,
-        options: [],
-        availableAddons: ['extra_berries', 'condensed_milk', 'honey']
-      },
-      {
-        id: 'br_pancake_berry',
-        category: 'breakfast',
-        categoryName: 'Утро в Кофемане',
-        title: 'Блин с ягодным муссом',
-        desc: 'нежный творог со сметаной',
-        basePrice: 370,
-        options: [],
-        availableAddons: ['extra_berries', 'honey', 'ice_cream']
-      },
-      {
-        id: 'br_syrniki',
-        category: 'breakfast',
-        categoryName: 'Утро в Кофемане',
-        title: 'Ванильные сырники',
-        desc: 'сырники по домашнему рецепту со сметаной',
-        basePrice: 310,
-        isPopular: true,
-        options: [],
-        availableAddons: ['extra_sour_cream', 'extra_berries', 'condensed_milk', 'honey']
-      },
-      {
-        id: 'br_croissant_salmon',
-        category: 'breakfast',
-        categoryName: 'Утро в Кофемане',
-        title: 'Круассан с лососем',
-        desc: 'лосось, крем-сыр с зеленью, огурец, салат айсберг',
-        basePrice: 430,
-        isPopular: true,
-        options: [],
-        availableAddons: ['extra_salmon', 'avocado', 'egg_fry']
-      },
-      {
-        id: 'br_croissant_chicken',
-        category: 'breakfast',
-        categoryName: 'Утро в Кофемане',
-        title: 'Круассан с цыпленком',
-        desc: 'филе цыпленка, крем-сыр с зеленью, салат айсберг',
-        basePrice: 390,
-        options: [],
-        availableAddons: ['extra_cheese', 'bacon', 'jalapeno']
-      },
-      {
-        id: 'br_croissant_classic',
-        category: 'breakfast',
-        categoryName: 'Утро в Кофемане',
-        title: 'Круассан классический',
-        desc: 'свежий хрустящий сливочный круассан',
-        basePrice: 250,
-        options: [],
-        availableAddons: ['honey', 'condensed_milk']
-      },
-      {
-        id: 'br_croissant_assort',
-        category: 'breakfast',
-        categoryName: 'Утро в Кофемане',
-        title: 'Круассан в ассортименте',
-        desc: 'свежая выпечка с начинками на выбор',
-        basePrice: 350,
-        options: [
-          { name: 'Миндальный', priceDelta: 0 },
-          { name: 'Шоколадный', priceDelta: 0 },
-          { name: 'Малиновый', priceDelta: 0 }
-        ],
-        availableAddons: ['ice_cream']
-      },
-      {
-        id: 'br_omlet_green',
-        category: 'breakfast',
-        categoryName: 'Утро в Кофемане',
-        title: 'Омлет «зелёный»',
-        desc: 'подаётся с салатом, авокадо и зерновым хлебом',
-        basePrice: 400,
-        options: [],
-        availableAddons: ['extra_salmon', 'bacon', 'extra_cheese']
-      },
-      {
-        id: 'br_big_breakfast',
-        category: 'breakfast',
-        categoryName: 'Утро в Кофемане',
-        title: '«Большой» завтрак',
-        desc: 'глазунья из двух яиц, куриные колбаски, салат, творожный сыр, фасоль, зерновой хлеб',
-        basePrice: 470,
-        isPopular: true,
-        options: [],
-        availableAddons: ['bacon', 'extra_bread', 'jalapeno']
-      },
-
-      // 2. Салаты (Фото 2)
-      {
-        id: 'sal_greko',
-        category: 'salads',
-        categoryName: 'Салаты',
-        title: 'Греко салат',
-        desc: 'листья салата, помидоры, огурцы, болгарский перец, оливки, красный лук, сыр фета',
-        basePrice: 470,
-        options: [],
-        availableAddons: ['extra_cheese', 'extra_olives']
-      },
-      {
-        id: 'sal_caesar',
-        category: 'salads',
-        categoryName: 'Салаты',
-        title: 'Цезарь с глазуньей',
-        desc: 'нежное куриное филе, листья салата, пармезан, соус цезарь',
-        basePrice: 480,
-        isPopular: true,
-        options: [],
-        availableAddons: ['extra_chicken', 'bacon', 'extra_parmesan']
-      },
-      {
-        id: 'sal_olivier',
-        category: 'salads',
-        categoryName: 'Салаты',
-        title: 'Оливье',
-        desc: 'обжаренное куриное филе, яблоки, перепелиные яйца, майонез',
-        basePrice: 410,
-        options: [],
-        availableAddons: ['extra_bread']
-      },
-      {
-        id: 'sal_mozzarella',
-        category: 'salads',
-        categoryName: 'Салаты',
-        title: 'Салат с моцареллой',
-        desc: 'сыр моцарелла, сочные помидоры, авокадо, соус песто',
-        basePrice: 530,
-        options: [],
-        availableAddons: ['extra_salmon', 'avocado']
-      },
-
-      // 3. Супы (Фото 2)
-      {
-        id: 'soup_pumpkin',
-        category: 'soups',
-        categoryName: 'Супы',
-        title: 'Крем-суп из тыквы',
-        desc: 'нежный тыквенный крем-суп с обжаренными семечками',
-        basePrice: 380,
-        options: [],
-        availableAddons: ['extra_bread', 'extra_parmesan']
-      },
-      {
-        id: 'soup_noodle',
-        category: 'soups',
-        categoryName: 'Супы',
-        title: 'Домашняя лапша',
-        desc: 'с домашней лапшой, перепелиные яйца, кусочки курицы',
-        basePrice: 350,
-        options: [],
-        availableAddons: ['extra_chicken', 'extra_bread']
-      },
-      {
-        id: 'soup_borscht',
-        category: 'soups',
-        categoryName: 'Супы',
-        title: 'Борщ',
-        desc: 'подаём со сметаной и свежей зеленью',
-        basePrice: 460,
-        isPopular: true,
-        options: [],
-        availableAddons: ['extra_sour_cream', 'extra_bread', 'bacon']
-      },
-
-      // 4. Сэндвичи и не только (Фото 2)
-      {
-        id: 'snd_salmon_toast',
-        category: 'sandwiches',
-        categoryName: 'Сэндвичи',
-        title: 'Тост с лососем',
-        desc: 'зерновой хлеб, слабосоленый лосось, крем-сыр, красный лук',
-        basePrice: 430,
-        isPopular: true,
-        options: [],
-        availableAddons: ['avocado', 'egg_fry']
-      },
-      {
-        id: 'snd_burger_coffeeman',
-        category: 'sandwiches',
-        categoryName: 'Сэндвичи',
-        title: 'Бургер «Кофеман»',
-        desc: 'котлета из говядины, сыр чеддер, томаты, красный лук, картофель фри',
-        basePrice: 640,
-        isPopular: true,
-        options: [
-          { name: 'Прожарка Medium', priceDelta: 0 },
-          { name: 'Прожарка Well-Done', priceDelta: 0 }
-        ],
-        availableAddons: ['bacon', 'jalapeno', 'extra_cheese']
-      },
-      {
-        id: 'snd_ciabatta',
-        category: 'sandwiches',
-        categoryName: 'Сэндвичи',
-        title: 'Сэндвич чиабатта',
-        desc: 'листья салата, куриное филе, томаты, сливочный крем-сыр',
-        basePrice: 390,
-        options: [],
-        availableAddons: ['bacon', 'jalapeno']
-      },
-      {
-        id: 'snd_bagel',
-        category: 'sandwiches',
-        categoryName: 'Сэндвичи',
-        title: 'Сэндвич на бейгле',
-        desc: 'нежная булочка, глазунья, микс салата, куриное филе',
-        basePrice: 420,
-        options: [],
-        availableAddons: ['extra_cheese', 'bacon']
-      },
-      {
-        id: 'snd_tuna',
-        category: 'sandwiches',
-        categoryName: 'Сэндвичи',
-        title: 'Японский сэндвич с тунцом',
-        desc: 'обжаренный тостовый хлеб с начинкой из тунца',
-        basePrice: 420,
-        options: [],
-        availableAddons: ['egg_fry', 'avocado']
-      },
-      {
-        id: 'snd_chicken',
-        category: 'sandwiches',
-        categoryName: 'Сэндвичи',
-        title: 'Сэндвич с курицей',
-        desc: 'тостовый хлеб, листья салата, куриное филе, томаты',
-        basePrice: 390,
-        options: [],
-        availableAddons: ['extra_cheese', 'bacon', 'extra_sauce']
-      },
-
-      // 5. Горячие блюда (Фото 2 & 4)
-      {
-        id: 'hot_cutlet',
-        category: 'hot',
-        categoryName: 'Горячие блюда',
-        title: 'Котлета из говядины с брусничным соусом',
-        desc: 'подаём с нежным картофельным пюре и картофельными чипсами',
-        basePrice: 720,
-        isPopular: true,
-        options: [],
-        availableAddons: ['extra_sauce', 'extra_bread']
-      },
-      {
-        id: 'hot_beefstroganoff',
-        category: 'hot',
-        categoryName: 'Горячие блюда',
-        title: 'Бефстроганов с картофельным пюре',
-        desc: 'подаём с огурцами собственного посола',
-        basePrice: 740,
-        isPopular: true,
-        options: [],
-        availableAddons: ['extra_bread']
-      },
-      {
-        id: 'hot_veal',
-        category: 'hot',
-        categoryName: 'Горячие блюда',
-        title: 'Телятина на косточке',
-        desc: 'нежная телятина в сочном маринаде, микс из зелени',
-        basePrice: 790,
-        options: [
-          { name: 'Прожарка Medium Well', priceDelta: 0 },
-          { name: 'Прожарка Well-done', priceDelta: 0 }
-        ],
-        availableAddons: ['extra_sauce']
-      },
-      {
-        id: 'hot_schnitzel',
-        category: 'hot',
-        categoryName: 'Горячие блюда',
-        title: 'Шницель куриный',
-        desc: 'куриный шницель с зелёным салатом песто',
-        basePrice: 690,
-        options: [],
-        availableAddons: ['fries', 'extra_sauce']
-      },
-      {
-        id: 'hot_buckwheat_noodles',
-        category: 'hot',
-        categoryName: 'Горячие блюда',
-        title: 'Гречневая лапша (Соба)',
-        desc: 'гречневая лапша, овощной микс, кунжут',
-        basePrice: 610,
-        options: [
-          { name: 'С курицей', priceDelta: 0 },
-          { name: 'С телятиной', priceDelta: 70 } // 680₽
-        ],
-        availableAddons: ['jalapeno', 'extra_sauce']
-      },
-      {
-        id: 'hot_salmon_teriyaki',
-        category: 'hot',
-        categoryName: 'Горячие блюда',
-        title: 'Лосось терияки',
-        desc: 'филе лосося с соусом терияки, кунжут, лимон',
-        basePrice: 820,
-        options: [],
-        availableAddons: ['extra_lemon']
-      },
-
-      // 6. Гарниры (Фото 2)
-      {
-        id: 'side_fries',
-        category: 'sides',
-        categoryName: 'Гарниры',
-        title: 'Картофель фри',
-        desc: 'хрустящий золотистый картофель',
-        basePrice: 270,
-        options: [],
-        availableAddons: ['sauce_ketchup', 'sauce_cheese']
-      },
-      {
-        id: 'side_rice',
-        category: 'sides',
-        categoryName: 'Гарниры',
-        title: 'Японский рис',
-        desc: 'отварной рис с легкой заправкой',
-        basePrice: 230,
-        options: [],
-        availableAddons: ['extra_sauce']
-      },
-      {
-        id: 'side_puree',
-        category: 'sides',
-        categoryName: 'Гарниры',
-        title: 'Картофельное пюре',
-        desc: 'нежное сливочное пюре',
-        basePrice: 230,
-        options: [],
-        availableAddons: ['bacon']
-      },
-      {
-        id: 'side_buckwheat',
-        category: 'sides',
-        categoryName: 'Гарниры',
-        title: 'Зелёная гречка',
-        desc: 'отварная гречка',
-        basePrice: 230,
-        options: [],
-        availableAddons: []
-      },
-
-      // 7. Десерты (Фото 2)
-      {
-        id: 'des_brownie',
-        category: 'desserts',
-        categoryName: 'Десерты',
-        title: 'Шоколадный брауни с мороженым',
-        desc: 'тёплый шоколадный брауни с шариком мороженого',
-        basePrice: 370,
-        isPopular: true,
-        options: [],
-        availableAddons: ['ice_cream', 'extra_berries']
-      },
-      {
-        id: 'des_apple_pie',
-        category: 'desserts',
-        categoryName: 'Десерты',
-        title: 'Яблочный пирог с мороженым',
-        desc: 'домашний пирог с яблоками и корицей',
-        basePrice: 370,
-        options: [],
-        availableAddons: ['ice_cream']
-      },
-      {
-        id: 'des_cakes',
-        category: 'desserts',
-        categoryName: 'Десерты',
-        title: 'Торты в ассортименте',
-        desc: 'свежие торты на витрине дня',
-        basePrice: 350,
-        options: [
-          { name: 'Наполеон', priceDelta: 0 },
-          { name: 'Медовик', priceDelta: 0 },
-          { name: 'Чизкейк', priceDelta: 0 }
-        ],
-        availableAddons: ['ice_cream']
-      },
-
-      // 8. Лето и Закуски (Фото 4)
-      {
-        id: 'sum_beet_salad',
-        category: 'summer',
-        categoryName: 'Лето & Закуски',
-        title: 'Салат свекольный',
-        desc: 'свекла, листья салата, сыр фета, апельсин, микс семечек',
-        basePrice: 480,
-        options: [],
-        availableAddons: ['extra_cheese']
-      },
-      {
-        id: 'sum_green_salad',
-        category: 'summer',
-        categoryName: 'Лето & Закуски',
-        title: 'Зелёный салат',
-        desc: 'огурцы, куриное филе, кунжут, листья салата',
-        basePrice: 480,
-        options: [],
-        availableAddons: ['avocado']
-      },
-      {
-        id: 'sum_okroshka',
-        category: 'summer',
-        categoryName: 'Лето & Закуски',
-        title: 'Окрошка',
-        desc: 'освежающая летняя окрошка',
-        basePrice: 380,
-        isPopular: true,
-        options: [
-          { name: 'На кефире', priceDelta: 0 },
-          { name: 'На рассоле / квасе', priceDelta: 0 }
-        ],
-        availableAddons: ['extra_sour_cream', 'extra_bread']
-      },
-      {
-        id: 'sum_meat_lavash',
-        category: 'summer',
-        categoryName: 'Лето & Закуски',
-        title: 'Мясной лаваш',
-        desc: 'сыр, свежие овощи, фирменный соус',
-        basePrice: 510,
-        options: [],
-        availableAddons: ['jalapeno', 'extra_cheese']
-      },
-      {
-        id: 'sum_quesadilla',
-        category: 'summer',
-        categoryName: 'Лето & Закуски',
-        title: 'Кесадилья с курицей',
-        desc: 'сыр, овощи, нежное филе цыпленка',
-        basePrice: 410,
-        isPopular: true,
-        options: [],
-        availableAddons: ['jalapeno', 'extra_sauce']
-      },
-      {
-        id: 'sum_stewed_beef',
-        category: 'summer',
-        categoryName: 'Лето & Закуски',
-        title: 'Томлёная говядина с картофелем фри',
-        desc: 'томленое мясо говядины с хрустящим картофелем',
-        basePrice: 810,
-        options: [],
-        availableAddons: ['extra_sauce']
-      },
-      {
-        id: 'sum_bibimbap',
-        category: 'summer',
-        categoryName: 'Лето & Закуски',
-        title: 'Пибимпаб',
-        desc: 'рис, овощи, фарш говяжий, соус чили',
-        basePrice: 780,
-        options: [],
-        availableAddons: ['egg_fry', 'extra_sauce']
-      },
-
-      // 9. Напитки & Кофе (Фото 3 и 4)
-      {
-        id: 'dr_espresso',
-        category: 'drinks',
-        categoryName: 'Кофе & Напитки',
-        title: 'Эспрессо',
-        desc: 'классический шот 100% арабики',
-        basePrice: 140,
-        options: [],
-        availableAddons: ['syrup', 'extra_shot']
-      },
-      {
-        id: 'dr_americano',
-        category: 'drinks',
-        categoryName: 'Кофе & Напитки',
-        title: 'Американо',
-        desc: 'эспрессо с добавлением фильтрованной воды',
-        basePrice: 180,
-        options: [
-          { name: '180 мл', priceDelta: 0 },
-          { name: '220 мл', priceDelta: 40 }
-        ],
-        availableAddons: ['syrup', 'alt_milk', 'milk_classic']
-      },
-      {
-        id: 'dr_cappuccino',
-        category: 'drinks',
-        categoryName: 'Кофе & Напитки',
-        title: 'Капучино',
-        desc: 'баланс насыщенного эспрессо и шелковистой пены',
-        basePrice: 260,
-        isPopular: true,
-        options: [
-          { name: '260 мл', priceDelta: 0 },
-          { name: '300 мл', priceDelta: 40 }
-        ],
-        availableAddons: ['syrup', 'alt_milk', 'cinnamon']
-      },
-      {
-        id: 'dr_latte',
-        category: 'drinks',
-        categoryName: 'Кофе & Напитки',
-        title: 'Латте',
-        desc: 'нежный молочный кофе',
-        basePrice: 260,
-        options: [
-          { name: '260 мл', priceDelta: 0 },
-          { name: '300 мл', priceDelta: 40 }
-        ],
-        availableAddons: ['syrup', 'alt_milk']
-      },
-      {
-        id: 'dr_flat_white',
-        category: 'drinks',
-        categoryName: 'Кофе & Напитки',
-        title: 'Флэт Уайт',
-        desc: 'двойной эспрессо с тонким слоем молока',
-        basePrice: 270,
-        options: [],
-        availableAddons: ['alt_milk', 'syrup']
-      },
-      {
-        id: 'dr_latte_raspberry',
-        category: 'drinks',
-        categoryName: 'Кофе & Напитки',
-        title: 'Латте малина',
-        desc: 'классический латте с ярким малиновым акцентом',
-        basePrice: 360,
-        isPopular: true,
-        options: [],
-        availableAddons: ['alt_milk']
-      },
-      {
-        id: 'dr_cap_caramel',
-        category: 'drinks',
-        categoryName: 'Кофе & Напитки',
-        title: 'Капучино соленая карамель',
-        desc: 'авторский капучино с соленой карамелью',
-        basePrice: 360,
-        options: [],
-        availableAddons: ['alt_milk']
-      },
-      {
-        id: 'dr_raf_almond',
-        category: 'drinks',
-        categoryName: 'Кофе & Напитки',
-        title: 'Раф миндальный',
-        desc: 'сливочный раф с миндальными нотками',
-        basePrice: 360,
-        options: [],
-        availableAddons: []
-      },
-      {
-        id: 'dr_bumble',
-        category: 'drinks',
-        categoryName: 'Кофе & Напитки',
-        title: 'Бамбл',
-        desc: 'свежевыжатый апельсиновый сок, эспрессо, карамель/лёд',
-        basePrice: 390,
-        isPopular: true,
-        options: [],
-        availableAddons: []
-      },
-      {
-        id: 'dr_tea_author',
-        category: 'drinks',
-        categoryName: 'Кофе & Напитки',
-        title: 'Чай авторский',
-        desc: 'облепиховый с апельсином или смородиновый',
-        basePrice: 360,
-        options: [
-          { name: 'Облепиховый с апельсином', priceDelta: 0 },
-          { name: 'Черносмородиновый с мятой', priceDelta: 0 }
-        ],
-        availableAddons: ['honey']
-      }
-    ];
-
-    /* Master dictionary of all possible add-ons and toppings */
-    const MASTER_ADDONS = {
-      'extra_cheese': { name: 'Сыр Чеддер / Моцарелла', price: 70, icon: '🧀' },
-      'bacon': { name: 'Хрустящий бекон', price: 90, icon: '🥓' },
-      'jalapeno': { name: 'Халапеньо', price: 40, icon: '🌶️' },
-      'avocado': { name: 'Свежий авокадо', price: 110, icon: '🥑' },
-      'egg_fry': { name: 'Яйцо глазунья', price: 60, icon: '🍳' },
-      'extra_chicken': { name: 'Куриное филе', price: 130, icon: '🍗' },
-      'extra_salmon': { name: 'Лосось с/с', price: 190, icon: '🐟' },
-      'extra_sour_cream': { name: 'Сметана деревенская', price: 50, icon: '🥛' },
-      'extra_cream_cheese': { name: 'Крем-сыр', price: 70, icon: '🧀' },
-      'extra_bread': { name: 'Зерновой хлеб', price: 50, icon: '🍞' },
-      'extra_parmesan': { name: 'Пармезан тёртый', price: 80, icon: '🧀' },
-      'extra_sauce': { name: 'Фирменный соус', price: 60, icon: '🥣' },
-      'extra_olives': { name: 'Оливки Каламата', price: 70, icon: '🫒' },
-      'sauce_ketchup': { name: 'Кетчуп Heinz', price: 40, icon: '🍅' },
-      'sauce_cheese': { name: 'Сырный соус', price: 50, icon: '🧀' },
-      'ice_cream': { name: 'Шарик мороженого', price: 90, icon: '🍨' },
-      'berries': { name: 'Свежие ягоды', price: 110, icon: '🫐' },
-      'extra_berries': { name: 'Ягодный мусс', price: 80, icon: '🍓' },
-      'nuts': { name: 'Грецкий орех', price: 60, icon: '🥜' },
-      'honey': { name: 'Натуральный мёд', price: 50, icon: '🍯' },
-      'condensed_milk': { name: 'Сгущенное молоко', price: 50, icon: '🥛' },
-      'syrup': { name: 'Сироп в ассортименте', price: 80, icon: '🍯' },
-      'alt_milk': { name: 'Растительное молоко', price: 80, icon: '🌱' },
-      'milk_classic': { name: 'Молоко', price: 40, icon: '🥛' },
-      'extra_shot': { name: 'Доп. эспрессо шот', price: 90, icon: '☕' },
-      'cinnamon': { name: 'Корица', price: 0, icon: '✨' },
-      'extra_lemon': { name: 'Лимон / Лайм', price: 30, icon: '🍋' }
-    };
-
-    const CATEGORIES = [
-      { id: 'all', name: 'Все блюда', icon: 'fa-border-all' },
-      { id: 'breakfast', name: 'Утро (Завтраки)', icon: 'fa-mug-hot' },
-      { id: 'salads', name: 'Салаты', icon: 'fa-bowl-rice' },
-      { id: 'soups', name: 'Супы', icon: 'fa-bowl-food' },
-      { id: 'sandwiches', name: 'Сэндвичи & Бургер', icon: 'fa-burger' },
-      { id: 'hot', name: 'Горячие блюда', icon: 'fa-drumstick-bite' },
-      { id: 'sides', name: 'Гарниры', icon: 'fa-seedling' },
-      { id: 'desserts', name: 'Десерты', icon: 'fa-cake-candles' },
-      { id: 'summer', name: 'Лето & Закуски', icon: 'fa-sun' },
-      { id: 'drinks', name: 'Кофе & Напитки', icon: 'fa-wine-glass' }
-    ];
-  </script>
-
-  <script>
+<!-- ... existing code ... -->
+```html:Coffeeman Waiter POS Terminal:index.html
+<!-- ... existing code ... -->
     // State of 12 Tables
     const tablesState = {};
     for (let i = 1; i <= 12; i++) {
@@ -1364,6 +379,8 @@
         hasConfirmedGuests: false,
         generalNote: '',
         openTime: null,
+        isRecordedInCash: false,
+        cashRecordTime: null,
         items: []
       };
     }
@@ -1380,10 +397,12 @@
       hasConfirmedGuests: true,
       generalNote: '',
       openTime: null,
+      isRecordedInCash: false,
+      cashRecordTime: null,
       items: []
     };
 
-    // Navigation and POS Filters
+    // Navigation, POS Filters and Cash Journal
     let currentScreen = 'tables'; // 'tables' | 'new-order' | 'pos'
     let activeTableId = 't_1';
     let step2TargetTableId = 't_1';
@@ -1394,231 +413,14 @@
     let isPosHitsOnly = false;
     let totalPaidShiftRevenue = 0;
 
+    // Cash Register Journal Entries Array
+    const cashJournalRecords = [];
+
     let modalDraftDish = null;
 
     /* SCREEN SWITCHING ENGINE */
     function switchScreen(targetScreen) {
-      currentScreen = targetScreen;
-
-      // Update Nav Buttons
-      ['tables', 'new-order', 'pos'].forEach(s => {
-        const btn = document.getElementById(`navBtn-${s}`);
-        const view = document.getElementById(`screen-${s}`);
-        if (s === targetScreen) {
-          view.classList.remove('hidden');
-          btn.className = "touch-press px-4 py-2 rounded-xl text-xs sm:text-sm font-extrabold flex items-center gap-2 transition-all bg-amber-500 text-slate-950 shadow-md";
-        } else {
-          view.classList.add('hidden');
-          btn.className = "touch-press px-4 py-2 rounded-xl text-xs sm:text-sm font-bold flex items-center gap-2 transition-all text-slate-300 hover:text-white hover:bg-[#202731]";
-        }
-      });
-
-      if (targetScreen === 'tables') {
-        renderScreen1Tables();
-      } else if (targetScreen === 'new-order') {
-        renderStep2Screen();
-      } else if (targetScreen === 'pos') {
-        renderPosTerminal();
-        // Focus fast search input directly
-        setTimeout(() => {
-          const input = document.getElementById('posFastSearchInput');
-          if (input) input.focus();
-        }, 120);
-      }
-    }
-
-    /* STEP 1: RENDER TABLES SCREEN */
-    function renderScreen1Tables() {
-      const grid = document.getElementById('screen1TablesGrid');
-      let html = '';
-      let occupiedCount = 0;
-      let totalGuests = 0;
-
-      for (let i = 1; i <= 12; i++) {
-        const tId = `t_${i}`;
-        const table = tablesState[tId];
-        const sum = calcItemsTotal(table.items);
-        const count = table.items.reduce((acc, it) => acc + it.quantity, 0);
-
-        let borderClass = 'border-[#2A3442] hover:border-amber-500/70 bg-[#161B22]';
-        let badgeClass = 'bg-[#222831] text-slate-400 border border-[#354050]';
-        let statusName = 'Свободен';
-        let iconColor = 'text-slate-500';
-
-        if (table.status === 'occupied' || (table.status === 'free' && table.items.length > 0)) {
-          occupiedCount++;
-          totalGuests += table.guests;
-          borderClass = 'border-emerald-600/80 bg-[#12221A] shadow-emerald-950/20 shadow-xl';
-          badgeClass = 'bg-emerald-500 text-slate-950 font-black';
-          statusName = 'Занят';
-          iconColor = 'text-emerald-400';
-        } else if (table.status === 'bill') {
-          occupiedCount++;
-          totalGuests += table.guests;
-          borderClass = 'border-amber-500 bg-[#251E14] shadow-amber-950/20 shadow-xl';
-          badgeClass = 'bg-amber-400 text-slate-950 font-black';
-          statusName = 'Счёт';
-          iconColor = 'text-amber-400';
-        } else if (table.status === 'paid') {
-          borderClass = 'border-sky-500 bg-[#14202B]';
-          badgeClass = 'bg-sky-400 text-slate-950 font-black';
-          statusName = 'Оплачен';
-          iconColor = 'text-sky-400';
-        }
-
-        html += `
-          <div onclick="handleTableCardClick('${tId}')" class="touch-press cursor-pointer rounded-3xl p-4 sm:p-5 border-2 ${borderClass} transition-all flex flex-col justify-between h-44 shadow-lg relative overflow-hidden group">
-            
-            <!-- Top Card Row -->
-            <div class="flex items-start justify-between">
-              <div>
-                <span class="text-xs font-bold text-slate-400 uppercase tracking-wider block">СТОЛИК</span>
-                <h3 class="text-2xl font-black text-white group-hover:text-amber-300 transition-colors flex items-center gap-2">
-                  <i class="fa-solid fa-chair ${iconColor} text-lg"></i>
-                  <span>#${i}</span>
-                </h3>
-              </div>
-              <span class="text-[11px] px-2.5 py-1 rounded-xl font-bold ${badgeClass}">
-                ${statusName}
-              </span>
-            </div>
-
-            <!-- Middle Guests Indicator -->
-            <div class="flex items-center gap-2 text-xs font-bold text-slate-300">
-              <i class="fa-solid fa-users text-amber-400"></i>
-              <span>${table.guests} ${getGuestWord(table.guests)}</span>
-              ${table.openTime ? `<span class="text-slate-500 font-mono text-[10px]">• от ${table.openTime}</span>` : ''}
-            </div>
-
-            <!-- Bottom Price and Items Count -->
-            <div class="pt-2 border-t border-slate-700/50 flex items-baseline justify-between">
-              <span class="text-xs text-slate-400 font-semibold">${count} поз.</span>
-              <span class="font-mono font-black text-lg text-amber-400">${sum} ₽</span>
-            </div>
-          </div>
-        `;
-      }
-
-      grid.innerHTML = html;
-
-      // Update counters & summary
-      document.getElementById('navTablesBadge').textContent = occupiedCount;
-      document.getElementById('roomSummaryText').textContent = `Занято: ${occupiedCount} из 12 | Гостей: ${totalGuests} чел.`;
-
-      // Update Takeaway Card Banner
-      const takeaway = tablesState['takeaway'];
-      const tSum = calcItemsTotal(takeaway.items);
-      const tCount = takeaway.items.reduce((s, it) => s + it.quantity, 0);
-      document.getElementById('takeawaySumDisplay').textContent = `${tSum} ₽`;
-      document.getElementById('takeawayItemsDisplay').textContent = `${tCount} позиций в заказе`;
-
-      const tBadge = document.getElementById('takeawayStatusBadge');
-      if (takeaway.items.length > 0) {
-        tBadge.textContent = 'Активен';
-        tBadge.className = 'text-xs font-black px-2.5 py-0.5 rounded-full bg-amber-400 text-slate-950';
-      } else {
-        tBadge.textContent = 'Свободен';
-        tBadge.className = 'text-xs font-bold px-2.5 py-0.5 rounded-full bg-slate-800 text-slate-300 border border-slate-700';
-      }
-    }
-
-    function handleTableCardClick(tableId) {
-      const table = tablesState[tableId];
-      if (table.status === 'free' && table.items.length === 0) {
-        // Free table -> proceed to Step 2 to configure guests count!
-        step2TargetTableId = tableId;
-        step2GuestsCount = table.guests || 2;
-        switchScreen('new-order');
-      } else {
-        // Occupied or has items -> directly jump to POS Terminal
-        activeTableId = tableId;
-        switchScreen('pos');
-      }
-    }
-
-    function selectTakeawayFromList() {
-      activeTableId = 'takeaway';
-      switchScreen('pos');
-    }
-
-    function startNewTableSetup() {
-      // Find first free table
-      let freeTable = 't_1';
-      for (let i = 1; i <= 12; i++) {
-        if (tablesState[`t_${i}`].status === 'free' && tablesState[`t_${i}`].items.length === 0) {
-          freeTable = `t_${i}`;
-          break;
-        }
-      }
-      step2TargetTableId = freeTable;
-      step2GuestsCount = 2;
-      switchScreen('new-order');
-    }
-  </script>
-
-  <script>
-    /* STEP 2: RENDER TABLE & GUESTS SELECTION SCREEN */
-    function renderStep2Screen() {
-      const container = document.getElementById('step2TablesPickerGrid');
-      let html = '';
-
-      for (let i = 1; i <= 12; i++) {
-        const tId = `t_${i}`;
-        const table = tablesState[tId];
-        const isSelected = step2TargetTableId === tId;
-        const isBusy = table.status !== 'free' || table.items.length > 0;
-
-        let btnClass = 'bg-[#222831] border-[#364252] text-slate-200 hover:border-amber-400';
-        if (isSelected) {
-          btnClass = 'bg-amber-500 text-slate-950 font-black border-amber-400 shadow-lg';
-        } else if (isBusy) {
-          btnClass = 'bg-[#18261F] border-emerald-700 text-emerald-300';
-        }
-
-        html += `
-          <button type="button" onclick="setStep2Table('${tId}')" class="touch-press p-3 rounded-2xl border-2 ${btnClass} flex flex-col items-center justify-center transition">
-            <span class="text-xs uppercase font-bold opacity-75">Стол</span>
-            <span class="text-xl font-black">#${i}</span>
-            <span class="text-[10px] mt-0.5 ${isSelected ? 'text-slate-900 font-bold' : isBusy ? 'text-emerald-400' : 'text-slate-400'}">
-              ${isBusy ? 'Занят' : 'Свободен'}
-            </span>
-          </button>
-        `;
-      }
-      container.innerHTML = html;
-
-      // Update takeaway button style
-      const takeawayBtn = document.getElementById('step2TakeawayBtn');
-      if (step2TargetTableId === 'takeaway') {
-        takeawayBtn.className = "touch-press w-full py-3 px-4 rounded-2xl border-2 border-amber-400 bg-amber-500 text-slate-950 font-black text-xs flex items-center justify-between transition shadow-lg";
-      } else {
-        takeawayBtn.className = "touch-press w-full py-3 px-4 rounded-2xl border border-[#394555] bg-[#202731] hover:bg-[#28313E] text-slate-200 font-bold text-xs flex items-center justify-between transition";
-      }
-
-      // Update label and guests display
-      const tObj = tablesState[step2TargetTableId];
-      document.getElementById('step2SelectedTableLabel').textContent = tObj ? tObj.name : 'Столик #1';
-      document.getElementById('step2GuestsBigNumber').textContent = step2GuestsCount;
-      document.getElementById('step2GuestsLabelWord').textContent = getGuestWord(step2GuestsCount);
-    }
-
-    function setStep2Table(tableId) {
-      step2TargetTableId = tableId;
-      renderStep2Screen();
-    }
-
-    function adjustStep2Guests(delta) {
-      step2GuestsCount = Math.max(1, Math.min(20, step2GuestsCount + delta));
-      document.getElementById('step2GuestsBigNumber').textContent = step2GuestsCount;
-      document.getElementById('step2GuestsLabelWord').textContent = getGuestWord(step2GuestsCount);
-    }
-
-    function setStep2Guests(num) {
-      step2GuestsCount = num;
-      document.getElementById('step2GuestsBigNumber').textContent = step2GuestsCount;
-      document.getElementById('step2GuestsLabelWord').textContent = getGuestWord(step2GuestsCount);
-    }
-
+<!-- ... existing code ... -->
     function confirmStep2AndOpenPOS() {
       activeTableId = step2TargetTableId;
       const table = tablesState[activeTableId];
@@ -1644,6 +446,17 @@
       if (n >= 2 && n <= 4) return 'персоны';
       return 'персон';
     }
+
+    /* MOBILE BILL DRAWER HELPER */
+    function toggleMobileBillDrawer(forceState) {
+      const aside = document.getElementById('posBillAside');
+      if (forceState !== undefined) {
+        if (forceState) aside.classList.remove('translate-x-full');
+        else aside.classList.add('translate-x-full');
+      } else {
+        aside.classList.toggle('translate-x-full');
+      }
+    }
   </script>
 
   <script>
@@ -1662,9 +475,10 @@
 
       // Update Bill Sidebar Header
       document.getElementById('billPanelTitle').textContent = `Чек: ${table.name}`;
-      document.getElementById('billPanelSubtitle').textContent = table.type === 'takeaway' 
+      const recBadge = table.isRecordedInCash ? ' • Записан в кассу' : '';
+      document.getElementById('billPanelSubtitle').textContent = (table.type === 'takeaway' 
         ? 'Упаковка с собой' 
-        : `${table.guests} ${getGuestWord(table.guests)} • ${getStatusWord(table.status)}`;
+        : `${table.guests} ${getGuestWord(table.guests)} • ${getStatusWord(table.status)}`) + recBadge;
       document.getElementById('billGeneralNoteInput').value = table.generalNote || '';
 
       renderPosCategoryPills();
@@ -1672,380 +486,14 @@
       renderBillItemsList();
       buildPosTableDropdown();
     }
-
-    function getStatusWord(st) {
-      switch(st) {
-        case 'free': return 'Свободен';
-        case 'occupied': return 'Обслуживается';
-        case 'bill': return 'Запросил счёт';
-        case 'paid': return 'Оплачен';
-        default: return st;
-      }
-    }
-
-    function buildPosTableDropdown() {
-      const container = document.getElementById('posTableDropdownList');
-      let html = '';
-
-      for (let i = 1; i <= 12; i++) {
-        const tId = `t_${i}`;
-        const t = tablesState[tId];
-        const isCurrent = activeTableId === tId;
-        const sum = calcItemsTotal(t.items);
-
-        html += `
-          <button onclick="switchPosTable('${tId}')" class="touch-press w-full text-left p-2.5 rounded-xl flex items-center justify-between text-xs font-bold ${isCurrent ? 'bg-amber-500 text-slate-950 font-black' : 'hover:bg-[#252E3A] text-slate-200'}">
-            <span>Столик #${i} (${t.guests} перс.)</span>
-            <span class="font-mono">${sum} ₽</span>
-          </button>
-        `;
-      }
-
-      // Add takeaway
-      const tw = tablesState['takeaway'];
-      const twSum = calcItemsTotal(tw.items);
-      html += `
-        <button onclick="switchPosTable('takeaway')" class="touch-press w-full text-left p-2.5 rounded-xl flex items-center justify-between text-xs font-bold border-t border-[#2F3947] mt-1 ${activeTableId === 'takeaway' ? 'bg-amber-500 text-slate-950 font-black' : 'hover:bg-[#252E3A] text-slate-200'}">
-          <span>С собой / На вынос</span>
-          <span class="font-mono">${twSum} ₽</span>
-        </button>
-      `;
-
-      container.innerHTML = html;
-    }
-
-    function togglePosTableDropdown() {
-      const el = document.getElementById('posTableDropdown');
-      el.classList.toggle('hidden');
-    }
-
-    function switchPosTable(newTableId) {
-      document.getElementById('posTableDropdown').classList.add('hidden');
-      activeTableId = newTableId;
-      renderPosTerminal();
-    }
-
-    function renderPosCategoryPills() {
-      const container = document.getElementById('posCategoryBar');
-      let html = '';
-
-      CATEGORIES.forEach(cat => {
-        const isActive = currentPosCategory === cat.id && !isPosHitsOnly;
-        const btnClass = isActive 
-          ? 'bg-amber-500 text-slate-950 font-black shadow-md' 
-          : 'bg-[#202731] text-slate-300 hover:bg-[#2A3442] border border-[#323D4D]';
-
-        html += `
-          <button onclick="setPosCategory('${cat.id}')" class="touch-press h-10 px-3.5 rounded-xl text-xs sm:text-sm font-extrabold whitespace-nowrap transition flex items-center gap-2 ${btnClass}">
-            <i class="fa-solid ${cat.icon} text-xs"></i>
-            <span>${cat.name}</span>
-          </button>
-        `;
-      });
-
-      container.innerHTML = html;
-    }
-
-    function setPosCategory(catId) {
-      isPosHitsOnly = false;
-      currentPosCategory = catId;
-      updateHitsBtnVisual();
-      renderPosCategoryPills();
-      renderPosDishesGrid();
-    }
-
-    function togglePopularFilter() {
-      isPosHitsOnly = !isPosHitsOnly;
-      updateHitsBtnVisual();
-      renderPosCategoryPills();
-      renderPosDishesGrid();
-    }
-
-    function updateHitsBtnVisual() {
-      const btn = document.getElementById('posHitsFilterBtn');
-      if (isPosHitsOnly) {
-        btn.className = "touch-press h-12 px-3 sm:px-4 rounded-2xl bg-amber-500 text-slate-950 font-black text-xs sm:text-sm flex items-center gap-1.5 shadow-lg";
-      } else {
-        btn.className = "touch-press h-12 px-3 sm:px-4 rounded-2xl bg-[#222831] border border-[#364252] text-amber-300 hover:border-amber-500 font-extrabold text-xs sm:text-sm flex items-center gap-1.5 shadow";
-      }
-    }
-
-    function handlePosSearch(query) {
-      currentPosSearchQuery = query.trim();
-      const clearBtn = document.getElementById('posClearSearchBtn');
-      if (currentPosSearchQuery.length > 0) {
-        clearBtn.classList.remove('hidden');
-      } else {
-        clearBtn.classList.add('hidden');
-      }
-      renderPosDishesGrid();
-    }
-
-    function clearPosSearch() {
-      const input = document.getElementById('posFastSearchInput');
-      input.value = '';
-      currentPosSearchQuery = '';
-      document.getElementById('posClearSearchBtn').classList.add('hidden');
-      renderPosDishesGrid();
-      input.focus();
-    }
-
-    /* RENDER DISH TOUCH CARDS IN POS */
-    function renderPosDishesGrid() {
-      const grid = document.getElementById('posDishesGrid');
-      const emptyNotice = document.getElementById('posNoResults');
-
-      const filtered = COFFEEMAN_MENU.filter(dish => {
-        if (isPosHitsOnly && !dish.isPopular) return false;
-        const matchesCategory = currentPosCategory === 'all' || dish.category === currentPosCategory;
-
-        if (!currentPosSearchQuery) return matchesCategory;
-
-        const q = currentPosSearchQuery.toLowerCase();
-        return dish.title.toLowerCase().includes(q) || 
-               dish.desc.toLowerCase().includes(q) || 
-               dish.categoryName.toLowerCase().includes(q);
-      });
-
-      if (filtered.length === 0) {
-        grid.innerHTML = '';
-        emptyNotice.classList.remove('hidden');
-        return;
-      }
-
-      emptyNotice.classList.add('hidden');
-
-      let html = '';
-      filtered.forEach(dish => {
-        html += `
-          <div class="bg-[#181D24] border-2 border-[#2A3442] hover:border-amber-400 rounded-3xl p-3.5 flex flex-col justify-between transition-all group shadow-md hover:shadow-xl">
-            <div>
-              <div class="flex items-start justify-between gap-1 mb-1">
-                <span class="text-[10px] font-extrabold text-amber-400 uppercase tracking-wider">${dish.categoryName}</span>
-                ${dish.isPopular ? '<span class="text-[9px] bg-amber-500/20 text-amber-300 font-black px-2 py-0.5 rounded-full border border-amber-500/40">★ ХИТ</span>' : ''}
-              </div>
-              <h4 class="font-black text-sm text-white group-hover:text-amber-300 transition-colors leading-snug line-clamp-2">${dish.title}</h4>
-              <p class="text-xs text-slate-400 mt-1 line-clamp-2 leading-relaxed">${dish.desc}</p>
-            </div>
-
-            <div class="mt-3 pt-3 border-t border-[#262F3C] flex items-center justify-between gap-2">
-              <span class="font-mono font-black text-amber-400 text-lg">${dish.basePrice} ₽</span>
-              
-              <div class="flex items-center gap-1.5">
-                <!-- Quick 1-touch Add button -->
-                <button onclick="quickAddDish('${dish.id}')" title="Быстро добавить 1 шт." class="touch-press w-11 h-11 rounded-2xl bg-[#252E3A] hover:bg-amber-500 hover:text-slate-950 text-white border border-[#3A485A] flex items-center justify-center font-black text-lg transition shadow">
-                  <i class="fa-solid fa-plus"></i>
-                </button>
-                
-                <!-- Open Modifiers & Addons button -->
-                <button onclick="openDishOptionsModal('${dish.id}')" title="Выбрать добавки, прожарку, объём" class="touch-press h-11 px-3.5 rounded-2xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-black text-xs flex items-center gap-1.5 shadow">
-                  <i class="fa-solid fa-sliders"></i>
-                  <span>Опции</span>
-                </button>
-              </div>
-            </div>
-          </div>
-        `;
-      });
-
-      grid.innerHTML = html;
-    }
-  </script>
-
-  <script>
-    function quickAddDish(dishId) {
-      const dish = COFFEEMAN_MENU.find(d => d.id === dishId);
-      if (!dish) return;
-
-      const table = tablesState[activeTableId];
-      if (table.status === 'free') {
-        table.status = 'occupied';
-      }
-
-      // Check if identical plain dish exists
-      const existing = table.items.find(it => it.dishId === dishId && !it.option && it.addons.length === 0 && !it.customNote);
-
-      if (existing) {
-        existing.quantity += 1;
-      } else {
-        table.items.push({
-          orderItemId: 'item_' + Date.now() + '_' + Math.floor(Math.random() * 1000),
-          dishId: dish.id,
-          title: dish.title,
-          basePrice: dish.basePrice,
-          unitPrice: dish.basePrice,
-          quantity: 1,
-          option: null,
-          addons: [],
-          customNote: ''
-        });
-      }
-
-      renderBillItemsList();
-      showToast(`+1 «${dish.title}» в чек`);
-    }
-
-    function openDishOptionsModal(dishId) {
-      const dish = COFFEEMAN_MENU.find(d => d.id === dishId);
-      if (!dish) return;
-
-      modalDraftDish = {
-        dishId: dish.id,
-        title: dish.title,
-        categoryName: dish.categoryName,
-        desc: dish.desc,
-        basePrice: dish.basePrice,
-        selectedOption: (dish.options && dish.options.length > 0) ? dish.options[0] : null,
-        selectedAddons: [],
-        customNote: '',
-        quantity: 1
-      };
-
-      document.getElementById('optCategoryBadge').textContent = dish.categoryName;
-      document.getElementById('optDishTitle').textContent = dish.title;
-      document.getElementById('optDishDesc').textContent = dish.desc;
-      document.getElementById('optDishNoteInput').value = '';
-      document.getElementById('optDishQtyDisplay').textContent = '1';
-
-      // Variations
-      const varBox = document.getElementById('optVariationsBox');
-      const varGrid = document.getElementById('optVariationsGrid');
-      if (dish.options && dish.options.length > 0) {
-        varBox.classList.remove('hidden');
-        let varHtml = '';
-        dish.options.forEach((opt, idx) => {
-          const isSelected = idx === 0;
-          const delta = opt.priceDelta > 0 ? ` (+${opt.priceDelta} ₽)` : '';
-          varHtml += `
-            <label class="touch-press flex items-center gap-2 p-2.5 bg-[#202731] border border-[#344050] rounded-2xl cursor-pointer hover:border-amber-400 transition">
-              <input type="radio" name="modalOptRadio" value="${idx}" ${isSelected ? 'checked' : ''} onchange="setModalVariation(${idx})" class="w-4 h-4 text-amber-500 focus:ring-amber-500">
-              <span class="text-xs font-bold text-slate-200">${opt.name}${delta}</span>
-            </label>
-          `;
-        });
-        varGrid.innerHTML = varHtml;
-      } else {
-        varBox.classList.add('hidden');
-      }
-
-      // Addons
-      const addonsGrid = document.getElementById('optAddonsGrid');
-      const keys = (dish.availableAddons && dish.availableAddons.length > 0) 
-        ? dish.availableAddons 
-        : ['extra_cheese', 'bacon', 'jalapeno', 'extra_sauce', 'extra_bread'];
-
-      let addonsHtml = '';
-      keys.forEach(k => {
-        const item = MASTER_ADDONS[k];
-        if (!item) return;
-        addonsHtml += `
-          <label class="touch-press flex items-center justify-between p-2.5 bg-[#202731] border border-[#344050] rounded-2xl cursor-pointer hover:border-amber-400 transition">
-            <div class="flex items-center gap-2 flex-1">
-              <input type="checkbox" onchange="toggleModalAddon('${k}', this.checked)" class="w-4 h-4 rounded text-amber-500 focus:ring-amber-500">
-              <span class="text-xs font-semibold text-slate-200">${item.icon} ${item.name}</span>
-            </div>
-            <span class="font-mono text-amber-400 text-xs font-bold">+${item.price}₽</span>
-          </label>
-        `;
-      });
-      addonsGrid.innerHTML = addonsHtml;
-
-      recalcModalPrice();
-      document.getElementById('dishOptionsModal').classList.remove('hidden');
-    }
-
-    function closeDishOptionsModal() {
-      document.getElementById('dishOptionsModal').classList.add('hidden');
-      modalDraftDish = null;
-    }
-
-    function setModalVariation(idx) {
-      const dish = COFFEEMAN_MENU.find(d => d.id === modalDraftDish.dishId);
-      modalDraftDish.selectedOption = dish.options[idx];
-      recalcModalPrice();
-    }
-
-    function toggleModalAddon(key, checked) {
-      if (checked) {
-        if (!modalDraftDish.selectedAddons.includes(key)) {
-          modalDraftDish.selectedAddons.push(key);
-        }
-      } else {
-        modalDraftDish.selectedAddons = modalDraftDish.selectedAddons.filter(k => k !== key);
-      }
-      recalcModalPrice();
-    }
-
-    function appendDishNote(txt) {
-      const input = document.getElementById('optDishNoteInput');
-      input.value = input.value ? `${input.value}, ${txt}` : txt;
-    }
-
-    function adjustModalQty(delta) {
-      if (!modalDraftDish) return;
-      modalDraftDish.quantity = Math.max(1, modalDraftDish.quantity + delta);
-      document.getElementById('optDishQtyDisplay').textContent = modalDraftDish.quantity;
-      recalcModalPrice();
-    }
-
-    function recalcModalPrice() {
-      if (!modalDraftDish) return;
-      let unit = modalDraftDish.basePrice;
-      if (modalDraftDish.selectedOption && modalDraftDish.selectedOption.priceDelta) {
-        unit += modalDraftDish.selectedOption.priceDelta;
-      }
-      modalDraftDish.selectedAddons.forEach(k => {
-        if (MASTER_ADDONS[k]) unit += MASTER_ADDONS[k].price;
-      });
-      const total = unit * modalDraftDish.quantity;
-      document.getElementById('optCalculatedTotal').textContent = `${total} ₽`;
-    }
-
-    function confirmDishFromModal() {
-      if (!modalDraftDish) return;
-      const note = document.getElementById('optDishNoteInput').value.trim();
-
-      let unit = modalDraftDish.basePrice;
-      if (modalDraftDish.selectedOption && modalDraftDish.selectedOption.priceDelta) {
-        unit += modalDraftDish.selectedOption.priceDelta;
-      }
-
-      const addonsPayload = modalDraftDish.selectedAddons.map(k => {
-        const ad = MASTER_ADDONS[k];
-        unit += ad.price;
-        return { key: k, name: ad.name, price: ad.price };
-      });
-
-      const orderItem = {
-        orderItemId: 'item_' + Date.now() + '_' + Math.floor(Math.random() * 1000),
-        dishId: modalDraftDish.dishId,
-        title: modalDraftDish.title,
-        basePrice: modalDraftDish.basePrice,
-        unitPrice: unit,
-        quantity: modalDraftDish.quantity,
-        option: modalDraftDish.selectedOption ? modalDraftDish.selectedOption.name : null,
-        addons: addonsPayload,
-        customNote: note
-      };
-
-      const table = tablesState[activeTableId];
-      if (table.status === 'free') {
-        table.status = 'occupied';
-      }
-
-      table.items.push(orderItem);
-
-      closeDishOptionsModal();
-      renderBillItemsList();
-      showToast(`«${orderItem.title}» записан в кассу`);
-    }
-
+<!-- ... existing code ... -->
     /* RENDER BILL ITEMS ON RIGHT SIDEBAR */
     function renderBillItemsList() {
       const table = tablesState[activeTableId];
       const container = document.getElementById('billItemsScrollList');
       const countElem = document.getElementById('billItemsTotalCount');
       const sumElem = document.getElementById('billFinalTotalSum');
+      const mobileBadge = document.getElementById('mobileBillBadgeCount');
 
       if (!table.items || table.items.length === 0) {
         container.innerHTML = `
@@ -2059,6 +507,7 @@
         `;
         countElem.textContent = '0 шт.';
         sumElem.textContent = '0 ₽';
+        if (mobileBadge) mobileBadge.textContent = '0';
         return;
       }
 
@@ -2112,6 +561,7 @@
       container.innerHTML = html;
       countElem.textContent = `${totalQty} шт.`;
       sumElem.textContent = `${totalSum} ₽`;
+      if (mobileBadge) mobileBadge.textContent = totalQty;
     }
 
     function adjustBillQty(index, delta) {
@@ -2122,12 +572,14 @@
       if (table.items[index].quantity <= 0) {
         table.items.splice(index, 1);
       }
+      table.isRecordedInCash = false;
       renderBillItemsList();
     }
 
     function removeBillItem(index) {
       const table = tablesState[activeTableId];
       table.items.splice(index, 1);
+      table.isRecordedInCash = false;
       renderBillItemsList();
       showToast('Позиция удалена из чека');
     }
@@ -2145,10 +597,13 @@
       table.hasConfirmedGuests = false;
       table.generalNote = '';
       table.openTime = null;
+      table.isRecordedInCash = false;
       renderBillItemsList();
       showToast('Заказ столика полностью сброшен');
     }
-
+<!-- ... existing code ... -->
+```html:Coffeeman Waiter POS Terminal:index.html
+<!-- ... existing code ... -->
     function sendOrderToKitchen() {
       const table = tablesState[activeTableId];
       if (table.items.length === 0) {
@@ -2158,162 +613,157 @@
       showToast(`Заказ стола ${table.shortName} отправлен на кухню и бар! 👨‍🍳`);
     }
 
-    /* PRECHECK MODAL */
-    function openPrecheckModal() {
+    /* DEDICATED «ЗАПИСЬ В КАССУ» MODAL & LOGGING */
+    function openRecordToCashModal() {
       const table = tablesState[activeTableId];
-      if (table.items.length === 0) {
-        showToast('Заказ пуст. Добавьте блюда для печати пречека');
+      if (!table.items || table.items.length === 0) {
+        showToast('Чек пуст! Добавьте хотя бы одно блюдо для записи в кассу.');
         return;
       }
 
-      document.getElementById('receiptTableTitle').textContent = table.name.toUpperCase();
-      document.getElementById('receiptGuestTitle').textContent = table.type === 'takeaway' ? 'Заказ с собой' : `Персон: ${table.guests}`;
-      
-      const now = new Date();
-      document.getElementById('receiptTime').textContent = now.toLocaleDateString('ru-RU') + ' • ' + now.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+      const totalSum = calcItemsTotal(table.items);
+      const totalCount = table.items.reduce((acc, it) => acc + it.quantity, 0);
 
-      const container = document.getElementById('receiptLinesContainer');
+      document.getElementById('rtcModalSubtitle').textContent = `${table.name} • ${table.guests} ${getGuestWord(table.guests)} • Официант: Анна В.`;
+      document.getElementById('rtcDocNumber').textContent = `CHK-${table.id.toUpperCase()}-${Date.now().toString().slice(-4)}`;
+      document.getElementById('rtcOpenTime').textContent = table.openTime || new Date().toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+      document.getElementById('rtcLinesCount').textContent = `${table.items.length} поз. (${totalCount} шт.)`;
+      document.getElementById('rtcServeType').textContent = table.type === 'takeaway' ? 'На вынос (С собой)' : 'Обслуживание за столом';
+      document.getElementById('rtcTotalSumDisplay').textContent = `${totalSum} ₽`;
+
+      // Status badge in modal
+      const badge = document.getElementById('rtcModalStatusBadge');
+      if (table.isRecordedInCash) {
+        badge.textContent = `Записан в кассу (${table.cashRecordTime})`;
+        badge.className = 'text-[10px] bg-emerald-500/20 text-emerald-300 font-bold px-2 py-0.5 rounded-lg border border-emerald-500/40';
+      } else {
+        badge.textContent = 'Ожидает записи в кассу';
+        badge.className = 'text-[10px] bg-amber-500/20 text-amber-300 font-bold px-2 py-0.5 rounded-lg border border-amber-500/40';
+      }
+
+      // Kitchen general note display
+      const noteBox = document.getElementById('rtcKitchenNoteBox');
+      const noteText = document.getElementById('rtcKitchenNoteText');
+      if (table.generalNote) {
+        noteBox.classList.remove('hidden');
+        noteText.textContent = table.generalNote;
+      } else {
+        noteBox.classList.add('hidden');
+      }
+
+      // Render items breakdown table
+      const tbody = document.getElementById('rtcItemsTableBody');
       let html = '';
-      let total = 0;
 
-      table.items.forEach(it => {
-        const line = it.unitPrice * it.quantity;
-        total += line;
-
-        let details = '';
-        if (it.option) details += `  • ${it.option}<br>`;
-        it.addons.forEach(a => { details += `  + ${a.name}<br>`; });
-        if (it.customNote) details += `  * ${it.customNote}<br>`;
+      table.items.forEach((item, idx) => {
+        const lineTotal = item.unitPrice * item.quantity;
+        let details = [];
+        if (item.option) details.push(`Вариант: ${item.option}`);
+        if (item.addons && item.addons.length > 0) {
+          details.push('Добавки: ' + item.addons.map(a => a.name).join(', '));
+        }
+        if (item.customNote) {
+          details.push(`Пожелание: ${item.customNote}`);
+        }
 
         html += `
-          <div>
-            <div class="flex justify-between items-start">
-              <span class="flex-1 font-bold text-slate-900">${it.title}</span>
-              <span class="font-black">${line} ₽</span>
-            </div>
-            <div class="text-[10px] text-slate-600 flex justify-between">
-              <span>${it.quantity} x ${it.unitPrice} ₽</span>
-            </div>
-            ${details ? `<div class="text-[10px] text-slate-500 pl-2 mt-0.5 leading-tight">${details}</div>` : ''}
-          </div>
+          <tr class="hover:bg-[#1E2530] transition">
+            <td class="py-3 px-3 font-mono text-slate-400">${idx + 1}</td>
+            <td class="py-3 px-3">
+              <div class="font-bold text-white text-xs">${item.title}</div>
+              ${details.length > 0 ? `<div class="text-[10px] text-amber-300/80 mt-0.5">${details.join(' • ')}</div>` : ''}
+            </td>
+            <td class="py-3 px-3 text-center font-mono font-bold text-amber-400">${item.quantity} шт.</td>
+            <td class="py-3 px-3 text-right font-mono text-slate-300">${item.unitPrice} ₽</td>
+            <td class="py-3 px-3 text-right font-mono font-black text-amber-400">${lineTotal} ₽</td>
+          </tr>
         `;
       });
 
-      container.innerHTML = html;
-      document.getElementById('receiptTotalAmount').textContent = `${total} ₽`;
-
-      table.status = 'bill';
-      document.getElementById('precheckModal').classList.remove('hidden');
+      tbody.innerHTML = html;
+      document.getElementById('recordToCashModal').classList.remove('hidden');
     }
 
-    function closePrecheckModal() {
-      document.getElementById('precheckModal').classList.add('hidden');
+    function closeRecordToCashModal() {
+      document.getElementById('recordToCashModal').classList.add('hidden');
     }
 
-    /* PAYMENT MODAL & CLOSING ORDER */
-    function openPaymentModal() {
+    function confirmRecordIntoCashRegister() {
       const table = tablesState[activeTableId];
-      const sum = calcItemsTotal(table.items);
+      if (!table.items || table.items.length === 0) return;
 
-      if (sum === 0) {
-        showToast('В чеке нет позиций. Нечего оплачивать!');
-        return;
+      const now = new Date();
+      const timeStr = now.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+      const totalSum = calcItemsTotal(table.items);
+      const totalCount = table.items.reduce((s, it) => s + it.quantity, 0);
+
+      table.isRecordedInCash = true;
+      table.cashRecordTime = timeStr;
+
+      // Add record to Cash Journal
+      const journalEntry = {
+        id: `REC-${Date.now().toString().slice(-6)}`,
+        tableId: table.id,
+        tableName: table.name,
+        time: timeStr,
+        itemsCount: totalCount,
+        totalSum: totalSum,
+        itemsSummary: table.items.map(it => `${it.title} (x${it.quantity})`).join(', ')
+      };
+
+      cashJournalRecords.unshift(journalEntry);
+      updateCashJournalBadge();
+
+      closeRecordToCashModal();
+      renderPosTerminal();
+      showToast(`Все позиции ${table.name} успешно записаны в кассу! 🧾`);
+    }
+
+    /* CASH JOURNAL MODAL FUNCTIONS */
+    function openCashJournalModal() {
+      const container = document.getElementById('cashJournalListContainer');
+      document.getElementById('journalTotalEntries').textContent = cashJournalRecords.length;
+
+      if (cashJournalRecords.length === 0) {
+        container.innerHTML = `
+          <div class="text-center py-10 text-slate-400">
+            <i class="fa-solid fa-file-invoice text-3xl mb-2 text-slate-500"></i>
+            <p class="font-bold text-sm">Кассовый журнал пуст</p>
+            <p class="text-xs text-slate-500 mt-1">Здесь будут отображаться чеки, записанные в кассу во время смены</p>
+          </div>
+        `;
+      } else {
+        let html = '';
+        cashJournalRecords.forEach(entry => {
+          html += `
+            <div class="bg-[#1F2631] border border-[#2E3947] rounded-2xl p-3 flex flex-col gap-1.5">
+              <div class="flex items-center justify-between text-xs">
+                <span class="font-mono font-bold text-amber-400">${entry.id} • ${entry.tableName}</span>
+                <span class="font-mono text-slate-400">${entry.time}</span>
+              </div>
+              <p class="text-xs text-slate-300 leading-snug">${entry.itemsSummary}</p>
+              <div class="flex items-center justify-between pt-1 border-t border-[#2A3442] text-xs">
+                <span class="text-emerald-400 font-bold"><i class="fa-solid fa-circle-check mr-1"></i>Зафиксировано</span>
+                <span class="font-mono font-black text-amber-400 text-sm">${entry.totalSum} ₽</span>
+              </div>
+            </div>
+          `;
+        });
+        container.innerHTML = html;
       }
 
-      document.getElementById('paymentModalTableSubtitle').textContent = `${table.name} (${table.type === 'takeaway' ? 'С собой' : `${table.guests} персон`})`;
-      document.getElementById('paymentModalSumDisplay').textContent = `${sum} ₽`;
-      document.getElementById('paymentModal').classList.remove('hidden');
+      document.getElementById('cashJournalModal').classList.remove('hidden');
     }
 
-    function closePaymentModal() {
-      document.getElementById('paymentModal').classList.add('hidden');
+    function closeCashJournalModal() {
+      document.getElementById('cashJournalModal').classList.add('hidden');
     }
 
-    function executeCloseOrder(paymentMethod) {
-      const table = tablesState[activeTableId];
-      const sum = calcItemsTotal(table.items);
-
-      totalPaidShiftRevenue += sum;
-
-      // Close and clear order
-      table.items = [];
-      table.status = 'free';
-      table.hasConfirmedGuests = false;
-      table.generalNote = '';
-      table.openTime = null;
-
-      closePaymentModal();
-      showToast(`Заказ закрыт! Оплачено: ${sum} ₽ (${paymentMethod})`);
-
-      // Automatically transition back to Screen 1 (Tables view)
-      switchScreen('tables');
+    function updateCashJournalBadge() {
+      const el = document.getElementById('headerJournalBadge');
+      if (el) el.textContent = cashJournalRecords.length;
     }
 
-    /* SHIFT MODAL */
-    function openShiftModal() {
-      let occupied = 0;
-      let totalGuests = 0;
-      let openSum = 0;
-
-      for (let i = 1; i <= 12; i++) {
-        const t = tablesState[`t_${i}`];
-        if (t.status !== 'free' || t.items.length > 0) {
-          occupied++;
-          totalGuests += t.guests;
-        }
-        openSum += calcItemsTotal(t.items);
-      }
-
-      const tw = tablesState['takeaway'];
-      openSum += calcItemsTotal(tw.items);
-
-      document.getElementById('statOccupiedTables').textContent = `${occupied} / 12`;
-      document.getElementById('statTotalGuests').textContent = `${totalGuests} чел.`;
-      document.getElementById('statOpenOrdersSum').textContent = `${openSum} ₽`;
-      document.getElementById('statPaidRevenue').textContent = `${totalPaidShiftRevenue} ₽`;
-
-      document.getElementById('shiftModal').classList.remove('hidden');
-    }
-
-    function closeShiftModal() {
-      document.getElementById('shiftModal').classList.add('hidden');
-    }
-
-    /* UTILITY HELPERS */
-    function calcItemsTotal(items) {
-      return items.reduce((acc, it) => acc + (it.unitPrice * it.quantity), 0);
-    }
-
-    let toastTimeout = null;
-    function showToast(msg) {
-      const toast = document.getElementById('toastNotification');
-      document.getElementById('toastMsg').textContent = msg;
-
-      toast.classList.remove('translate-y-24', 'opacity-0');
-      toast.classList.add('translate-y-0', 'opacity-100');
-
-      if (toastTimeout) clearTimeout(toastTimeout);
-      toastTimeout = setTimeout(() => {
-        toast.classList.remove('translate-y-0', 'opacity-100');
-        toast.classList.add('translate-y-24', 'opacity-0');
-      }, 2500);
-    }
-
-    function startPosClock() {
-      const el = document.getElementById('posLiveClock');
-      function tick() {
-        const d = new Date();
-        el.textContent = d.toLocaleTimeString('ru-RU');
-      }
-      tick();
-      setInterval(tick, 1000);
-    }
-
-    /* INITIALIZATION */
-    window.addEventListener('DOMContentLoaded', () => {
-      startPosClock();
-      switchScreen('tables');
-    });
-  </script>
-</body>
-</html>
+    /* PRECHECK MODAL */
+    function openPrecheckModal() {
+<!-- ... existing code ... -->
