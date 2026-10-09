@@ -1,4 +1,11 @@
-import { initFirebaseAuth, subscribeToCloudTables, saveTablesToCloud } from "./firebase.js";
+import { 
+  initFirebaseAuth, 
+  subscribeToCloudTables, 
+  saveTablesToCloud,
+  sendOrderToCustomerDisplay,
+  clearCustomerDisplay,
+  subscribeToCustomerPayment
+} from "./firebase.js";
 import { FULL_MENU, TABLES_INITIAL, MODIFIERS_DATA, calcTableSum, getDishDepartment } from "./menu.js";
 
 /* Состояние терминала */
@@ -187,14 +194,12 @@ function updateHallMetrics() {
   if (busyEl) busyEl.textContent = busy.length;
   if (sumEl) sumEl.textContent = `${totalSum} ₽`;
 
-  // Бейдж на нижней навигации «Заказы»
   const navBadge = document.getElementById('navOrdersBadge');
   if (navBadge) {
     if (busy.length > 0) navBadge.classList.remove('hidden');
     else navBadge.classList.add('hidden');
   }
 
-  // Обновляем список известных имён из столов в базе
   tables.forEach(t => {
     if (t.waiter && !knownWaiters.includes(t.waiter)) {
       knownWaiters.push(t.waiter);
@@ -203,18 +208,117 @@ function updateHallMetrics() {
 }
 
 /* =========================================================
- * НИЖНИЙ ПЛАВАЮЩИЙ ТАББАР С АНИМАЦИЕЙ СКОЛЬЗЯЩЕЙ ТАБЛЕТКИ
+ * ИНТЕГРАЦИЯ С ЭКРАНОМ КЛИЕНТА (FIREBASE)
+ * ========================================================= */
+function sendCurrentOrderToCustomerScreen() {
+  const table = tables.find(t => t.id === currentTableId);
+  if (!table || !table.items || table.items.length === 0) {
+    showToast('В чеке нет блюд для оплаты!', '⚠️');
+    return;
+  }
+
+  const totalSum = calcTableSum(table);
+  const orderPayload = {
+    status: 'pending_payment',
+    tableId: table.id,
+    tableName: table.name || `Стол ${table.id}`,
+    waiter: table.waiter || currentWaiter || 'Бариста',
+    guests: table.guests || 1,
+    totalSum: totalSum,
+    items: table.items.map(it => ({
+      name: it.name,
+      qty: it.qty,
+      price: it.price,
+      comment: it.comment || '',
+      modifiers: it.modifiers ? it.modifiers.map(m => m.name) : []
+    }))
+  };
+
+  sendOrderToCustomerDisplay(orderPayload)
+    .then(() => {
+      updateCustomerScreenBadge(table.name || table.id, 'pending');
+      showToast(`Счёт отправлен на экран гостя!`, '📺');
+    })
+    .catch((err) => {
+      console.error(err);
+      showToast('Ошибка отправки на экран', '❌');
+    });
+}
+
+function clearCustomerScreenSync() {
+  clearCustomerDisplay()
+    .then(() => {
+      hideCustomerScreenBadge();
+      showToast('Экран гостя переведён в режим заставки', '✨');
+    })
+    .catch(() => showToast('Ошибка сброса экрана', '❌'));
+}
+
+function updateCustomerScreenBadge(tableName, status = 'pending') {
+  const badge = document.getElementById('customerScreenSyncBadge');
+  const text = document.getElementById('customerScreenSyncText');
+  if (!badge || !text) return;
+
+  badge.classList.remove('hidden');
+  badge.classList.add('flex');
+
+  if (status === 'succeeded') {
+    badge.className = "flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-semibold";
+    text.textContent = `Оплачено: Стол ${tableName}`;
+  } else {
+    badge.className = "flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-50 border border-amber-200 text-amber-700 text-xs font-semibold";
+    text.textContent = `Экран: Стол ${tableName}`;
+  }
+}
+
+function hideCustomerScreenBadge() {
+  const badge = document.getElementById('customerScreenSyncBadge');
+  if (badge) {
+    badge.classList.add('hidden');
+    badge.classList.remove('flex');
+  }
+}
+
+function listenToCustomerCheckout() {
+  subscribeToCustomerPayment((checkoutData) => {
+    if (!checkoutData) return;
+
+    if (checkoutData.status === 'succeeded' && checkoutData.tableId) {
+      updateCustomerScreenBadge(checkoutData.tableName || checkoutData.tableId, 'succeeded');
+      showToast(`Стол ${checkoutData.tableName || checkoutData.tableId} оплачен гостем! 💰`, '🎉');
+
+      const paidTable = tables.find(t => t.id === checkoutData.tableId);
+      if (paidTable) {
+        paidTable.items = [];
+        paidTable.guests = 0;
+        paidTable.waiter = "";
+        syncToCloud();
+        
+        if (currentAppTab === 'cart' && currentTableId === checkoutData.tableId) {
+          renderOrderScreen();
+        } else if (currentAppTab === 'map') {
+          renderHallMap();
+        } else if (currentAppTab === 'orders') {
+          renderActiveOrdersScreen();
+        }
+      }
+    } else if (checkoutData.status === 'idle') {
+      hideCustomerScreenBadge();
+    }
+  });
+}
+
+/* =========================================================
+ * ТАБЫ И ЭКРАНЫ
  * ========================================================= */
 function switchAppTab(tab, tabIndex = 0) {
   currentAppTab = tab;
 
-  // 1. Анимация бегающей оранжевой пилюли
   const pill = document.getElementById('slidingNavPill');
   if (pill) {
     pill.style.transform = `translateX(${tabIndex * 100}%)`;
   }
 
-  // 2. Цвета иконок таббара
   document.querySelectorAll('.nav-tab-btn').forEach((btn, idx) => {
     if (idx === tabIndex) {
       btn.className = "nav-tab-btn flex-1 py-2 flex flex-col items-center justify-center gap-0.5 relative z-10 transition-colors text-white font-black";
@@ -223,7 +327,6 @@ function switchAppTab(tab, tabIndex = 0) {
     }
   });
 
-  // 3. Переключение экранов
   const viewTables = document.getElementById('view-tables');
   const viewActiveOrders = document.getElementById('view-active-orders');
   const viewOrder = document.getElementById('view-order');
@@ -258,9 +361,7 @@ function switchAppTab(tab, tabIndex = 0) {
   }
 }
 
-/* =========================================================
- * РАЗДЕЛ «АКТИВНЫЕ ЗАКАЗЫ» С СОРТИРОВКОЙ ПО СТАТУСУ
- * ========================================================= */
+/* Фильтрация активных заказов */
 function filterActiveOrders(status) {
   currentOrdersFilter = status;
   document.querySelectorAll('.order-filter-btn').forEach(btn => {
@@ -281,7 +382,6 @@ function renderActiveOrdersScreen() {
   const busyTables = tables.filter(t => t.items && t.items.length > 0);
   if (totalBadge) totalBadge.textContent = `${busyTables.length} столов`;
 
-  // Сортировка / фильтрация
   const filtered = busyTables.filter(t => {
     const hasUnsent = t.items.some(it => !it.sentToKitchen);
     const totalCount = t.items.reduce((s, it) => s + it.qty, 0);
@@ -291,7 +391,7 @@ function renderActiveOrdersScreen() {
     if (currentOrdersFilter === 'new') return hasUnsent;
     if (currentOrdersFilter === 'cooking') return !hasUnsent && !allServed;
     if (currentOrdersFilter === 'served') return allServed;
-    return true; // 'all'
+    return true;
   });
 
   if (filtered.length === 0) {
@@ -320,9 +420,7 @@ function renderActiveOrdersScreen() {
 
     const card = document.createElement('div');
     card.className = "p-3 bg-white rounded-2xl border border-slate-200/80 shadow-2xs flex items-center justify-between cursor-pointer active:scale-[0.98] transition";
-    card.onclick = () => {
-      goToOrderView(t.id);
-    };
+    card.onclick = () => goToOrderView(t.id);
 
     card.innerHTML = `
       <div class="flex items-center gap-3">
@@ -642,7 +740,7 @@ function addDishDirectlyToCart(dish, modifiers = [], comment = "") {
   showToast(`+ 1 ${dish.name}`, '☕');
 }
 
-/* РЕНДЕРИНГ ЧЕКА СТОЛА С ПОДДЕРЖКОЙ DOUBLE-TAP ДЛЯ ПОДАЧИ */
+/* Рендеринг чека стола с поддержкой двойного тапа */
 function renderOrderScreen() {
   const table = tables.find(t => t.id === currentTableId);
   if (!table) return;
@@ -698,18 +796,14 @@ function renderOrderScreen() {
         : (it.sentToKitchen ? 'border-slate-200 bg-slate-50' : 'border-orange-200 bg-orange-50/40')
     }`;
 
-    // Переменная для отслеживания двойного тапа
     let lastTapTime = 0;
 
     row.addEventListener('click', (e) => {
-      // Игнорируем клики по кнопкам + / - / удалить, чтобы не сбивать счетчик
       if (e.target.closest('button')) return;
-
       const currentTime = new Date().getTime();
       const tapLength = currentTime - lastTapTime;
 
       if (tapLength < 320 && tapLength > 0) {
-        // Двойной тап зафиксирован!
         toggleServed(idx);
         e.preventDefault();
       }
@@ -748,7 +842,6 @@ function renderOrderScreen() {
   });
 }
 
-/* ПЕРЕКЛЮЧЕНИЕ СТАТУСА ПОДАЧИ */
 function toggleServed(idx) {
   const table = tables.find(t => t.id === currentTableId);
   if (!table || !table.items[idx]) return;
@@ -765,7 +858,6 @@ function toggleServed(idx) {
     showToast(`«${table.items[idx].name}» возвращено в готовку`, '⏳');
   }
 }
-
 
 function changeQty(idx, delta) {
   const table = tables.find(t => t.id === currentTableId);
@@ -807,7 +899,6 @@ function clearCurrentOrder() {
   showToast('Чек очищен', '🗑️');
 }
 
-/* Пересадка за свободный стол */
 function openTransferTableModal() {
   const currentTable = tables.find(t => t.id === currentTableId);
   if (!currentTable) return;
@@ -887,7 +978,7 @@ function showToast(msg, icon = '🔔') {
 }
 
 /* =========================================================
- * ЭКРАН ВХОДА И ДИНАМИЧЕСКИЕ ИМЕНА ИЗ БАЗЫ
+ * ВХОД И СМЕНА ИМЕНИ
  * ========================================================= */
 function renderWaitersList() {
   const container = document.getElementById('quickWaitersList');
@@ -936,7 +1027,7 @@ function confirmWaiterLogin() {
   showToast(`Привет, ${currentWaiter}!`, '☕');
 }
 
-/* Экспорт в window */
+/* Экспорт в window для работы инлайновых onclick в HTML */
 window.zoomMap = zoomMap;
 window.resetMapView = resetMapView;
 window.switchAppTab = switchAppTab;
@@ -961,6 +1052,8 @@ window.openWelcomeModal = openWelcomeModal;
 window.closeModal = closeModal;
 window.selectQuickWaiter = selectQuickWaiter;
 window.confirmWaiterLogin = confirmWaiterLogin;
+window.sendCurrentOrderToCustomerScreen = sendCurrentOrderToCustomerScreen;
+window.clearCustomerScreenSync = clearCustomerScreenSync;
 
 window.selectCategory = (cat) => {
   currentCategory = cat;
@@ -1057,6 +1150,7 @@ window.completeAndFreeTable = () => {
   table.guests = 0;
   table.waiter = "";
   syncToCloud();
+  clearCustomerScreenSync();
   closeModal('cashierCheckoutModal');
   goToTablesView();
   showToast('Стол освобожден!', '💰');
@@ -1097,7 +1191,7 @@ window.saveCustomDishToOrder = () => {
   showToast(`+ ${name}`, '✨');
 };
 
-/* Инициализация */
+/* Инициализация приложения */
 window.addEventListener('DOMContentLoaded', () => {
   const savedName = localStorage.getItem('coffeeman_waiter_name');
   if (savedName) {
@@ -1121,6 +1215,7 @@ window.addEventListener('DOMContentLoaded', () => {
   } catch(e) {}
 
   initFirebaseAuth(() => {
+    // Слушаем изменения зала
     subscribeToCloudTables((remoteTables, remoteObstacles) => {
       if (remoteTables && remoteTables.length > 0) {
         tables = remoteTables;
@@ -1138,5 +1233,8 @@ window.addEventListener('DOMContentLoaded', () => {
       }
       applyMapTransform();
     });
+
+    // Слушаем статус оплаты с экрана гостя
+    listenToCustomerCheckout();
   });
 });
