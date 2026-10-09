@@ -217,7 +217,7 @@ export const FULL_MENU = [
   { id: 211, name: "Сэндвич на тостовом хлебе", price: 360, cat: "snacks", catTitle: "Закуски", desc: "Сыр, листья салата, томаты, куриное филе", modGroups: [] },
   { id: 212, name: "Сэндвич-клаб", price: 370, cat: "snacks", catTitle: "Закуски", desc: "С сыром, томатами и куриным филе", modGroups: [] },
   { id: 213, name: "Сэндвич на бейгле", price: 390, cat: "snacks", catTitle: "Закуски", desc: "Сыр, листья салата, соус, томаты, куриное филе/ветчина", modGroups: [] },
-  { id: 214, name: "Кесадилья", price: 460, cat: "snacks", catTitle: "Закуски", desc: "С курицей, ветчиной или помидорами на выбор", modGroups: ["quesadilla_filling"] },
+  { id: 214, name: "Кесадилья", price: 380, cat: "snacks", catTitle: "Закуски", desc: "С курицей, ветчиной или помидорами на выбор", modGroups: ["quesadilla_filling"] },
   { id: 215, name: "Наггетсы куриные", price: 390, cat: "snacks", catTitle: "Закуски", desc: "Хрустящие наггетсы. Соус на выбор", modGroups: ["sauces"] },
   { id: 216, name: "Брускетта с лососем", price: 390, cat: "snacks", catTitle: "Закуски", desc: "Лосось, творожный сыр, зерновой хлеб", modGroups: [] },
   { id: 217, name: "Брускетта с авокадо и с креветками", price: 480, cat: "snacks", catTitle: "Закуски", desc: "Тигровые креветки, авокадо, творожный сыр", modGroups: [] },
