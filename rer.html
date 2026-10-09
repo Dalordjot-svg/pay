@@ -2,37 +2,37 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>COFFEEMAN | Экран гостя</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>COFFEEMAN | Гостевой дисплей</title>
 
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- QRCode.js CDN -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
-  <!-- Google Fonts: Inter & Outfit -->
+  <!-- Google Fonts: Syne & Plus Jakarta Sans -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Outfit:wght@600;700;800;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Syne:wght@700;800;900&display=swap" rel="stylesheet">
 
   <script>
     tailwind.config = {
       theme: {
         extend: {
           fontFamily: {
-            sans: ['Inter', 'sans-serif'],
-            display: ['Outfit', 'sans-serif']
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+            display: ['Syne', 'sans-serif']
           },
           colors: {
-            autumn: {
-              50: '#fffaf4',
-              100: '#ffedd6',
-              200: '#ffd7ad',
-              300: '#ffb673',
-              400: '#ff8f33',
-              500: '#FF6B00',
-              600: '#e05300',
-              700: '#b33c00'
+            cafe: {
+              bg: '#F9F5F0',
+              panel: '#FFFFFF',
+              border: '#EDE4D8',
+              espresso: '#1E140F',
+              caramel: '#C86428',
+              cinnamon: '#E07A38',
+              foam: '#FAF6F1',
+              muted: '#8D7B70'
             }
           }
         }
@@ -42,180 +42,192 @@
 
   <style>
     body {
+      background-color: #F9F5F0;
+      color: #1E140F;
       touch-action: manipulation;
       user-select: none;
       -webkit-user-select: none;
-      background-color: #fff9f2;
       overflow: hidden;
     }
 
-    .bg-autumn-grid {
-      background-image: radial-gradient(rgba(255, 107, 0, 0.16) 1.5px, transparent 1.5px);
-      background-size: 24px 24px;
+    /* Фоновый амбиент кофейни */
+    .bg-grain {
+      background-image: radial-gradient(rgba(200, 100, 40, 0.12) 1.5px, transparent 1.5px);
+      background-size: 28px 28px;
     }
 
-    .glass-kiosk-panel {
-      background: rgba(255, 255, 255, 0.95);
-      backdrop-filter: blur(28px);
-      -webkit-backdrop-filter: blur(28px);
-      border: 2px solid rgba(255, 226, 196, 0.85);
-      box-shadow: 0 30px 60px -15px rgba(255, 107, 0, 0.12), 0 12px 30px -8px rgba(184, 59, 0, 0.06);
+    .kiosk-panel {
+      background: rgba(255, 255, 255, 0.92);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border: 1px solid rgba(237, 228, 216, 0.9);
+      box-shadow: 0 24px 60px -12px rgba(30, 20, 15, 0.06), 0 8px 20px -4px rgba(200, 100, 40, 0.04);
     }
 
-    .tip-pill {
-      background: #ffffff;
-      border: 2px solid #fee8d6;
-      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    /* Мягкий радар вокруг QR */
+    @keyframes radarPulse {
+      0% { box-shadow: 0 0 0 0 rgba(200, 100, 40, 0.35); }
+      70% { box-shadow: 0 0 0 20px rgba(200, 100, 40, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(200, 100, 40, 0); }
     }
-    .tip-pill:active {
-      transform: scale(0.95);
-    }
-    .tip-pill.active {
-      border-color: #FF6B00;
-      background: linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%);
-      transform: translateY(-2px) scale(1.02);
-      box-shadow: 0 0 0 3px rgba(255, 107, 0, 0.25);
+    .radar-qr {
+      animation: radarPulse 2.8s infinite cubic-bezier(0.24, 0, 0.38, 1);
     }
 
-    @keyframes steamRise {
-      0% { opacity: 0.2; transform: translateY(0) scaleX(1); }
-      50% { opacity: 0.7; transform: translateY(-8px) scaleX(1.3); }
-      100% { opacity: 0; transform: translateY(-16px) scaleX(1.6); }
+    /* Плавный скроллбар */
+    .tablet-scroll::-webkit-scrollbar {
+      width: 4px;
     }
-    .steam-line { animation: steamRise 2.4s ease-out infinite; }
-
-    /* Радар привлечения внимания вокруг QR */
-    @keyframes attractPulseRadar {
-      0% { box-shadow: 0 0 0 0 rgba(255, 107, 0, 0.6), 0 0 24px rgba(255, 107, 0, 0.25); }
-      50% { box-shadow: 0 0 0 18px rgba(255, 107, 0, 0), 0 0 40px rgba(255, 143, 51, 0.4); }
-      100% { box-shadow: 0 0 0 0 rgba(255, 107, 0, 0), 0 0 24px rgba(255, 107, 0, 0.25); }
-    }
-    .attract-target {
-      animation: attractPulseRadar 2.2s infinite ease-out;
-    }
-
-    .custom-scroll::-webkit-scrollbar { width: 5px; }
-    .custom-scroll::-webkit-scrollbar-thumb {
-      background: #ffb673;
+    .tablet-scroll::-webkit-scrollbar-thumb {
+      background: #EDE4D8;
       border-radius: 99px;
     }
+
+    /* Струя пара */
+    @keyframes riseSteam {
+      0% { opacity: 0.1; transform: translateY(0) scaleX(1); }
+      50% { opacity: 0.7; transform: translateY(-7px) scaleX(1.3); }
+      100% { opacity: 0; transform: translateY(-14px) scaleX(1.6); }
+    }
+    .steam-anim {
+      animation: riseSteam 2.5s ease-out infinite;
+    }
+
+    /* Тряска при ошибке пин-кода */
+    @keyframes pinErrorShake {
+      0%, 100% { transform: translateX(0); }
+      20%, 60% { transform: translateX(-8px); }
+      40%, 80% { transform: translateX(8px); }
+    }
+    .shake-pin { animation: pinErrorShake 0.35s ease-in-out; }
   </style>
 </head>
-<body class="w-full h-[100dvh] flex flex-col justify-between relative font-sans">
+<body class="w-full h-[100dvh] flex flex-col justify-between relative inset-0">
 
-  <!-- Фоновая матрица точек и свечение -->
-  <div class="fixed inset-0 bg-autumn-grid pointer-events-none z-0 opacity-80"></div>
-  <div class="fixed -top-32 -left-32 w-96 h-96 rounded-full bg-gradient-to-br from-amber-300/30 to-autumn-500/20 blur-3xl pointer-events-none z-0"></div>
-  <div class="fixed -bottom-32 -right-32 w-96 h-96 rounded-full bg-gradient-to-br from-autumn-400/25 to-amber-500/20 blur-3xl pointer-events-none z-0"></div>
-  <canvas id="autumnCanvas" class="fixed inset-0 pointer-events-none z-0"></canvas>
+  <!-- Фоновые мягкие пятна осеннего света -->
+  <div class="fixed inset-0 bg-grain pointer-events-none z-0"></div>
+  <div class="fixed -top-40 -left-40 w-[500px] h-[500px] rounded-full bg-gradient-to-br from-amber-200/30 to-cafe-cinnamon/15 blur-3xl pointer-events-none z-0"></div>
+  <div class="fixed -bottom-40 -right-40 w-[550px] h-[550px] rounded-full bg-gradient-to-tl from-cafe-caramel/20 to-orange-100/30 blur-3xl pointer-events-none z-0"></div>
 
   <!-- ШАПКА -->
-  <header class="relative z-10 w-full px-6 py-3.5 flex items-center justify-between border-b border-autumn-200/70 bg-white/80 backdrop-blur-xl shrink-0">
+  <header class="relative z-10 w-full px-8 py-4 flex items-center justify-between border-b border-cafe-border bg-white/75 backdrop-blur-xl shrink-0">
     <div class="flex items-center gap-3.5">
-      <div class="relative w-11 h-11 rounded-2xl bg-gradient-to-tr from-autumn-600 to-amber-400 text-white flex items-center justify-center font-black text-xl shadow-md shadow-autumn-500/30">
+      <div class="relative w-11 h-11 rounded-2xl bg-cafe-espresso text-white flex items-center justify-center font-display font-black text-xl shadow-md">
         ☕
-        <div class="absolute -top-2 left-1/2 -translate-x-1/2 flex gap-0.5">
-          <span class="w-0.5 h-2 bg-autumn-400 rounded-full steam-line" style="animation-delay: 0s;"></span>
-          <span class="w-0.5 h-3 bg-autumn-400 rounded-full steam-line" style="animation-delay: 0.6s;"></span>
-          <span class="w-0.5 h-2 bg-autumn-400 rounded-full steam-line" style="animation-delay: 1.2s;"></span>
+        <div class="absolute -top-2 left-1/2 -translate-x-1/2 flex gap-0.5 pointer-events-none">
+          <span class="w-0.5 h-2 bg-cafe-cinnamon rounded-full steam-anim" style="animation-delay: 0s;"></span>
+          <span class="w-0.5 h-3 bg-cafe-cinnamon rounded-full steam-anim" style="animation-delay: 0.6s;"></span>
         </div>
       </div>
       <div>
-        <h1 id="headerVenueName" class="font-display font-black text-neutral-900 text-lg leading-none">COFFEEMAN</h1>
-        <p id="headerStatusText" class="text-xs text-neutral-500 font-medium mt-1 flex items-center gap-1.5">
+        <h1 id="headerVenueTitle" class="font-display font-black text-cafe-espresso text-lg tracking-tight uppercase">COFFEEMAN</h1>
+        <p class="text-xs text-cafe-muted font-medium flex items-center gap-2">
           <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-          <span>Терминал готов к оплате по СБП</span>
+          <span>Бесконтактная оплата СБП</span>
         </p>
       </div>
     </div>
 
-    <div class="flex items-center gap-2">
-      <!-- Кнопка Закрыть (активна, когда на экране выведен заказ) -->
-      <button id="closeOrderScreenBtn" onclick="closeOrderView()" class="hidden px-4 py-2 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-extrabold text-xs transition active:scale-95 flex items-center gap-1.5 shadow-xs">
-        <span>✕</span>
-        <span>Закрыть чек</span>
+    <!-- Действия справа -->
+    <div class="flex items-center gap-2.5">
+      <!-- Кнопка "Закрыть чек" (видна только в режиме заказа) -->
+      <button id="closeOrderScreenBtn" onclick="closeOrderView()" class="hidden px-4 py-2.5 rounded-2xl bg-cafe-foam border border-cafe-border hover:bg-orange-50 font-bold text-xs text-cafe-espresso transition active:scale-95 flex items-center gap-2 shadow-xs">
+        <span class="text-cafe-caramel font-black">✕</span>
+        <span>Закрыть стол</span>
       </button>
 
-      <!-- Разворот на весь экран -->
-      <button onclick="toggleFullscreen()" class="p-2 rounded-2xl bg-white border border-neutral-200 text-neutral-600 hover:text-autumn-600 shadow-xs transition active:scale-95">
+      <!-- Разворот в полный экран -->
+      <button onclick="toggleFullscreen()" title="На весь экран" class="p-2.5 rounded-2xl bg-white border border-cafe-border text-cafe-muted hover:text-cafe-caramel shadow-xs transition active:scale-95">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4h-4"/>
+        </svg>
+      </button>
+
+      <!-- Кнопка настроек под PIN-кодом -->
+      <button onclick="openPinModal()" title="Настройки киоска" class="p-2.5 rounded-2xl bg-white border border-cafe-border text-cafe-muted hover:text-cafe-caramel shadow-xs transition active:scale-95">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
         </svg>
       </button>
     </div>
   </header>
 
   <!-- =========================================================
-       РЕЖИМ 1: АКТИВНЫЙ ЧЕК СТОЛА (Позиции + QR на чаевые)
+       РЕЖИМ 1: АКТИВНЫЙ ЧЕК СТОЛА (Крупные блюда слева + QR справа)
        ========================================================= -->
-  <main id="activeOrderView" class="hidden relative z-10 w-full max-w-6xl mx-auto px-4 py-3 flex-1 flex flex-col justify-center min-h-0">
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-stretch h-[82vh]">
+  <main id="activeOrderView" class="hidden relative z-10 w-full max-w-7xl mx-auto px-6 py-4 flex-1 flex flex-col justify-center min-h-0">
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch h-[82vh]">
       
-      <!-- Левая часть: Состав заказа -->
-      <div class="lg:col-span-7 glass-kiosk-panel rounded-3xl p-5 md:p-6 flex flex-col justify-between min-h-0 overflow-hidden">
+      <!-- ЛЕВАЯ КОЛОНКА: МЕНЮ С КРУПНЫМИ БУКВАМИ И ЦЕНАМИ -->
+      <div class="lg:col-span-8 kiosk-panel rounded-3xl p-7 flex flex-col justify-between min-h-0 overflow-hidden">
         <div>
-          <div class="flex items-center justify-between pb-3 border-b border-autumn-100 mb-2">
+          <!-- Шапка чека -->
+          <div class="flex items-end justify-between pb-4 border-b border-cafe-border mb-3">
             <div>
-              <span id="activeOrderTableTag" class="px-2.5 py-0.5 rounded-full bg-orange-100 text-orange-700 font-mono font-black text-xs">Стол №1</span>
-              <h2 class="text-xl md:text-2xl font-display font-black text-neutral-900 mt-1">Ваш заказ</h2>
+              <span id="activeOrderTableTag" class="px-3 py-1 rounded-full bg-cafe-cinnamon/15 text-cafe-caramel font-display font-black text-xs tracking-wider uppercase">
+                Стол №1
+              </span>
+              <h2 class="font-display font-black text-3xl md:text-4xl text-cafe-espresso mt-2 tracking-tight">
+                Ваш заказ
+              </h2>
             </div>
             <div class="text-right">
-              <span class="text-[11px] text-neutral-400 font-semibold block">Официант</span>
-              <span id="activeOrderWaiter" class="text-xs font-bold text-neutral-800">—</span>
+              <span class="text-xs text-cafe-muted uppercase font-bold tracking-wider block">Официант</span>
+              <span id="activeOrderWaiter" class="font-bold text-cafe-espresso text-sm">—</span>
             </div>
           </div>
 
-          <!-- Список позиций с ценой и названием -->
-          <div id="orderItemsList" class="overflow-y-auto max-h-[50vh] space-y-2 pr-1 custom-scroll">
-            <!-- Динамические строки -->
+          <!-- Список позиций: Крупный планшетный шрифт -->
+          <div id="orderItemsList" class="overflow-y-auto max-h-[50vh] pr-2 space-y-3 tablet-scroll">
+            <!-- Динамические строки блюд -->
           </div>
         </div>
 
-        <!-- Итоговая сумма к оплате по чеку -->
-        <div class="pt-3 border-t border-autumn-100 flex items-center justify-between bg-autumn-50/70 p-3.5 rounded-2xl mt-2">
+        <!-- Итог по чеку -->
+        <div class="pt-4 border-t border-cafe-border flex items-center justify-between bg-cafe-foam/80 p-4 rounded-2xl mt-3">
           <div>
-            <span class="text-[10px] font-extrabold text-neutral-400 uppercase tracking-wider block">СУММА ПО ЧЕКУ:</span>
-            <span id="orderItemsCountBadge" class="text-xs text-neutral-500 font-semibold">0 позиций</span>
+            <span class="text-[11px] font-extrabold text-cafe-muted uppercase tracking-widest block">ИТОГО К ОПЛАТЕ</span>
+            <span id="orderItemsCountBadge" class="text-xs text-cafe-muted font-semibold">0 блюд</span>
           </div>
-          <div class="font-display font-black text-2xl md:text-3xl text-neutral-900">
-            <span id="orderTotalSum">0</span> <span class="text-autumn-500">₽</span>
+          <div class="font-display font-black text-3xl md:text-4xl text-cafe-espresso">
+            <span id="orderTotalSum">0</span> <span class="text-cafe-caramel">₽</span>
           </div>
         </div>
       </div>
 
-      <!-- Правая часть: QR-код на чаевые бариста -->
-      <div class="lg:col-span-5 glass-kiosk-panel rounded-3xl p-5 md:p-6 flex flex-col items-center justify-between text-center relative">
+      <!-- ПРАВАЯ КОЛОНКА: ЧАЕВЫЕ + QR-КОД -->
+      <div class="lg:col-span-4 kiosk-panel rounded-3xl p-6 flex flex-col items-center justify-between text-center relative">
         <div class="w-full flex flex-col items-center">
-          <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-autumn-100 text-autumn-800 text-xs font-extrabold mb-3">
-            <span>🍁</span> <span>Оставить на чай бариста</span>
-          </div>
+          <span class="text-xs font-bold text-cafe-caramel bg-orange-50 px-3.5 py-1 rounded-full border border-orange-200 mb-3">
+            Оставить чаевые бариста
+          </span>
 
-          <!-- Кнопки выбора суммы чаевых к чеку -->
-          <div class="grid grid-cols-3 gap-2 w-full mb-3">
-            <button onclick="selectTipAmount(50)" class="tip-pill p-2 rounded-2xl font-display font-black text-sm text-neutral-800 active:scale-95" data-tip="50">50 ₽</button>
-            <button onclick="selectTipAmount(100)" class="tip-pill active p-2 rounded-2xl font-display font-black text-sm text-autumn-600 active:scale-95" data-tip="100">100 ₽</button>
-            <button onclick="selectTipAmount(200)" class="tip-pill p-2 rounded-2xl font-display font-black text-sm text-neutral-800 active:scale-95" data-tip="200">200 ₽</button>
+          <!-- Быстрые суммы чаевых -->
+          <div class="grid grid-cols-3 gap-2 w-full mb-4">
+            <button onclick="selectTipAmount(50)" class="tip-pill py-2.5 rounded-2xl bg-white border border-cafe-border font-display font-black text-sm text-cafe-espresso active:scale-95" data-tip="50">50 ₽</button>
+            <button onclick="selectTipAmount(100)" class="tip-pill active py-2.5 rounded-2xl bg-cafe-cinnamon text-white font-display font-black text-sm shadow-sm active:scale-95" data-tip="100">100 ₽</button>
+            <button onclick="selectTipAmount(200)" class="tip-pill py-2.5 rounded-2xl bg-white border border-cafe-border font-display font-black text-sm text-cafe-espresso active:scale-95" data-tip="200">200 ₽</button>
           </div>
 
           <!-- Рамка QR -->
-          <div class="relative p-3 bg-white rounded-3xl shadow-lg border-2 border-autumn-300 mb-2 attract-target">
-            <div id="orderQrBox" class="w-[170px] h-[170px] flex items-center justify-center rounded-xl bg-white"></div>
-            <!-- Значок СБП -->
+          <div class="relative p-4 bg-white rounded-3xl border-2 border-cafe-border radar-qr mb-3">
+            <div id="orderQrBox" class="w-[180px] h-[180px] flex items-center justify-center rounded-2xl bg-white"></div>
             <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
-              <div class="w-10 h-10 px-1 py-1 rounded-xl bg-white shadow-xl border border-autumn-200 flex items-center justify-center">
-                <span class="text-xs font-black text-neutral-800">СБП</span>
+              <div class="w-10 h-10 px-1 py-1 rounded-xl bg-white shadow-md border border-cafe-border flex items-center justify-center font-display font-black text-[11px] text-cafe-espresso">
+                СБП
               </div>
             </div>
           </div>
 
-          <div class="font-display font-black text-xl text-neutral-900 mb-0.5">
-            <span id="orderTipAmountDisplay">100</span> <span class="text-autumn-500">₽</span>
+          <div class="font-display font-black text-2xl text-cafe-espresso mb-1">
+            <span id="orderTipAmountDisplay">100</span> <span class="text-cafe-caramel">₽</span>
           </div>
-          <p class="text-[11px] text-neutral-500 font-semibold">Наведите камеру смартфона для перевода чаевых</p>
+          <p class="text-xs text-cafe-muted font-medium">Наведите камеру любого банка</p>
         </div>
 
-        <button onclick="closeOrderView()" class="w-full py-2.5 rounded-2xl bg-neutral-100 hover:bg-neutral-200 text-neutral-700 font-extrabold text-xs active:scale-95 transition">
-          Закрыть
+        <button onclick="closeOrderView()" class="w-full py-3 rounded-2xl bg-cafe-foam hover:bg-cafe-border/50 text-cafe-espresso font-bold text-xs active:scale-95 transition">
+          Закрыть экран
         </button>
       </div>
 
@@ -223,149 +235,261 @@
   </main>
 
   <!-- =========================================================
-       РЕЖИМ 2: ПАССИВНЫЙ РЕЖИМ (Attract Mode / Чаевые бариста)
+       РЕЖИМ 2: ПАССИВНЫЙ РЕЖИМ (Стильная заставка с чаевыми)
        ========================================================= -->
-  <main id="idleTipsView" class="relative z-10 w-full max-w-5xl mx-auto px-4 py-3 flex-1 flex flex-col justify-center min-h-0">
-    <div class="grid grid-cols-1 md:grid-cols-12 gap-5 items-stretch">
+  <main id="idleTipsView" class="relative z-10 w-full max-w-5xl mx-auto px-6 py-4 flex-1 flex flex-col justify-center min-h-0">
+    <div class="grid grid-cols-1 md:grid-cols-12 gap-6 items-stretch">
       
       <!-- Левый блок: выбор суммы -->
-      <div class="md:col-span-7 glass-kiosk-panel rounded-3xl p-6 md:p-8 flex flex-col justify-between">
+      <div class="md:col-span-7 kiosk-panel rounded-3xl p-8 md:p-10 flex flex-col justify-between">
         <div>
-          <div class="mb-5">
-            <span class="text-xs font-black text-autumn-600 uppercase tracking-wider bg-autumn-100 px-3 py-1 rounded-full border border-autumn-200">Экран благодарности</span>
-            <h2 class="text-2xl md:text-3xl font-display font-black text-neutral-900 mt-2">
-              Согрейте бариста чашечкой кофе 🧡
-            </h2>
-            <p class="text-xs md:text-sm text-neutral-500 mt-1">Выберите комфортную сумму чаевых по СБП</p>
-          </div>
+          <span class="text-[11px] font-black tracking-widest uppercase bg-cafe-cinnamon/15 text-cafe-caramel px-3 py-1 rounded-full">
+            Благодарность бариста
+          </span>
+          <h2 class="font-display font-black text-3xl md:text-5xl text-cafe-espresso mt-4 leading-tight tracking-tight">
+            Согрейте тёплым словом и чашечкой кофе
+          </h2>
+          <p class="text-sm text-cafe-muted mt-2 font-medium">
+            Выберите комфортную сумму поддержки за уютную атмосферу
+          </p>
 
-          <div class="grid grid-cols-3 gap-3 mb-5">
-            <button onclick="selectIdleTip(50)" class="tip-pill p-3.5 rounded-2xl flex flex-col items-center justify-center active:scale-95" data-idle-tip="50">
-              <span class="text-xl mb-0.5">🍪</span>
-              <span class="font-display font-black text-xl text-neutral-800">50 ₽</span>
-              <span class="text-[10px] text-neutral-400">К чаю</span>
+          <!-- Сетка карточек -->
+          <div class="grid grid-cols-3 gap-3.5 mt-8">
+            <button onclick="selectIdleTip(50)" class="idle-tip-pill p-4 rounded-3xl bg-white border border-cafe-border flex flex-col items-center justify-center transition active:scale-95" data-idle="50">
+              <span class="text-2xl mb-1">🍪</span>
+              <span class="font-display font-black text-2xl text-cafe-espresso">50 ₽</span>
+              <span class="text-[11px] text-cafe-muted mt-0.5">К чаю</span>
             </button>
-            <button onclick="selectIdleTip(100)" class="tip-pill active p-3.5 rounded-2xl flex flex-col items-center justify-center active:scale-95" data-idle-tip="100">
-              <span class="text-xl mb-0.5">☕</span>
-              <span class="font-display font-black text-xl text-autumn-600">100 ₽</span>
-              <span class="text-[10px] text-autumn-600 font-bold">На кофе</span>
+            <button onclick="selectIdleTip(100)" class="idle-tip-pill active p-4 rounded-3xl bg-cafe-cinnamon text-white flex flex-col items-center justify-center shadow-lg shadow-cafe-cinnamon/25 transition active:scale-95" data-idle="100">
+              <span class="text-2xl mb-1">☕</span>
+              <span class="font-display font-black text-2xl text-white">100 ₽</span>
+              <span class="text-[11px] text-orange-100 font-bold mt-0.5">На кофе</span>
             </button>
-            <button onclick="selectIdleTip(200)" class="tip-pill p-3.5 rounded-2xl flex flex-col items-center justify-center active:scale-95" data-idle-tip="200">
-              <span class="text-xl mb-0.5">🍰</span>
-              <span class="font-display font-black text-xl text-neutral-800">200 ₽</span>
-              <span class="text-[10px] text-neutral-400">Десерт</span>
+            <button onclick="selectIdleTip(200)" class="idle-tip-pill p-4 rounded-3xl bg-white border border-cafe-border flex flex-col items-center justify-center transition active:scale-95" data-idle="200">
+              <span class="text-2xl mb-1">🍰</span>
+              <span class="font-display font-black text-2xl text-cafe-espresso">200 ₽</span>
+              <span class="text-[11px] text-cafe-muted mt-0.5">Десерт</span>
             </button>
           </div>
         </div>
 
-        <div class="pt-4 border-t border-autumn-100 flex items-center justify-between">
+        <div class="pt-6 border-t border-cafe-border flex items-baseline justify-between mt-6">
           <div>
-            <span class="text-[10px] font-extrabold text-neutral-400 uppercase tracking-wider block">К ОПЛАТЕ:</span>
-            <div class="font-display font-black text-3xl text-neutral-900">
-              <span id="idleAmountDisplay">100</span> <span class="text-autumn-500">₽</span>
+            <span class="text-[10px] font-black uppercase tracking-wider text-cafe-muted block">Сумма к переводу:</span>
+            <div class="font-display font-black text-3xl text-cafe-espresso">
+              <span id="idleAmountDisplay">100</span> <span class="text-cafe-caramel">₽</span>
             </div>
           </div>
-          <div class="flex items-center gap-1.5 text-xs font-semibold text-neutral-500">
-            <span>⚡ СБП без комиссии</span>
-          </div>
+          <span class="text-xs text-cafe-muted font-semibold">⚡ СБП 0% комиссии</span>
         </div>
       </div>
 
       <!-- Правый блок: QR-код -->
-      <div class="md:col-span-5 glass-kiosk-panel rounded-3xl p-6 md:p-8 flex flex-col items-center justify-center text-center">
-        <div class="relative p-4 bg-white rounded-3xl shadow-xl border-2 border-autumn-300 mb-3 attract-target">
-          <div id="idleQrBox" class="w-[200px] h-[200px] flex items-center justify-center rounded-2xl bg-white"></div>
+      <div class="md:col-span-5 kiosk-panel rounded-3xl p-8 flex flex-col items-center justify-center text-center">
+        <div class="relative p-5 bg-white rounded-3xl border-2 border-cafe-border radar-qr mb-4">
+          <div id="idleQrBox" class="w-[210px] h-[210px] flex items-center justify-center rounded-2xl bg-white"></div>
           <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
-            <div class="w-12 h-12 px-1 py-1 rounded-2xl bg-white shadow-xl border border-autumn-200 flex items-center justify-center font-black text-xs">
+            <div class="w-12 h-12 rounded-2xl bg-white shadow-xl border border-cafe-border flex items-center justify-center font-display font-black text-xs text-cafe-espresso">
               СБП
             </div>
           </div>
         </div>
 
-        <div class="font-display font-black text-2xl text-neutral-900 mb-0.5">
-          <span id="idleQrAmountDisplay">100</span> <span class="text-autumn-500">₽</span>
+        <div class="font-display font-black text-2xl text-cafe-espresso mb-1">
+          <span id="idleQrAmountDisplay">100</span> <span class="text-cafe-caramel">₽</span>
         </div>
-        <p class="text-xs text-neutral-600 font-bold">Наведите камеру смартфона для оплаты</p>
+        <p class="text-xs text-cafe-muted font-medium">Отсканируйте камерой смартфона</p>
       </div>
 
     </div>
   </main>
 
   <!-- ФУТЕР -->
-  <footer class="relative z-10 w-full py-2.5 px-6 text-center flex items-center justify-between text-xs text-neutral-500 border-t border-autumn-200/60 bg-white/70 backdrop-blur-md shrink-0">
-    <div class="flex items-center gap-1.5 font-medium">
-      <span class="text-autumn-500">🍁</span>
-      <span>Спасибо за то, что выбираете нас!</span>
+  <footer class="relative z-10 w-full py-3 px-8 flex items-center justify-between text-xs text-cafe-muted border-t border-cafe-border bg-white/70 backdrop-blur-md shrink-0">
+    <div class="flex items-center gap-2">
+      <span class="text-cafe-caramel font-bold">🍁</span>
+      <span>С заботой о каждом зерне и каждой чашке</span>
     </div>
-    <div class="font-bold text-neutral-600">
-      COFFEEMAN • Терминал СБП
+    <div class="font-semibold text-cafe-espresso">
+      Система Быстрых Платежей
     </div>
   </footer>
 
-  <!-- СКРИПТ КЛИЕНТСКОГО ТЕРМИНАЛА -->
+  <!-- =========================================================
+       МОДАЛКА 1: ВВОД PIN-КОДА (Служебный доступ 0506)
+       ========================================================= -->
+  <div id="pinModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-md p-4">
+    <div class="bg-white rounded-3xl w-full max-w-xs p-6 shadow-2xl border border-cafe-border text-center relative">
+      <button onclick="closePinModal()" class="absolute top-4 right-4 p-1.5 text-cafe-muted hover:text-cafe-espresso">✕</button>
+
+      <div class="w-12 h-12 rounded-2xl bg-cafe-foam border border-cafe-border text-cafe-caramel flex items-center justify-center text-2xl mx-auto mb-3">
+        🔒
+      </div>
+      <h3 class="font-display font-black text-lg text-cafe-espresso">Панель управления</h3>
+      <p class="text-xs text-cafe-muted mb-5">Введите PIN-код для изменения параметров</p>
+
+      <!-- Индикаторы точек -->
+      <div id="pinDotsRow" class="flex items-center justify-center gap-3.5 mb-6">
+        <div class="pin-dot w-3.5 h-3.5 rounded-full border-2 border-cafe-border"></div>
+        <div class="pin-dot w-3.5 h-3.5 rounded-full border-2 border-cafe-border"></div>
+        <div class="pin-dot w-3.5 h-3.5 rounded-full border-2 border-cafe-border"></div>
+        <div class="pin-dot w-3.5 h-3.5 rounded-full border-2 border-cafe-border"></div>
+      </div>
+
+      <!-- Сенсорная клавиатура -->
+      <div class="grid grid-cols-3 gap-2">
+        <button onclick="pressPin('1')" class="py-3.5 rounded-2xl bg-cafe-foam hover:bg-orange-50 font-display font-black text-lg active:scale-95">1</button>
+        <button onclick="pressPin('2')" class="py-3.5 rounded-2xl bg-cafe-foam hover:bg-orange-50 font-display font-black text-lg active:scale-95">2</button>
+        <button onclick="pressPin('3')" class="py-3.5 rounded-2xl bg-cafe-foam hover:bg-orange-50 font-display font-black text-lg active:scale-95">3</button>
+        <button onclick="pressPin('4')" class="py-3.5 rounded-2xl bg-cafe-foam hover:bg-orange-50 font-display font-black text-lg active:scale-95">4</button>
+        <button onclick="pressPin('5')" class="py-3.5 rounded-2xl bg-cafe-foam hover:bg-orange-50 font-display font-black text-lg active:scale-95">5</button>
+        <button onclick="pressPin('6')" class="py-3.5 rounded-2xl bg-cafe-foam hover:bg-orange-50 font-display font-black text-lg active:scale-95">6</button>
+        <button onclick="pressPin('7')" class="py-3.5 rounded-2xl bg-cafe-foam hover:bg-orange-50 font-display font-black text-lg active:scale-95">7</button>
+        <button onclick="pressPin('8')" class="py-3.5 rounded-2xl bg-cafe-foam hover:bg-orange-50 font-display font-black text-lg active:scale-95">8</button>
+        <button onclick="pressPin('9')" class="py-3.5 rounded-2xl bg-cafe-foam hover:bg-orange-50 font-display font-black text-lg active:scale-95">9</button>
+        <button onclick="clearPin()" class="py-3.5 rounded-2xl bg-white border border-cafe-border font-bold text-xs text-cafe-muted active:scale-95">C</button>
+        <button onclick="pressPin('0')" class="py-3.5 rounded-2xl bg-cafe-foam hover:bg-orange-50 font-display font-black text-lg active:scale-95">0</button>
+        <button onclick="backspacePin()" class="py-3.5 rounded-2xl bg-white border border-cafe-border font-bold text-sm text-cafe-espresso active:scale-95">⌫</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================================
+       МОДАЛКА 2: НАСТРОЙКИ СЕТИ И ЮKASSA (Открывается по 0506)
+       ========================================================= -->
+  <div id="settingsModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-md p-4">
+    <div class="bg-white rounded-3xl w-full max-w-md p-6 shadow-2xl border border-cafe-border max-h-[90vh] overflow-y-auto tablet-scroll">
+      <div class="flex items-center justify-between pb-3 border-b border-cafe-border mb-4">
+        <h3 class="font-display font-black text-lg text-cafe-espresso flex items-center gap-2">
+          <span>⚙️</span> Настройки экрана
+        </h3>
+        <button onclick="closeSettingsModal()" class="p-1.5 rounded-lg text-cafe-muted hover:text-cafe-espresso">✕</button>
+      </div>
+
+      <div class="space-y-3.5 text-xs text-left">
+        <div>
+          <label class="block font-bold text-cafe-espresso mb-1">Название кофейни:</label>
+          <input type="text" id="cfgVenueName" class="w-full py-2.5 px-3 rounded-xl bg-cafe-foam border border-cafe-border outline-none focus:border-cafe-caramel">
+        </div>
+
+        <div>
+          <label class="block font-bold text-cafe-espresso mb-1">Cloudflare Worker URL:</label>
+          <input type="url" id="cfgWorkerUrl" placeholder="https://my-worker.workers.dev" class="w-full py-2.5 px-3 font-mono rounded-xl bg-cafe-foam border border-cafe-border outline-none focus:border-cafe-caramel">
+        </div>
+
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block font-bold text-cafe-espresso mb-1">Shop ID:</label>
+            <input type="text" id="cfgShopId" class="w-full py-2.5 px-3 font-mono rounded-xl bg-cafe-foam border border-cafe-border outline-none focus:border-cafe-caramel">
+          </div>
+          <div>
+            <label class="block font-bold text-cafe-espresso mb-1">Secret Key:</label>
+            <input type="password" id="cfgSecretKey" class="w-full py-2.5 px-3 font-mono rounded-xl bg-cafe-foam border border-cafe-border outline-none focus:border-cafe-caramel">
+          </div>
+        </div>
+
+        <button onclick="testWorkerConnection()" class="w-full py-2.5 rounded-xl bg-cafe-foam border border-cafe-border font-bold text-cafe-espresso hover:bg-orange-50 transition">
+          🔍 Проверить доступность воркера
+        </button>
+        <div id="cfgTestStatus" class="hidden p-2 rounded-xl text-center font-mono text-xs"></div>
+
+        <div class="pt-4 border-t border-cafe-border flex justify-end gap-2">
+          <button onclick="saveSettings()" class="px-5 py-2.5 rounded-xl bg-cafe-caramel text-white font-display font-black text-xs hover:bg-cafe-cinnamon transition shadow-sm">
+            Сохранить
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- СКРИПТ КЛИЕНТСКОГО ЭКРАНА -->
   <script type="module">
     import { subscribeToCustomerPayment, clearCustomerDisplay } from "./firebase.js";
 
+    const ADMIN_PIN = "0506";
+    const STORAGE_KEY = "coffeeman_customer_kiosk_v2";
+
+    let enteredPin = "";
     let currentTipAmount = 100;
     let currentIdleTipAmount = 100;
     let orderQrCodeInstance = null;
     let idleQrCodeInstance = null;
 
-    // Режим экрана
-    const activeOrderView = document.getElementById('activeOrderView');
-    const idleTipsView = document.getElementById('idleTipsView');
-    const closeOrderScreenBtn = document.getElementById('closeOrderScreenBtn');
+    // Конфигурация
+    const config = {
+      venue: localStorage.getItem(`${STORAGE_KEY}_venue`) || "COFFEEMAN",
+      workerUrl: localStorage.getItem(`${STORAGE_KEY}_worker`) || "",
+      shopId: localStorage.getItem(`${STORAGE_KEY}_shopId`) || "",
+      secretKey: localStorage.getItem(`${STORAGE_KEY}_secretKey`) || ""
+    };
 
-    // Элементы чека
-    const activeOrderTableTag = document.getElementById('activeOrderTableTag');
-    const activeOrderWaiter = document.getElementById('activeOrderWaiter');
-    const orderItemsList = document.getElementById('orderItemsList');
-    const orderItemsCountBadge = document.getElementById('orderItemsCountBadge');
-    const orderTotalSum = document.getElementById('orderTotalSum');
-    const orderTipAmountDisplay = document.getElementById('orderTipAmountDisplay');
-    const orderQrBox = document.getElementById('orderQrBox');
+    // DOM-элементы
+    const activeOrderView = document.getElementById("activeOrderView");
+    const idleTipsView = document.getElementById("idleTipsView");
+    const closeOrderScreenBtn = document.getElementById("closeOrderScreenBtn");
 
-    // Элементы пассивного режима
-    const idleQrBox = document.getElementById('idleQrBox');
-    const idleAmountDisplay = document.getElementById('idleAmountDisplay');
-    const idleQrAmountDisplay = document.getElementById('idleQrAmountDisplay');
+    const activeOrderTableTag = document.getElementById("activeOrderTableTag");
+    const activeOrderWaiter = document.getElementById("activeOrderWaiter");
+    const orderItemsList = document.getElementById("orderItemsList");
+    const orderItemsCountBadge = document.getElementById("orderItemsCountBadge");
+    const orderTotalSum = document.getElementById("orderTotalSum");
+    const orderTipAmountDisplay = document.getElementById("orderTipAmountDisplay");
+    const orderQrBox = document.getElementById("orderQrBox");
 
-    // 1. Подписка на Firebase: активный чек
+    const idleQrBox = document.getElementById("idleQrBox");
+    const idleAmountDisplay = document.getElementById("idleAmountDisplay");
+    const idleQrAmountDisplay = document.getElementById("idleQrAmountDisplay");
+    const headerVenueTitle = document.getElementById("headerVenueTitle");
+
+    // Инициализация названия
+    headerVenueTitle.textContent = config.venue;
+
+    // 1. Подписка на Firebase (узел active_checkout)
     subscribeToCustomerPayment((checkoutData) => {
-      if (checkoutData && checkoutData.status === 'pending_payment' && checkoutData.items && checkoutData.items.length > 0) {
+      if (checkoutData && checkoutData.status === "pending_payment" && checkoutData.items && checkoutData.items.length > 0) {
         showActiveOrder(checkoutData);
       } else {
         showIdleTips();
       }
     });
 
-    // Отрисовка состава заказа
+    // Отрисовка активного заказа
     function showActiveOrder(data) {
-      activeOrderView.classList.remove('hidden');
-      idleTipsView.classList.add('hidden');
-      closeOrderScreenBtn.classList.remove('hidden');
+      activeOrderView.classList.remove("hidden");
+      idleTipsView.classList.add("hidden");
+      closeOrderScreenBtn.classList.remove("hidden");
 
       activeOrderTableTag.textContent = data.tableName || `Стол ${data.tableId}`;
-      activeOrderWaiter.textContent = data.waiter || 'Бариста';
+      activeOrderWaiter.textContent = data.waiter || "Бариста";
       orderTotalSum.textContent = data.totalSum || 0;
 
-      const totalQty = data.items.reduce((s, it) => s + (it.qty || 1), 0);
-      orderItemsCountBadge.textContent = `${totalQty} шт. (${data.items.length} поз.)`;
+      const totalQty = data.items.reduce((sum, item) => sum + (item.qty || 1), 0);
+      orderItemsCountBadge.textContent = `${totalQty} шт. • ${data.items.length} поз.`;
 
-      // Генерация строк блюд (только название, количество, цена)
-      orderItemsList.innerHTML = '';
-      data.items.forEach(it => {
-        const row = document.createElement('div');
-        row.className = "p-2.5 rounded-2xl bg-white border border-autumn-200/80 shadow-2xs flex items-center justify-between";
+      // Генерация строк блюд с крупным акцидентным шрифтом
+      orderItemsList.innerHTML = "";
+      data.items.forEach((item) => {
+        const row = document.createElement("div");
+        row.className = "py-3 px-4 rounded-2xl bg-white border border-cafe-border flex items-center justify-between";
+
+        const modsText = item.modifiers && item.modifiers.length > 0 ? `<p class="text-[11px] text-cafe-caramel font-semibold mt-0.5 tracking-tight">+ ${item.modifiers.join(', ')}</p>` : "";
+        const commentText = item.comment ? `<p class="text-[11px] text-cafe-muted italic mt-0.5">💬 "${item.comment}"</p>` : "";
+
         row.innerHTML = `
-          <div class="min-w-0 pr-2">
-            <h4 class="font-extrabold text-sm text-neutral-900 leading-tight">${it.name}</h4>
-            ${it.modifiers && it.modifiers.length > 0 ? `<p class="text-[10px] text-autumn-600 font-mono mt-0.5">+ ${it.modifiers.join(', ')}</p>` : ''}
-            ${it.comment ? `<p class="text-[10px] text-neutral-400 italic">💬 "${it.comment}"</p>` : ''}
+          <div class="min-w-0 pr-3">
+            <h3 class="font-display font-black text-xl md:text-2xl text-cafe-espresso leading-snug tracking-tight">
+              ${item.name}
+            </h3>
+            ${modsText}
+            ${commentText}
           </div>
           <div class="text-right shrink-0">
-            <span class="font-display font-black text-sm text-neutral-900 block">${it.price * (it.qty || 1)} ₽</span>
-            <span class="text-[10px] text-neutral-400 font-bold">${it.qty || 1} × ${it.price} ₽</span>
+            <span class="font-display font-black text-xl md:text-2xl text-cafe-espresso block">
+              ${item.price * (item.qty || 1)} ₽
+            </span>
+            <span class="text-xs text-cafe-muted font-bold">
+              ${item.qty || 1} × ${item.price} ₽
+            </span>
           </div>
         `;
         orderItemsList.appendChild(row);
@@ -374,45 +498,44 @@
       renderOrderTipQr();
     }
 
-    // Возврат в пассивный режим
+    // Возврат в режим заставки
     function showIdleTips() {
-      activeOrderView.classList.add('hidden');
-      idleTipsView.classList.remove('hidden');
-      closeOrderScreenBtn.classList.add('hidden');
+      activeOrderView.classList.add("hidden");
+      idleTipsView.classList.remove("hidden");
+      closeOrderScreenBtn.classList.add("hidden");
       renderIdleTipQr();
     }
 
-    // Кнопка Закрыть
     window.closeOrderView = function() {
       clearCustomerDisplay().then(() => {
         showIdleTips();
       });
     };
 
-    // Выбор чаевых в активном чеке
+    // Выбор суммы в активном чеке
     window.selectTipAmount = function(amt) {
       currentTipAmount = amt;
-      document.querySelectorAll('[data-tip]').forEach(btn => {
+      document.querySelectorAll("[data-tip]").forEach(btn => {
         if (parseInt(btn.dataset.tip, 10) === amt) {
-          btn.className = "tip-pill active p-2 rounded-2xl font-display font-black text-sm text-autumn-600 active:scale-95";
+          btn.className = "tip-pill active py-2.5 rounded-2xl bg-cafe-cinnamon text-white font-display font-black text-sm shadow-sm active:scale-95";
         } else {
-          btn.className = "tip-pill p-2 rounded-2xl font-display font-black text-sm text-neutral-800 active:scale-95";
+          btn.className = "tip-pill py-2.5 rounded-2xl bg-white border border-cafe-border font-display font-black text-sm text-cafe-espresso active:scale-95";
         }
       });
       orderTipAmountDisplay.textContent = amt;
       renderOrderTipQr();
     };
 
-    // Выбор чаевых в пассивном режиме
+    // Выбор суммы в пассивном режиме
     window.selectIdleTip = function(amt) {
       currentIdleTipAmount = amt;
-      document.querySelectorAll('[data-idle-tip]').forEach(btn => {
-        if (parseInt(btn.dataset.idleTip, 10) === amt) {
-          btn.className = "tip-pill active p-3.5 rounded-2xl flex flex-col items-center justify-center active:scale-95";
-          btn.querySelector('span:nth-child(2)').className = "font-display font-black text-xl text-autumn-600";
+      document.querySelectorAll("[data-idle]").forEach(btn => {
+        if (parseInt(btn.dataset.idle, 10) === amt) {
+          btn.className = "idle-tip-pill active p-4 rounded-3xl bg-cafe-cinnamon text-white flex flex-col items-center justify-center shadow-lg shadow-cafe-cinnamon/25 transition active:scale-95";
+          btn.querySelector("span:nth-child(2)").className = "font-display font-black text-2xl text-white";
         } else {
-          btn.className = "tip-pill p-3.5 rounded-2xl flex flex-col items-center justify-center active:scale-95";
-          btn.querySelector('span:nth-child(2)').className = "font-display font-black text-xl text-neutral-800";
+          btn.className = "idle-tip-pill p-4 rounded-3xl bg-white border border-cafe-border flex flex-col items-center justify-center transition active:scale-95";
+          btn.querySelector("span:nth-child(2)").className = "font-display font-black text-2xl text-cafe-espresso";
         }
       });
       idleAmountDisplay.textContent = amt;
@@ -420,35 +543,151 @@
       renderIdleTipQr();
     };
 
-    // Отрисовка QR для чаевых
+    // Генерация QR-кода
     function renderOrderTipQr() {
-      orderQrBox.innerHTML = '';
-      // Ссылка СБП или тестовая платёжная ссылка
+      orderQrBox.innerHTML = "";
       const sbpPayLink = `https://qr.nspk.ru/AD100004ABCDE12345?type=02&bank=100000000005&sum=${currentTipAmount * 100}&cur=RUB`;
       new QRCode(orderQrBox, {
         text: sbpPayLink,
-        width: 170,
-        height: 170,
-        colorDark: "#1a1816",
-        colorLight: "#ffffff",
+        width: 180,
+        height: 180,
+        colorDark: "#1E140F",
+        colorLight: "#FFFFFF",
         correctLevel: QRCode.CorrectLevel.M
       });
     }
 
     function renderIdleTipQr() {
-      idleQrBox.innerHTML = '';
+      idleQrBox.innerHTML = "";
       const sbpPayLink = `https://qr.nspk.ru/AD100004ABCDE12345?type=02&bank=100000000005&sum=${currentIdleTipAmount * 100}&cur=RUB`;
       new QRCode(idleQrBox, {
         text: sbpPayLink,
-        width: 200,
-        height: 200,
-        colorDark: "#1a1816",
-        colorLight: "#ffffff",
+        width: 210,
+        height: 210,
+        colorDark: "#1E140F",
+        colorLight: "#FFFFFF",
         correctLevel: QRCode.CorrectLevel.M
       });
     }
 
-    // Полноэкранный режим
+    // PIN-КОД И НАСТРОЙКИ
+    const pinModal = document.getElementById("pinModal");
+    const settingsModal = document.getElementById("settingsModal");
+    const pinDots = document.querySelectorAll(".pin-dot");
+    const pinDotsRow = document.getElementById("pinDotsRow");
+
+    window.openPinModal = function() {
+      enteredPin = "";
+      updatePinDots();
+      pinModal.classList.remove("hidden");
+    };
+
+    window.closePinModal = function() {
+      pinModal.classList.add("hidden");
+    };
+
+    window.pressPin = function(num) {
+      if (enteredPin.length < 4) {
+        enteredPin += num;
+        updatePinDots();
+        if (enteredPin.length === 4) {
+          setTimeout(verifyPin, 100);
+        }
+      }
+    };
+
+    window.backspacePin = function() {
+      if (enteredPin.length > 0) {
+        enteredPin = enteredPin.slice(0, -1);
+        updatePinDots();
+      }
+    };
+
+    window.clearPin = function() {
+      enteredPin = "";
+      updatePinDots();
+    };
+
+    function updatePinDots() {
+      pinDots.forEach((dot, idx) => {
+        if (idx < enteredPin.length) {
+          dot.className = "pin-dot w-3.5 h-3.5 rounded-full bg-cafe-caramel border-2 border-cafe-caramel scale-110 transition-all";
+        } else {
+          dot.className = "pin-dot w-3.5 h-3.5 rounded-full border-2 border-cafe-border transition-all";
+        }
+      });
+    }
+
+    function verifyPin() {
+      if (enteredPin === ADMIN_PIN) {
+        pinModal.classList.add("hidden");
+        openSettingsModal();
+      } else {
+        pinDotsRow.classList.add("shake-pin");
+        pinDots.forEach(dot => dot.className = "pin-dot w-3.5 h-3.5 rounded-full bg-rose-500 border-2 border-rose-500");
+        setTimeout(() => {
+          pinDotsRow.classList.remove("shake-pin");
+          enteredPin = "";
+          updatePinDots();
+        }, 400);
+      }
+    }
+
+    function openSettingsModal() {
+      document.getElementById("cfgVenueName").value = config.venue;
+      document.getElementById("cfgWorkerUrl").value = config.workerUrl;
+      document.getElementById("cfgShopId").value = config.shopId;
+      document.getElementById("cfgSecretKey").value = config.secretKey;
+      settingsModal.classList.remove("hidden");
+    }
+
+    window.closeSettingsModal = function() {
+      settingsModal.classList.add("hidden");
+    };
+
+    window.saveSettings = function() {
+      config.venue = document.getElementById("cfgVenueName").value.trim() || "COFFEEMAN";
+      config.workerUrl = document.getElementById("cfgWorkerUrl").value.trim();
+      config.shopId = document.getElementById("cfgShopId").value.trim();
+      config.secretKey = document.getElementById("cfgSecretKey").value.trim();
+
+      localStorage.setItem(`${STORAGE_KEY}_venue`, config.venue);
+      localStorage.setItem(`${STORAGE_KEY}_worker`, config.workerUrl);
+      localStorage.setItem(`${STORAGE_KEY}_shopId`, config.shopId);
+      localStorage.setItem(`${STORAGE_KEY}_secretKey`, config.secretKey);
+
+      headerVenueTitle.textContent = config.venue;
+      closeSettingsModal();
+      renderIdleTipQr();
+    };
+
+    window.testWorkerConnection = async function() {
+      const url = document.getElementById("cfgWorkerUrl").value.trim().replace(/\/+$/, "");
+      const statusBox = document.getElementById("cfgTestStatus");
+      if (!url) {
+        statusBox.className = "p-2 rounded-xl text-center font-mono text-xs bg-rose-50 text-rose-600 block";
+        statusBox.textContent = "Укажите URL воркера";
+        return;
+      }
+
+      statusBox.className = "p-2 rounded-xl text-center font-mono text-xs bg-cafe-foam text-cafe-espresso block";
+      statusBox.textContent = "Проверяем...";
+
+      try {
+        const res = await fetch(url);
+        if (res.ok) {
+          statusBox.className = "p-2 rounded-xl text-center font-mono text-xs bg-emerald-50 text-emerald-700 block";
+          statusBox.textContent = "✅ Воркер доступен (HTTP 200)";
+        } else {
+          statusBox.className = "p-2 rounded-xl text-center font-mono text-xs bg-amber-50 text-amber-700 block";
+          statusBox.textContent = `⚠️ Ответ: HTTP ${res.status}`;
+        }
+      } catch (err) {
+        statusBox.className = "p-2 rounded-xl text-center font-mono text-xs bg-rose-50 text-rose-600 block";
+        statusBox.textContent = `❌ Ошибка: ${err.message}`;
+      }
+    };
+
     window.toggleFullscreen = function() {
       if (!document.fullscreenElement) {
         document.documentElement.requestFullscreen().catch(() => {});
@@ -457,38 +696,6 @@
       }
     };
 
-    // Легкая фоновая анимация осенних частиц
-    const canvas = document.getElementById('autumnCanvas');
-    const ctx = canvas.getContext('2d');
-    let width = (canvas.width = window.innerWidth);
-    let height = (canvas.height = window.innerHeight);
-
-    window.addEventListener('resize', () => {
-      width = canvas.width = window.innerWidth;
-      height = canvas.height = window.innerHeight;
-    });
-
-    const particles = Array.from({ length: 20 }, () => ({
-      x: Math.random() * width,
-      y: Math.random() * height,
-      size: Math.random() * 8 + 6,
-      speedY: Math.random() * 0.6 + 0.3,
-      color: ['rgba(255, 107, 0, 0.25)', 'rgba(245, 158, 11, 0.25)', 'rgba(234, 88, 12, 0.2)'][Math.floor(Math.random() * 3)]
-    }));
-
-    function animate() {
-      ctx.clearRect(0, 0, width, height);
-      particles.forEach(p => {
-        p.y += p.speedY;
-        if (p.y > height + 10) { p.y = -10; p.x = Math.random() * width; }
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-        ctx.fillStyle = p.color;
-        ctx.fill();
-      });
-      requestAnimationFrame(animate);
-    }
-    animate();
     renderIdleTipQr();
   </script>
 </body>
