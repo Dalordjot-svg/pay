@@ -10,7 +10,7 @@
   <!-- QRCode.js -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
-  <!-- Шрифты: Plus Jakarta Sans (текст) + Inter (цифры) -->
+  <!-- Шрифты -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Inter:wght@600;700;800;900&display=swap" rel="stylesheet">
@@ -25,14 +25,14 @@
           },
           colors: {
             earth: {
-              base: '#2C3E35',      /* Глубокий хвойно-зелёный фон */
-              surface: '#364B41',   /* Приподнятые слои */
-              card: '#F4EFEB',      /* Молочно-глиняные плашки */
-              cardDark: '#202D26',  /* Утопленные подложки */
-              terracotta: '#A65B32',/* Теплый кирпично-осенний */
-              sand: '#D8C7B5',      /* Песочный акцент */
-              leaf: '#5B7A68',      /* Шалфей */
-              bark: '#3B2B23'       /* Кофейная кора */
+              base: '#2C3E35',
+              surface: '#364B41',
+              card: '#F4EFEB',
+              cardDark: '#202D26',
+              terracotta: '#A65B32',
+              sand: '#D8C7B5',
+              leaf: '#5B7A68',
+              bark: '#3B2B23'
             }
           }
         }
@@ -41,10 +41,6 @@
   </script>
 
   <style>
-    :root {
-      --light-angle: 135deg;
-    }
-
     body {
       background: radial-gradient(circle at 20% 20%, #34483E 0%, #22312A 100%);
       color: #1F2823;
@@ -54,7 +50,6 @@
       overflow: hidden;
     }
 
-    /* Фоновый песчано-волновой рельеф */
     .bg-relief {
       background-image: 
         radial-gradient(ellipse at 80% 10%, rgba(166, 91, 50, 0.18) 0%, transparent 50%),
@@ -63,11 +58,10 @@
       background-size: 100% 100%, 100% 100%, 32px 32px;
     }
 
-    /* ЭФФЕКТ ГЛУБОКОЙ БУМАЖНОЙ ПЛАШКИ (Paper Depth) */
+    /* Paper Depth кард */
     .depth-card {
       background: linear-gradient(145deg, #F9F6F2 0%, #EFE9E2 100%);
       border-radius: 32px;
-      /* Двойная тень: контактный контур + мягкое парение */
       box-shadow: 
         inset 1px 1.5px 0px rgba(255, 255, 255, 0.9),
         inset -1px -1.5px 2px rgba(31, 40, 35, 0.06),
@@ -75,7 +69,6 @@
         0 24px 48px -12px rgba(10, 18, 14, 0.45);
     }
 
-    /* ВДАВЛЕННЫЙ ТАКТИЛЬНЫЙ КОНТЕЙНЕР (Inverted/Groove) */
     .depth-sunken {
       background: linear-gradient(145deg, #E6DFD6 0%, #EDE7E0 100%);
       border-radius: 24px;
@@ -85,7 +78,6 @@
         0 1px 0 rgba(255, 255, 255, 0.8);
     }
 
-    /* ВЫПУКЛАЯ 3D КНОПКА (Neumorphic Pillow) */
     .depth-btn {
       background: linear-gradient(145deg, #FFFFFF 0%, #ECE5DC 100%);
       border-radius: 20px;
@@ -102,7 +94,6 @@
         0 2px 4px rgba(31, 40, 35, 0.1);
     }
 
-    /* АКТИВНОЕ СОСТОЯНИЕ (ТЕРРАКОТОВЫЙ 3D ОБЪЕМ) */
     .depth-btn-active {
       background: linear-gradient(145deg, #B86739 0%, #944D25 100%) !important;
       color: #FFFFFF !important;
@@ -113,15 +104,12 @@
       transform: translateY(-1px);
     }
 
-    /* СТИЛЬНЫЙ СКРОЛЛБАР */
     .tablet-scroll::-webkit-scrollbar { width: 5px; }
-    .tablet-scroll::-webkit-scrollbar-track { background: transparent; }
     .tablet-scroll::-webkit-scrollbar-thumb {
       background: #D8C7B5;
       border-radius: 99px;
     }
 
-    /* МЯГКИЙ РАДАР ВОКРУГ QR */
     @keyframes deepRadar {
       0% { box-shadow: 0 0 0 0 rgba(166, 91, 50, 0.35); }
       70% { box-shadow: 0 0 0 18px rgba(166, 91, 50, 0); }
@@ -130,14 +118,29 @@
     .qr-radar {
       animation: deepRadar 2.6s infinite cubic-bezier(0.24, 0, 0.38, 1);
     }
+
+    /* Анимация точек загрузки */
+    @keyframes dotPulse {
+      0%, 100% { transform: scale(0.6); opacity: 0.3; }
+      50% { transform: scale(1.1); opacity: 1; }
+    }
+    .loading-dot-1 { animation: dotPulse 1.2s infinite ease-in-out; }
+    .loading-dot-2 { animation: dotPulse 1.2s infinite ease-in-out 0.2s; }
+    .loading-dot-3 { animation: dotPulse 1.2s infinite ease-in-out 0.4s; }
+
+    @keyframes shakePin {
+      0%, 100% { transform: translateX(0); }
+      20%, 60% { transform: translateX(-8px); }
+      40%, 80% { transform: translateX(8px); }
+    }
+    .shake-pin { animation: shakePin 0.35s ease-in-out; }
   </style>
 </head>
 <body class="w-full h-[100dvh] flex flex-col justify-between relative inset-0 font-sans">
 
-  <!-- Фоновые рельефные волны и амбиент -->
   <div class="fixed inset-0 bg-relief pointer-events-none z-0"></div>
 
-  <!-- ШАПКА КИОСКА -->
+  <!-- ШАПКА -->
   <header class="relative z-10 w-full max-w-6xl mx-auto px-6 py-4 flex items-center justify-between shrink-0">
     <div class="flex items-center gap-3.5">
       <div class="w-11 h-11 rounded-2xl bg-gradient-to-br from-earth-surface to-earth-cardDark text-earth-sand flex items-center justify-center font-black text-xl shadow-md border border-white/10">
@@ -146,27 +149,24 @@
       <div>
         <h1 id="headerVenueTitle" class="font-extrabold text-white text-base tracking-wider uppercase drop-shadow-sm">COFFEEMAN</h1>
         <p class="text-xs text-earth-sand/80 font-medium flex items-center gap-1.5">
-          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-          <span>Бесконтактный терминал СБП</span>
+          <span id="gatewayStatusDot" class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+          <span id="gatewayStatusText">Шлюз СБП ЮKassa активен</span>
         </p>
       </div>
     </div>
 
     <div class="flex items-center gap-2.5">
-      <!-- Кнопка "Закрыть чек" -->
       <button id="closeOrderScreenBtn" onclick="closeOrderView()" class="hidden px-4 py-2.5 rounded-2xl depth-btn font-extrabold text-xs text-earth-bark transition active:scale-95 flex items-center gap-2">
         <span class="text-earth-terracotta font-black">✕</span>
         <span>Закрыть стол</span>
       </button>
 
-      <!-- Разворот на полный экран -->
       <button onclick="toggleFullscreen()" class="p-2.5 rounded-2xl depth-btn text-earth-bark/80 hover:text-earth-terracotta active:scale-95">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4h-4"/>
         </svg>
       </button>
 
-      <!-- Настройки под PIN (0506) -->
       <button onclick="openPinModal()" class="p-2.5 rounded-2xl depth-btn text-earth-bark/80 hover:text-earth-terracotta active:scale-95">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
@@ -177,12 +177,12 @@
   </header>
 
   <!-- =========================================================
-       ШАГ 1: АКТИВНЫЙ ЧЕК СТОЛА (Крупное меню слева + QR справа)
+       ШАГ 1: АКТИВНЫЙ ЧЕК СТОЛА
        ========================================================= -->
   <main id="activeOrderView" class="hidden relative z-10 w-full max-w-6xl mx-auto px-6 py-2 flex-1 flex flex-col justify-center min-h-0">
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch h-[78vh]">
       
-      <!-- ЛЕВАЯ КОЛОНКА: МЕНЮ С ТАКТИЛЬНЫМИ СТРОКАМИ И КРУПНЫМ ШРИФТОМ -->
+      <!-- Меню слева с крупным текстом -->
       <div class="lg:col-span-7 depth-card p-7 flex flex-col justify-between min-h-0 overflow-hidden">
         <div>
           <div class="flex items-center justify-between pb-3.5 border-b border-earth-sand/40 mb-3.5">
@@ -198,11 +198,9 @@
             </div>
           </div>
 
-          <!-- Список позиций -->
           <div id="orderItemsList" class="overflow-y-auto max-h-[49vh] pr-2 space-y-3 tablet-scroll"></div>
         </div>
 
-        <!-- Итог -->
         <div class="pt-3.5 border-t border-earth-sand/40 flex items-center justify-between depth-sunken p-4 mt-2">
           <div>
             <span class="text-[10px] font-black text-earth-leaf uppercase tracking-widest block">ИТОГО ПО ЧЕКУ:</span>
@@ -214,17 +212,38 @@
         </div>
       </div>
 
-      <!-- ПРАВАЯ КОЛОНКА: СТАНДАРТНЫЙ QR (100 ₽) + КНОПКА «ОСТАВИТЬ ЧАЕВЫЕ» -->
+      <!-- QR справа со статусами загрузки и ошибки -->
       <div class="lg:col-span-5 depth-card p-7 flex flex-col items-center justify-between text-center">
         <div class="w-full flex flex-col items-center">
           <span class="text-xs font-extrabold text-earth-terracotta bg-earth-terracotta/10 px-3.5 py-1.5 rounded-full mb-3.5">
             Быстрая оплата СБП
           </span>
 
-          <!-- Рамка QR -->
-          <div class="relative p-4 bg-white rounded-3xl depth-sunken qr-radar mb-3">
-            <div id="orderDefaultQrBox" class="w-[180px] h-[180px] flex items-center justify-center rounded-2xl bg-white"></div>
-            <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+          <!-- Контейнер QR / Загрузки / Ошибки -->
+          <div class="relative p-4 bg-white rounded-3xl depth-sunken qr-radar mb-3 w-[220px] h-[220px] flex items-center justify-center">
+            
+            <!-- Состояние 1: QR -->
+            <div id="orderDefaultQrBox" class="w-full h-full flex items-center justify-center"></div>
+
+            <!-- Состояние 2: Загрузка (3 точки) -->
+            <div id="orderDefaultLoading" class="hidden flex flex-col items-center justify-center gap-2">
+              <div class="flex items-center gap-2">
+                <span class="w-3.5 h-3.5 rounded-full bg-earth-terracotta loading-dot-1"></span>
+                <span class="w-3.5 h-3.5 rounded-full bg-earth-terracotta loading-dot-2"></span>
+                <span class="w-3.5 h-3.5 rounded-full bg-earth-terracotta loading-dot-3"></span>
+              </div>
+              <span class="text-[11px] font-bold text-earth-leaf mt-2">Формируем СБП...</span>
+            </div>
+
+            <!-- Состояние 3: Ошибка -->
+            <div id="orderDefaultError" class="hidden flex flex-col items-center justify-center p-2 text-center">
+              <span class="text-3xl mb-1">⚠️</span>
+              <span class="text-xs font-extrabold text-rose-700 leading-tight">Временно не работает</span>
+              <span class="text-[9px] text-stone-400 mt-1">Сбой связи с сервером</span>
+              <button onclick="requestOrderDefaultQr(100)" class="mt-2 px-3 py-1 rounded-xl bg-earth-sand/40 text-[10px] font-bold text-earth-bark active:scale-95">Повторить</button>
+            </div>
+
+            <div id="orderSbpLogoOverlay" class="absolute inset-0 flex items-center justify-center pointer-events-none hidden">
               <div class="w-11 h-11 rounded-2xl bg-white shadow-md border border-earth-sand/50 flex items-center justify-center font-black text-xs text-earth-bark">
                 СБП
               </div>
@@ -232,12 +251,11 @@
           </div>
 
           <div class="font-mono font-black text-3xl text-earth-bark mb-0.5">
-            <span id="orderDefaultAmount">100</span> <span class="text-earth-terracotta">₽</span>
+            <span id="orderDefaultAmount">100</span> <span class="text-earth-terracotta font-sans">₽</span>
           </div>
-          <p class="text-xs text-earth-leaf font-bold">Наведите камеру смартфона для оплаты</p>
+          <p class="text-xs text-earth-leaf font-bold">Наведите камеру любого банка</p>
         </div>
 
-        <!-- Кнопки перехода -->
         <div class="w-full space-y-2.5 mt-4">
           <button onclick="goToStaffSelectionScreen()" class="w-full py-4 rounded-2xl depth-btn depth-btn-active font-extrabold text-sm flex items-center justify-center gap-2 active:scale-95">
             <span class="text-base">🧡</span>
@@ -254,7 +272,7 @@
   </main>
 
   <!-- =========================================================
-       ШАГ 2: ВЫБОР КОМУ ОСТАВИТЬ (БАРИСТА ИЛИ ОФИЦИАНТ)
+       ШАГ 2: ВЫБОР КОМУ ОСТАВИТЬ (БАРИСТА / ОФИЦИАНТ)
        ========================================================= -->
   <main id="staffSelectionView" class="hidden relative z-10 w-full max-w-4xl mx-auto px-6 py-4 flex-1 flex flex-col justify-center min-h-0">
     <div class="depth-card p-8 md:p-12 text-center max-w-2xl mx-auto w-full">
@@ -265,18 +283,16 @@
         Кому направить чаевые?
       </h2>
       <p class="text-sm text-earth-leaf mb-8 font-semibold">
-        Выберите, чью заботу хотите отметить
+        Выберите, кого хотите отблагодарить
       </p>
 
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
-        <!-- Бариста -->
         <button onclick="selectStaffRecipient('barista')" class="p-6 rounded-3xl depth-btn flex flex-col items-center justify-center gap-2 group active:scale-95">
           <span class="text-4xl group-hover:scale-110 transition-transform">☕</span>
           <span class="font-extrabold text-xl text-earth-bark">Баристе</span>
           <span class="text-xs text-earth-leaf font-medium">За вкусный кофе и атмосферу</span>
         </button>
 
-        <!-- Официант -->
         <button onclick="selectStaffRecipient('waiter')" class="p-6 rounded-3xl depth-btn flex flex-col items-center justify-center gap-2 group active:scale-95">
           <span class="text-4xl group-hover:scale-110 transition-transform">🍽️</span>
           <span class="font-extrabold text-xl text-earth-bark">Официанту</span>
@@ -300,7 +316,7 @@
       </span>
 
       <div class="my-6">
-        <span class="text-[11px] font-black text-earth-leaf uppercase tracking-widest block mb-1">РАСЧЕТНАЯ СУММА:</span>
+        <span class="text-[11px] font-black text-earth-leaf uppercase tracking-widest block mb-1">СУММА ЧАЕВЫХ:</span>
         <div class="font-mono font-black text-5xl md:text-6xl text-earth-bark">
           <span id="calculatedTipAmount">100</span> <span class="text-earth-terracotta font-sans">₽</span>
         </div>
@@ -309,25 +325,16 @@
         </p>
       </div>
 
-      <!-- 4 тактильные кнопки процентов -->
       <div class="grid grid-cols-4 gap-3 mb-8">
-        <button onclick="applyTipPercent(5)" class="percent-btn p-4 rounded-2xl depth-btn font-mono font-black text-lg text-earth-bark active:scale-95" data-pct="5">
-          5%
-        </button>
-        <button onclick="applyTipPercent(10)" class="percent-btn depth-btn-active p-4 rounded-2xl depth-btn font-mono font-black text-lg active:scale-95" data-pct="10">
-          10%
-        </button>
-        <button onclick="applyTipPercent(15)" class="percent-btn p-4 rounded-2xl depth-btn font-mono font-black text-lg text-earth-bark active:scale-95" data-pct="15">
-          15%
-        </button>
-        <button onclick="applyTipPercent(20)" class="percent-btn p-4 rounded-2xl depth-btn font-mono font-black text-lg text-earth-bark active:scale-95" data-pct="20">
-          20%
-        </button>
+        <button onclick="applyTipPercent(5)" class="percent-btn p-4 rounded-2xl depth-btn font-mono font-black text-lg text-earth-bark active:scale-95" data-pct="5">5%</button>
+        <button onclick="applyTipPercent(10)" class="percent-btn depth-btn-active p-4 rounded-2xl depth-btn font-mono font-black text-lg active:scale-95" data-pct="10">10%</button>
+        <button onclick="applyTipPercent(15)" class="percent-btn p-4 rounded-2xl depth-btn font-mono font-black text-lg text-earth-bark active:scale-95" data-pct="15">15%</button>
+        <button onclick="applyTipPercent(20)" class="percent-btn p-4 rounded-2xl depth-btn font-mono font-black text-lg text-earth-bark active:scale-95" data-pct="20">20%</button>
       </div>
 
       <div class="space-y-3">
         <button onclick="goToFinalPaymentQr()" class="w-full py-4 rounded-2xl depth-btn depth-btn-active font-extrabold text-base flex items-center justify-center gap-2 active:scale-95">
-          <span>Сформировать QR на оплату</span>
+          <span>Перейти к оплате</span>
           <span>→</span>
         </button>
 
@@ -339,7 +346,7 @@
   </main>
 
   <!-- =========================================================
-       ШАГ 4: ФИНАЛЬНЫЙ СБП QR ЧАЕВЫХ
+       ШАГ 4: ФИНАЛЬНЫЙ QR ЧАЕВЫХ
        ========================================================= -->
   <main id="finalQrView" class="hidden relative z-10 w-full max-w-4xl mx-auto px-6 py-4 flex-1 flex flex-col justify-center min-h-0">
     <div class="depth-card p-8 text-center max-w-md mx-auto w-full flex flex-col items-center">
@@ -347,9 +354,26 @@
         Оплата чаевых СБП
       </span>
 
-      <div class="relative p-5 bg-white rounded-3xl depth-sunken qr-radar mb-4">
-        <div id="finalTipQrBox" class="w-[210px] h-[210px] flex items-center justify-center rounded-2xl bg-white"></div>
-        <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+      <div class="relative p-5 bg-white rounded-3xl depth-sunken qr-radar mb-4 w-[230px] h-[230px] flex items-center justify-center">
+        <div id="finalTipQrBox" class="w-full h-full flex items-center justify-center"></div>
+
+        <div id="finalTipLoading" class="hidden flex flex-col items-center justify-center gap-2">
+          <div class="flex items-center gap-2">
+            <span class="w-3.5 h-3.5 rounded-full bg-earth-terracotta loading-dot-1"></span>
+            <span class="w-3.5 h-3.5 rounded-full bg-earth-terracotta loading-dot-2"></span>
+            <span class="w-3.5 h-3.5 rounded-full bg-earth-terracotta loading-dot-3"></span>
+          </div>
+          <span class="text-[11px] font-bold text-earth-leaf mt-2">Запрос в ЮKassa...</span>
+        </div>
+
+        <div id="finalTipError" class="hidden flex flex-col items-center justify-center p-2 text-center">
+          <span class="text-3xl mb-1">⚠️</span>
+          <span class="text-xs font-extrabold text-rose-700 leading-tight">Временно не работает</span>
+          <span class="text-[9px] text-stone-400 mt-1">Попробуйте чуть позже</span>
+          <button onclick="renderFinalTipQr(finalTipAmount)" class="mt-2 px-3 py-1 rounded-xl bg-earth-sand/40 text-[10px] font-bold text-earth-bark active:scale-95">Повторить</button>
+        </div>
+
+        <div id="finalSbpLogoOverlay" class="absolute inset-0 flex items-center justify-center pointer-events-none hidden">
           <div class="w-12 h-12 rounded-2xl bg-white shadow-md border border-earth-sand/50 flex items-center justify-center font-black text-xs text-earth-bark">
             СБП
           </div>
@@ -370,7 +394,7 @@
   </main>
 
   <!-- =========================================================
-       ПАССИВНЫЙ РЕЖИМ (ГЛУБОКАЯ ЗАСТАВКА КОГДА СТОЛ НЕ ВЫБРАН)
+       ПАССИВНЫЙ РЕЖИМ (ЗАСТАВКА)
        ========================================================= -->
   <main id="idleTipsView" class="relative z-10 w-full max-w-5xl mx-auto px-6 py-4 flex-1 flex flex-col justify-center min-h-0">
     <div class="grid grid-cols-1 md:grid-cols-12 gap-6 items-stretch">
@@ -418,9 +442,26 @@
       </div>
 
       <div class="md:col-span-5 depth-card p-8 flex flex-col items-center justify-center text-center">
-        <div class="relative p-5 bg-white rounded-3xl depth-sunken qr-radar mb-4">
-          <div id="idleQrBox" class="w-[200px] h-[200px] flex items-center justify-center rounded-2xl bg-white"></div>
-          <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+        <div class="relative p-5 bg-white rounded-3xl depth-sunken qr-radar mb-4 w-[230px] h-[230px] flex items-center justify-center">
+          <div id="idleQrBox" class="w-full h-full flex items-center justify-center"></div>
+
+          <div id="idleLoading" class="hidden flex flex-col items-center justify-center gap-2">
+            <div class="flex items-center gap-2">
+              <span class="w-3.5 h-3.5 rounded-full bg-earth-terracotta loading-dot-1"></span>
+              <span class="w-3.5 h-3.5 rounded-full bg-earth-terracotta loading-dot-2"></span>
+              <span class="w-3.5 h-3.5 rounded-full bg-earth-terracotta loading-dot-3"></span>
+            </div>
+            <span class="text-[11px] font-bold text-earth-leaf mt-2">Генерация СБП...</span>
+          </div>
+
+          <div id="idleError" class="hidden flex flex-col items-center justify-center p-2 text-center">
+            <span class="text-3xl mb-1">⚠️</span>
+            <span class="text-xs font-extrabold text-rose-700 leading-tight">Временно не работает</span>
+            <span class="text-[9px] text-stone-400 mt-1">Сервер недоступен</span>
+            <button onclick="renderIdleTipQr()" class="mt-2 px-3 py-1 rounded-xl bg-earth-sand/40 text-[10px] font-bold text-earth-bark active:scale-95">Повторить</button>
+          </div>
+
+          <div id="idleSbpLogoOverlay" class="absolute inset-0 flex items-center justify-center pointer-events-none hidden">
             <div class="w-12 h-12 rounded-2xl bg-white shadow-md border border-earth-sand/50 flex items-center justify-center font-black text-xs text-earth-bark">
               СБП
             </div>
@@ -447,7 +488,7 @@
     </div>
   </footer>
 
-  <!-- МОДАЛКА ВВОДА PIN (0506) -->
+  <!-- МОДАЛКА PIN (0506) -->
   <div id="pinModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md p-4">
     <div class="depth-card w-full max-w-xs p-6 text-center relative border border-white/20">
       <button onclick="closePinModal()" class="absolute top-4 right-4 p-1.5 text-earth-leaf hover:text-earth-bark">✕</button>
@@ -482,12 +523,12 @@
     </div>
   </div>
 
-  <!-- МОДАЛКА НАСТРОЕК (ПОСЛЕ 0506) -->
+  <!-- МОДАЛКА НАСТРОЕК С ПРОВЕРКОЙ СВЯЗИ ЮKASSA -->
   <div id="settingsModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md p-4">
     <div class="depth-card w-full max-w-md p-6 border border-white/20">
       <div class="flex items-center justify-between pb-3 border-b border-earth-sand/40 mb-4">
         <h3 class="font-extrabold text-base text-earth-bark flex items-center gap-2">
-          <span>⚙️</span> Настройки экрана
+          <span>⚙️</span> Настройки сервера и ЮKassa
         </h3>
         <button onclick="closeSettingsModal()" class="p-1 rounded-lg text-earth-leaf hover:text-earth-bark">✕</button>
       </div>
@@ -499,20 +540,27 @@
         </div>
 
         <div>
-          <label class="block font-bold text-earth-bark mb-1">Worker URL:</label>
-          <input type="url" id="cfgWorkerUrl" placeholder="https://..." class="w-full py-2.5 px-3 font-mono rounded-xl depth-sunken outline-none">
+          <label class="block font-bold text-earth-bark mb-1">Ссылка на сервер (Worker URL):</label>
+          <input type="url" id="cfgWorkerUrl" placeholder="https://my-worker.workers.dev" class="w-full py-2.5 px-3 font-mono rounded-xl depth-sunken outline-none">
         </div>
 
         <div class="grid grid-cols-2 gap-2">
           <div>
             <label class="block font-bold text-earth-bark mb-1">Shop ID:</label>
-            <input type="text" id="cfgShopId" class="w-full py-2.5 px-3 font-mono rounded-xl depth-sunken outline-none">
+            <input type="text" id="cfgShopId" placeholder="123456" class="w-full py-2.5 px-3 font-mono rounded-xl depth-sunken outline-none">
           </div>
           <div>
-            <label class="block font-bold text-earth-bark mb-1">Secret Key:</label>
-            <input type="password" id="cfgSecretKey" class="w-full py-2.5 px-3 font-mono rounded-xl depth-sunken outline-none">
+            <label class="block font-bold text-earth-bark mb-1">Секретный ключ:</label>
+            <input type="password" id="cfgSecretKey" placeholder="live_... или test_..." class="w-full py-2.5 px-3 font-mono rounded-xl depth-sunken outline-none">
           </div>
         </div>
+
+        <!-- Кнопка проверки соединения -->
+        <button onclick="testServerConnection()" id="btnTestConnection" class="w-full py-3 rounded-xl depth-btn font-extrabold text-xs text-earth-bark flex items-center justify-center gap-2 active:scale-95">
+          <span>🔍</span> <span>Проверить соединение с ЮKassa</span>
+        </button>
+
+        <div id="testStatusBox" class="hidden p-3 rounded-xl text-center font-mono text-xs"></div>
 
         <div class="pt-4 border-t border-earth-sand/40 flex justify-end gap-2">
           <button onclick="saveSettings()" class="px-5 py-2.5 rounded-xl depth-btn depth-btn-active font-extrabold text-xs active:scale-95">
@@ -523,12 +571,12 @@
     </div>
   </div>
 
-  <!-- СКРИПТ КИОСКА -->
+  <!-- СКРИПТ КИОСКА С СЕРВЕРНОЙ ГЕНЕРАЦИЕЙ ЮKASSA -->
   <script type="module">
-    import { subscribeToCustomerPayment, clearCustomerDisplay } from "./firebase.js";
+    import { subscribeToCustomerPayment, clearCustomerDisplay, sendOrderToCustomerDisplay } from "./firebase.js";
 
     const ADMIN_PIN = "0506";
-    const STORAGE_KEY = "coffeeman_customer_kiosk_v4";
+    const STORAGE_KEY = "coffeeman_customer_kiosk_v5";
 
     let currentOrderData = null;
     let selectedRecipient = "waiter";
@@ -536,6 +584,18 @@
     let finalTipAmount = 100;
     let currentIdleTipAmount = 100;
     let enteredPin = "";
+
+    // Поллинг статуса платежа
+    let activePollingTimer = null;
+    let activePaymentId = null;
+
+    // Конфигурация шлюза
+    const config = {
+      venue: localStorage.getItem(`${STORAGE_KEY}_venue`) || "COFFEEMAN",
+      workerUrl: localStorage.getItem(`${STORAGE_KEY}_worker`) || "",
+      shopId: localStorage.getItem(`${STORAGE_KEY}_shopId`) || "",
+      secretKey: localStorage.getItem(`${STORAGE_KEY}_secretKey`) || ""
+    };
 
     // DOM экраны
     const activeOrderView = document.getElementById("activeOrderView");
@@ -551,14 +611,91 @@
     const orderItemsCountBadge = document.getElementById("orderItemsCountBadge");
     const orderTotalSum = document.getElementById("orderTotalSum");
     const orderDefaultAmount = document.getElementById("orderDefaultAmount");
-    const orderDefaultQrBox = document.getElementById("orderDefaultQrBox");
 
-    // Подписка на Firebase
+    document.getElementById("headerVenueTitle").textContent = config.venue;
+
+    // 1. Запрос в ЮKassa через Worker для генерации QR СБП
+    async function fetchYookassaSbpQr(amount, description = "Оплата чаевых СБП") {
+      const cleanUrl = (config.workerUrl || "").trim().replace(/\/+$/, "");
+
+      if (!cleanUrl || !config.shopId || !config.secretKey) {
+        throw new Error("Не настроены параметры сервера или ключи ЮKassa");
+      }
+
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), 12000);
+
+      const response = await fetch(`${cleanUrl}/create-payment`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          amount: amount,
+          shopId: config.shopId.trim(),
+          secretKey: config.secretKey.trim(),
+          description: description
+        }),
+        signal: controller.signal
+      });
+
+      clearTimeout(timer);
+
+      if (!response.ok) {
+        const errText = await response.text().catch(() => "");
+        throw new Error(`Ошибка HTTP ${response.status}: ${errText}`);
+      }
+
+      const data = await response.json();
+      const sbpLink = data?.confirmation?.confirmation_data || data?.confirmation?.confirmation_url || data?.sbp_url;
+
+      if (!sbpLink) {
+        throw new Error("ЮKassa не вернула ссылку confirmation_data для СБП");
+      }
+
+      return {
+        paymentId: data?.id,
+        sbpLink: sbpLink
+      };
+    }
+
+    // 2. Опрос статуса оплаты
+    function startPaymentPolling(paymentId) {
+      if (activePollingTimer) clearInterval(activePollingTimer);
+      if (!paymentId) return;
+
+      const cleanUrl = config.workerUrl.trim().replace(/\/+$/, "");
+
+      activePollingTimer = setInterval(async () => {
+        try {
+          const checkUrl = `${cleanUrl}/payment-status?paymentId=${paymentId}&shopId=${encodeURIComponent(config.shopId)}&secretKey=${encodeURIComponent(config.secretKey)}`;
+          const res = await fetch(checkUrl);
+          if (!res.ok) return;
+          const statusData = await res.json();
+
+          if (statusData.status === "succeeded") {
+            clearInterval(activePollingTimer);
+            handlePaymentSuccess();
+          }
+        } catch (e) {}
+      }, 2500);
+    }
+
+    function handlePaymentSuccess() {
+      if (currentOrderData && currentOrderData.tableId) {
+        sendOrderToCustomerDisplay({
+          ...currentOrderData,
+          status: "succeeded"
+        });
+      }
+      alert("Оплата успешно прошла! Спасибо за чаевые ☕");
+      closeOrderView();
+    }
+
+    // 3. Подписка на Firebase (активный чек официанта)
     subscribeToCustomerPayment((checkoutData) => {
       if (checkoutData && checkoutData.status === "pending_payment" && checkoutData.items && checkoutData.items.length > 0) {
         currentOrderData = checkoutData;
         showActiveOrder(checkoutData);
-      } else {
+      } else if (!checkoutData || checkoutData.status === "idle") {
         currentOrderData = null;
         showIdleTips();
       }
@@ -577,7 +714,6 @@
       const totalQty = data.items.reduce((s, it) => s + (it.qty || 1), 0);
       orderItemsCountBadge.textContent = `${totalQty} шт. • ${data.items.length} поз.`;
 
-      // Генерация блюд с эффектом объёмной плашки
       orderItemsList.innerHTML = "";
       data.items.forEach(it => {
         const row = document.createElement("div");
@@ -596,9 +732,45 @@
         orderItemsList.appendChild(row);
       });
 
-      renderDefaultOrderQr(100);
+      requestOrderDefaultQr(100);
     }
 
+    // Запрос QR для стандартного чека (100 ₽)
+    window.requestOrderDefaultQr = async function(amount) {
+      const box = document.getElementById("orderDefaultQrBox");
+      const loading = document.getElementById("orderDefaultLoading");
+      const errorBox = document.getElementById("orderDefaultError");
+      const sbpLogo = document.getElementById("orderSbpLogoOverlay");
+
+      box.innerHTML = "";
+      errorBox.classList.add("hidden");
+      sbpLogo.classList.add("hidden");
+      loading.classList.remove("hidden");
+
+      try {
+        const { paymentId, sbpLink } = await fetchYookassaSbpQr(amount, `Чаевые для ${config.venue}`);
+        loading.classList.add("hidden");
+
+        new QRCode(box, {
+          text: sbpLink,
+          width: 180,
+          height: 180,
+          colorDark: "#1F2823",
+          colorLight: "#FFFFFF",
+          correctLevel: QRCode.CorrectLevel.M
+        });
+
+        sbpLogo.classList.remove("hidden");
+        activePaymentId = paymentId;
+        startPaymentPolling(paymentId);
+      } catch (err) {
+        console.error("Ошибка ЮKassa:", err);
+        loading.classList.add("hidden");
+        errorBox.classList.remove("hidden");
+      }
+    };
+
+    // ШАГ 2: Экран выбора сотрудника
     window.goToStaffSelectionScreen = function() {
       hideAllScreens();
       staffSelectionView.classList.remove("hidden");
@@ -612,15 +784,12 @@
       percentSelectionView.classList.remove("hidden");
 
       const badge = document.getElementById("tipTargetBadge");
-      if (recipient === 'barista') {
-        badge.textContent = "Чаевые баристе";
-      } else {
-        badge.textContent = `Чаевые официанту (${currentOrderData?.waiter || 'смена'})`;
-      }
+      badge.textContent = recipient === 'barista' ? "Чаевые баристе" : `Чаевые официанту (${currentOrderData?.waiter || 'смена'})`;
 
       applyTipPercent(10);
     };
 
+    // ШАГ 3: Выбор процента
     window.applyTipPercent = function(pct) {
       selectedPercent = pct;
       document.querySelectorAll(".percent-btn").forEach(btn => {
@@ -639,6 +808,7 @@
       document.getElementById("billCalculationHint").textContent = `(${pct}% от суммы счёта ${total} ₽)`;
     };
 
+    // ШАГ 4: Финальный экран оплаты чаевых
     window.goToFinalPaymentQr = function() {
       hideAllScreens();
       finalQrView.classList.remove("hidden");
@@ -648,6 +818,40 @@
         selectedRecipient === 'barista' ? "Чаевые баристе" : `Чаевые официанту (${currentOrderData?.waiter || 'смена'})`;
 
       renderFinalTipQr(finalTipAmount);
+    };
+
+    window.renderFinalTipQr = async function(amount) {
+      const box = document.getElementById("finalTipQrBox");
+      const loading = document.getElementById("finalTipLoading");
+      const errorBox = document.getElementById("finalTipError");
+      const sbpLogo = document.getElementById("finalSbpLogoOverlay");
+
+      box.innerHTML = "";
+      errorBox.classList.add("hidden");
+      sbpLogo.classList.add("hidden");
+      loading.classList.remove("hidden");
+
+      try {
+        const { paymentId, sbpLink } = await fetchYookassaSbpQr(amount, `Чаевые (${selectedRecipient}) ${config.venue}`);
+        loading.classList.add("hidden");
+
+        new QRCode(box, {
+          text: sbpLink,
+          width: 200,
+          height: 200,
+          colorDark: "#1F2823",
+          colorLight: "#FFFFFF",
+          correctLevel: QRCode.CorrectLevel.M
+        });
+
+        sbpLogo.classList.remove("hidden");
+        activePaymentId = paymentId;
+        startPaymentPolling(paymentId);
+      } catch (err) {
+        console.error("Ошибка финального QR:", err);
+        loading.classList.add("hidden");
+        errorBox.classList.remove("hidden");
+      }
     };
 
     window.backToOrderView = function() {
@@ -667,6 +871,7 @@
       idleTipsView.classList.add("hidden");
     }
 
+    // Пассивный режим
     function showIdleTips() {
       hideAllScreens();
       idleTipsView.classList.remove("hidden");
@@ -675,6 +880,7 @@
     }
 
     window.closeOrderView = function() {
+      if (activePollingTimer) clearInterval(activePollingTimer);
       clearCustomerDisplay().then(() => showIdleTips());
     };
 
@@ -684,11 +890,9 @@
         if (parseInt(btn.dataset.idle, 10) === amt) {
           btn.className = "idle-tip-pill depth-btn-active p-4 rounded-3xl depth-btn flex flex-col items-center justify-center active:scale-95";
           btn.querySelector("span:nth-child(2)").className = "font-mono font-black text-xl text-white";
-          btn.querySelector("span:nth-child(3)").className = "text-[10px] text-white/90 font-bold mt-0.5";
         } else {
           btn.className = "idle-tip-pill p-4 rounded-3xl depth-btn flex flex-col items-center justify-center active:scale-95";
           btn.querySelector("span:nth-child(2)").className = "font-mono font-black text-xl text-earth-bark";
-          btn.querySelector("span:nth-child(3)").className = "text-[10px] text-earth-leaf mt-0.5 font-bold";
         }
       });
       document.getElementById("idleAmountDisplay").textContent = amt;
@@ -696,48 +900,40 @@
       renderIdleTipQr();
     };
 
-    function renderDefaultOrderQr(amt) {
-      orderDefaultQrBox.innerHTML = "";
-      const link = `https://qr.nspk.ru/AD100004ABCDE12345?type=02&bank=100000000005&sum=${amt * 100}&cur=RUB`;
-      new QRCode(orderDefaultQrBox, {
-        text: link,
-        width: 180,
-        height: 180,
-        colorDark: "#1F2823",
-        colorLight: "#FFFFFF",
-        correctLevel: QRCode.CorrectLevel.M
-      });
-    }
-
-    function renderFinalTipQr(amt) {
-      const box = document.getElementById("finalTipQrBox");
-      box.innerHTML = "";
-      const link = `https://qr.nspk.ru/AD100004ABCDE12345?type=02&bank=100000000005&sum=${amt * 100}&cur=RUB`;
-      new QRCode(box, {
-        text: link,
-        width: 210,
-        height: 210,
-        colorDark: "#1F2823",
-        colorLight: "#FFFFFF",
-        correctLevel: QRCode.CorrectLevel.M
-      });
-    }
-
-    function renderIdleTipQr() {
+    window.renderIdleTipQr = async function() {
       const box = document.getElementById("idleQrBox");
-      box.innerHTML = "";
-      const link = `https://qr.nspk.ru/AD100004ABCDE12345?type=02&bank=100000000005&sum=${currentIdleTipAmount * 100}&cur=RUB`;
-      new QRCode(box, {
-        text: link,
-        width: 200,
-        height: 200,
-        colorDark: "#1F2823",
-        colorLight: "#FFFFFF",
-        correctLevel: QRCode.CorrectLevel.M
-      });
-    }
+      const loading = document.getElementById("idleLoading");
+      const errorBox = document.getElementById("idleError");
+      const sbpLogo = document.getElementById("idleSbpLogoOverlay");
 
-    // PIN-код и настройки
+      box.innerHTML = "";
+      errorBox.classList.add("hidden");
+      sbpLogo.classList.add("hidden");
+      loading.classList.remove("hidden");
+
+      try {
+        const { paymentId, sbpLink } = await fetchYookassaSbpQr(currentIdleTipAmount, `Чаевые ${config.venue}`);
+        loading.classList.add("hidden");
+
+        new QRCode(box, {
+          text: sbpLink,
+          width: 200,
+          height: 200,
+          colorDark: "#1F2823",
+          colorLight: "#FFFFFF",
+          correctLevel: QRCode.CorrectLevel.M
+        });
+
+        sbpLogo.classList.remove("hidden");
+        activePaymentId = paymentId;
+        startPaymentPolling(paymentId);
+      } catch (err) {
+        loading.classList.add("hidden");
+        errorBox.classList.remove("hidden");
+      }
+    };
+
+    // Настройки и PIN
     window.openPinModal = function() {
       enteredPin = "";
       updatePinDots();
@@ -782,7 +978,7 @@
     function verifyPin() {
       if (enteredPin === ADMIN_PIN) {
         document.getElementById("pinModal").classList.add("hidden");
-        document.getElementById("settingsModal").classList.remove("hidden");
+        openSettingsModal();
       } else {
         const row = document.getElementById("pinDotsRow");
         row.classList.add("shake-pin");
@@ -794,14 +990,87 @@
       }
     }
 
+    function openSettingsModal() {
+      document.getElementById("cfgVenueName").value = config.venue;
+      document.getElementById("cfgWorkerUrl").value = config.workerUrl;
+      document.getElementById("cfgShopId").value = config.shopId;
+      document.getElementById("cfgSecretKey").value = config.secretKey;
+      document.getElementById("testStatusBox").classList.add("hidden");
+      document.getElementById("settingsModal").classList.remove("hidden");
+    }
+
     window.closeSettingsModal = function() {
       document.getElementById("settingsModal").classList.add("hidden");
     };
 
+    // Кнопка: Проверить соединение с ЮKassa через Worker
+    window.testServerConnection = async function() {
+      const url = document.getElementById("cfgWorkerUrl").value.trim().replace(/\/+$/, "");
+      const shopId = document.getElementById("cfgShopId").value.trim();
+      const secretKey = document.getElementById("cfgSecretKey").value.trim();
+      const box = document.getElementById("testStatusBox");
+
+      if (!url) {
+        box.className = "p-3 rounded-xl text-center font-mono text-xs bg-rose-100 text-rose-800 block";
+        box.textContent = "❌ Введите URL Worker";
+        return;
+      }
+
+      box.className = "p-3 rounded-xl text-center font-mono text-xs bg-earth-sand/30 text-earth-bark block";
+      box.textContent = "⏳ Проверяем связь с сервером и ЮKassa...";
+
+      try {
+        // 1. Проверяем доступность воркера
+        const ping = await fetch(url);
+        if (!ping.ok && ping.status !== 200) {
+          throw new Error(`Воркер вернул HTTP ${ping.status}`);
+        }
+
+        // 2. Если заполнены ключи — пробуем тестовый платёж на 10 руб (минимальный чек)
+        if (shopId && secretKey) {
+          const testPay = await fetch(`${url}/create-payment`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              amount: 10,
+              shopId: shopId,
+              secretKey: secretKey,
+              description: "Тест соединения терминала"
+            })
+          });
+
+          if (!testPay.ok) {
+            const errData = await testPay.text().catch(() => "");
+            throw new Error(`ЮKassa отклонила авторизацию: ${errData}`);
+          }
+        }
+
+        box.className = "p-3 rounded-xl text-center font-mono text-xs bg-emerald-100 text-emerald-900 block";
+        box.textContent = "✅ Соединение с ЮKassa успешно установлено!";
+        document.getElementById("gatewayStatusDot").className = "w-2 h-2 rounded-full bg-emerald-400 animate-pulse";
+        document.getElementById("gatewayStatusText").textContent = "Шлюз СБП ЮKassa активен";
+      } catch (err) {
+        box.className = "p-3 rounded-xl text-center font-mono text-xs bg-rose-100 text-rose-800 block";
+        box.textContent = `❌ Ошибка: ${err.message}`;
+        document.getElementById("gatewayStatusDot").className = "w-2 h-2 rounded-full bg-rose-500";
+        document.getElementById("gatewayStatusText").textContent = "Ошибка связи со шлюзом";
+      }
+    };
+
     window.saveSettings = function() {
-      const venue = document.getElementById("cfgVenueName").value.trim() || "COFFEEMAN";
-      document.getElementById("headerVenueTitle").textContent = venue;
+      config.venue = document.getElementById("cfgVenueName").value.trim() || "COFFEEMAN";
+      config.workerUrl = document.getElementById("cfgWorkerUrl").value.trim();
+      config.shopId = document.getElementById("cfgShopId").value.trim();
+      config.secretKey = document.getElementById("cfgSecretKey").value.trim();
+
+      localStorage.setItem(`${STORAGE_KEY}_venue`, config.venue);
+      localStorage.setItem(`${STORAGE_KEY}_worker`, config.workerUrl);
+      localStorage.setItem(`${STORAGE_KEY}_shopId`, config.shopId);
+      localStorage.setItem(`${STORAGE_KEY}_secretKey`, config.secretKey);
+
+      document.getElementById("headerVenueTitle").textContent = config.venue;
       closeSettingsModal();
+      renderIdleTipQr();
     };
 
     window.toggleFullscreen = function() {
