@@ -19,8 +19,9 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 export const rtdb = getDatabase(app);
 
-// Узел хранения всей схемы зала
+// Узлы Realtime Database
 export const stateRef = ref(rtdb, "coffeeman_hall_state");
+export const checkoutRef = ref(rtdb, "active_checkout");
 
 let syncDebounceTimer = null;
 
@@ -59,7 +60,7 @@ export function saveTablesToCloud(tables, obstacles = [], currentWaiter = "") {
   }, 150);
 }
 
-// Мгновенная подписка на обновления
+// Мгновенная подписка на обновления зала
 export function subscribeToCloudTables(onUpdateCallback) {
   return onValue(stateRef, (snapshot) => {
     const data = snapshot.val();
@@ -80,5 +81,40 @@ export function subscribeToCloudTables(onUpdateCallback) {
     const syncText = document.getElementById("syncText");
     if (syncDot) syncDot.className = "w-2 h-2 rounded-full bg-rose-500";
     if (syncText) syncText.textContent = "Нет доступа";
+  });
+}
+
+/* =========================================================
+ * СВЯЗКА С ЭКРАНОМ КЛИЕНТА (СБП ЧАЕВЫЕ + ЧЕК)
+ * ========================================================= */
+
+// Отправка чека на клиентский терминал
+export function sendOrderToCustomerDisplay(orderData) {
+  return set(checkoutRef, {
+    ...orderData,
+    updatedAt: Date.now()
+  });
+}
+
+// Сброс клиентского терминала в режим ожидания (Attract mode)
+export function clearCustomerDisplay() {
+  return set(checkoutRef, {
+    status: "idle",
+    tableId: null,
+    tableName: null,
+    totalSum: 0,
+    items: [],
+    waiter: "",
+    updatedAt: Date.now()
+  });
+}
+
+// Подписка на статус оплаты с экрана гостя (успех / ожидание)
+export function subscribeToCustomerPayment(callback) {
+  return onValue(checkoutRef, (snapshot) => {
+    const data = snapshot.val();
+    callback(data);
+  }, (err) => {
+    console.error("Ошибка прослушивания active_checkout:", err);
   });
 }
