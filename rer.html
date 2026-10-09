@@ -3,38 +3,36 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>COFFEEMAN | Гостевой экран</title>
+  <title>COFFEEMAN | Гостевой дисплей</title>
 
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- QRCode.js -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
-  <!-- Чистый, идеально читаемый шрифт Inter -->
+  <!-- Шрифты: Plus Jakarta Sans (текст) + Inter (цифры) -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Inter:wght@600;700;800;900&display=swap" rel="stylesheet">
 
   <script>
     tailwind.config = {
       theme: {
         extend: {
           fontFamily: {
-            sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+            mono: ['Inter', 'monospace']
           },
           colors: {
-            warm: {
-              50: '#FDFBF7',
-              100: '#F7F2EA',
-              200: '#EFE7DA',
-              300: '#E2D4C0',
-              800: '#2C221E',
-              900: '#1A1412',
-            },
-            accent: {
-              DEFAULT: '#D96528',
-              hover: '#C2531B',
-              soft: '#FDF2EB',
+            earth: {
+              base: '#2C3E35',      /* Глубокий хвойно-зелёный фон */
+              surface: '#364B41',   /* Приподнятые слои */
+              card: '#F4EFEB',      /* Молочно-глиняные плашки */
+              cardDark: '#202D26',  /* Утопленные подложки */
+              terracotta: '#A65B32',/* Теплый кирпично-осенний */
+              sand: '#D8C7B5',      /* Песочный акцент */
+              leaf: '#5B7A68',      /* Шалфей */
+              bark: '#3B2B23'       /* Кофейная кора */
             }
           }
         }
@@ -43,82 +41,133 @@
   </script>
 
   <style>
+    :root {
+      --light-angle: 135deg;
+    }
+
     body {
-      background-color: #F7F2EA;
-      color: #1A1412;
+      background: radial-gradient(circle at 20% 20%, #34483E 0%, #22312A 100%);
+      color: #1F2823;
       touch-action: manipulation;
       user-select: none;
       -webkit-user-select: none;
       overflow: hidden;
     }
 
-    .glass-card {
-      background: #FFFFFF;
-      border: 1px solid #EFE7DA;
-      border-radius: 28px;
-      box-shadow: 0 12px 36px -8px rgba(44, 34, 30, 0.06);
+    /* Фоновый песчано-волновой рельеф */
+    .bg-relief {
+      background-image: 
+        radial-gradient(ellipse at 80% 10%, rgba(166, 91, 50, 0.18) 0%, transparent 50%),
+        radial-gradient(ellipse at 10% 90%, rgba(91, 122, 104, 0.25) 0%, transparent 60%),
+        radial-gradient(rgba(244, 239, 235, 0.08) 1.5px, transparent 1.5px);
+      background-size: 100% 100%, 100% 100%, 32px 32px;
     }
 
-    .tablet-scroll::-webkit-scrollbar {
-      width: 5px;
+    /* ЭФФЕКТ ГЛУБОКОЙ БУМАЖНОЙ ПЛАШКИ (Paper Depth) */
+    .depth-card {
+      background: linear-gradient(145deg, #F9F6F2 0%, #EFE9E2 100%);
+      border-radius: 32px;
+      /* Двойная тень: контактный контур + мягкое парение */
+      box-shadow: 
+        inset 1px 1.5px 0px rgba(255, 255, 255, 0.9),
+        inset -1px -1.5px 2px rgba(31, 40, 35, 0.06),
+        0 4px 10px -2px rgba(16, 24, 20, 0.25),
+        0 24px 48px -12px rgba(10, 18, 14, 0.45);
     }
+
+    /* ВДАВЛЕННЫЙ ТАКТИЛЬНЫЙ КОНТЕЙНЕР (Inverted/Groove) */
+    .depth-sunken {
+      background: linear-gradient(145deg, #E6DFD6 0%, #EDE7E0 100%);
+      border-radius: 24px;
+      box-shadow: 
+        inset 0 3px 6px rgba(31, 40, 35, 0.12),
+        inset 0 1px 2px rgba(31, 40, 35, 0.18),
+        0 1px 0 rgba(255, 255, 255, 0.8);
+    }
+
+    /* ВЫПУКЛАЯ 3D КНОПКА (Neumorphic Pillow) */
+    .depth-btn {
+      background: linear-gradient(145deg, #FFFFFF 0%, #ECE5DC 100%);
+      border-radius: 20px;
+      box-shadow: 
+        inset 1px 1px 0px rgba(255, 255, 255, 1),
+        0 3px 6px -1px rgba(31, 40, 35, 0.15),
+        0 8px 18px -4px rgba(31, 40, 35, 0.2);
+      transition: all 0.18s cubic-bezier(0.2, 0, 0, 1);
+    }
+    .depth-btn:active {
+      transform: translateY(2px) scale(0.98);
+      box-shadow: 
+        inset 0 2px 4px rgba(31, 40, 35, 0.2),
+        0 2px 4px rgba(31, 40, 35, 0.1);
+    }
+
+    /* АКТИВНОЕ СОСТОЯНИЕ (ТЕРРАКОТОВЫЙ 3D ОБЪЕМ) */
+    .depth-btn-active {
+      background: linear-gradient(145deg, #B86739 0%, #944D25 100%) !important;
+      color: #FFFFFF !important;
+      box-shadow: 
+        inset 1px 1px 0px rgba(255, 255, 255, 0.4),
+        inset 0 -2px 4px rgba(0, 0, 0, 0.25),
+        0 6px 16px -2px rgba(166, 91, 50, 0.45) !important;
+      transform: translateY(-1px);
+    }
+
+    /* СТИЛЬНЫЙ СКРОЛЛБАР */
+    .tablet-scroll::-webkit-scrollbar { width: 5px; }
+    .tablet-scroll::-webkit-scrollbar-track { background: transparent; }
     .tablet-scroll::-webkit-scrollbar-thumb {
-      background: #E2D4C0;
+      background: #D8C7B5;
       border-radius: 99px;
     }
 
-    /* Мягкая пульсация рамки QR */
-    @keyframes qrRadar {
-      0% { box-shadow: 0 0 0 0 rgba(217, 101, 40, 0.25); }
-      70% { box-shadow: 0 0 0 16px rgba(217, 101, 40, 0); }
-      100% { box-shadow: 0 0 0 0 rgba(217, 101, 40, 0); }
+    /* МЯГКИЙ РАДАР ВОКРУГ QR */
+    @keyframes deepRadar {
+      0% { box-shadow: 0 0 0 0 rgba(166, 91, 50, 0.35); }
+      70% { box-shadow: 0 0 0 18px rgba(166, 91, 50, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(166, 91, 50, 0); }
     }
     .qr-radar {
-      animation: qrRadar 2.4s infinite cubic-bezier(0.2, 0, 0.38, 1);
-    }
-
-    .percent-btn.active {
-      background-color: #D96528;
-      color: #FFFFFF;
-      border-color: #D96528;
-      transform: scale(1.02);
-      box-shadow: 0 8px 20px -4px rgba(217, 101, 40, 0.35);
+      animation: deepRadar 2.6s infinite cubic-bezier(0.24, 0, 0.38, 1);
     }
   </style>
 </head>
 <body class="w-full h-[100dvh] flex flex-col justify-between relative inset-0 font-sans">
 
-  <!-- ШАПКА -->
+  <!-- Фоновые рельефные волны и амбиент -->
+  <div class="fixed inset-0 bg-relief pointer-events-none z-0"></div>
+
+  <!-- ШАПКА КИОСКА -->
   <header class="relative z-10 w-full max-w-6xl mx-auto px-6 py-4 flex items-center justify-between shrink-0">
-    <div class="flex items-center gap-3">
-      <div class="w-10 h-10 rounded-2xl bg-warm-900 text-white flex items-center justify-center font-black text-lg shadow-sm">
+    <div class="flex items-center gap-3.5">
+      <div class="w-11 h-11 rounded-2xl bg-gradient-to-br from-earth-surface to-earth-cardDark text-earth-sand flex items-center justify-center font-black text-xl shadow-md border border-white/10">
         ☕
       </div>
       <div>
-        <h1 id="headerVenueTitle" class="font-black text-warm-900 text-base tracking-tight uppercase">COFFEEMAN</h1>
-        <p class="text-xs text-stone-500 font-medium flex items-center gap-1.5">
-          <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-          <span>Оплата и благодарность по СБП</span>
+        <h1 id="headerVenueTitle" class="font-extrabold text-white text-base tracking-wider uppercase drop-shadow-sm">COFFEEMAN</h1>
+        <p class="text-xs text-earth-sand/80 font-medium flex items-center gap-1.5">
+          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+          <span>Бесконтактный терминал СБП</span>
         </p>
       </div>
     </div>
 
-    <div class="flex items-center gap-2">
-      <!-- Кнопка сброса/закрытия экрана -->
-      <button id="closeOrderScreenBtn" onclick="closeOrderView()" class="hidden px-4 py-2 rounded-2xl bg-white border border-warm-200 hover:bg-warm-100 font-bold text-xs text-warm-900 transition active:scale-95 flex items-center gap-1.5 shadow-2xs">
-        <span class="text-accent font-black">✕</span>
-        <span>Закрыть</span>
+    <div class="flex items-center gap-2.5">
+      <!-- Кнопка "Закрыть чек" -->
+      <button id="closeOrderScreenBtn" onclick="closeOrderView()" class="hidden px-4 py-2.5 rounded-2xl depth-btn font-extrabold text-xs text-earth-bark transition active:scale-95 flex items-center gap-2">
+        <span class="text-earth-terracotta font-black">✕</span>
+        <span>Закрыть стол</span>
       </button>
 
-      <!-- Разворот в полный экран -->
-      <button onclick="toggleFullscreen()" class="p-2.5 rounded-2xl bg-white border border-warm-200 text-stone-500 hover:text-accent shadow-2xs transition active:scale-95">
+      <!-- Разворот на полный экран -->
+      <button onclick="toggleFullscreen()" class="p-2.5 rounded-2xl depth-btn text-earth-bark/80 hover:text-earth-terracotta active:scale-95">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4h-4"/>
         </svg>
       </button>
 
       <!-- Настройки под PIN (0506) -->
-      <button onclick="openPinModal()" class="p-2.5 rounded-2xl bg-white border border-warm-200 text-stone-500 hover:text-accent shadow-2xs transition active:scale-95">
+      <button onclick="openPinModal()" class="p-2.5 rounded-2xl depth-btn text-earth-bark/80 hover:text-earth-terracotta active:scale-95">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
@@ -128,74 +177,74 @@
   </header>
 
   <!-- =========================================================
-       ШАГ 1: ОСНОВНОЙ ВИД ЧЕКА (МЕНЮ СЛЕВА + QR И КНОПКА СПРАВА)
+       ШАГ 1: АКТИВНЫЙ ЧЕК СТОЛА (Крупное меню слева + QR справа)
        ========================================================= -->
   <main id="activeOrderView" class="hidden relative z-10 w-full max-w-6xl mx-auto px-6 py-2 flex-1 flex flex-col justify-center min-h-0">
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch h-[78vh]">
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch h-[78vh]">
       
-      <!-- ЛЕВАЯ КОЛОНКА: МЕНЮ С КРУПНЫМ ЧЁТКИМ ШРИФТОМ -->
-      <div class="lg:col-span-7 glass-card p-6 flex flex-col justify-between min-h-0 overflow-hidden">
+      <!-- ЛЕВАЯ КОЛОНКА: МЕНЮ С ТАКТИЛЬНЫМИ СТРОКАМИ И КРУПНЫМ ШРИФТОМ -->
+      <div class="lg:col-span-7 depth-card p-7 flex flex-col justify-between min-h-0 overflow-hidden">
         <div>
-          <div class="flex items-center justify-between pb-3 border-b border-warm-200 mb-3">
+          <div class="flex items-center justify-between pb-3.5 border-b border-earth-sand/40 mb-3.5">
             <div>
-              <span id="activeOrderTableTag" class="px-2.5 py-0.5 rounded-full bg-accent-soft text-accent font-extrabold text-xs tracking-wider uppercase">
+              <span id="activeOrderTableTag" class="px-3 py-1 rounded-full bg-earth-terracotta/15 text-earth-terracotta font-mono font-black text-xs uppercase tracking-wider">
                 Стол №1
               </span>
-              <h2 class="font-extrabold text-2xl text-warm-900 mt-1">Ваш заказ</h2>
+              <h2 class="font-extrabold text-2xl md:text-3xl text-earth-bark mt-1.5 tracking-tight">Ваш заказ</h2>
             </div>
             <div class="text-right">
-              <span class="text-[11px] text-stone-400 font-bold uppercase tracking-wider block">Официант</span>
-              <span id="activeOrderWaiter" class="font-bold text-warm-900 text-xs">—</span>
+              <span class="text-[11px] text-earth-leaf uppercase font-extrabold tracking-wider block">Официант</span>
+              <span id="activeOrderWaiter" class="font-bold text-earth-bark text-sm">—</span>
             </div>
           </div>
 
           <!-- Список позиций -->
-          <div id="orderItemsList" class="overflow-y-auto max-h-[50vh] pr-1.5 space-y-2.5 tablet-scroll"></div>
+          <div id="orderItemsList" class="overflow-y-auto max-h-[49vh] pr-2 space-y-3 tablet-scroll"></div>
         </div>
 
-        <!-- Итого -->
-        <div class="pt-3 border-t border-warm-200 flex items-center justify-between bg-warm-50 p-4 rounded-2xl">
+        <!-- Итог -->
+        <div class="pt-3.5 border-t border-earth-sand/40 flex items-center justify-between depth-sunken p-4 mt-2">
           <div>
-            <span class="text-[10px] font-black text-stone-400 uppercase tracking-widest block">СУММА ПО ЧЕКУ</span>
-            <span id="orderItemsCountBadge" class="text-xs text-stone-500 font-semibold">0 позиций</span>
+            <span class="text-[10px] font-black text-earth-leaf uppercase tracking-widest block">ИТОГО ПО ЧЕКУ:</span>
+            <span id="orderItemsCountBadge" class="text-xs text-earth-bark/70 font-bold">0 позиций</span>
           </div>
-          <div class="font-extrabold text-3xl text-warm-900">
-            <span id="orderTotalSum">0</span> <span class="text-accent">₽</span>
+          <div class="font-mono font-black text-3xl md:text-4xl text-earth-bark">
+            <span id="orderTotalSum">0</span> <span class="text-earth-terracotta">₽</span>
           </div>
         </div>
       </div>
 
       <!-- ПРАВАЯ КОЛОНКА: СТАНДАРТНЫЙ QR (100 ₽) + КНОПКА «ОСТАВИТЬ ЧАЕВЫЕ» -->
-      <div class="lg:col-span-5 glass-card p-6 flex flex-col items-center justify-between text-center">
+      <div class="lg:col-span-5 depth-card p-7 flex flex-col items-center justify-between text-center">
         <div class="w-full flex flex-col items-center">
-          <span class="text-xs font-bold text-accent bg-accent-soft px-3 py-1 rounded-full mb-3">
-            Оплата по СБП
+          <span class="text-xs font-extrabold text-earth-terracotta bg-earth-terracotta/10 px-3.5 py-1.5 rounded-full mb-3.5">
+            Быстрая оплата СБП
           </span>
 
           <!-- Рамка QR -->
-          <div class="relative p-4 bg-white rounded-3xl border border-warm-200 qr-radar mb-3">
+          <div class="relative p-4 bg-white rounded-3xl depth-sunken qr-radar mb-3">
             <div id="orderDefaultQrBox" class="w-[180px] h-[180px] flex items-center justify-center rounded-2xl bg-white"></div>
             <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
-              <div class="w-10 h-10 px-1 py-1 rounded-xl bg-white shadow-md border border-warm-200 flex items-center justify-center font-black text-[11px] text-warm-900">
+              <div class="w-11 h-11 rounded-2xl bg-white shadow-md border border-earth-sand/50 flex items-center justify-center font-black text-xs text-earth-bark">
                 СБП
               </div>
             </div>
           </div>
 
-          <div class="font-extrabold text-2xl text-warm-900 mb-0.5">
-            <span id="orderDefaultAmount">100</span> <span class="text-accent">₽</span>
+          <div class="font-mono font-black text-3xl text-earth-bark mb-0.5">
+            <span id="orderDefaultAmount">100</span> <span class="text-earth-terracotta">₽</span>
           </div>
-          <p class="text-xs text-stone-500 font-medium">Отсканируйте камерой любого банка</p>
+          <p class="text-xs text-earth-leaf font-bold">Наведите камеру смартфона для оплаты</p>
         </div>
 
-        <!-- Главная кнопка перехода к чаевым -->
-        <div class="w-full space-y-2 mt-4">
-          <button onclick="goToStaffSelectionScreen()" class="w-full py-4 rounded-2xl bg-accent hover:bg-accent-hover text-white font-extrabold text-sm transition active:scale-95 shadow-md flex items-center justify-center gap-2">
-            <span>🧡</span>
+        <!-- Кнопки перехода -->
+        <div class="w-full space-y-2.5 mt-4">
+          <button onclick="goToStaffSelectionScreen()" class="w-full py-4 rounded-2xl depth-btn depth-btn-active font-extrabold text-sm flex items-center justify-center gap-2 active:scale-95">
+            <span class="text-base">🧡</span>
             <span>Оставить чаевые</span>
           </button>
 
-          <button onclick="closeOrderView()" class="w-full py-2.5 rounded-2xl bg-warm-100 hover:bg-warm-200 text-stone-600 font-bold text-xs active:scale-95 transition">
+          <button onclick="closeOrderView()" class="w-full py-2.5 rounded-2xl depth-btn text-earth-bark/70 font-bold text-xs active:scale-95">
             Закрыть
           </button>
         </div>
@@ -208,274 +257,265 @@
        ШАГ 2: ВЫБОР КОМУ ОСТАВИТЬ (БАРИСТА ИЛИ ОФИЦИАНТ)
        ========================================================= -->
   <main id="staffSelectionView" class="hidden relative z-10 w-full max-w-4xl mx-auto px-6 py-4 flex-1 flex flex-col justify-center min-h-0">
-    <div class="glass-card p-8 md:p-12 text-center max-w-2xl mx-auto w-full">
-      <span class="text-xs font-black text-accent bg-accent-soft px-3.5 py-1.5 rounded-full uppercase tracking-wider">
+    <div class="depth-card p-8 md:p-12 text-center max-w-2xl mx-auto w-full">
+      <span class="text-xs font-black text-earth-terracotta bg-earth-terracotta/10 px-3.5 py-1.5 rounded-full uppercase tracking-wider">
         Благодарность команде
       </span>
-      <h2 class="font-extrabold text-3xl md:text-4xl text-warm-900 mt-4 mb-2">
-        Кому хотите оставить чаевые?
+      <h2 class="font-extrabold text-3xl md:text-4xl text-earth-bark mt-4 mb-2 tracking-tight">
+        Кому направить чаевые?
       </h2>
-      <p class="text-sm text-stone-500 mb-8 font-medium">
-        Выберите, кого хотите поблагодарить за отличный визит
+      <p class="text-sm text-earth-leaf mb-8 font-semibold">
+        Выберите, чью заботу хотите отметить
       </p>
 
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
-        <!-- Кнопка Бариста -->
-        <button onclick="selectStaffRecipient('barista')" class="p-6 rounded-3xl bg-warm-50 border-2 border-warm-200 hover:border-accent hover:bg-accent-soft flex flex-col items-center justify-center gap-2 transition active:scale-95 group">
+        <!-- Бариста -->
+        <button onclick="selectStaffRecipient('barista')" class="p-6 rounded-3xl depth-btn flex flex-col items-center justify-center gap-2 group active:scale-95">
           <span class="text-4xl group-hover:scale-110 transition-transform">☕</span>
-          <span class="font-extrabold text-xl text-warm-900">Баристе</span>
-          <span class="text-xs text-stone-500 font-medium">За вкусный кофе и атмосферу</span>
+          <span class="font-extrabold text-xl text-earth-bark">Баристе</span>
+          <span class="text-xs text-earth-leaf font-medium">За вкусный кофе и атмосферу</span>
         </button>
 
-        <!-- Кнопка Официант -->
-        <button onclick="selectStaffRecipient('waiter')" class="p-6 rounded-3xl bg-warm-50 border-2 border-warm-200 hover:border-accent hover:bg-accent-soft flex flex-col items-center justify-center gap-2 transition active:scale-95 group">
+        <!-- Официант -->
+        <button onclick="selectStaffRecipient('waiter')" class="p-6 rounded-3xl depth-btn flex flex-col items-center justify-center gap-2 group active:scale-95">
           <span class="text-4xl group-hover:scale-110 transition-transform">🍽️</span>
-          <span class="font-extrabold text-xl text-warm-900">Официанту</span>
-          <span id="targetWaiterLabel" class="text-xs text-stone-500 font-medium">За заботу у стола</span>
+          <span class="font-extrabold text-xl text-earth-bark">Официанту</span>
+          <span id="targetWaiterLabel" class="text-xs text-earth-leaf font-medium">За заботу у стола</span>
         </button>
       </div>
 
-      <button onclick="backToOrderView()" class="px-6 py-2.5 rounded-2xl bg-warm-100 hover:bg-warm-200 text-stone-600 font-bold text-xs transition active:scale-95">
+      <button onclick="backToOrderView()" class="px-6 py-2.5 rounded-2xl depth-btn text-earth-bark/80 font-bold text-xs active:scale-95">
         ← Назад к чеку
       </button>
     </div>
   </main>
 
   <!-- =========================================================
-       ШАГ 3: ВЫБОР ПРОЦЕНТА (5%, 10%, 15%, 20%) И КНОПКА ОПЛАТЫ
+       ШАГ 3: ВЫБОР ПРОЦЕНТА (5%, 10%, 15%, 20%)
        ========================================================= -->
   <main id="percentSelectionView" class="hidden relative z-10 w-full max-w-4xl mx-auto px-6 py-4 flex-1 flex flex-col justify-center min-h-0">
-    <div class="glass-card p-8 md:p-10 text-center max-w-2xl mx-auto w-full">
-      
-      <!-- Верхний расчет суммы -->
-      <span id="tipTargetBadge" class="text-xs font-black text-accent bg-accent-soft px-3 py-1 rounded-full uppercase tracking-wider">
+    <div class="depth-card p-8 md:p-10 text-center max-w-2xl mx-auto w-full">
+      <span id="tipTargetBadge" class="text-xs font-black text-earth-terracotta bg-earth-terracotta/10 px-3.5 py-1.5 rounded-full uppercase tracking-wider">
         Чаевые официанту
       </span>
 
-      <div class="my-5">
-        <span class="text-xs font-bold text-stone-400 uppercase tracking-widest block mb-1">СУММА ЧАЕВЫХ:</span>
-        <div class="font-extrabold text-5xl text-warm-900">
-          <span id="calculatedTipAmount">100</span> <span class="text-accent">₽</span>
+      <div class="my-6">
+        <span class="text-[11px] font-black text-earth-leaf uppercase tracking-widest block mb-1">РАСЧЕТНАЯ СУММА:</span>
+        <div class="font-mono font-black text-5xl md:text-6xl text-earth-bark">
+          <span id="calculatedTipAmount">100</span> <span class="text-earth-terracotta font-sans">₽</span>
         </div>
-        <p id="billCalculationHint" class="text-xs text-stone-500 mt-1 font-medium">
-          (от суммы чека 1 000 ₽)
+        <p id="billCalculationHint" class="text-xs text-earth-leaf mt-1.5 font-bold">
+          (от суммы счёта 1 000 ₽)
         </p>
       </div>
 
-      <!-- 4 Кнопки процентов -->
+      <!-- 4 тактильные кнопки процентов -->
       <div class="grid grid-cols-4 gap-3 mb-8">
-        <button onclick="applyTipPercent(5)" class="percent-btn p-3.5 rounded-2xl bg-warm-50 border-2 border-warm-200 font-extrabold text-lg text-warm-900 active:scale-95 transition" data-pct="5">
+        <button onclick="applyTipPercent(5)" class="percent-btn p-4 rounded-2xl depth-btn font-mono font-black text-lg text-earth-bark active:scale-95" data-pct="5">
           5%
         </button>
-        <button onclick="applyTipPercent(10)" class="percent-btn active p-3.5 rounded-2xl bg-warm-50 border-2 border-warm-200 font-extrabold text-lg text-warm-900 active:scale-95 transition" data-pct="10">
+        <button onclick="applyTipPercent(10)" class="percent-btn depth-btn-active p-4 rounded-2xl depth-btn font-mono font-black text-lg active:scale-95" data-pct="10">
           10%
         </button>
-        <button onclick="applyTipPercent(15)" class="percent-btn p-3.5 rounded-2xl bg-warm-50 border-2 border-warm-200 font-extrabold text-lg text-warm-900 active:scale-95 transition" data-pct="15">
+        <button onclick="applyTipPercent(15)" class="percent-btn p-4 rounded-2xl depth-btn font-mono font-black text-lg text-earth-bark active:scale-95" data-pct="15">
           15%
         </button>
-        <button onclick="applyTipPercent(20)" class="percent-btn p-3.5 rounded-2xl bg-warm-50 border-2 border-warm-200 font-extrabold text-lg text-warm-900 active:scale-95 transition" data-pct="20">
+        <button onclick="applyTipPercent(20)" class="percent-btn p-4 rounded-2xl depth-btn font-mono font-black text-lg text-earth-bark active:scale-95" data-pct="20">
           20%
         </button>
       </div>
 
-      <!-- Кнопка перехода к оплате выбранных чаевых -->
       <div class="space-y-3">
-        <button onclick="goToFinalPaymentQr()" class="w-full py-4 rounded-2xl bg-accent hover:bg-accent-hover text-white font-extrabold text-base transition active:scale-95 shadow-md flex items-center justify-center gap-2">
+        <button onclick="goToFinalPaymentQr()" class="w-full py-4 rounded-2xl depth-btn depth-btn-active font-extrabold text-base flex items-center justify-center gap-2 active:scale-95">
           <span>Сформировать QR на оплату</span>
           <span>→</span>
         </button>
 
-        <button onclick="backToStaffSelection()" class="px-6 py-2.5 rounded-2xl bg-warm-100 hover:bg-warm-200 text-stone-600 font-bold text-xs transition active:scale-95">
+        <button onclick="backToStaffSelection()" class="px-6 py-2.5 rounded-2xl depth-btn text-earth-bark/80 font-bold text-xs active:scale-95">
           ← Выбрать другого сотрудника
         </button>
       </div>
-
     </div>
   </main>
 
   <!-- =========================================================
-       ШАГ 4: ФИНАЛЬНЫЙ ЭКРАН С QR-КОДОМ ЧАЕВЫХ ПО СБП
+       ШАГ 4: ФИНАЛЬНЫЙ СБП QR ЧАЕВЫХ
        ========================================================= -->
   <main id="finalQrView" class="hidden relative z-10 w-full max-w-4xl mx-auto px-6 py-4 flex-1 flex flex-col justify-center min-h-0">
-    <div class="glass-card p-8 text-center max-w-md mx-auto w-full flex flex-col items-center">
-      <span class="text-xs font-black text-accent bg-accent-soft px-3 py-1 rounded-full uppercase tracking-wider mb-3">
+    <div class="depth-card p-8 text-center max-w-md mx-auto w-full flex flex-col items-center">
+      <span class="text-xs font-black text-earth-terracotta bg-earth-terracotta/10 px-3.5 py-1.5 rounded-full uppercase tracking-wider mb-4">
         Оплата чаевых СБП
       </span>
 
-      <!-- QR -->
-      <div class="relative p-5 bg-white rounded-3xl border border-warm-200 qr-radar mb-4">
+      <div class="relative p-5 bg-white rounded-3xl depth-sunken qr-radar mb-4">
         <div id="finalTipQrBox" class="w-[210px] h-[210px] flex items-center justify-center rounded-2xl bg-white"></div>
         <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
-          <div class="w-12 h-12 rounded-2xl bg-white shadow-md border border-warm-200 flex items-center justify-center font-black text-xs text-warm-900">
+          <div class="w-12 h-12 rounded-2xl bg-white shadow-md border border-earth-sand/50 flex items-center justify-center font-black text-xs text-earth-bark">
             СБП
           </div>
         </div>
       </div>
 
-      <div class="font-extrabold text-3xl text-warm-900 mb-1">
-        <span id="finalQrAmountDisplay">100</span> <span class="text-accent">₽</span>
+      <div class="font-mono font-black text-4xl text-earth-bark mb-1">
+        <span id="finalQrAmountDisplay">100</span> <span class="text-earth-terracotta font-sans">₽</span>
       </div>
-      <p id="finalQrRecipientText" class="text-xs text-stone-500 font-medium mb-6">
+      <p id="finalQrRecipientText" class="text-xs text-earth-leaf font-bold mb-6">
         Чаевые для официанта
       </p>
 
-      <button onclick="backToOrderView()" class="w-full py-3 rounded-2xl bg-warm-100 hover:bg-warm-200 text-warm-900 font-extrabold text-xs active:scale-95 transition">
+      <button onclick="backToOrderView()" class="w-full py-3.5 rounded-2xl depth-btn text-earth-bark font-extrabold text-xs active:scale-95">
         Вернуться к заказу
       </button>
     </div>
   </main>
 
   <!-- =========================================================
-       ПАССИВНЫЙ РЕЖИМ (ЗАСТАВКА КОГДА НЕТ ЗАКАЗА С ОФИЦИАНТА)
+       ПАССИВНЫЙ РЕЖИМ (ГЛУБОКАЯ ЗАСТАВКА КОГДА СТОЛ НЕ ВЫБРАН)
        ========================================================= -->
   <main id="idleTipsView" class="relative z-10 w-full max-w-5xl mx-auto px-6 py-4 flex-1 flex flex-col justify-center min-h-0">
     <div class="grid grid-cols-1 md:grid-cols-12 gap-6 items-stretch">
       
-      <div class="md:col-span-7 glass-card p-8 md:p-10 flex flex-col justify-between">
+      <div class="md:col-span-7 depth-card p-8 md:p-10 flex flex-col justify-between">
         <div>
-          <span class="text-xs font-black uppercase tracking-wider bg-accent-soft text-accent px-3 py-1 rounded-full">
+          <span class="text-xs font-black uppercase tracking-wider bg-earth-terracotta/10 text-earth-terracotta px-3 py-1 rounded-full">
             Экран благодарности
           </span>
-          <h2 class="font-extrabold text-3xl md:text-4xl text-warm-900 mt-4 leading-tight">
+          <h2 class="font-extrabold text-3xl md:text-4xl text-earth-bark mt-4 leading-tight tracking-tight">
             Согрейте бариста чашечкой кофе 🧡
           </h2>
-          <p class="text-sm text-stone-500 mt-2 font-medium">
-            Выберите комфортную сумму чаевых без комиссии
+          <p class="text-sm text-earth-leaf mt-2 font-semibold">
+            Выберите комфортную сумму благодарности без комиссии
           </p>
 
           <div class="grid grid-cols-3 gap-3.5 mt-8">
-            <button onclick="selectIdleTip(50)" class="idle-tip-pill p-4 rounded-3xl bg-warm-50 border border-warm-200 flex flex-col items-center justify-center transition active:scale-95" data-idle="50">
+            <button onclick="selectIdleTip(50)" class="idle-tip-pill p-4 rounded-3xl depth-btn flex flex-col items-center justify-center active:scale-95" data-idle="50">
               <span class="text-2xl mb-1">🍪</span>
-              <span class="font-extrabold text-xl text-warm-900">50 ₽</span>
-              <span class="text-[10px] text-stone-400 mt-0.5">К чаю</span>
+              <span class="font-mono font-black text-xl text-earth-bark">50 ₽</span>
+              <span class="text-[10px] text-earth-leaf mt-0.5 font-bold">К чаю</span>
             </button>
-            <button onclick="selectIdleTip(100)" class="idle-tip-pill active p-4 rounded-3xl bg-accent text-white flex flex-col items-center justify-center shadow-md transition active:scale-95" data-idle="100">
+            <button onclick="selectIdleTip(100)" class="idle-tip-pill depth-btn-active p-4 rounded-3xl depth-btn flex flex-col items-center justify-center active:scale-95" data-idle="100">
               <span class="text-2xl mb-1">☕</span>
-              <span class="font-extrabold text-xl text-white">100 ₽</span>
-              <span class="text-[10px] text-orange-100 font-bold mt-0.5">На кофе</span>
+              <span class="font-mono font-black text-xl text-white">100 ₽</span>
+              <span class="text-[10px] text-white/90 font-bold mt-0.5">На кофе</span>
             </button>
-            <button onclick="selectIdleTip(200)" class="idle-tip-pill p-4 rounded-3xl bg-warm-50 border border-warm-200 flex flex-col items-center justify-center transition active:scale-95" data-idle="200">
+            <button onclick="selectIdleTip(200)" class="idle-tip-pill p-4 rounded-3xl depth-btn flex flex-col items-center justify-center active:scale-95" data-idle="200">
               <span class="text-2xl mb-1">🍰</span>
-              <span class="font-extrabold text-xl text-warm-900">200 ₽</span>
-              <span class="text-[10px] text-stone-400 mt-0.5">Десерт</span>
+              <span class="font-mono font-black text-xl text-earth-bark">200 ₽</span>
+              <span class="text-[10px] text-earth-leaf mt-0.5 font-bold">Десерт</span>
             </button>
           </div>
         </div>
 
-        <div class="pt-6 border-t border-warm-200 flex items-baseline justify-between mt-6">
+        <div class="pt-6 border-t border-earth-sand/40 flex items-baseline justify-between mt-6">
           <div>
-            <span class="text-[10px] font-black uppercase tracking-wider text-stone-400 block">К оплате:</span>
-            <div class="font-extrabold text-3xl text-warm-900">
-              <span id="idleAmountDisplay">100</span> <span class="text-accent">₽</span>
+            <span class="text-[10px] font-black uppercase tracking-wider text-earth-leaf block">К ОПЛАТЕ:</span>
+            <div class="font-mono font-black text-3xl text-earth-bark">
+              <span id="idleAmountDisplay">100</span> <span class="text-earth-terracotta font-sans">₽</span>
             </div>
           </div>
-          <span class="text-xs text-stone-500 font-semibold">⚡ СБП 0% комиссии</span>
+          <span class="text-xs text-earth-leaf font-bold">⚡ СБП 0% комиссии</span>
         </div>
       </div>
 
-      <div class="md:col-span-5 glass-card p-8 flex flex-col items-center justify-center text-center">
-        <div class="relative p-5 bg-white rounded-3xl border border-warm-200 qr-radar mb-4">
+      <div class="md:col-span-5 depth-card p-8 flex flex-col items-center justify-center text-center">
+        <div class="relative p-5 bg-white rounded-3xl depth-sunken qr-radar mb-4">
           <div id="idleQrBox" class="w-[200px] h-[200px] flex items-center justify-center rounded-2xl bg-white"></div>
           <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
-            <div class="w-12 h-12 rounded-2xl bg-white shadow-md border border-warm-200 flex items-center justify-center font-black text-xs text-warm-900">
+            <div class="w-12 h-12 rounded-2xl bg-white shadow-md border border-earth-sand/50 flex items-center justify-center font-black text-xs text-earth-bark">
               СБП
             </div>
           </div>
         </div>
 
-        <div class="font-extrabold text-2xl text-warm-900 mb-1">
-          <span id="idleQrAmountDisplay">100</span> <span class="text-accent">₽</span>
+        <div class="font-mono font-black text-3xl text-earth-bark mb-1">
+          <span id="idleQrAmountDisplay">100</span> <span class="text-earth-terracotta font-sans">₽</span>
         </div>
-        <p class="text-xs text-stone-500 font-medium">Отсканируйте камерой смартфона</p>
+        <p class="text-xs text-earth-leaf font-bold">Отсканируйте камерой смартфона</p>
       </div>
 
     </div>
   </main>
 
   <!-- ФУТЕР -->
-  <footer class="relative z-10 w-full py-3 px-8 flex items-center justify-between text-xs text-stone-500 border-t border-warm-200 bg-white/60 backdrop-blur-md shrink-0">
-    <div class="flex items-center gap-1.5 font-medium">
-      <span class="text-accent">🍁</span>
-      <span>Спасибо за то, что согреваете нас улыбками!</span>
+  <footer class="relative z-10 w-full py-3 px-8 flex items-center justify-between text-xs text-earth-sand/80 border-t border-white/10 shrink-0">
+    <div class="flex items-center gap-2 font-medium">
+      <span class="text-earth-terracotta">🍂</span>
+      <span>Спасибо за то, что согреваете нас тёплыми визитами!</span>
     </div>
-    <div class="font-bold text-warm-900">
+    <div class="font-bold text-white tracking-wide">
       COFFEEMAN • Терминал
     </div>
   </footer>
 
-  <!-- =========================================================
-       МОДАЛКА 1: ВВОД PIN-КОДА (0506)
-       ========================================================= -->
-  <div id="pinModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
-    <div class="bg-white rounded-3xl w-full max-w-xs p-6 shadow-2xl border border-warm-200 text-center relative">
-      <button onclick="closePinModal()" class="absolute top-4 right-4 p-1.5 text-stone-400 hover:text-warm-900">✕</button>
+  <!-- МОДАЛКА ВВОДА PIN (0506) -->
+  <div id="pinModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md p-4">
+    <div class="depth-card w-full max-w-xs p-6 text-center relative border border-white/20">
+      <button onclick="closePinModal()" class="absolute top-4 right-4 p-1.5 text-earth-leaf hover:text-earth-bark">✕</button>
 
-      <div class="w-12 h-12 rounded-2xl bg-warm-100 text-accent flex items-center justify-center text-2xl mx-auto mb-3">
+      <div class="w-12 h-12 rounded-2xl depth-sunken text-earth-terracotta flex items-center justify-center text-2xl mx-auto mb-3">
         🔒
       </div>
-      <h3 class="font-extrabold text-lg text-warm-900">Служебный доступ</h3>
-      <p class="text-xs text-stone-400 mb-5">Введите PIN-код терминала</p>
+      <h3 class="font-extrabold text-lg text-earth-bark">Служебный доступ</h3>
+      <p class="text-xs text-earth-leaf mb-5">Введите PIN-код терминала</p>
 
       <div id="pinDotsRow" class="flex items-center justify-center gap-3 mb-6">
-        <div class="pin-dot w-3.5 h-3.5 rounded-full border-2 border-warm-300"></div>
-        <div class="pin-dot w-3.5 h-3.5 rounded-full border-2 border-warm-300"></div>
-        <div class="pin-dot w-3.5 h-3.5 rounded-full border-2 border-warm-300"></div>
-        <div class="pin-dot w-3.5 h-3.5 rounded-full border-2 border-warm-300"></div>
+        <div class="pin-dot w-3.5 h-3.5 rounded-full border-2 border-earth-sand"></div>
+        <div class="pin-dot w-3.5 h-3.5 rounded-full border-2 border-earth-sand"></div>
+        <div class="pin-dot w-3.5 h-3.5 rounded-full border-2 border-earth-sand"></div>
+        <div class="pin-dot w-3.5 h-3.5 rounded-full border-2 border-earth-sand"></div>
       </div>
 
       <div class="grid grid-cols-3 gap-2">
-        <button onclick="pressPin('1')" class="py-3 rounded-2xl bg-warm-50 hover:bg-warm-100 font-extrabold text-lg active:scale-95">1</button>
-        <button onclick="pressPin('2')" class="py-3 rounded-2xl bg-warm-50 hover:bg-warm-100 font-extrabold text-lg active:scale-95">2</button>
-        <button onclick="pressPin('3')" class="py-3 rounded-2xl bg-warm-50 hover:bg-warm-100 font-extrabold text-lg active:scale-95">3</button>
-        <button onclick="pressPin('4')" class="py-3 rounded-2xl bg-warm-50 hover:bg-warm-100 font-extrabold text-lg active:scale-95">4</button>
-        <button onclick="pressPin('5')" class="py-3 rounded-2xl bg-warm-50 hover:bg-warm-100 font-extrabold text-lg active:scale-95">5</button>
-        <button onclick="pressPin('6')" class="py-3 rounded-2xl bg-warm-50 hover:bg-warm-100 font-extrabold text-lg active:scale-95">6</button>
-        <button onclick="pressPin('7')" class="py-3 rounded-2xl bg-warm-50 hover:bg-warm-100 font-extrabold text-lg active:scale-95">7</button>
-        <button onclick="pressPin('8')" class="py-3 rounded-2xl bg-warm-50 hover:bg-warm-100 font-extrabold text-lg active:scale-95">8</button>
-        <button onclick="pressPin('9')" class="py-3 rounded-2xl bg-warm-50 hover:bg-warm-100 font-extrabold text-lg active:scale-95">9</button>
-        <button onclick="clearPin()" class="py-3 rounded-2xl bg-white border border-warm-200 font-bold text-xs text-stone-400 active:scale-95">C</button>
-        <button onclick="pressPin('0')" class="py-3 rounded-2xl bg-warm-50 hover:bg-warm-100 font-extrabold text-lg active:scale-95">0</button>
-        <button onclick="backspacePin()" class="py-3 rounded-2xl bg-white border border-warm-200 font-bold text-sm text-warm-900 active:scale-95">⌫</button>
+        <button onclick="pressPin('1')" class="py-3 rounded-2xl depth-btn font-mono font-black text-lg active:scale-95">1</button>
+        <button onclick="pressPin('2')" class="py-3 rounded-2xl depth-btn font-mono font-black text-lg active:scale-95">2</button>
+        <button onclick="pressPin('3')" class="py-3 rounded-2xl depth-btn font-mono font-black text-lg active:scale-95">3</button>
+        <button onclick="pressPin('4')" class="py-3 rounded-2xl depth-btn font-mono font-black text-lg active:scale-95">4</button>
+        <button onclick="pressPin('5')" class="py-3 rounded-2xl depth-btn font-mono font-black text-lg active:scale-95">5</button>
+        <button onclick="pressPin('6')" class="py-3 rounded-2xl depth-btn font-mono font-black text-lg active:scale-95">6</button>
+        <button onclick="pressPin('7')" class="py-3 rounded-2xl depth-btn font-mono font-black text-lg active:scale-95">7</button>
+        <button onclick="pressPin('8')" class="py-3 rounded-2xl depth-btn font-mono font-black text-lg active:scale-95">8</button>
+        <button onclick="pressPin('9')" class="py-3 rounded-2xl depth-btn font-mono font-black text-lg active:scale-95">9</button>
+        <button onclick="clearPin()" class="py-3 rounded-2xl depth-btn font-bold text-xs text-earth-leaf active:scale-95">C</button>
+        <button onclick="pressPin('0')" class="py-3 rounded-2xl depth-btn font-mono font-black text-lg active:scale-95">0</button>
+        <button onclick="backspacePin()" class="py-3 rounded-2xl depth-btn font-bold text-sm text-earth-bark active:scale-95">⌫</button>
       </div>
     </div>
   </div>
 
-  <!-- =========================================================
-       МОДАЛКА 2: НАСТРОЙКИ (ПОСЛЕ 0506)
-       ========================================================= -->
-  <div id="settingsModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
-    <div class="bg-white rounded-3xl w-full max-w-md p-6 shadow-2xl border border-warm-200">
-      <div class="flex items-center justify-between pb-3 border-b border-warm-200 mb-4">
-        <h3 class="font-extrabold text-base text-warm-900 flex items-center gap-2">
+  <!-- МОДАЛКА НАСТРОЕК (ПОСЛЕ 0506) -->
+  <div id="settingsModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md p-4">
+    <div class="depth-card w-full max-w-md p-6 border border-white/20">
+      <div class="flex items-center justify-between pb-3 border-b border-earth-sand/40 mb-4">
+        <h3 class="font-extrabold text-base text-earth-bark flex items-center gap-2">
           <span>⚙️</span> Настройки экрана
         </h3>
-        <button onclick="closeSettingsModal()" class="p-1 rounded-lg text-stone-400 hover:text-warm-900">✕</button>
+        <button onclick="closeSettingsModal()" class="p-1 rounded-lg text-earth-leaf hover:text-earth-bark">✕</button>
       </div>
 
       <div class="space-y-3 text-xs text-left">
         <div>
-          <label class="block font-bold text-warm-900 mb-1">Название заведения:</label>
-          <input type="text" id="cfgVenueName" class="w-full py-2 px-3 rounded-xl bg-warm-50 border border-warm-200 outline-none focus:border-accent">
+          <label class="block font-bold text-earth-bark mb-1">Название кофейни:</label>
+          <input type="text" id="cfgVenueName" class="w-full py-2.5 px-3 rounded-xl depth-sunken outline-none">
         </div>
 
         <div>
-          <label class="block font-bold text-warm-900 mb-1">Worker URL:</label>
-          <input type="url" id="cfgWorkerUrl" placeholder="https://..." class="w-full py-2 px-3 font-mono rounded-xl bg-warm-50 border border-warm-200 outline-none focus:border-accent">
+          <label class="block font-bold text-earth-bark mb-1">Worker URL:</label>
+          <input type="url" id="cfgWorkerUrl" placeholder="https://..." class="w-full py-2.5 px-3 font-mono rounded-xl depth-sunken outline-none">
         </div>
 
         <div class="grid grid-cols-2 gap-2">
           <div>
-            <label class="block font-bold text-warm-900 mb-1">Shop ID:</label>
-            <input type="text" id="cfgShopId" class="w-full py-2 px-3 font-mono rounded-xl bg-warm-50 border border-warm-200 outline-none focus:border-accent">
+            <label class="block font-bold text-earth-bark mb-1">Shop ID:</label>
+            <input type="text" id="cfgShopId" class="w-full py-2.5 px-3 font-mono rounded-xl depth-sunken outline-none">
           </div>
           <div>
-            <label class="block font-bold text-warm-900 mb-1">Secret Key:</label>
-            <input type="password" id="cfgSecretKey" class="w-full py-2 px-3 font-mono rounded-xl bg-warm-50 border border-warm-200 outline-none focus:border-accent">
+            <label class="block font-bold text-earth-bark mb-1">Secret Key:</label>
+            <input type="password" id="cfgSecretKey" class="w-full py-2.5 px-3 font-mono rounded-xl depth-sunken outline-none">
           </div>
         </div>
 
-        <div class="pt-3 border-t border-warm-200 flex justify-end gap-2">
-          <button onclick="saveSettings()" class="px-5 py-2.5 rounded-xl bg-accent text-white font-extrabold text-xs hover:bg-accent-hover transition">
+        <div class="pt-4 border-t border-earth-sand/40 flex justify-end gap-2">
+          <button onclick="saveSettings()" class="px-5 py-2.5 rounded-xl depth-btn depth-btn-active font-extrabold text-xs active:scale-95">
             Сохранить
           </button>
         </div>
@@ -483,22 +523,18 @@
     </div>
   </div>
 
-  <!-- СКРИПТ УПРАВЛЕНИЯ -->
+  <!-- СКРИПТ КИОСКА -->
   <script type="module">
     import { subscribeToCustomerPayment, clearCustomerDisplay } from "./firebase.js";
 
     const ADMIN_PIN = "0506";
-    const STORAGE_KEY = "coffeeman_customer_kiosk_v3";
+    const STORAGE_KEY = "coffeeman_customer_kiosk_v4";
 
     let currentOrderData = null;
-    let selectedRecipient = "waiter"; // 'barista' или 'waiter'
+    let selectedRecipient = "waiter";
     let selectedPercent = 10;
     let finalTipAmount = 100;
     let currentIdleTipAmount = 100;
-
-    let orderDefaultQrInstance = null;
-    let finalTipQrInstance = null;
-    let idleQrInstance = null;
     let enteredPin = "";
 
     // DOM экраны
@@ -509,7 +545,6 @@
     const idleTipsView = document.getElementById("idleTipsView");
     const closeOrderScreenBtn = document.getElementById("closeOrderScreenBtn");
 
-    // Поля заказа
     const activeOrderTableTag = document.getElementById("activeOrderTableTag");
     const activeOrderWaiter = document.getElementById("activeOrderWaiter");
     const orderItemsList = document.getElementById("orderItemsList");
@@ -518,7 +553,7 @@
     const orderDefaultAmount = document.getElementById("orderDefaultAmount");
     const orderDefaultQrBox = document.getElementById("orderDefaultQrBox");
 
-    // Подписка на Firebase (активный чек официанта)
+    // Подписка на Firebase
     subscribeToCustomerPayment((checkoutData) => {
       if (checkoutData && checkoutData.status === "pending_payment" && checkoutData.items && checkoutData.items.length > 0) {
         currentOrderData = checkoutData;
@@ -529,7 +564,6 @@
       }
     });
 
-    // ШАГ 1: Показ чека
     function showActiveOrder(data) {
       hideAllScreens();
       activeOrderView.classList.remove("hidden");
@@ -538,27 +572,25 @@
       activeOrderTableTag.textContent = data.tableName || `Стол ${data.tableId}`;
       activeOrderWaiter.textContent = data.waiter || "Бариста";
       orderTotalSum.textContent = data.totalSum || 0;
-
-      // Стандартная сумма в правом блоке = 100 руб
       orderDefaultAmount.textContent = 100;
 
       const totalQty = data.items.reduce((s, it) => s + (it.qty || 1), 0);
       orderItemsCountBadge.textContent = `${totalQty} шт. • ${data.items.length} поз.`;
 
-      // Генерация блюд: крупный чистый шрифт
+      // Генерация блюд с эффектом объёмной плашки
       orderItemsList.innerHTML = "";
       data.items.forEach(it => {
         const row = document.createElement("div");
-        row.className = "p-3.5 rounded-2xl bg-warm-50 border border-warm-200 flex items-center justify-between";
+        row.className = "p-3.5 rounded-2xl depth-sunken flex items-center justify-between";
         row.innerHTML = `
           <div class="min-w-0 pr-3">
-            <h4 class="font-extrabold text-base text-warm-900 leading-snug">${it.name}</h4>
-            ${it.modifiers && it.modifiers.length > 0 ? `<p class="text-[11px] text-accent font-semibold mt-0.5">+ ${it.modifiers.join(', ')}</p>` : ''}
-            ${it.comment ? `<p class="text-[11px] text-stone-400 italic mt-0.5">💬 "${it.comment}"</p>` : ''}
+            <h4 class="font-extrabold text-base text-earth-bark leading-snug">${it.name}</h4>
+            ${it.modifiers && it.modifiers.length > 0 ? `<p class="text-[11px] text-earth-terracotta font-semibold mt-0.5">+ ${it.modifiers.join(', ')}</p>` : ''}
+            ${it.comment ? `<p class="text-[11px] text-earth-leaf italic mt-0.5">💬 "${it.comment}"</p>` : ''}
           </div>
           <div class="text-right shrink-0">
-            <span class="font-extrabold text-base text-warm-900 block">${it.price * (it.qty || 1)} ₽</span>
-            <span class="text-[11px] text-stone-400 font-bold">${it.qty || 1} × ${it.price} ₽</span>
+            <span class="font-mono font-black text-lg text-earth-bark block">${it.price * (it.qty || 1)} ₽</span>
+            <span class="text-[11px] text-earth-leaf font-bold">${it.qty || 1} × ${it.price} ₽</span>
           </div>
         `;
         orderItemsList.appendChild(row);
@@ -567,7 +599,6 @@
       renderDefaultOrderQr(100);
     }
 
-    // ШАГ 2: Переход к выбору сотрудника
     window.goToStaffSelectionScreen = function() {
       hideAllScreens();
       staffSelectionView.classList.remove("hidden");
@@ -575,7 +606,6 @@
       document.getElementById("targetWaiterLabel").textContent = `Официант: ${waiterName}`;
     };
 
-    // ШАГ 3: Выбор сотрудника -> переход к процентам
     window.selectStaffRecipient = function(recipient) {
       selectedRecipient = recipient;
       hideAllScreens();
@@ -588,29 +618,27 @@
         badge.textContent = `Чаевые официанту (${currentOrderData?.waiter || 'смена'})`;
       }
 
-      applyTipPercent(10); // по умолчанию 10%
+      applyTipPercent(10);
     };
 
-    // Расчет процента от суммы чека
     window.applyTipPercent = function(pct) {
       selectedPercent = pct;
       document.querySelectorAll(".percent-btn").forEach(btn => {
         if (parseInt(btn.dataset.pct, 10) === pct) {
-          btn.classList.add("active");
+          btn.className = "percent-btn depth-btn-active p-4 rounded-2xl depth-btn font-mono font-black text-lg active:scale-95";
         } else {
-          btn.classList.remove("active");
+          btn.className = "percent-btn p-4 rounded-2xl depth-btn font-mono font-black text-lg text-earth-bark active:scale-95";
         }
       });
 
       const total = currentOrderData?.totalSum || 1000;
       finalTipAmount = Math.round((total * pct) / 100);
-      if (finalTipAmount < 50) finalTipAmount = 50; // минимальный порог
+      if (finalTipAmount < 50) finalTipAmount = 50;
 
       document.getElementById("calculatedTipAmount").textContent = finalTipAmount;
       document.getElementById("billCalculationHint").textContent = `(${pct}% от суммы счёта ${total} ₽)`;
     };
 
-    // ШАГ 4: Переход к финальному QR
     window.goToFinalPaymentQr = function() {
       hideAllScreens();
       finalQrView.classList.remove("hidden");
@@ -622,7 +650,6 @@
       renderFinalTipQr(finalTipAmount);
     };
 
-    // Навигация назад
     window.backToOrderView = function() {
       if (currentOrderData) showActiveOrder(currentOrderData);
       else showIdleTips();
@@ -640,7 +667,6 @@
       idleTipsView.classList.add("hidden");
     }
 
-    // Возврат в режим заставки
     function showIdleTips() {
       hideAllScreens();
       idleTipsView.classList.remove("hidden");
@@ -652,16 +678,17 @@
       clearCustomerDisplay().then(() => showIdleTips());
     };
 
-    // Пассивные чаевые
     window.selectIdleTip = function(amt) {
       currentIdleTipAmount = amt;
       document.querySelectorAll(".idle-tip-pill").forEach(btn => {
         if (parseInt(btn.dataset.idle, 10) === amt) {
-          btn.className = "idle-tip-pill active p-4 rounded-3xl bg-accent text-white flex flex-col items-center justify-center shadow-md transition active:scale-95";
-          btn.querySelector("span:nth-child(2)").className = "font-extrabold text-xl text-white";
+          btn.className = "idle-tip-pill depth-btn-active p-4 rounded-3xl depth-btn flex flex-col items-center justify-center active:scale-95";
+          btn.querySelector("span:nth-child(2)").className = "font-mono font-black text-xl text-white";
+          btn.querySelector("span:nth-child(3)").className = "text-[10px] text-white/90 font-bold mt-0.5";
         } else {
-          btn.className = "idle-tip-pill p-4 rounded-3xl bg-warm-50 border border-warm-200 flex flex-col items-center justify-center transition active:scale-95";
-          btn.querySelector("span:nth-child(2)").className = "font-extrabold text-xl text-warm-900";
+          btn.className = "idle-tip-pill p-4 rounded-3xl depth-btn flex flex-col items-center justify-center active:scale-95";
+          btn.querySelector("span:nth-child(2)").className = "font-mono font-black text-xl text-earth-bark";
+          btn.querySelector("span:nth-child(3)").className = "text-[10px] text-earth-leaf mt-0.5 font-bold";
         }
       });
       document.getElementById("idleAmountDisplay").textContent = amt;
@@ -669,7 +696,6 @@
       renderIdleTipQr();
     };
 
-    // Генерация QR-кодов
     function renderDefaultOrderQr(amt) {
       orderDefaultQrBox.innerHTML = "";
       const link = `https://qr.nspk.ru/AD100004ABCDE12345?type=02&bank=100000000005&sum=${amt * 100}&cur=RUB`;
@@ -677,7 +703,7 @@
         text: link,
         width: 180,
         height: 180,
-        colorDark: "#1A1412",
+        colorDark: "#1F2823",
         colorLight: "#FFFFFF",
         correctLevel: QRCode.CorrectLevel.M
       });
@@ -691,7 +717,7 @@
         text: link,
         width: 210,
         height: 210,
-        colorDark: "#1A1412",
+        colorDark: "#1F2823",
         colorLight: "#FFFFFF",
         correctLevel: QRCode.CorrectLevel.M
       });
@@ -705,13 +731,13 @@
         text: link,
         width: 200,
         height: 200,
-        colorDark: "#1A1412",
+        colorDark: "#1F2823",
         colorLight: "#FFFFFF",
         correctLevel: QRCode.CorrectLevel.M
       });
     }
 
-    // PIN-КОД (0506)
+    // PIN-код и настройки
     window.openPinModal = function() {
       enteredPin = "";
       updatePinDots();
@@ -726,9 +752,7 @@
       if (enteredPin.length < 4) {
         enteredPin += num;
         updatePinDots();
-        if (enteredPin.length === 4) {
-          setTimeout(verifyPin, 100);
-        }
+        if (enteredPin.length === 4) setTimeout(verifyPin, 100);
       }
     };
 
@@ -748,9 +772,9 @@
       const dots = document.querySelectorAll(".pin-dot");
       dots.forEach((dot, idx) => {
         if (idx < enteredPin.length) {
-          dot.className = "pin-dot w-3.5 h-3.5 rounded-full bg-accent border-2 border-accent scale-110 transition-all";
+          dot.className = "pin-dot w-3.5 h-3.5 rounded-full bg-earth-terracotta border-2 border-earth-terracotta scale-110 transition-all";
         } else {
-          dot.className = "pin-dot w-3.5 h-3.5 rounded-full border-2 border-warm-300 transition-all";
+          dot.className = "pin-dot w-3.5 h-3.5 rounded-full border-2 border-earth-sand transition-all";
         }
       });
     }
