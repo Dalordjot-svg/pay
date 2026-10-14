@@ -1,0 +1,1492 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Coffeeman — Экран чаевых</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=Playfair+Display:ital,wght@1,600;1,800&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    * {
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+    .font-quote {
+      font-family: 'Playfair Display', serif;
+    }
+    .font-mono-code {
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .bg-editorial-gradient {
+      background: radial-gradient(120% 90% at 75% 20%, #a4bba9 0%, #87a292 45%, #6d8977 100%);
+    }
+
+    @keyframes floatLayer {
+      0%, 100% { transform: translateY(0px) rotate(0deg); }
+      50% { transform: translateY(-9px) rotate(0.8deg); }
+    }
+    @keyframes floatBookTilt {
+      0%, 100% { transform: rotate(-22deg) translateY(0); }
+      50% { transform: rotate(-18deg) translateY(-8px); }
+    }
+    @keyframes energyPulse {
+      0%, 100% { opacity: 0.7; filter: drop-shadow(0 0 6px rgba(254, 240, 138, 0.4)); }
+      50% { opacity: 1; filter: drop-shadow(0 0 16px rgba(254, 240, 138, 0.9)); }
+    }
+    @keyframes lineGlow {
+      0%, 100% { filter: drop-shadow(0 0 6px rgba(56, 189, 248, 0.6)); }
+      50% { filter: drop-shadow(0 0 16px rgba(244, 114, 182, 0.9)); }
+    }
+    @keyframes tapInstructionFade {
+      0%, 100% { opacity: 0.55; transform: translateY(0); }
+      50% { opacity: 1; transform: translateY(-4px); }
+    }
+    @keyframes radarWave {
+      0% { transform: scale(0.9); opacity: 0.9; }
+      100% { transform: scale(1.6); opacity: 0; }
+    }
+    @keyframes scanLaser {
+      0%, 100% { top: 6%; opacity: 0.3; }
+      50% { top: 90%; opacity: 0.9; }
+    }
+
+    /* Анимации победы и стрелок */
+    @keyframes arrowUpFly {
+      0% { transform: translateY(24px) scale(0.8); opacity: 0; }
+      50% { transform: translateY(-8px) scale(1.2); opacity: 1; filter: drop-shadow(0 0 18px rgba(52, 211, 153, 0.9)); }
+      100% { transform: translateY(0) scale(1); opacity: 1; filter: drop-shadow(0 0 8px rgba(52, 211, 153, 0.6)); }
+    }
+    @keyframes arrowDownSink {
+      0% { transform: translateY(-20px) scale(0.8); opacity: 0; }
+      50% { transform: translateY(6px) scale(1.15); opacity: 1; filter: drop-shadow(0 0 16px rgba(244, 63, 94, 0.9)); }
+      100% { transform: translateY(0) scale(1); opacity: 1; filter: drop-shadow(0 0 6px rgba(244, 63, 94, 0.5)); }
+    }
+    @keyframes popIn {
+      0% { transform: scale(0.85); opacity: 0; }
+      60% { transform: scale(1.04); opacity: 1; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    .anim-float { animation: floatLayer 5s ease-in-out infinite; }
+    .anim-tilt { animation: floatBookTilt 4.8s ease-in-out infinite; }
+    .anim-pulse-energy { animation: energyPulse 2.4s ease-in-out infinite; }
+    .anim-line-glow { animation: lineGlow 2s ease-in-out infinite; }
+    .anim-tap-hint { animation: tapInstructionFade 2s ease-in-out infinite; }
+    .anim-radar { animation: radarWave 2s cubic-bezier(0, 0.2, 0.8, 1) infinite; }
+    .anim-scan { animation: scanLaser 2.4s ease-in-out infinite; }
+    
+    .anim-arrow-up { animation: arrowUpFly 0.85s cubic-bezier(0.17, 0.89, 0.32, 1.28) forwards; }
+    .anim-arrow-down { animation: arrowDownSink 0.85s cubic-bezier(0.17, 0.89, 0.32, 1.28) forwards; }
+    .anim-pop-in { animation: popIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+
+    .shadow-layered {
+      box-shadow: -12px 20px 32px rgba(20, 36, 26, 0.26), -2px 3px 8px rgba(255, 255, 255, 0.25) inset;
+    }
+    .shadow-capsule {
+      box-shadow: 0 16px 40px rgba(18, 32, 23, 0.28), 0 1px 0 rgba(255, 255, 255, 0.3) inset;
+    }
+
+    .custom-scroll::-webkit-scrollbar {
+      width: 6px;
+    }
+    .custom-scroll::-webkit-scrollbar-track {
+      background: rgba(0, 0, 0, 0.2);
+      border-radius: 4px;
+    }
+    .custom-scroll::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body class="bg-editorial-gradient text-white min-h-screen w-full overflow-x-hidden flex flex-col justify-between p-4 sm:p-6 md:p-8 relative">
+
+  <div class="fixed inset-0 pointer-events-none overflow-hidden z-0">
+    <div class="absolute -top-32 -left-20 w-[500px] h-[500px] bg-emerald-200/20 rounded-full blur-[120px]"></div>
+    <div class="absolute -bottom-32 right-10 w-[550px] h-[550px] bg-teal-900/30 rounded-full blur-[140px]"></div>
+    <div class="absolute top-1/3 left-1/4 w-96 h-96 bg-amber-100/15 rounded-full blur-[130px]"></div>
+  </div>
+
+  <!-- ВЕРХНИЙ БАР: Логотип Coffeeman + Секретный вход 5 тапов (0506) -->
+  <header class="relative z-30 flex items-center justify-between w-full max-w-6xl mx-auto">
+    <div id="secret-logo-trigger" class="cursor-pointer active:scale-95 transition-all flex items-center gap-3.5 bg-black/15 backdrop-blur-xl border border-white/20 px-5 py-2.5 rounded-full shadow-capsule">
+      <div class="w-7 h-7 rounded-full bg-gradient-to-tr from-amber-300 to-amber-500 flex items-center justify-center text-zinc-950 font-black text-xs shadow-md">
+        ☕
+      </div>
+      <div class="flex flex-col">
+        <span class="text-sm font-extrabold tracking-widest uppercase text-white/95">Coffeeman</span>
+        <span class="text-[9px] uppercase tracking-wider text-white/60 font-medium">Specialty Coffee Bar</span>
+      </div>
+    </div>
+
+    <div class="hidden sm:flex items-center gap-4 px-6 py-2 rounded-full bg-black/10 backdrop-blur-md border border-white/10 text-xs font-semibold text-white/80">
+      <span class="text-amber-300 font-extrabold tracking-wider">ATMOSPHERE</span>
+      <span class="text-white/30">•</span>
+      <span class="tracking-wider">TASTE</span>
+      <span class="text-white/30">•</span>
+      <span class="tracking-wider">PEOPLE</span>
+    </div>
+
+    <div class="flex items-center gap-2.5">
+      <button onclick="openAdminDirect()" title="Логи и диагностика" class="w-9 h-9 rounded-full bg-black/15 backdrop-blur-md border border-white/20 flex items-center justify-center text-white/90 text-sm hover:bg-black/30 transition">
+        ⚡
+      </button>
+    </div>
+  </header>
+
+  <!-- ==================== 0. ЭКРАН ОЖИДАНИЯ ==================== -->
+  <section id="screen-idle" onclick="startWorkflow()" class="fixed inset-0 z-20 flex flex-col justify-between p-6 sm:p-8 md:p-10 cursor-pointer select-none transition-opacity duration-500">
+    
+    <div class="my-auto w-full max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-12 gap-8 items-center">
+      
+      <!-- Пастельная слоистая композиция -->
+      <div class="md:col-span-5 relative flex flex-col justify-end items-center md:items-start min-h-[340px] md:min-h-[440px]">
+        
+        <div class="absolute left-2 md:-left-2 top-4 md:top-8 z-20 flex items-center gap-2 bg-emerald-950/40 backdrop-blur-2xl border border-white/20 p-2 rounded-full shadow-capsule">
+          <div class="w-10 h-10 rounded-full bg-[#1b251e] border border-white/15 flex items-center justify-center text-white font-black text-xs">
+            CM
+          </div>
+          <span class="text-white/40 text-xs font-bold px-1">✕</span>
+          <div class="w-10 h-10 rounded-full bg-amber-400 text-zinc-950 flex items-center justify-center font-extrabold text-sm shadow-md">
+            ⚡
+          </div>
+        </div>
+
+        <div class="relative w-full max-w-[320px] mx-auto anim-float">
+          <div class="absolute -bottom-3 left-4 w-52 h-14 bg-[#a78bfa] rounded-2xl shadow-layered anim-tilt border-t border-white/30"></div>
+
+          <div class="space-y-2 relative z-10">
+            <div class="w-[88%] h-11 bg-[#c4b5fd] rounded-2xl shadow-layered flex items-center px-4 border-t border-white/40 justify-between">
+              <div class="w-12 h-1.5 rounded-full bg-white/40"></div>
+              <div class="w-4 h-4 rounded-full bg-purple-400/30"></div>
+            </div>
+
+            <div class="w-[98%] h-12 bg-[#fdba74] rounded-2xl shadow-layered flex items-center px-5 border-t border-white/40 justify-between">
+              <div class="w-16 h-2 rounded-full bg-orange-700/20"></div>
+              <div class="flex gap-1.5">
+                <span class="w-2 h-2 rounded-full bg-white/60"></span>
+                <span class="w-2 h-2 rounded-full bg-white/60"></span>
+              </div>
+            </div>
+
+            <div class="w-[80%] h-10 bg-[#5eead4] rounded-2xl shadow-layered flex items-center px-4 border-t border-white/40">
+              <div class="w-20 h-1.5 rounded-full bg-teal-800/20"></div>
+            </div>
+
+            <div class="w-[94%] h-12 bg-[#7c3aed] rounded-2xl shadow-layered flex items-center px-5 border-t border-white/30 justify-between">
+              <div class="w-10 h-2 rounded-full bg-purple-300/40"></div>
+              <div class="w-14 h-2 rounded-full bg-purple-200/30"></div>
+            </div>
+
+            <div class="w-[92%] h-11 bg-[#f472b6] rounded-2xl shadow-layered flex items-center px-4 border-t border-white/40">
+              <div class="w-24 h-2 rounded-full bg-pink-900/20"></div>
+            </div>
+
+            <div class="w-[100%] h-14 bg-[#fed7aa] rounded-2xl shadow-layered flex items-center px-6 border-t border-white/50 justify-between">
+              <div class="w-24 h-2.5 rounded-full bg-amber-900/20"></div>
+              <div class="w-8 h-2.5 rounded-full bg-amber-600/30"></div>
+            </div>
+
+            <div class="w-[86%] h-11 bg-[#6366f1] rounded-2xl shadow-layered flex items-center px-4 border-t border-white/30">
+              <div class="w-16 h-2 rounded-full bg-indigo-900/20"></div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Журнальная типографика -->
+      <div class="md:col-span-7 flex flex-col justify-center space-y-6 md:pl-6 text-center md:text-left">
+        <div class="text-white/40 font-quote text-7xl md:text-8xl leading-none select-none">
+          “
+        </div>
+
+        <div class="space-y-4">
+          <h1 id="idle-headline" class="text-4xl md:text-6xl font-black tracking-tight text-white leading-[1.08] drop-shadow-sm transition-all duration-500">
+            Оставь на чай с душой
+          </h1>
+
+          <p id="idle-subtext" class="text-lg md:text-xl font-medium text-white/85 max-w-xl mx-auto md:mx-0 leading-relaxed transition-all duration-500">
+            Вы знали, что девушки чаще оставляют чаевые? Парни, покажем, кто здесь задаёт стиль смены?
+          </p>
+        </div>
+
+        <div class="flex items-center justify-center md:justify-start gap-3 pt-2">
+          <div class="w-8 h-[2px] bg-white/40"></div>
+          <span id="idle-author" class="text-xs font-bold tracking-widest uppercase text-white/70">
+            Coffeeman Community • Shift Battle
+          </span>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- НИЖНИЙ БАР: Линии противостояния -->
+    <div class="w-full max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6 pt-4">
+      
+      <div class="w-full md:w-auto bg-black/20 backdrop-blur-2xl border border-white/20 p-4 rounded-3xl shadow-capsule flex flex-col gap-2 min-w-[320px]">
+        <div class="flex items-center justify-between text-xs font-black tracking-wider uppercase">
+          <span class="flex items-center gap-1.5 text-sky-300">
+            <span class="w-2 h-2 rounded-full bg-sky-400 anim-pulse-energy"></span>
+            Парни <span id="idle-boys-pct">54%</span>
+          </span>
+          <span class="text-white/40 font-extrabold text-[10px]">БАТТЛ СМЕНЫ</span>
+          <span class="flex items-center gap-1.5 text-pink-300">
+            Девушки <span id="idle-girls-pct">46%</span>
+            <span class="w-2 h-2 rounded-full bg-pink-400 anim-pulse-energy"></span>
+          </span>
+        </div>
+
+        <div class="relative w-full h-3 rounded-full bg-black/40 overflow-hidden flex items-center p-0.5 border border-white/10">
+          <div id="battle-line-boy" class="h-full rounded-l-full bg-gradient-to-r from-cyan-400 to-sky-500 transition-all duration-700 relative" style="width: 54%;">
+            <div class="absolute right-0 top-0 bottom-0 w-2 bg-white rounded-full anim-line-glow"></div>
+          </div>
+          <div id="battle-line-girl" class="h-full rounded-r-full bg-gradient-to-r from-pink-500 to-rose-400 transition-all duration-700" style="width: 46%;"></div>
+        </div>
+
+        <div class="flex items-center justify-between text-[10px] text-white/60 font-semibold">
+          <span id="idle-boys-count">32 гостя</span>
+          <span id="idle-leader-badge" class="text-amber-300 font-bold">⚡ Лидируют парни</span>
+          <span id="idle-girls-count">27 гостей</span>
+        </div>
+      </div>
+
+      <div class="text-center md:text-right anim-tap-hint">
+        <p class="text-sm md:text-base font-extrabold tracking-widest uppercase text-white drop-shadow">
+          Коснись экрана, чтобы оставить на чай →
+        </p>
+        <p class="text-[11px] text-white/60 font-medium mt-0.5">
+          Касание в любое место активирует оплату
+        </p>
+      </div>
+
+    </div>
+
+  </section>
+
+  <!-- ==================== ОСНОВНОЙ WORKFLOW ==================== -->
+  <main class="relative z-10 w-full max-w-4xl mx-auto my-auto flex items-center justify-center min-h-[480px]">
+
+    <!-- ШАГ 1: ВЫБОР СУММЫ -->
+    <section id="step-1" class="hidden w-full transition-all duration-300">
+      
+      <div class="text-center mb-6 space-y-1">
+        <span class="text-[11px] uppercase tracking-widest font-black text-amber-300 bg-black/20 px-3.5 py-1 rounded-full border border-white/15">
+          Шаг 1 из 3
+        </span>
+        <h2 class="text-3xl md:text-4xl font-black tracking-tight text-white mt-2">Выбери сумму чаевых</h2>
+        <p class="text-xs text-white/70">Выбери готовый вариант или введи свою сумму</p>
+      </div>
+
+      <div class="flex flex-col md:flex-row items-center justify-center gap-5 max-w-2xl mx-auto">
+        <div id="amounts-container" class="w-full max-w-sm space-y-3 transition-all duration-300">
+          <div class="grid grid-cols-2 gap-3">
+            <button onclick="setAmount(50)" class="amt-btn p-4 rounded-3xl bg-black/20 hover:bg-black/30 border border-white/20 active:scale-95 transition flex flex-col items-center backdrop-blur-xl shadow-capsule">
+              <span class="text-2xl font-black text-white">50 ₽</span>
+              <span class="text-[11px] text-white/60">На конфету</span>
+            </button>
+
+            <button onclick="setAmount(100)" class="amt-btn p-4 rounded-3xl bg-amber-400 text-zinc-950 border border-amber-300 active:scale-95 transition flex flex-col items-center shadow-lg shadow-amber-400/20">
+              <span class="text-2xl font-black text-zinc-950">100 ₽</span>
+              <span class="text-[11px] font-bold text-zinc-800">Классика кофе</span>
+            </button>
+
+            <button onclick="setAmount(200)" class="amt-btn p-4 rounded-3xl bg-black/20 hover:bg-black/30 border border-white/20 active:scale-95 transition flex flex-col items-center backdrop-blur-xl shadow-capsule">
+              <span class="text-2xl font-black text-white">200 ₽</span>
+              <span class="text-[11px] text-white/60">За уют и тепло</span>
+            </button>
+
+            <button onclick="setAmount(500)" class="amt-btn p-4 rounded-3xl bg-black/20 hover:bg-black/30 border border-white/20 active:scale-95 transition flex flex-col items-center backdrop-blur-xl shadow-capsule">
+              <span class="text-2xl font-black text-white">500 ₽</span>
+              <span class="text-[11px] text-white/60">Щедрый гость</span>
+            </button>
+          </div>
+
+          <div onclick="openNumpad()" class="cursor-pointer p-4 rounded-3xl bg-black/25 border-2 border-dashed border-white/30 hover:border-amber-300 flex items-center justify-between px-6 transition backdrop-blur-xl">
+            <span class="text-xs font-bold text-white/70">Своя сумма:</span>
+            <span id="custom-amount-display" class="text-2xl font-black text-amber-300">100 ₽</span>
+          </div>
+
+          <div class="space-y-2 pt-2">
+            <button onclick="goToStep(2)" class="w-full py-4 rounded-2xl bg-white text-zinc-950 hover:bg-amber-300 font-extrabold text-base tracking-wider uppercase active:scale-95 shadow-capsule transition flex items-center justify-center gap-2">
+              <span>Дальше</span>
+              <span>→</span>
+            </button>
+            <button onclick="skipToPayment()" class="w-full py-2.5 rounded-xl bg-black/20 hover:bg-black/40 text-white/70 hover:text-white border border-white/10 text-xs font-bold transition">
+              ⚡ Пропустить и сразу к оплате
+            </button>
+          </div>
+        </div>
+
+        <!-- Numpad -->
+        <div id="numpad-container" class="hidden w-full max-w-[270px] bg-black/30 border border-white/20 p-4 rounded-3xl backdrop-blur-2xl shadow-capsule space-y-2.5">
+          <div class="flex items-center justify-between border-b border-white/10 pb-2">
+            <span class="text-xs font-bold text-white/70 uppercase tracking-wider">Ввод суммы</span>
+            <button onclick="closeNumpad()" class="text-xs text-amber-300 font-extrabold hover:underline">Готово ✓</button>
+          </div>
+          
+          <div class="grid grid-cols-3 gap-2">
+            <button onclick="numpadPress('1')" class="py-3 bg-white/10 hover:bg-white/20 active:bg-amber-400 active:text-black rounded-2xl text-xl font-black transition">1</button>
+            <button onclick="numpadPress('2')" class="py-3 bg-white/10 hover:bg-white/20 active:bg-amber-400 active:text-black rounded-2xl text-xl font-black transition">2</button>
+            <button onclick="numpadPress('3')" class="py-3 bg-white/10 hover:bg-white/20 active:bg-amber-400 active:text-black rounded-2xl text-xl font-black transition">3</button>
+            <button onclick="numpadPress('4')" class="py-3 bg-white/10 hover:bg-white/20 active:bg-amber-400 active:text-black rounded-2xl text-xl font-black transition">4</button>
+            <button onclick="numpadPress('5')" class="py-3 bg-white/10 hover:bg-white/20 active:bg-amber-400 active:text-black rounded-2xl text-xl font-black transition">5</button>
+            <button onclick="numpadPress('6')" class="py-3 bg-white/10 hover:bg-white/20 active:bg-amber-400 active:text-black rounded-2xl text-xl font-black transition">6</button>
+            <button onclick="numpadPress('7')" class="py-3 bg-white/10 hover:bg-white/20 active:bg-amber-400 active:text-black rounded-2xl text-xl font-black transition">7</button>
+            <button onclick="numpadPress('8')" class="py-3 bg-white/10 hover:bg-white/20 active:bg-amber-400 active:text-black rounded-2xl text-xl font-black transition">8</button>
+            <button onclick="numpadPress('9')" class="py-3 bg-white/10 hover:bg-white/20 active:bg-amber-400 active:text-black rounded-2xl text-xl font-black transition">9</button>
+            <button onclick="numpadClear()" class="py-3 bg-rose-500/20 text-rose-300 hover:bg-rose-500/30 active:scale-95 rounded-2xl text-sm font-black transition">C</button>
+            <button onclick="numpadPress('0')" class="py-3 bg-white/10 hover:bg-white/20 active:bg-amber-400 active:text-black rounded-2xl text-xl font-black transition">0</button>
+            <button onclick="numpadBackspace()" class="py-3 bg-white/10 hover:bg-white/20 active:scale-95 rounded-2xl text-base font-black transition">⌫</button>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ШАГ 2: ВЫБОР РОЛИ -->
+    <section id="step-2" class="hidden w-full max-w-md mx-auto space-y-6">
+      <div class="text-center space-y-1">
+        <span class="text-[11px] uppercase tracking-widest font-black text-amber-300 bg-black/20 px-3.5 py-1 rounded-full border border-white/15">
+          Шаг 2 из 3
+        </span>
+        <h2 class="text-3xl font-black tracking-tight mt-2 text-white">Кому адресованы чаевые?</h2>
+        <p class="text-xs text-white/70">Выбери того, кто создал твое настроение</p>
+      </div>
+
+      <div class="grid grid-cols-2 gap-4">
+        <button onclick="selectRole('barista')" id="role-barista" class="p-6 rounded-3xl bg-amber-400 text-zinc-950 border border-amber-300 active:scale-95 transition flex flex-col items-center gap-3 text-center shadow-capsule">
+          <div class="w-16 h-16 rounded-2xl bg-white/40 flex items-center justify-center text-3xl shadow-sm">☕</div>
+          <div>
+            <div class="text-lg font-black text-zinc-950">Бариста</div>
+            <div class="text-[11px] font-semibold text-zinc-800 mt-0.5">Вкуснейший кофе</div>
+          </div>
+        </button>
+
+        <button onclick="selectRole('waiter')" id="role-waiter" class="p-6 rounded-3xl bg-black/20 border border-white/20 active:scale-95 transition flex flex-col items-center gap-3 text-center hover:bg-black/30 backdrop-blur-xl">
+          <div class="w-16 h-16 rounded-2xl bg-white/10 flex items-center justify-center text-3xl">🍽️</div>
+          <div>
+            <div class="text-lg font-black text-white">Официант</div>
+            <div class="text-[11px] text-white/60 mt-0.5">Сервис и внимание</div>
+          </div>
+        </button>
+      </div>
+
+      <div class="flex gap-3 pt-2">
+        <button onclick="goToStep(1)" class="w-1/3 py-4 rounded-2xl bg-black/20 border border-white/20 text-white font-bold text-sm active:scale-95 transition backdrop-blur-md">
+          ← Назад
+        </button>
+        <button onclick="goToStep(3)" class="w-2/3 py-4 rounded-2xl bg-white text-zinc-950 hover:bg-amber-300 font-extrabold text-base tracking-wider uppercase active:scale-95 shadow-capsule transition">
+          Дальше →
+        </button>
+      </div>
+    </section>
+
+    <!-- ШАГ 3: БАТТЛ ПОЛОВ -->
+    <section id="step-3" class="hidden w-full max-w-md mx-auto space-y-6">
+      <div class="text-center space-y-1">
+        <span class="text-[11px] uppercase tracking-widest font-black text-rose-300 bg-rose-500/20 px-3.5 py-1 rounded-full border border-rose-400/30">
+          Битва смены
+        </span>
+        <h2 class="text-3xl font-black tracking-tight mt-2 text-white">Кто сегодня лидер?</h2>
+        <p class="text-xs text-white/70">Твой голос сдвигает линию противостояния в пользу команды!</p>
+      </div>
+
+      <div class="relative flex items-center justify-between gap-3 pt-2 pb-4">
+        <button onclick="pickFighter('boy')" class="w-1/2 p-5 rounded-3xl bg-black/25 border-2 border-sky-400/50 hover:border-sky-300 active:scale-95 transition flex flex-col items-center gap-3 text-center shadow-capsule backdrop-blur-xl">
+          <div class="w-20 h-20 rounded-2xl bg-sky-500/20 border border-sky-300/40 flex items-center justify-center">
+            <svg viewBox="0 0 48 48" class="w-14 h-14" fill="none">
+              <circle cx="24" cy="18" r="8" fill="#7dd3fc"/>
+              <path d="M14 16C14 11 18 8 24 8C30 8 34 11 34 16L34 18L14 18Z" fill="#0369a1"/>
+              <path d="M12 40C12 31 17 27 24 27C31 27 36 31 36 40" fill="#0284c7"/>
+            </svg>
+          </div>
+          <div>
+            <div class="text-xl font-black text-sky-300 tracking-wide">ПАРНИ</div>
+            <div id="guy-label" class="text-xs text-white/80 font-bold">Алексей</div>
+          </div>
+          <span class="text-[10px] uppercase tracking-wider font-extrabold text-sky-200 bg-sky-500/30 px-3 py-1 rounded-xl">
+            Поддержать
+          </span>
+        </button>
+
+        <div class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-10 pointer-events-none">
+          <div class="w-12 h-12 rounded-2xl bg-amber-400 text-zinc-950 border-2 border-white flex items-center justify-center font-black text-base shadow-2xl">
+            VS
+          </div>
+        </div>
+
+        <button onclick="pickFighter('girl')" class="w-1/2 p-5 rounded-3xl bg-black/25 border-2 border-pink-400/50 hover:border-pink-300 active:scale-95 transition flex flex-col items-center gap-3 text-center shadow-capsule backdrop-blur-xl">
+          <div class="w-20 h-20 rounded-2xl bg-pink-500/20 border border-pink-300/40 flex items-center justify-center">
+            <svg viewBox="0 0 48 48" class="w-14 h-14" fill="none">
+              <circle cx="24" cy="18" r="8" fill="#f472b6"/>
+              <path d="M15 14C15 9 19 6 24 6C29 6 33 9 33 14C35 18 34 22 34 22C32 23 30 19 30 19C28 22 25 22 24 22C23 22 20 22 18 19C18 19 16 23 14 22C14 22 13 18 15 14Z" fill="#831843"/>
+              <path d="M12 40C12 31 17 27 24 27C31 27 36 31 36 40" fill="#db2777"/>
+            </svg>
+          </div>
+          <div>
+            <div class="text-xl font-black text-pink-300 tracking-wide">ДЕВУШКИ</div>
+            <div id="girl-label" class="text-xs text-white/80 font-bold">Мария</div>
+          </div>
+          <span class="text-[10px] uppercase tracking-wider font-extrabold text-pink-200 bg-pink-500/30 px-3 py-1 rounded-xl">
+            Поддержать
+          </span>
+        </button>
+      </div>
+
+      <button onclick="goToStep(2)" class="w-full py-3.5 rounded-2xl bg-black/20 border border-white/20 text-white/80 font-bold text-xs active:scale-95 transition backdrop-blur-md">
+        ← Назад к выбору роли
+      </button>
+    </section>
+
+    <!-- ШАГ 4: ЭКРАН ОПЛАТЫ (РЕАЛЬНЫЙ СБП QR) -->
+    <section id="step-4" class="hidden w-full max-w-4xl mx-auto space-y-4">
+      
+      <div class="flex items-center justify-between px-2">
+        <div class="flex items-center gap-2">
+          <span id="pay-status-dot" class="w-2.5 h-2.5 rounded-full bg-emerald-400 anim-pulse-energy"></span>
+          <span id="pay-status-text" class="text-xs uppercase font-extrabold tracking-widest text-emerald-300">Прямой СБП QR через ЮKassa</span>
+        </div>
+        <div class="text-[11px] font-bold text-white/70 bg-black/20 px-3 py-1 rounded-full border border-white/10">
+          Связь: <span id="kassa-online-badge" class="text-emerald-300 font-black">Онлайн</span>
+        </div>
+      </div>
+
+      <div class="bg-black/25 backdrop-blur-2xl border border-white/20 rounded-3xl p-6 md:p-8 shadow-capsule relative overflow-hidden">
+        
+        <div id="pay-loading-view" class="hidden flex-col items-center justify-center py-16 space-y-4 text-center">
+          <div class="w-14 h-14 rounded-full border-4 border-amber-300/30 border-t-amber-400 animate-spin"></div>
+          <div class="space-y-1">
+            <h3 class="text-xl font-bold text-white">Регистрируем СБП счёт в ЮKassa...</h3>
+            <p class="text-xs text-white/70">Получаем подлинный QR-код Национальной Системы Платежных Карт (НСПК)</p>
+          </div>
+        </div>
+
+        <div id="pay-error-view" class="hidden flex-col items-center justify-center py-6 space-y-4 text-center max-w-xl mx-auto">
+          <div class="w-14 h-14 rounded-full bg-rose-500/20 border border-rose-500/40 text-rose-300 flex items-center justify-center text-2xl shadow-lg">
+            ⚠️
+          </div>
+          <div class="space-y-1.5 w-full">
+            <h3 class="text-lg font-black text-rose-200">Не удалось создать платёж</h3>
+            <p id="pay-error-desc" class="text-xs text-white/80 leading-relaxed font-medium">Шлюз ЮKassa отклонил запрос.</p>
+          </div>
+
+          <div class="w-full text-left space-y-2">
+            <div class="flex items-center justify-between text-[11px] px-1 text-white/70">
+              <span class="font-bold">Лог ответа ЮKassa:</span>
+              <button onclick="toggleErrorDetails()" id="btn-toggle-err-details" class="text-amber-300 underline font-semibold hover:text-white">
+                Показать лог ▾
+              </button>
+            </div>
+
+            <div id="pay-error-details-box" class="hidden bg-black/60 border border-rose-500/30 rounded-2xl p-3.5 font-mono-code text-[11px] text-rose-200 max-h-48 overflow-y-auto custom-scroll space-y-1 break-all select-text">
+              <div id="pay-error-raw-dump">Логи запроса отсутствуют</div>
+            </div>
+          </div>
+
+          <div class="flex flex-col sm:flex-row items-center justify-center gap-2.5 w-full pt-1">
+            <button onclick="retryRealPayment()" class="w-full sm:w-auto py-3 px-6 rounded-2xl bg-amber-400 hover:bg-amber-300 text-zinc-950 font-black text-xs uppercase tracking-wider transition active:scale-95 shadow-md">
+              🔄 Повторить запрос
+            </button>
+            <button onclick="copyRecentLogs()" class="w-full sm:w-auto py-3 px-5 rounded-2xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs uppercase tracking-wider transition active:scale-95 border border-white/15 flex items-center justify-center gap-1.5">
+              <span>📋</span> <span id="btn-copy-text">Скопировать логи</span>
+            </button>
+            <button onclick="openAdminDirect()" class="w-full sm:w-auto py-3 px-4 rounded-2xl bg-black/30 hover:bg-black/50 text-white/80 text-xs font-semibold border border-white/10">
+              ⚙️ Настройки (0506)
+            </button>
+          </div>
+        </div>
+
+        <div id="pay-content-view" class="grid grid-cols-1 md:grid-cols-12 gap-8 items-center">
+          
+          <div class="md:col-span-7 flex flex-col justify-between space-y-6">
+            <div class="space-y-2">
+              <span class="text-xs font-black uppercase tracking-wider text-amber-300 bg-amber-400/20 px-3 py-1 rounded-lg border border-amber-300/30">
+                Шаг 3 из 3 • Оплата СБП
+              </span>
+              <h2 id="final-amount-label" class="text-4xl md:text-5xl font-black text-white tracking-tight mt-2">100 ₽</h2>
+              <p id="target-recipient" class="text-sm text-white/85 font-medium">В пользу: Парни (Алексей) • Бариста</p>
+            </div>
+
+            <div class="space-y-3 bg-black/20 p-4 rounded-2xl border border-white/10 text-xs font-semibold">
+              <div class="flex items-start gap-3">
+                <span class="w-6 h-6 rounded-full bg-amber-400 text-zinc-950 flex items-center justify-center font-black shrink-0 text-xs shadow-sm">1</span>
+                <p class="text-white/90 leading-relaxed">Открой камеру телефона или приложение любого банка (Сбер, Т-Банк, Альфа...)</p>
+              </div>
+              <div class="flex items-start gap-3">
+                <span class="w-6 h-6 rounded-full bg-white/20 text-white flex items-center justify-center font-black shrink-0 text-xs">2</span>
+                <p class="text-white/80 leading-relaxed">Наведи на официальный QR СБП справа — приложение сразу откроет подтверждение перевода</p>
+              </div>
+              <div class="flex items-start gap-3">
+                <span class="w-6 h-6 rounded-full bg-emerald-400 text-zinc-950 flex items-center justify-center font-black shrink-0 text-xs shadow-sm">3</span>
+                <p class="text-emerald-200 leading-relaxed font-bold">Подтверди в телефоне — экран автоматически зафиксирует поступление средств</p>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-3.5 px-4 py-2.5 rounded-xl bg-white/5 border border-white/10">
+              <div class="relative w-4 h-4 flex items-center justify-center">
+                <div class="absolute inset-0 rounded-full bg-emerald-400 anim-radar"></div>
+                <div class="w-2.5 h-2.5 rounded-full bg-emerald-400 shadow-lg"></div>
+              </div>
+              <div class="text-[11px] text-white/80 font-medium">
+                Ожидаем подтверждение оплаты от ЮKassa в реальном времени...
+              </div>
+            </div>
+
+            <div class="flex items-center gap-3 pt-2">
+              <button onclick="userChangedMind()" class="w-1/2 py-3.5 rounded-2xl bg-rose-500/15 hover:bg-rose-500/25 border border-rose-400/30 text-rose-200 text-xs font-extrabold uppercase tracking-wider active:scale-95 transition flex items-center justify-center gap-1.5 shadow-sm">
+                <span>✕</span>
+                <span>Передумал</span>
+              </button>
+              <button onclick="goToStep(1)" class="w-1/2 py-3.5 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/15 text-white/90 text-xs font-extrabold uppercase tracking-wider active:scale-95 transition">
+                Изменить сумму
+              </button>
+            </div>
+          </div>
+
+          <div class="md:col-span-5 flex flex-col items-center justify-center space-y-3">
+            <div class="relative bg-white p-5 rounded-3xl shadow-2xl border-4 border-amber-300/40 group overflow-hidden">
+              <div class="absolute left-2 right-2 h-0.5 bg-gradient-to-r from-transparent via-amber-500 to-transparent shadow-lg anim-scan pointer-events-none z-10"></div>
+              
+              <div class="flex items-center justify-between border-b border-zinc-200 pb-2.5 mb-2.5">
+                <span class="text-[10px] font-black uppercase tracking-wider text-zinc-950 flex items-center gap-1">
+                  <span class="w-2 h-2 rounded-full bg-emerald-500"></span> Официальный СБП QR
+                </span>
+                <span class="text-[10px] font-bold text-zinc-600">0% комиссии</span>
+              </div>
+
+              <div id="qrcode" class="flex items-center justify-center min-w-[200px] min-h-[200px]"></div>
+
+              <div class="pt-2 text-center border-t border-zinc-100 mt-2">
+                <span class="text-[9px] uppercase tracking-widest text-zinc-500 font-extrabold">Зарегистрировано в НСПК</span>
+              </div>
+            </div>
+
+            <button onclick="triggerPaymentSuccess()" class="text-[10px] text-white/40 hover:text-white/80 underline font-mono-code">
+              [Тест] Симулировать оплату
+            </button>
+          </div>
+
+        </div>
+
+      </div>
+
+    </section>
+
+    <!-- ==================== ШАГ 5: ТРИУМФ И ПОСЛЕДОВАТЕЛЬНЫЕ АНИМАЦИИ ==================== -->
+    <section id="step-5" class="hidden w-full max-w-xl mx-auto py-4">
+
+      <!-- СЦЕНАРИЙ А: ГОСТЬ УЧАСТВОВАЛ В БАТТЛЕ (ПОЛНЫЙ ПАКЕТ АНИМАЦИЙ) -->
+      <div id="victory-battle-flow" class="w-full space-y-5">
+        
+        <!-- ФАЗА 1: СТРЕЛКА ВВЕРХ (БУСТ ПОБЕДИТЕЛЯ) -->
+        <div id="phase-winner" class="bg-black/35 backdrop-blur-2xl border-2 border-emerald-400/60 rounded-3xl p-6 shadow-2xl space-y-4 anim-pop-in">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <span class="w-3 h-3 rounded-full bg-emerald-400 anim-pulse-energy"></span>
+              <span class="text-xs font-black uppercase tracking-widest text-emerald-300">СТАТИСТИКА ВВЕРХ!</span>
+            </div>
+            <span class="text-xs font-extrabold text-white/60 bg-white/10 px-3 py-1 rounded-full">+1 Голос в баттл</span>
+          </div>
+
+          <div class="flex items-center justify-between gap-4 py-2">
+            <div class="flex items-center gap-4">
+              <div class="w-16 h-16 rounded-2xl bg-emerald-500/20 border border-emerald-400/50 flex items-center justify-center text-3xl font-black text-emerald-300 anim-arrow-up">
+                ⬆️
+              </div>
+              <div class="space-y-0.5">
+                <div class="text-[11px] font-bold uppercase tracking-wider text-emerald-300">Твой выбор побеждает</div>
+                <div id="winner-name-label" class="text-2xl font-black text-white">Парни (Алексей)</div>
+                <div class="text-xs text-white/70 font-semibold">Рейтинг смены взлетел вверх!</div>
+              </div>
+            </div>
+
+            <div class="text-right">
+              <div id="winner-pct-display" class="text-4xl font-black text-emerald-300">55%</div>
+              <div class="text-[10px] uppercase font-bold text-emerald-400/80">Доля в смене</div>
+            </div>
+          </div>
+
+          <!-- Динамическая полоса буста -->
+          <div class="w-full h-3 rounded-full bg-black/50 overflow-hidden p-0.5 border border-white/15">
+            <div id="winner-progress-bar" class="h-full rounded-full bg-gradient-to-r from-emerald-400 to-teal-300 transition-all duration-1000" style="width: 50%;"></div>
+          </div>
+        </div>
+
+        <!-- ФАЗА 2: СТРЕЛКА ВНИЗ (ОТСТАВАНИЕ СОПЕРНИКОВ) -->
+        <div id="phase-loser" class="hidden bg-black/30 backdrop-blur-2xl border border-rose-500/40 rounded-3xl p-5 shadow-2xl space-y-3 anim-pop-in">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <span class="w-2.5 h-2.5 rounded-full bg-rose-400"></span>
+              <span class="text-xs font-black uppercase tracking-widest text-rose-300">СОПЕРНИКИ СМЕЩАЮТСЯ ВНИЗ</span>
+            </div>
+            <span class="text-[11px] font-bold text-rose-300/80">Потеря преимущества</span>
+          </div>
+
+          <div class="flex items-center justify-between gap-4">
+            <div class="flex items-center gap-3.5">
+              <div class="w-12 h-12 rounded-xl bg-rose-500/20 border border-rose-400/40 flex items-center justify-center text-2xl font-black text-rose-300 anim-arrow-down">
+                ⬇️
+              </div>
+              <div class="space-y-0.5">
+                <div id="loser-name-label" class="text-lg font-black text-white/90">Девушки (Мария)</div>
+                <div class="text-[11px] text-white/60 font-medium">Отстают в общем противостоянии смены</div>
+              </div>
+            </div>
+
+            <div class="text-right">
+              <div id="loser-pct-display" class="text-2xl font-black text-rose-300">45%</div>
+              <div class="text-[9px] uppercase font-bold text-rose-400/70">Новая доля</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ФАЗА 3: ФИНАЛЬНАЯ БЛАГОДАРНОСТЬ И ТАЙМЕР -->
+        <div id="phase-thanks" class="hidden bg-black/35 backdrop-blur-2xl border border-amber-300/40 rounded-3xl p-6 shadow-2xl text-center space-y-4 anim-pop-in">
+          <div class="w-16 h-16 rounded-full bg-amber-400 text-zinc-950 mx-auto flex items-center justify-center text-3xl shadow-xl animate-bounce">
+            🎉
+          </div>
+
+          <div class="space-y-1">
+            <span class="text-xs font-black uppercase tracking-widest text-emerald-300 bg-emerald-500/20 px-3.5 py-1 rounded-full border border-emerald-400/30">
+              Платёж успешно проведён!
+            </span>
+            <h2 class="text-3xl font-black text-white tracking-tight mt-2">ОГРОМНОЕ СПАСИБО!</h2>
+            <p id="thanks-recipient-subtext" class="text-sm font-semibold text-amber-200">
+              Твои чаевые уже согрели сердечко команды Coffeeman
+            </p>
+          </div>
+
+          <!-- Обратный отсчет (появляется ТОЛЬКО после всех анимаций) -->
+          <div class="bg-black/40 border border-white/15 p-4 rounded-2xl max-w-xs mx-auto flex items-center justify-between px-6">
+            <div class="text-left">
+              <p class="text-[10px] text-white/60 uppercase tracking-wider font-bold">Возврат на экран</p>
+              <p class="text-xs text-white/90 font-semibold">Ждём вас снова!</p>
+            </div>
+            <div id="countdown-timer" class="text-3xl font-black text-amber-300">5</div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- СЦЕНАРИЙ Б: БЫСТРАЯ ОПЛАТА БЕЗ ВОПРОСОВ (ПРОПУСК) -->
+      <div id="victory-simple-flow" class="hidden w-full max-w-sm mx-auto text-center space-y-5 bg-black/35 backdrop-blur-2xl border border-amber-300/40 p-7 rounded-3xl shadow-2xl">
+        <div class="w-20 h-20 rounded-full bg-amber-400 text-zinc-950 mx-auto flex items-center justify-center text-4xl shadow-xl animate-bounce">
+          ☕
+        </div>
+
+        <div class="space-y-1">
+          <span class="text-xs font-black uppercase tracking-widest text-emerald-300 bg-emerald-500/20 px-3.5 py-1 rounded-full border border-emerald-400/30">
+            Оплата подтверждена
+          </span>
+          <h2 class="text-3xl font-black text-white mt-2">СПАСИБО!</h2>
+          <p class="text-xs text-white/80 font-medium">Чаевые успешно зачислены. Отличного настроения и вкусного кофе!</p>
+        </div>
+
+        <div class="bg-black/40 border border-white/15 p-4 rounded-2xl max-w-xs mx-auto flex items-center justify-between px-5">
+          <span class="text-xs text-white/70 font-semibold uppercase tracking-wider">Возврат</span>
+          <div id="countdown-simple-timer" class="text-3xl font-black text-amber-300">5</div>
+        </div>
+      </div>
+
+    </section>
+
+  </main>
+
+  <footer class="relative z-10 text-center py-1">
+    <p class="text-[11px] text-white/50 font-semibold tracking-wide">
+      Coffeeman Terminal • Электронные чаевые и интерактивный сервис
+    </p>
+  </footer>
+
+  <!-- ИНЖЕНЕРНЫЙ ПУЛЬТ (0506) -->
+  <div id="admin-modal" class="hidden fixed inset-0 z-50 bg-black/85 backdrop-blur-xl flex items-center justify-center p-4">
+    <div class="bg-[#17231c] border border-white/20 rounded-3xl w-full max-w-xl p-6 space-y-4 shadow-2xl max-h-[92vh] overflow-y-auto custom-scroll">
+      
+      <div class="flex items-center justify-between border-b border-white/10 pb-3">
+        <div class="flex items-center gap-2">
+          <span class="text-amber-400 text-lg">⚡</span>
+          <div>
+            <h3 class="text-sm font-black text-white">Инженерный пульт Coffeeman</h3>
+            <span class="text-[10px] text-white/50 font-mono-code">Настройка ЮKassa, CORS и СБП</span>
+          </div>
+        </div>
+        <button onclick="closeAdmin()" class="text-white/60 hover:text-white text-2xl font-bold leading-none">&times;</button>
+      </div>
+
+      <div class="space-y-3">
+        <div>
+          <label class="text-[10px] uppercase font-mono-code text-white/60 block mb-1">CORS Прокси (Cloudflare Worker URL):</label>
+          <input id="cfg-cors" type="text" class="w-full p-2.5 bg-black/40 border border-white/15 rounded-xl text-xs font-mono-code text-white/90 focus:border-amber-400 outline-none" value="https://green-glade-501c.dalordjot.workers.dev/">
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="text-[10px] uppercase font-mono-code text-white/60 block mb-1">ShopID ЮKassa:</label>
+            <input id="cfg-id" type="text" class="w-full p-2.5 bg-black/40 border border-white/15 rounded-xl text-xs font-mono-code text-white/90 focus:border-amber-400 outline-none" value="1350725">
+          </div>
+          <div>
+            <label class="text-[10px] uppercase font-mono-code text-white/60 block mb-1">Secret Key ЮKassa (live_... / test_...):</label>
+            <input id="cfg-sec" type="password" class="w-full p-2.5 bg-black/40 border border-white/15 rounded-xl text-xs font-mono-code text-white/90 focus:border-amber-400 outline-none" placeholder="live_... или test_...">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2 pt-1">
+          <button onclick="saveAdminCfg()" class="bg-amber-400 hover:bg-amber-300 text-zinc-950 py-2.5 rounded-xl font-black text-xs uppercase tracking-wider transition active:scale-95 shadow">
+            💾 Сохранить
+          </button>
+          <button onclick="runDiagnostics()" id="btn-diag-run" class="bg-emerald-600 hover:bg-emerald-500 text-white py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider transition active:scale-95 flex items-center justify-center gap-1.5 shadow">
+            <span>🔬</span> Проверить ЮKassa
+          </button>
+        </div>
+      </div>
+
+      <div class="space-y-2 pt-2 border-t border-white/10">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <span class="text-xs font-bold uppercase tracking-wider text-white/80">Журнал операций (Logs)</span>
+            <span id="log-count-badge" class="text-[9px] font-mono-code px-2 py-0.5 rounded bg-white/10 text-amber-300">0 записей</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <button onclick="copyRecentLogs()" id="btn-copy-modal-logs" class="text-xs text-amber-300 hover:text-white font-bold px-2 py-1 bg-white/5 hover:bg-white/10 rounded-lg border border-white/10 transition flex items-center gap-1">
+              📋 Скопировать логи
+            </button>
+            <button onclick="clearSystemLogs()" class="text-xs text-white/40 hover:text-rose-400 font-semibold px-2 py-1 transition">
+              Очистить
+            </button>
+          </div>
+        </div>
+
+        <div id="admin-log-console" class="bg-black/70 border border-white/15 p-3.5 rounded-2xl h-56 overflow-y-auto font-mono-code text-[11px] text-emerald-400 space-y-1.5 custom-scroll select-text">
+          <div class="text-white/40">[SYSTEM READY] Терминал Coffeeman ожидает действий...</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
+    import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCT2aJ8rF5KRCIFS3W6r4wbQeyBzkhmqnc",
+      authDomain: "lte-bank.firebaseapp.com",
+      databaseURL: "https://lte-bank-default-rtdb.firebaseio.com",
+      projectId: "lte-bank",
+      storageBucket: "lte-bank.firebasestorage.app",
+      messagingSenderId: "286397543738",
+      appId: "1:286397543738:web:c3ef297e6b6666620c4c03",
+      measurementId: "G-Q9BM100F5P"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    const systemLogs = [];
+
+    window.addLog = (level, message, details = null) => {
+      const now = new Date();
+      const timeStr = now.toLocaleTimeString() + "." + String(now.getMilliseconds()).padStart(3, "0");
+      systemLogs.push({ time: timeStr, level, message, details });
+      if (systemLogs.length > 200) systemLogs.shift();
+
+      const consoleBox = document.getElementById("admin-log-console");
+      if (consoleBox) {
+        const row = document.createElement("div");
+        let colorClass = "text-emerald-400";
+        if (level === "ERR") colorClass = "text-rose-400 font-bold";
+        else if (level === "WARN") colorClass = "text-amber-300 font-semibold";
+        else if (level === "REQ") colorClass = "text-sky-300";
+        else if (level === "RES") colorClass = "text-teal-200";
+
+        let detailsHtml = "";
+        if (details) {
+          const detailStr = typeof details === "object" ? JSON.stringify(details, null, 2) : String(details);
+          detailsHtml = `<pre class="mt-0.5 text-[10px] text-white/70 bg-white/5 p-1.5 rounded overflow-x-auto">${detailStr}</pre>`;
+        }
+
+        row.className = colorClass;
+        row.innerHTML = `<span class="text-white/40">[${timeStr}]</span> <span class="font-bold">[${level}]</span> ${message}${detailsHtml}`;
+        consoleBox.appendChild(row);
+        consoleBox.scrollTop = consoleBox.scrollHeight;
+      }
+
+      const badge = document.getElementById("log-count-badge");
+      if (badge) badge.textContent = `${systemLogs.length} записей`;
+    };
+
+    window.clearSystemLogs = () => {
+      systemLogs.length = 0;
+      const consoleBox = document.getElementById("admin-log-console");
+      if (consoleBox) consoleBox.innerHTML = '<div class="text-white/40">[SYSTEM] Журнал логов очищен.</div>';
+      const badge = document.getElementById("log-count-badge");
+      if (badge) badge.textContent = `0 записей`;
+    };
+
+    window.copyRecentLogs = () => {
+      if (systemLogs.length === 0) return alert("Логи пусты.");
+      const formatted = systemLogs.map(item => {
+        let out = `[${item.time}] [${item.level}] ${item.message}`;
+        if (item.details) out += "\n" + (typeof item.details === "object" ? JSON.stringify(item.details, null, 2) : item.details);
+        return out;
+      }).join("\n\n");
+
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(formatted).then(showCopyFeedback).catch(() => alert("Скопируйте вручную из окна логов"));
+      } else {
+        alert("Скопируйте вручную из окна логов");
+      }
+    };
+
+    function showCopyFeedback() {
+      const btn1 = document.getElementById("btn-copy-text");
+      const btn2 = document.getElementById("btn-copy-modal-logs");
+      if (btn1) {
+        btn1.textContent = "✓ Скопировано!";
+        setTimeout(() => btn1.textContent = "Скопировать логи", 2000);
+      }
+      if (btn2) {
+        btn2.innerHTML = "✓ Логи скопированы!";
+        setTimeout(() => btn2.innerHTML = "📋 Скопировать логи", 2000);
+      }
+      alert("Логи скопированы в буфер обмена!");
+    }
+
+    window.toggleErrorDetails = () => {
+      const box = document.getElementById("pay-error-details-box");
+      const btn = document.getElementById("btn-toggle-err-details");
+      if (box.classList.contains("hidden")) {
+        box.classList.remove("hidden");
+        btn.textContent = "Скрыть лог ▴";
+      } else {
+        box.classList.add("hidden");
+        btn.textContent = "Показать лог ▾";
+      }
+    };
+
+    let selectedAmount = 100;
+    let customAmountStr = "100";
+    let selectedRole = "barista";
+    let selectedGender = "boy";
+    let answeredQuestions = true; // Ответил ли гость на вопросы баттла
+    let activeShift = null;
+    let countdownInterval = null;
+    let currentPaymentId = null;
+    let pollInterval = null;
+
+    let idleTimeout = null;
+    const INACTIVITY_LIMIT_MS = 32000;
+
+    function resetInactivityTimer() {
+      if (idleTimeout) clearTimeout(idleTimeout);
+      const isIdle = !document.getElementById("screen-idle").classList.contains("hidden");
+      const isSuccess = !document.getElementById("step-5").classList.contains("hidden");
+      if (isIdle || isSuccess) return;
+
+      idleTimeout = setTimeout(() => {
+        window.userChangedMind();
+      }, INACTIVITY_LIMIT_MS);
+    }
+
+    ['pointerdown', 'touchstart', 'click', 'keydown'].forEach(evt => {
+      window.addEventListener(evt, resetInactivityTimer, { passive: true });
+    });
+
+    let boysCount = 34;
+    let girlsCount = 29;
+
+    function updateBattleStatsUI() {
+      const total = boysCount + girlsCount;
+      const bPct = Math.round((boysCount / total) * 100);
+      const gPct = 100 - bPct;
+
+      const lineBoy = document.getElementById("battle-line-boy");
+      const lineGirl = document.getElementById("battle-line-girl");
+      if (lineBoy && lineGirl) {
+        lineBoy.style.width = `${bPct}%`;
+        lineGirl.style.width = `${gPct}%`;
+      }
+
+      document.getElementById("idle-boys-pct").textContent = `${bPct}%`;
+      document.getElementById("idle-girls-pct").textContent = `${gPct}%`;
+      document.getElementById("idle-boys-count").textContent = `${boysCount} гостей`;
+      document.getElementById("idle-girls-count").textContent = `${girlsCount} гостей`;
+
+      const badge = document.getElementById("idle-leader-badge");
+      if (badge) {
+        if (bPct > gPct) badge.textContent = "⚡ Лидируют парни";
+        else if (gPct > bPct) badge.textContent = "⚡ Лидируют девушки";
+        else badge.textContent = "⚡ Ничья смены";
+      }
+    }
+
+    const idleQuotes = [
+      {
+        headline: "Оставь на чай с душой",
+        subtext: "Вы знали, что девушки чаще оставляют чаевые? Парни, покажем, кто здесь задаёт стиль смены?",
+        author: "Coffeeman Community • Battle"
+      },
+      {
+        headline: "Кофе сварен с любовью",
+        subtext: "Твой бариста вложил душу в каждую каплю эспрессо. Ответь взаимным жестом благодарности!",
+        author: "Coffee Roasting & Barista Craft"
+      },
+      {
+        headline: "Кто сегодня делает день?",
+        subtext: "Битва смены в самом разгаре: каждый рубль чаевых двигает шкалу победы команды!",
+        author: "Coffeeman Team • Live Tug of War"
+      }
+    ];
+
+    let quoteIndex = 0;
+    setInterval(() => {
+      const headlineEl = document.getElementById("idle-headline");
+      const subtextEl = document.getElementById("idle-subtext");
+      const authorEl = document.getElementById("idle-author");
+      if (!headlineEl || !subtextEl) return;
+
+      headlineEl.style.opacity = 0;
+      subtextEl.style.opacity = 0;
+
+      setTimeout(() => {
+        quoteIndex = (quoteIndex + 1) % idleQuotes.length;
+        const cur = idleQuotes[quoteIndex];
+        headlineEl.textContent = cur.headline;
+        subtextEl.textContent = cur.subtext;
+        authorEl.textContent = cur.author;
+
+        headlineEl.style.opacity = 1;
+        subtextEl.style.opacity = 1;
+      }, 400);
+    }, 5000);
+
+    window.startWorkflow = () => {
+      document.getElementById("screen-idle").classList.add("hidden");
+      answeredQuestions = true;
+      goToStep(1);
+      resetInactivityTimer();
+    };
+
+    window.returnToIdle = () => {
+      stopPaymentPolling();
+      for (let i = 1; i <= 5; i++) {
+        document.getElementById(`step-${i}`).classList.add("hidden");
+      }
+      closeNumpad();
+      if (idleTimeout) clearTimeout(idleTimeout);
+      if (countdownInterval) clearInterval(countdownInterval);
+
+      // Сброс фаз победы
+      document.getElementById("phase-loser").classList.add("hidden");
+      document.getElementById("phase-thanks").classList.add("hidden");
+
+      document.getElementById("screen-idle").classList.remove("hidden");
+    };
+
+    window.userChangedMind = () => {
+      setAmount(100);
+      returnToIdle();
+    };
+
+    window.goToStep = (step) => {
+      stopPaymentPolling();
+      for (let i = 1; i <= 5; i++) {
+        document.getElementById(`step-${i}`).classList.add("hidden");
+      }
+      document.getElementById(`step-${step}`).classList.remove("hidden");
+      resetInactivityTimer();
+      if (step === 4) initializePaymentStep();
+    };
+
+    window.setAmount = (sum) => {
+      selectedAmount = sum;
+      customAmountStr = String(sum);
+      document.getElementById("custom-amount-display").textContent = `${sum} ₽`;
+      highlightButtons(sum);
+      closeNumpad();
+      resetInactivityTimer();
+    };
+
+    function highlightButtons(sum) {
+      document.querySelectorAll(".amt-btn").forEach(btn => {
+        const val = parseInt(btn.querySelector("span").textContent);
+        if (val === sum) {
+          btn.className = "amt-btn p-4 rounded-3xl bg-amber-400 text-zinc-950 border border-amber-300 active:scale-95 transition flex flex-col items-center shadow-lg shadow-amber-400/20";
+          btn.querySelector("span:first-child").className = "text-2xl font-black text-zinc-950";
+        } else {
+          btn.className = "amt-btn p-4 rounded-3xl bg-black/20 hover:bg-black/30 border border-white/20 active:scale-95 transition flex flex-col items-center backdrop-blur-xl shadow-capsule";
+          btn.querySelector("span:first-child").className = "text-2xl font-black text-white";
+        }
+      });
+    }
+
+    window.openNumpad = () => {
+      document.getElementById("numpad-container").classList.remove("hidden");
+      document.getElementById("amounts-container").classList.add("md:-translate-x-3");
+      customAmountStr = "";
+      document.getElementById("custom-amount-display").textContent = "_ ₽";
+      highlightButtons(null);
+      resetInactivityTimer();
+    };
+
+    window.closeNumpad = () => {
+      document.getElementById("numpad-container").classList.add("hidden");
+      document.getElementById("amounts-container").classList.remove("md:-translate-x-3");
+      resetInactivityTimer();
+    };
+
+    window.numpadPress = (char) => {
+      if (customAmountStr.length >= 5) return;
+      if (customAmountStr === "0") customAmountStr = "";
+      customAmountStr += char;
+      const parsed = parseInt(customAmountStr) || 0;
+      selectedAmount = parsed;
+      document.getElementById("custom-amount-display").textContent = `${parsed} ₽`;
+      resetInactivityTimer();
+    };
+
+    window.numpadClear = () => {
+      customAmountStr = "";
+      selectedAmount = 0;
+      document.getElementById("custom-amount-display").textContent = "0 ₽";
+      resetInactivityTimer();
+    };
+
+    window.numpadBackspace = () => {
+      customAmountStr = customAmountStr.slice(0, -1);
+      const parsed = parseInt(customAmountStr) || 0;
+      selectedAmount = parsed;
+      document.getElementById("custom-amount-display").textContent = `${parsed} ₽`;
+      resetInactivityTimer();
+    };
+
+    window.skipToPayment = () => {
+      if (!selectedAmount || selectedAmount <= 0) selectedAmount = 100;
+      answeredQuestions = false; // Отметили, что гость пропустил опросы
+      goToStep(4);
+    };
+
+    window.selectRole = (role) => {
+      selectedRole = role;
+      const bBtn = document.getElementById("role-barista");
+      const wBtn = document.getElementById("role-waiter");
+      if (role === 'barista') {
+        bBtn.className = "p-6 rounded-3xl bg-amber-400 text-zinc-950 border border-amber-300 active:scale-95 transition flex flex-col items-center gap-3 text-center shadow-capsule";
+        bBtn.querySelector("div > div:first-child").className = "text-lg font-black text-zinc-950";
+        wBtn.className = "p-6 rounded-3xl bg-black/20 border border-white/20 active:scale-95 transition flex flex-col items-center gap-3 text-center backdrop-blur-xl";
+        wBtn.querySelector("div > div:first-child").className = "text-lg font-black text-white";
+      } else {
+        wBtn.className = "p-6 rounded-3xl bg-amber-400 text-zinc-950 border border-amber-300 active:scale-95 transition flex flex-col items-center gap-3 text-center shadow-capsule";
+        wBtn.querySelector("div > div:first-child").className = "text-lg font-black text-zinc-950";
+        bBtn.className = "p-6 rounded-3xl bg-black/20 border border-white/20 active:scale-95 transition flex flex-col items-center gap-3 text-center backdrop-blur-xl";
+        bBtn.querySelector("div > div:first-child").className = "text-lg font-black text-white";
+      }
+      resetInactivityTimer();
+    };
+
+    window.pickFighter = (gender) => {
+      selectedGender = gender;
+      answeredQuestions = true;
+      if (gender === 'boy') boysCount += 1;
+      else girlsCount += 1;
+      updateBattleStatsUI();
+      goToStep(4);
+    };
+
+    async function initializePaymentStep() {
+      document.getElementById("final-amount-label").textContent = `${selectedAmount} ₽`;
+      
+      let targetName = "";
+      if (answeredQuestions) {
+        targetName = selectedGender === 'boy' 
+          ? `Парни (${document.getElementById("guy-label").textContent})`
+          : `Девушки (${document.getElementById("girl-label").textContent})`;
+        document.getElementById("target-recipient").textContent = `В пользу: ${targetName} • ${selectedRole === 'barista' ? 'Бариста' : 'Официант'}`;
+      } else {
+        document.getElementById("target-recipient").textContent = `В пользу: Команда Coffeeman`;
+      }
+
+      await createRealPayment();
+    }
+
+    // ==============================================================
+    // СОЗДАНИЕ ОФИЦИАЛЬНОГО ПЛАТЕЖА СБП ЧЕРЕЗ ЮKASSA
+    // ==============================================================
+    async function createRealPayment() {
+      const loadingEl = document.getElementById("pay-loading-view");
+      const errorEl = document.getElementById("pay-error-view");
+      const contentEl = document.getElementById("pay-content-view");
+      const errorDesc = document.getElementById("pay-error-desc");
+      const rawDump = document.getElementById("pay-error-raw-dump");
+      const kassaBadge = document.getElementById("kassa-online-badge");
+
+      loadingEl.classList.remove("hidden");
+      errorEl.classList.add("hidden");
+      contentEl.classList.add("hidden");
+
+      const rawCors = (localStorage.getItem("c_cors") || "https://green-glade-501c.dalordjot.workers.dev/").trim();
+      const proxyBase = rawCors.replace(/\/+$/, "");
+      const terminalId = (localStorage.getItem("c_id") || "1350725").trim();
+      const secretKey = (localStorage.getItem("c_sec") || "").trim();
+
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 12000);
+
+      const payload = {
+        amount: selectedAmount,
+        terminal_id: terminalId,
+        secret_key: secretKey,
+        role: selectedRole,
+        gender: selectedGender,
+        timestamp: Date.now()
+      };
+
+      const createUrl = `${proxyBase}/kassa/create-bill`;
+
+      window.addLog("REQ", `Регистрация СБП счёта в ЮKassa: ${createUrl}`, {
+        amount: selectedAmount,
+        shopId: terminalId,
+        hasSecret: Boolean(secretKey)
+      });
+
+      try {
+        const res = await fetch(createUrl, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+            ...(secretKey ? { "Authorization": `Bearer ${secretKey}` } : {})
+          },
+          body: JSON.stringify(payload),
+          signal: controller.signal
+        });
+
+        clearTimeout(timeoutId);
+
+        const rawText = await res.text().catch(() => "");
+        window.addLog("RES", `Ответ ЮKassa: HTTP ${res.status}`, rawText || "(пусто)");
+
+        let data = {};
+        try { data = JSON.parse(rawText); } catch (_) {}
+
+        if (!res.ok) {
+          throw new Error(data.error || `Ошибка ЮKassa HTTP ${res.status}: ${rawText}`);
+        }
+
+        const realPayUrl = data?.payment_url;
+        currentPaymentId = data?.payment_id;
+
+        if (!realPayUrl) {
+          throw new Error("ЮKassa не вернула платёжную ссылку СБП. Проверьте подключение СБП в договоре ЮKassa.");
+        }
+
+        window.addLog("INFO", `✓ Подлинный СБП QR сформирован! PaymentID: ${currentPaymentId}`);
+
+        kassaBadge.textContent = "Онлайн (ЮKassa)";
+        kassaBadge.className = "text-emerald-300 font-black";
+
+        loadingEl.classList.add("hidden");
+        contentEl.classList.remove("hidden");
+        renderQRCode(realPayUrl);
+
+        // Запуск фонового опроса ЮKassa
+        startPaymentPolling(proxyBase, terminalId, secretKey, currentPaymentId);
+
+      } catch (err) {
+        clearTimeout(timeoutId);
+        kassaBadge.textContent = "Ошибка шлюза";
+        kassaBadge.className = "text-rose-400 font-black";
+
+        loadingEl.classList.add("hidden");
+        errorEl.classList.remove("hidden");
+
+        const msg = err.name === "AbortError" 
+          ? "Превышено время ожидания ответа от ЮKassa (таймаут 12с)."
+          : (err.message || "Не удалось связаться с ЮKassa.");
+
+        errorDesc.textContent = msg;
+
+        rawDump.innerHTML = `
+<b>[TIMESTAMP]:</b> ${new Date().toISOString()}<br>
+<b>[SHOP_ID]:</b> ${terminalId}<br>
+<b>[ERROR]:</b> ${msg}<br>
+<b>[HINT]:</b> Откройте настройки (0506) и убедитесь, что введён Secret Key от ЮKassa.
+        `.trim();
+
+        window.addLog("ERR", `Сбой ЮKassa: ${msg}`);
+      }
+    }
+
+    function startPaymentPolling(proxyBase, shopId, secretKey, paymentId) {
+      stopPaymentPolling();
+      if (!paymentId || !secretKey) return;
+
+      pollInterval = setInterval(async () => {
+        try {
+          const pollUrl = `${proxyBase}/kassa/check-status?payment_id=${paymentId}&terminal_id=${shopId}`;
+          const res = await fetch(pollUrl, {
+            headers: { "Authorization": `Bearer ${secretKey}` }
+          });
+          if (res.ok) {
+            const data = await res.json();
+            if (data.paid === true || data.status === "succeeded") {
+              window.addLog("INFO", `Платеж ${paymentId} успешно подтвержден ЮKassa!`);
+              stopPaymentPolling();
+              window.triggerPaymentSuccess();
+            }
+          }
+        } catch (_) {}
+      }, 2500);
+    }
+
+    function stopPaymentPolling() {
+      if (pollInterval) {
+        clearInterval(pollInterval);
+        pollInterval = null;
+      }
+    }
+
+    window.retryRealPayment = () => {
+      createRealPayment();
+    };
+
+    function renderQRCode(linkText) {
+      const qrContainer = document.getElementById("qrcode");
+      qrContainer.innerHTML = "";
+      new QRCode(qrContainer, {
+        text: linkText,
+        width: 195,
+        height: 195,
+        colorDark: "#101813",
+        colorLight: "#ffffff",
+        correctLevel: QRCode.CorrectLevel.M
+      });
+    }
+
+    // ==============================================================
+    // ЦИКЛ ПОБЕДЫ: ПОСЛЕДОВАТЕЛЬНЫЕ АНИМАЦИИ (⬆️ -> ⬇️ -> СПАСИБО -> ТАЙМЕР)
+    // ==============================================================
+    window.triggerPaymentSuccess = () => {
+      stopPaymentPolling();
+      if (idleTimeout) clearTimeout(idleTimeout);
+      if (countdownInterval) clearInterval(countdownInterval);
+
+      // Переключаем на шаг 5
+      goToStep(5);
+
+      const battleFlow = document.getElementById("victory-battle-flow");
+      const simpleFlow = document.getElementById("victory-simple-flow");
+
+      // Сценарий 1: Гость ответил на все вопросы (включаем полную хореографию)
+      if (answeredQuestions) {
+        battleFlow.classList.remove("hidden");
+        simpleFlow.classList.add("hidden");
+
+        const phaseWinner = document.getElementById("phase-winner");
+        const phaseLoser = document.getElementById("phase-loser");
+        const phaseThanks = document.getElementById("phase-thanks");
+
+        // Подготовка данных победителя и проигравшего
+        const isBoy = selectedGender === 'boy';
+        const winnerName = isBoy 
+          ? `Парни (${document.getElementById("guy-label").textContent})`
+          : `Девушки (${document.getElementById("girl-label").textContent})`;
+        const loserName = isBoy
+          ? `Девушки (${document.getElementById("girl-label").textContent})`
+          : `Парни (${document.getElementById("guy-label").textContent})`;
+
+        const total = boysCount + girlsCount;
+        const bPct = Math.round((boysCount / total) * 100);
+        const gPct = 100 - bPct;
+
+        const winPct = isBoy ? bPct : gPct;
+        const losePct = 100 - winPct;
+
+        document.getElementById("winner-name-label").textContent = winnerName;
+        document.getElementById("winner-pct-display").textContent = `${winPct}%`;
+        document.getElementById("winner-progress-bar").style.width = `${winPct}%`;
+
+        document.getElementById("loser-name-label").textContent = loserName;
+        document.getElementById("loser-pct-display").textContent = `${losePct}%`;
+
+        const roleText = selectedRole === 'barista' ? 'Бариста' : 'Официант';
+        document.getElementById("thanks-recipient-subtext").textContent = `Сумма ${selectedAmount} ₽ успешно зачислена в пользу: ${winnerName} • ${roleText}!`;
+
+        // Сброс видимости фаз
+        phaseWinner.classList.remove("hidden");
+        phaseLoser.classList.add("hidden");
+        phaseThanks.classList.add("hidden");
+
+        // ЭТАП 1: САЛЮТ И БУСТ ПОБЕДИТЕЛЯ (СТРЕЛКА ВВЕРХ)
+        confetti({ particleCount: 90, spread: 75, origin: { y: 0.6 } });
+
+        // ЭТАП 2: ЧЕРЕЗ 2 СЕКУНДЫ ВСПЛЫВАЕТ СТРЕЛКА ВНИЗ (ОТСТАВАНИЕ СОПЕРНИКА)
+        setTimeout(() => {
+          phaseLoser.classList.remove("hidden");
+
+          // ЭТАП 3: ЕЩЕ ЧЕРЕЗ 2 СЕКУНДЫ ВСПЛЫВАЕТ БЛАГОДАРНОСТЬ + ФИНАЛЬНЫЙ САЛЮТ
+          setTimeout(() => {
+            phaseThanks.classList.remove("hidden");
+            
+            confetti({ particleCount: 120, spread: 90, origin: { y: 0.5 } });
+            setTimeout(() => {
+              confetti({ particleCount: 60, angle: 60, spread: 50, origin: { x: 0 } });
+              confetti({ particleCount: 60, angle: 120, spread: 50, origin: { x: 1 } });
+            }, 200);
+
+            // ЭТАП 4: СТАРТУЕТ ОБРАТНЫЙ ОТСЧЕТ ВОЗВРАТА (5 СЕКУНД)
+            startCountdownTimer("countdown-timer", 5);
+
+          }, 2000);
+
+        }, 1900);
+
+      } else {
+        // Сценарий 2: Гость пропустил вопросы (лаконичный триумф)
+        battleFlow.classList.add("hidden");
+        simpleFlow.classList.remove("hidden");
+
+        confetti({ particleCount: 110, spread: 80, origin: { y: 0.6 } });
+        startCountdownTimer("countdown-simple-timer", 5);
+      }
+    };
+
+    function startCountdownTimer(elementId, seconds) {
+      let timeLeft = seconds;
+      const countLabel = document.getElementById(elementId);
+      if (countLabel) countLabel.textContent = timeLeft;
+
+      if (countdownInterval) clearInterval(countdownInterval);
+      countdownInterval = setInterval(() => {
+        timeLeft--;
+        if (countLabel) countLabel.textContent = timeLeft;
+        if (timeLeft <= 0) {
+          clearInterval(countdownInterval);
+          setAmount(100);
+          returnToIdle();
+        }
+      }, 1000);
+    }
+
+    onValue(ref(db, "active_shift"), (snap) => {
+      activeShift = snap.val();
+      if (activeShift) {
+        if (activeShift.guy_name) document.getElementById("guy-label").textContent = activeShift.guy_name;
+        if (activeShift.girl_name) document.getElementById("girl-label").textContent = activeShift.girl_name;
+      }
+    });
+
+    onValue(ref(db, "kassa_status"), (snap) => {
+      const status = snap.val();
+      if (status && status.paid === true) {
+        window.triggerPaymentSuccess();
+        set(ref(db, "kassa_status"), null);
+      }
+    });
+
+    // ==============================================================
+    // СЕКРЕТНЫЙ ВХОД (0506)
+    // ==============================================================
+    let clicks = 0;
+    let lastTime = 0;
+    document.getElementById("secret-logo-trigger").addEventListener("click", (e) => {
+      e.stopPropagation();
+      const now = Date.now();
+      if (now - lastTime < 450) clicks++;
+      else clicks = 1;
+      lastTime = now;
+
+      if (clicks >= 5) {
+        clicks = 0;
+        const pass = prompt("Пароль доступа к инженерному пульту:");
+        if (pass === "0506") {
+          openAdminDirect();
+        } else if (pass !== null) {
+          alert("Неверный пароль.");
+        }
+      }
+    });
+
+    window.openAdminDirect = () => {
+      document.getElementById("cfg-cors").value = localStorage.getItem("c_cors") || "https://green-glade-501c.dalordjot.workers.dev/";
+      document.getElementById("cfg-id").value = localStorage.getItem("c_id") || "1350725";
+      document.getElementById("cfg-sec").value = localStorage.getItem("c_sec") || "";
+      document.getElementById("admin-modal").classList.remove("hidden");
+    };
+
+    window.closeAdmin = () => document.getElementById("admin-modal").classList.add("hidden");
+
+    window.saveAdminCfg = () => {
+      const corsVal = document.getElementById("cfg-cors").value.trim();
+      const idVal = document.getElementById("cfg-id").value.trim();
+      const secVal = document.getElementById("cfg-sec").value.trim();
+
+      localStorage.setItem("c_cors", corsVal);
+      localStorage.setItem("c_id", idVal);
+      localStorage.setItem("c_sec", secVal);
+
+      window.addLog("INFO", "Параметры ЮKassa сохранены в браузере", { idVal });
+      alert("Настройки ЮKassa сохранены!");
+    };
+
+    window.runDiagnostics = async () => {
+      const btn = document.getElementById("btn-diag-run");
+      btn.disabled = true;
+      btn.innerHTML = `<span class="animate-spin">⏳</span> Тестируем...`;
+
+      const rawCors = document.getElementById("cfg-cors").value.trim().replace(/\/+$/, "");
+      const shopId = document.getElementById("cfg-id").value.trim();
+      const secretKey = document.getElementById("cfg-sec").value.trim();
+
+      window.addLog("INFO", `--- ПРОВЕРКА СВЯЗИ С ЮKASSA: ShopId ${shopId} ---`);
+
+      try {
+        const testUrl = `${rawCors}/kassa/create-bill`;
+        const testPayload = {
+          amount: 10,
+          terminal_id: shopId,
+          secret_key: secretKey
+        };
+
+        const postRes = await fetch(testUrl, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${secretKey}`
+          },
+          body: JSON.stringify(testPayload)
+        });
+
+        const bodyText = await postRes.text().catch(() => "");
+        let data = {};
+        try { data = JSON.parse(bodyText); } catch (_) {}
+
+        if (postRes.ok && data.success && data.payment_url) {
+          window.addLog("INFO", `[УСПЕХ ЮKASSA] QR СБП получен!`, data.payment_url);
+          alert(`Связь с ЮKassa успешна! Получен подлинный QR СБП.`);
+        } else {
+          window.addLog("ERR", `[ОШИБКА ЮKASSA HTTP ${postRes.status}]`, bodyText);
+          alert(`Ответ ЮKassa: ${data.error || bodyText}`);
+        }
+
+      } catch (err) {
+        window.addLog("ERR", `Сетевой сбой: ${err.message}`);
+        alert(`Ошибка сети: ${err.message}`);
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = `<span>🔬</span> Проверить ЮKassa`;
+      }
+    };
+
+    updateBattleStatsUI();
+  </script>
+</body>
+</html>
