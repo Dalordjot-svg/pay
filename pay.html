@@ -1,472 +1,566 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Moon POS • СБП Оплата</title>
-  
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com">
-  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&family=Syne:wght@700;800;900&family=Unbounded:wght@600;800;900&display=swap" rel="stylesheet">
-  
-  <!-- Надежная легковесная библиотека QR-кода -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Coffeeman — Оставить на чай</title>
   <script src="https://cdn.tailwindcss.com"></script>
-
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          fontFamily: {
-            display: ['Unbounded', 'sans-serif'],
-            sans: ['Montserrat', 'sans-serif'],
-          },
-          colors: { sticker: '#FFF188', surface: '#18181d', surfaceLight: '#23232b' }
-        }
-      }
-    }
-  </script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600;700&family=Playfair+Display:ital,wght@1,700&display=swap" rel="stylesheet">
 
   <style>
-    * { -webkit-tap-highlight-color: transparent; user-select: none; }
-    body { background: #0d0d10; color: white; }
-    .sticker-badge { box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5); }
-    .stamp-badge {
-      clip-path: polygon(50% 0%, 65% 15%, 85% 10%, 85% 30%, 100% 45%, 90% 65%, 95% 85%, 75% 85%, 65% 100%, 45% 90%, 25% 95%, 20% 75%, 0% 65%, 12% 45%, 5% 25%, 25% 20%, 35% 0%);
+    * {
+      -webkit-tap-highlight-color: transparent;
+      font-family: 'Plus Jakarta Sans', sans-serif;
     }
-    #qrcode-box img, #qrcode-box canvas {
-      margin: 0 auto;
-      border-radius: 1rem;
+    .font-mono-code {
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .font-heritage {
+      font-family: 'Playfair Display', serif;
+    }
+    .bg-editorial-dark {
+      background: radial-gradient(125% 100% at 50% 0%, #16281e 0%, #0c1711 50%, #060b08 100%);
+    }
+    .shadow-capsule {
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.45), 0 1px 0 rgba(255, 255, 255, 0.1) inset;
     }
   </style>
+</head>
+<body class="bg-editorial-dark text-white min-h-screen flex flex-col justify-between p-4 sm:p-6 antialiased selection:bg-amber-400 selection:text-black">
 
-  <!-- Firebase -->
+  <!-- ==================== ЭКРАН ОШИБКИ: ТОЧКА НЕ НАЙДЕНА ==================== -->
+  <div id="error-screen" class="hidden fixed inset-0 z-50 bg-[#080f0b]/98 backdrop-blur-2xl flex items-center justify-center p-6 text-center">
+    <div class="max-w-sm w-full bg-black/60 border border-rose-500/30 p-8 rounded-3xl shadow-capsule space-y-5">
+      <div class="w-16 h-16 rounded-3xl bg-rose-500/20 border border-rose-500/40 text-rose-300 mx-auto flex items-center justify-center text-3xl shadow-lg">
+        ⚠️
+      </div>
+      <div class="space-y-2">
+        <h2 class="text-xl font-black text-white uppercase tracking-tight">QR-код не распознан</h2>
+        <p class="text-xs text-white/70 leading-relaxed">
+          В адресной строке отсутствует или не найден идентификатор кофейни.
+        </p>
+      </div>
+      <div class="p-3.5 rounded-2xl bg-white/5 border border-white/10 text-[11px] text-amber-200/90 leading-relaxed text-left">
+        💡 <b>Что сделать:</b> пересканируйте фирменный QR-код на вашем столике или на кассе, либо обратитесь к сотруднику заведения.
+      </div>
+      <button onclick="location.reload()" class="w-full py-3.5 rounded-2xl bg-white/10 hover:bg-white/15 border border-white/20 text-white font-bold text-xs uppercase tracking-wider transition">
+        Попробовать снова ↺
+      </button>
+    </div>
+  </div>
+
+  <!-- ==================== ШАПКА ==================== -->
+  <header class="w-full max-w-md mx-auto flex items-center justify-between border-b border-white/10 pb-4">
+    <div class="flex items-center gap-3">
+      <div class="w-10 h-10 rounded-2xl bg-amber-400 text-zinc-950 flex items-center justify-center text-xl font-black shadow-md">
+        ☕
+      </div>
+      <div>
+        <h1 class="text-sm font-black tracking-wide uppercase text-white">COFFEEMAN</h1>
+        <div class="flex items-center gap-1.5 text-[10px] text-emerald-300 font-mono-code">
+          <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+          <span id="point-header-name">Загрузка кофейни...</span>
+        </div>
+      </div>
+    </div>
+    <span class="text-[9px] font-heritage italic text-amber-300 border border-amber-400/20 px-2 py-1 rounded-full bg-amber-400/10">
+      SINCE 2008
+    </span>
+  </header>
+
+  <!-- ==================== ОСНОВНОЙ КОНТЕНТ ПО ШАГАМ ==================== -->
+  <main class="w-full max-w-md mx-auto my-4 space-y-5">
+
+    <!-- ==================== ШАГ 1: ВЫБОР СУММЫ ==================== -->
+    <section id="step-amount" class="space-y-5">
+      <div class="bg-black/35 border border-white/15 p-6 rounded-3xl backdrop-blur-xl shadow-capsule text-center space-y-4">
+        
+        <div class="space-y-1">
+          <span class="text-[10px] uppercase font-bold tracking-widest text-amber-300 bg-amber-400/10 px-3 py-1 rounded-full border border-amber-400/20">
+            Благодарность за сервис
+          </span>
+          <h2 class="text-2xl font-black text-white pt-1">Сколько оставить на чай?</h2>
+          <p class="text-xs text-white/60">Каждая чашка сварена с душой для вас</p>
+        </div>
+
+        <!-- Пресеты сумм -->
+        <div class="grid grid-cols-2 gap-3 pt-1">
+          <button onclick="setAmount(50)" class="amt-btn p-4 rounded-2xl bg-black/40 border border-white/15 hover:border-amber-400 active:scale-95 transition flex flex-col items-center">
+            <span class="text-2xl font-black text-white">50 ₽</span>
+            <span class="text-[10px] text-white/50">На конфету</span>
+          </button>
+          <button onclick="setAmount(100)" class="amt-btn p-4 rounded-2xl bg-amber-400 text-zinc-950 border border-amber-300 active:scale-95 transition flex flex-col items-center shadow-lg shadow-amber-400/20">
+            <span class="text-2xl font-black text-zinc-950">100 ₽</span>
+            <span class="text-[10px] font-bold text-zinc-800">Классика кофе</span>
+          </button>
+          <button onclick="setAmount(200)" class="amt-btn p-4 rounded-2xl bg-black/40 border border-white/15 hover:border-amber-400 active:scale-95 transition flex flex-col items-center">
+            <span class="text-2xl font-black text-white">200 ₽</span>
+            <span class="text-[10px] text-white/50">За атмосферу</span>
+          </button>
+          <button onclick="setAmount(500)" class="amt-btn p-4 rounded-2xl bg-black/40 border border-white/15 hover:border-amber-400 active:scale-95 transition flex flex-col items-center">
+            <span class="text-2xl font-black text-white">500 ₽</span>
+            <span class="text-[10px] text-white/50">Щедрый гость</span>
+          </button>
+        </div>
+
+        <!-- Своя сумма -->
+        <div class="pt-2 text-left space-y-1">
+          <label class="text-[10px] font-bold uppercase tracking-wider text-white/60 block">Или введите свою сумму:</label>
+          <div class="relative">
+            <input id="input-custom-sum" type="number" placeholder="100" class="w-full p-3.5 bg-black/60 border border-white/20 rounded-2xl text-lg font-black text-amber-300 outline-none focus:border-amber-400">
+            <span class="absolute right-4 top-4 text-xs font-bold text-white/50">₽</span>
+          </div>
+        </div>
+
+        <button onclick="nextToRoleStep()" class="w-full py-4 rounded-2xl bg-amber-400 hover:bg-amber-300 active:scale-95 text-zinc-950 font-black text-xs uppercase tracking-wider transition shadow-lg shadow-amber-400/20 flex items-center justify-center gap-2">
+          <span>Дальше: кому чаевые</span>
+          <span>→</span>
+        </button>
+
+      </div>
+    </section>
+
+    <!-- ==================== ШАГ 2: ВЫБОР РОЛИ (БАРИСТА / ОФИЦИАНТ) ==================== -->
+    <section id="step-role" class="hidden space-y-5">
+      <div class="bg-black/35 border border-white/15 p-6 rounded-3xl backdrop-blur-xl shadow-capsule text-center space-y-4">
+        
+        <div class="space-y-1">
+          <span class="text-[10px] uppercase font-bold tracking-widest text-amber-300 bg-amber-400/10 px-3 py-1 rounded-full border border-amber-400/20">
+            Шаг 2 из 3
+          </span>
+          <h2 class="text-2xl font-black text-white pt-1">Кому оставить на чай?</h2>
+          <p class="text-xs text-white/60">Выберите роль сотрудника</p>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3.5 pt-2">
+          <button onclick="selectRole('barista')" id="btn-role-barista" class="p-5 rounded-2xl bg-amber-400 text-zinc-950 border border-amber-300 active:scale-95 transition flex flex-col items-center gap-2.5 shadow-lg shadow-amber-400/20">
+            <div class="w-14 h-14 rounded-2xl bg-black/10 flex items-center justify-center text-3xl">☕</div>
+            <div>
+              <div class="text-base font-black">Бариста</div>
+              <div class="text-[10px] font-semibold opacity-80">За идеальный кофе</div>
+            </div>
+          </button>
+
+          <button onclick="selectRole('waiter')" id="btn-role-waiter" class="p-5 rounded-2xl bg-black/40 border border-white/15 text-white active:scale-95 transition flex flex-col items-center gap-2.5">
+            <div class="w-14 h-14 rounded-2xl bg-white/10 flex items-center justify-center text-3xl">🍽️</div>
+            <div>
+              <div class="text-base font-black">Официант</div>
+              <div class="text-[10px] text-white/50">За сервис и уют</div>
+            </div>
+          </button>
+        </div>
+
+        <div class="flex gap-2.5 pt-3">
+          <button onclick="goToStep('step-amount')" class="w-1/3 py-3.5 rounded-2xl bg-white/10 text-white font-bold text-xs uppercase tracking-wider">
+            ← Назад
+          </button>
+          <button onclick="nextToStaffStep()" class="w-2/3 py-3.5 rounded-2xl bg-amber-400 text-zinc-950 font-black text-xs uppercase tracking-wider shadow-lg">
+            Выбрать сменщика →
+          </button>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ==================== ШАГ 3: ВЫБОР СОТРУДНИКА СМЕНЫ ==================== -->
+    <section id="step-staff" class="hidden space-y-4">
+      <div class="bg-black/35 border border-white/15 p-6 rounded-3xl backdrop-blur-xl shadow-capsule space-y-4">
+        
+        <div class="text-center space-y-1">
+          <span class="text-[10px] uppercase font-bold tracking-widest text-emerald-300 bg-emerald-500/20 px-3 py-1 rounded-full border border-emerald-400/30">
+            Смена в этой кофейне
+          </span>
+          <h2 class="text-xl font-black text-white pt-1">Кто готовил вам напиток?</h2>
+          <p class="text-xs text-white/60">Выберите сотрудника из списка заведения</p>
+        </div>
+
+        <!-- Предупреждение -->
+        <div class="p-3.5 rounded-2xl bg-amber-400/10 border border-amber-400/25 text-xs text-amber-200/90 leading-relaxed flex items-start gap-2.5">
+          <span class="text-amber-400 text-sm mt-0.5">ℹ️</span>
+          <span>Если вы хотите, чтобы деньги пришли точно тому человеку, которого вы выбрали, <b>лучше уточнить имя на кассе</b>.</span>
+        </div>
+
+        <!-- Список сотрудников смены этой точки -->
+        <div id="shift-staff-list" class="space-y-2.5 max-h-72 overflow-y-auto pr-1">
+          <div class="text-center py-6 text-white/40 text-xs">Загрузка сотрудников...</div>
+        </div>
+
+        <div class="flex items-center justify-between pt-1">
+          <button onclick="goToStep('step-role')" class="text-xs text-white/50 hover:text-white underline">
+            ← Сменить роль
+          </button>
+          <button onclick="goToStep('step-role')" class="text-xs text-amber-300 font-bold hover:underline">
+            Перевыбрать сотрудника ↺
+          </button>
+        </div>
+
+        <button id="btn-confirm-staff" onclick="proceedToPayment()" disabled class="w-full py-4 rounded-2xl bg-amber-400 disabled:opacity-40 hover:bg-amber-300 text-zinc-950 font-black text-xs uppercase tracking-wider transition shadow-lg shadow-amber-400/20">
+          Подтвердить и перейти к оплате →
+        </button>
+
+      </div>
+    </section>
+
+    <!-- ==================== ШАГ 4: ЭКРАН ОПЛАТЫ СБП ==================== -->
+    <section id="step-pay" class="hidden space-y-4">
+      <div class="bg-black/35 border border-white/15 p-6 rounded-3xl backdrop-blur-xl shadow-capsule text-center space-y-5">
+        
+        <div>
+          <span class="text-[10px] uppercase font-bold tracking-widest text-emerald-300 bg-emerald-500/20 px-3 py-1 rounded-full border border-emerald-400/30">
+            Официальный СБП QR
+          </span>
+          <h2 id="pay-amount-label" class="text-4xl font-black text-white tracking-tight mt-2">100 ₽</h2>
+          <p id="pay-target-staff-label" class="text-xs text-white/80 mt-1 font-semibold">В пользу: Алексей (Бариста)</p>
+        </div>
+
+        <!-- Кнопка прямого перехода в приложение банка -->
+        <a id="bank-app-link" href="#" class="block w-full py-4 rounded-2xl bg-gradient-to-r from-emerald-400 to-teal-400 hover:from-emerald-300 hover:to-teal-300 text-zinc-950 font-black text-sm uppercase tracking-wider transition shadow-xl shadow-emerald-500/25 active:scale-95 flex items-center justify-center gap-2">
+          <span>⚡ Оплатить через СБП</span>
+          <span class="text-xs font-normal opacity-80">(в приложении банка)</span>
+        </a>
+
+        <!-- Или QR-код -->
+        <div class="space-y-2 pt-2">
+          <div class="text-[11px] text-white/50 font-semibold uppercase tracking-wider">
+            Или покажите QR с другого телефона:
+          </div>
+          <div class="bg-white p-3.5 rounded-2xl w-fit mx-auto shadow-2xl flex items-center justify-center">
+            <div id="pay-qrcode"></div>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-between text-xs text-white/50 pt-2 border-t border-white/10">
+          <button onclick="goToStep('step-staff')" class="hover:text-white underline">
+            ← Перевыбрать
+          </button>
+          <button onclick="simulatePaymentSuccess()" class="text-amber-300/60 hover:text-amber-300 text-[10px] font-mono-code">
+            [Симуляция оплаты]
+          </button>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ==================== ШАГ 5: ЭКРАН УСПЕХА ==================== -->
+    <section id="step-success" class="hidden space-y-5 text-center">
+      <div class="bg-black/35 border border-amber-400/30 p-8 rounded-3xl backdrop-blur-xl shadow-capsule space-y-5">
+        <div class="w-20 h-20 rounded-full bg-amber-400 text-zinc-950 mx-auto flex items-center justify-center text-4xl shadow-2xl animate-bounce">
+          🎉
+        </div>
+        <div class="space-y-1.5">
+          <span class="text-xs font-bold uppercase tracking-widest text-emerald-300 bg-emerald-500/20 px-3 py-1 rounded-full border border-emerald-400/30">
+            Оплата подтверждена
+          </span>
+          <h2 class="text-3xl font-black text-white pt-2">ОГРОМНОЕ СПАСИБО!</h2>
+          <p id="success-thanks-text" class="text-xs text-white/80 leading-relaxed font-medium">
+            Ваши чаевые успешно отправлены сотруднику. Ждём вас снова в Coffeeman!
+          </p>
+        </div>
+        <button onclick="location.reload()" class="w-full py-3.5 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/20 text-white font-bold text-xs uppercase tracking-wider transition">
+          Оставить ещё чаевые ↺
+        </button>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Футер -->
+  <footer class="w-full max-w-md mx-auto text-center py-2 border-t border-white/10">
+    <p class="text-[10px] text-white/40 font-mono-code">
+      COFFEEMAN • SPECIALTY COFFEE • 0% КОМИССИИ СБП
+    </p>
+  </footer>
+
   <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getDatabase, ref, set, get, update, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
+    import { getDatabase, ref, onValue, set, update, get } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-database.js";
 
     const firebaseConfig = {
-      apiKey: "AIzaSyB8CBeK8m25rox6BYO8ep6JeBJ7ipmYViQ",
-      authDomain: "moon-60c5a.firebaseapp.com",
-      databaseURL: "https://moon-60c5a-default-rtdb.firebaseio.com",
-      projectId: "moon-60c5a",
-      storageBucket: "moon-60c5a.firebasestorage.app",
-      messagingSenderId: "1010513396599",
-      appId: "1:1010513396599:web:86cbb8164de80b1dcc9772"
+      apiKey: "AIzaSyCT2aJ8rF5KRCIFS3W6r4wbQeyBzkhmqnc",
+      authDomain: "lte-bank.firebaseapp.com",
+      databaseURL: "https://lte-bank-default-rtdb.firebaseio.com",
+      projectId: "lte-bank",
+      storageBucket: "lte-bank.firebasestorage.app",
+      messagingSenderId: "286397543738",
+      appId: "1:286397543738:web:c3ef297e6b6666620c4c03",
+      measurementId: "G-Q9BM100F5P"
     };
 
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
 
-    window.firebaseDB = db;
-    window.dbRef = ref;
-    window.dbSet = set;
-    window.dbGet = get;
-    window.dbUpdate = update;
+    // Извлечение point ID из URL (?point=center или ?point=main)
+    const urlParams = new URLSearchParams(window.location.search);
+    const pointId = urlParams.get("point") || urlParams.get("id");
 
-    window.yooKassaConfig = {
-      shopId: localStorage.getItem('yk_shop_id') || '',
-      secretKey: localStorage.getItem('yk_secret_key') || 'live_u1nG8LW2Njov2qtlvYjkb2ulHYgVAjVs4h8wryP1bcA',
-      serverUrl: localStorage.getItem('yk_server_url') || 'https://green-glade-501c.dalordjot.workers.dev'
-    };
+    let currentPoint = null;
+    let selectedAmount = 100;
+    let selectedRole = "barista";
+    let selectedStaffId = null;
+    let selectedStaffData = null;
+    let pointStaffMap = {};
+    let globalYooKassaSettings = null;
 
-    onValue(ref(db, 'admin_settings/yookassa'), (snapshot) => {
-      const data = snapshot.val();
-      if (data) {
-        if (data.shopId && !localStorage.getItem('yk_shop_id')) window.yooKassaConfig.shopId = data.shopId;
-        if (data.secretKey && !localStorage.getItem('yk_secret_key')) window.yooKassaConfig.secretKey = data.secretKey;
-        if (data.serverUrl && !localStorage.getItem('yk_server_url')) window.yooKassaConfig.serverUrl = data.serverUrl;
-        updateKeyStatusBadge();
-      }
+    // 1. Проверка наличия pointId в URL
+    if (!pointId) {
+      showErrorScreen();
+    } else {
+      initPointVerification(pointId);
+    }
+
+    function showErrorScreen() {
+      document.getElementById("error-screen").classList.remove("hidden");
+    }
+
+    // Слушатель настроек ЮKassa из Firebase
+    onValue(ref(db, "system_settings/yookassa"), (snap) => {
+      globalYooKassaSettings = snap.val() || {
+        shop_id: "1350725",
+        cors_url: "https://green-glade-501c.dalordjot.workers.dev/"
+      };
     });
-  </script>
-</head>
-<body class="min-h-screen flex flex-col font-sans">
 
-  <!-- TOP BAR -->
-  <header class="w-full bg-surface/90 backdrop-blur-xl border-b border-white/10 px-4 md:px-8 py-3 flex justify-between items-center sticky top-0 z-40">
-    <div class="flex items-center gap-2.5">
-      <div class="stamp-badge bg-sticker text-black font-display font-black text-xs px-2.5 py-1 uppercase -rotate-3 shadow-md">
-        MOON
-      </div>
-      <h1 class="font-display text-xs md:text-sm font-black tracking-wide uppercase">Касса СБП</h1>
-    </div>
-
-    <div class="flex items-center gap-2">
-      <button onclick="openKeysModal(false)" class="flex items-center gap-1.5 bg-surfaceLight hover:bg-white/15 active:scale-95 text-xs text-white border border-white/10 px-3 py-2 rounded-xl font-display font-bold transition-all">
-        <span>⚙️</span>
-        <span class="hidden sm:inline">Ключи ЮKassa</span>
-        <span id="keys-status-indicator" class="w-2 h-2 rounded-full bg-rose-500 ml-0.5"></span>
-      </button>
-
-      <a href="https://dalordjot-svg.github.io/Do-go/" target="_blank" rel="noopener noreferrer" class="flex items-center gap-1.5 bg-yellow-400/10 hover:bg-yellow-400/20 active:scale-95 text-xs text-sticker border border-yellow-400/30 px-3 py-2 rounded-xl font-display font-bold transition-all shadow-sm">
-        <span>🖥️</span>
-        <span class="hidden sm:inline">Экран покупателя</span>
-        <span class="sm:hidden">Экран</span>
-        <span class="text-[10px] opacity-75">↗</span>
-      </a>
-    </div>
-  </header>
-
-  <!-- МОДАЛКА НАСТРОЕК -->
-  <div id="keys-modal" class="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex items-center justify-center p-4 hidden">
-    <div class="w-full max-w-sm bg-surface border border-white/15 rounded-3xl p-6 shadow-2xl flex flex-col gap-4 text-left">
-      <div class="flex justify-between items-center border-b border-white/10 pb-3">
-        <div>
-          <h3 class="font-display font-black text-sm uppercase text-sticker">Настройки ЮKassa</h3>
-          <p class="text-[11px] text-neutral-400">Shop ID и Секретный ключ</p>
-        </div>
-        <button id="modal-close-btn" onclick="closeKeysModal()" class="text-neutral-400 hover:text-white text-lg p-1">✕</button>
-      </div>
-
-      <div class="flex flex-col gap-3">
-        <div>
-          <label class="text-[11px] text-neutral-300 font-bold uppercase block mb-1">Сервер посредник</label>
-          <input type="text" id="modal-server-url" value="https://green-glade-501c.dalordjot.workers.dev" class="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-xs text-white font-mono focus:outline-none focus:border-yellow-300" />
-        </div>
-        <div>
-          <label class="text-[11px] text-neutral-300 font-bold uppercase block mb-1">Shop ID (номер из шапки ЛК)</label>
-          <input type="text" id="modal-shop-id" placeholder="Вставьте точный Shop ID" class="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-xs text-white font-mono focus:outline-none focus:border-yellow-300" />
-        </div>
-        <div>
-          <label class="text-[11px] text-neutral-300 font-bold uppercase block mb-1">Секретный ключ API</label>
-          <input type="text" id="modal-secret-key" value="live_u1nG8LW2Njov2qtlvYjkb2ulHYgVAjVs4h8wryP1bcA" class="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-xs text-white font-mono focus:outline-none focus:border-yellow-300" />
-        </div>
-      </div>
-
-      <div class="flex flex-col gap-2 pt-2">
-        <button onclick="saveKeysFromModal()" class="w-full bg-sticker text-black font-display font-black text-xs uppercase py-3.5 rounded-xl active:scale-95 transition-all sticker-badge">
-          Сохранить настройки
-        </button>
-        <button onclick="clearStoredKeys()" class="w-full bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 text-[11px] font-bold py-2 rounded-xl border border-rose-500/20">
-          Сбросить все сохранённые ключи
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <!-- ГЛАВНЫЙ ЭКРАН КАССЫ -->
-  <main class="flex-1 p-4 md:p-8 flex items-center justify-center">
-    <div class="w-full max-w-md bg-surface border border-white/10 rounded-3xl p-6 md:p-8 flex flex-col gap-5 shadow-2xl">
-      
-      <!-- Экран суммы -->
-      <div class="bg-black/50 border border-white/10 rounded-3xl p-6 text-center">
-        <span class="text-xs text-neutral-400 uppercase font-bold tracking-widest block mb-2">Сумма к оплате (СБП)</span>
-        <div class="flex items-center justify-center gap-2">
-          <span id="amount-display" class="font-display text-5xl md:text-6xl font-black tracking-tight">0</span>
-          <span class="font-display text-3xl md:text-4xl font-bold text-sticker">₽</span>
-        </div>
-        <p id="pos-status-text" class="text-xs text-neutral-400 mt-2 break-words">Готов к выставлению СБП QR</p>
-      </div>
-
-      <!-- Ввод суммы (Numpad) -->
-      <div id="keypad-container" class="flex flex-col gap-5">
-        <div class="grid grid-cols-3 gap-3">
-          <button onclick="pressKey('1')" class="h-14 md:h-16 rounded-2xl bg-surfaceLight hover:bg-white/15 active:scale-95 border border-white/10 font-display text-2xl font-black">1</button>
-          <button onclick="pressKey('2')" class="h-14 md:h-16 rounded-2xl bg-surfaceLight hover:bg-white/15 active:scale-95 border border-white/10 font-display text-2xl font-black">2</button>
-          <button onclick="pressKey('3')" class="h-14 md:h-16 rounded-2xl bg-surfaceLight hover:bg-white/15 active:scale-95 border border-white/10 font-display text-2xl font-black">3</button>
-          <button onclick="pressKey('4')" class="h-14 md:h-16 rounded-2xl bg-surfaceLight hover:bg-white/15 active:scale-95 border border-white/10 font-display text-2xl font-black">4</button>
-          <button onclick="pressKey('5')" class="h-14 md:h-16 rounded-2xl bg-surfaceLight hover:bg-white/15 active:scale-95 border border-white/10 font-display text-2xl font-black">5</button>
-          <button onclick="pressKey('6')" class="h-14 md:h-16 rounded-2xl bg-surfaceLight hover:bg-white/15 active:scale-95 border border-white/10 font-display text-2xl font-black">6</button>
-          <button onclick="pressKey('7')" class="h-14 md:h-16 rounded-2xl bg-surfaceLight hover:bg-white/15 active:scale-95 border border-white/10 font-display text-2xl font-black">7</button>
-          <button onclick="pressKey('8')" class="h-14 md:h-16 rounded-2xl bg-surfaceLight hover:bg-white/15 active:scale-95 border border-white/10 font-display text-2xl font-black">8</button>
-          <button onclick="pressKey('9')" class="h-14 md:h-16 rounded-2xl bg-surfaceLight hover:bg-white/15 active:scale-95 border border-white/10 font-display text-2xl font-black">9</button>
-          <button onclick="pressKey('00')" class="h-14 md:h-16 rounded-2xl bg-white/5 hover:bg-white/10 active:scale-95 border border-white/10 font-display text-xl font-black text-neutral-400">00</button>
-          <button onclick="pressKey('0')" class="h-14 md:h-16 rounded-2xl bg-surfaceLight hover:bg-white/15 active:scale-95 border border-white/10 font-display text-2xl font-black">0</button>
-          <button onclick="backspace()" class="h-14 md:h-16 rounded-2xl bg-rose-500/20 hover:bg-rose-500/30 active:scale-95 border border-rose-500/30 text-rose-300 font-bold text-xl">⌫</button>
-        </div>
-
-        <button id="send-bill-btn" onclick="createDirectSbpPayment()" class="w-full bg-sticker text-black font-display font-black text-base uppercase py-4 rounded-2xl active:scale-[0.98] transition-transform sticker-badge">
-          ⚡ Выставить СБП QR
-        </button>
-      </div>
-
-      <!-- Экран с QR кодом -->
-      <div id="qr-container" class="hidden flex-col items-center gap-4">
-        <div class="relative bg-white p-4 rounded-3xl shadow-2xl flex items-center justify-center min-w-[240px] min-h-[240px]">
-          <!-- Контейнер для QR -->
-          <div id="qrcode-box"></div>
-          <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
-            <div class="w-10 h-10 bg-black rounded-xl border-2 border-white flex items-center justify-center text-xs font-bold text-sticker">
-              СБП
-            </div>
-          </div>
-        </div>
-
-        <div class="text-center">
-          <p class="text-xs text-neutral-300 font-semibold flex items-center justify-center gap-1.5">
-            <span class="w-2 h-2 rounded-full bg-yellow-400 animate-ping"></span>
-            Отсканируйте камерой телефона или банком
-          </p>
-          <a id="qr-direct-link" href="#" target="_blank" class="text-[11px] text-sticker hover:underline mt-1 inline-block">
-            Открыть ссылку на оплату вручную →
-          </a>
-        </div>
-
-        <button onclick="resetTerminal()" class="w-full bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 font-display font-bold text-xs uppercase py-3.5 rounded-2xl border border-rose-500/30 transition-all">
-          ✕ Отменить / Новый счет
-        </button>
-      </div>
-
-    </div>
-  </main>
-
-  <script>
-    let currentInput = "0";
-    let activePollInterval = null;
-    const terminalId = localStorage.getItem('yk_term_id') || 'term_01';
-
-    function updateKeyStatusBadge() {
-      const sId = localStorage.getItem('yk_shop_id') || (window.yooKassaConfig && window.yooKassaConfig.shopId);
-      const sKey = localStorage.getItem('yk_secret_key') || (window.yooKassaConfig && window.yooKassaConfig.secretKey);
-      const indicator = document.getElementById('keys-status-indicator');
-      if (indicator) {
-        if (sId && sKey) {
-          indicator.className = 'w-2 h-2 rounded-full bg-emerald-400 ml-0.5';
-        } else {
-          indicator.className = 'w-2 h-2 rounded-full bg-rose-500 ml-0.5';
-          openKeysModal(true);
-        }
-      }
-    }
-
-    function openKeysModal(isMandatory = false) {
-      document.getElementById('modal-server-url').value = localStorage.getItem('yk_server_url') || window.yooKassaConfig.serverUrl;
-      document.getElementById('modal-shop-id').value = localStorage.getItem('yk_shop_id') || window.yooKassaConfig.shopId;
-      document.getElementById('modal-secret-key').value = localStorage.getItem('yk_secret_key') || window.yooKassaConfig.secretKey;
-      
-      const closeBtn = document.getElementById('modal-close-btn');
-      if (isMandatory) closeBtn.classList.add('hidden');
-      else closeBtn.classList.remove('hidden');
-
-      document.getElementById('keys-modal').classList.remove('hidden');
-    }
-
-    function closeKeysModal() {
-      document.getElementById('keys-modal').classList.add('hidden');
-    }
-
-    function clearStoredKeys() {
-      localStorage.removeItem('yk_shop_id');
-      localStorage.removeItem('yk_secret_key');
-      localStorage.removeItem('yk_server_url');
-      location.reload();
-    }
-
-    function saveKeysFromModal() {
-      let serverUrl = document.getElementById('modal-server-url').value.trim();
-      const sId = document.getElementById('modal-shop-id').value.trim();
-      const sKey = document.getElementById('modal-secret-key').value.trim();
-
-      if (serverUrl.endsWith('/')) serverUrl = serverUrl.slice(0, -1);
-
-      if (!sId || !sKey) {
-        alert('Пожалуйста, введите точный Shop ID и Секретный ключ!');
+    async function initPointVerification(pId) {
+      const pointSnap = await get(ref(db, `points/${pId}`));
+      if (!pointSnap.exists()) {
+        showErrorScreen();
         return;
       }
 
-      localStorage.setItem('yk_server_url', serverUrl);
-      localStorage.setItem('yk_shop_id', sId);
-      localStorage.setItem('yk_secret_key', sKey);
+      currentPoint = pointSnap.val();
+      document.getElementById("point-header-name").textContent = currentPoint.name || pId;
 
-      window.yooKassaConfig.serverUrl = serverUrl;
-      window.yooKassaConfig.shopId = sId;
-      window.yooKassaConfig.secretKey = sKey;
+      // Загрузка сотрудников этой точки
+      onValue(ref(db, "staff"), (snap) => {
+        const allStaff = snap.val() || {};
+        pointStaffMap = {};
 
-      updateKeyStatusBadge();
-      closeKeysModal();
-      document.getElementById('pos-status-text').innerText = 'Ключи успешно обновлены!';
-    }
+        Object.keys(allStaff).forEach((id) => {
+          const s = allStaff[id];
+          if (s.point_id === pId || (!s.point_id && pId === "main")) {
+            pointStaffMap[id] = s;
+          }
+        });
 
-    window.addEventListener('DOMContentLoaded', updateKeyStatusBadge);
-
-    function generateUUID() {
-      return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
-        const r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
-        return v.toString(16);
+        renderShiftStaffList();
       });
     }
 
-    function updateDisplay() {
-      document.getElementById('amount-display').innerText = currentInput;
+    // Навигация
+    window.goToStep = (stepId) => {
+      ['step-amount', 'step-role', 'step-staff', 'step-pay', 'step-success'].forEach(id => {
+        document.getElementById(id).classList.add("hidden");
+      });
+      document.getElementById(stepId).classList.remove("hidden");
+    };
+
+    // Выбор суммы
+    window.setAmount = (sum) => {
+      selectedAmount = sum;
+      document.getElementById("input-custom-sum").value = "";
+      updateAmountButtons(sum);
+    };
+
+    function updateAmountButtons(sum) {
+      document.querySelectorAll(".amt-btn").forEach(btn => {
+        const val = parseInt(btn.querySelector("span").textContent);
+        if (val === sum) {
+          btn.className = "amt-btn p-4 rounded-2xl bg-amber-400 text-zinc-950 border border-amber-300 active:scale-95 transition flex flex-col items-center shadow-lg shadow-amber-400/20";
+          btn.querySelector("span:first-child").className = "text-2xl font-black text-zinc-950";
+        } else {
+          btn.className = "amt-btn p-4 rounded-2xl bg-black/40 border border-white/15 hover:border-amber-400 active:scale-95 transition flex flex-col items-center";
+          btn.querySelector("span:first-child").className = "text-2xl font-black text-white";
+        }
+      });
     }
 
-    function pressKey(num) {
-      if (currentInput === "0") {
-        if (num === "00") return;
-        currentInput = num;
-      } else {
-        if (currentInput.length < 7) currentInput += num;
+    document.getElementById("input-custom-sum").addEventListener("input", (e) => {
+      const val = parseInt(e.target.value);
+      if (val && val > 0) {
+        selectedAmount = val;
+        updateAmountButtons(null);
       }
-      updateDisplay();
-    }
+    });
 
-    function backspace() {
-      currentInput = currentInput.length > 1 ? currentInput.slice(0, -1) : "0";
-      updateDisplay();
-    }
-
-    // Безопасный рендер QR-кода с fallback-вариантом
-    function renderQRCodeSafe(text) {
-      const box = document.getElementById('qrcode-box');
-      box.innerHTML = '';
-
-      if (typeof QRCode !== 'undefined') {
-        new QRCode(box, {
-          text: text,
-          width: 210,
-          height: 210,
-          colorDark: "#000000",
-          colorLight: "#ffffff",
-          correctLevel: QRCode.CorrectLevel.M
-        });
-      } else {
-        // Запасной генератор, если скрипт заблокирован в сети
-        const img = document.createElement('img');
-        img.src = `https://api.qrserver.com/v1/create-qr-code/?size=210x210&data=${encodeURIComponent(text)}`;
-        img.className = 'w-[210px] h-[210px] rounded-2xl';
-        box.appendChild(img);
+    window.nextToRoleStep = () => {
+      const customVal = parseInt(document.getElementById("input-custom-sum").value);
+      if (customVal && customVal > 0) {
+        selectedAmount = customVal;
       }
-    }
+      goToStep("step-role");
+    };
 
-    async function createDirectSbpPayment() {
-      const amount = parseInt(currentInput);
-      if (!amount || amount <= 0) return alert('Введите сумму больше 0');
+    // Выбор роли
+    window.selectRole = (role) => {
+      selectedRole = role;
+      const bBtn = document.getElementById("btn-role-barista");
+      const wBtn = document.getElementById("btn-role-waiter");
 
-      let serverUrl = localStorage.getItem('yk_server_url') || window.yooKassaConfig.serverUrl;
-      const shopId = (localStorage.getItem('yk_shop_id') || window.yooKassaConfig.shopId || '').trim();
-      const secretKey = (localStorage.getItem('yk_secret_key') || window.yooKassaConfig.secretKey || '').trim();
+      if (role === "barista") {
+        bBtn.className = "p-5 rounded-2xl bg-amber-400 text-zinc-950 border border-amber-300 active:scale-95 transition flex flex-col items-center gap-2.5 shadow-lg shadow-amber-400/20";
+        wBtn.className = "p-5 rounded-2xl bg-black/40 border border-white/15 text-white active:scale-95 transition flex flex-col items-center gap-2.5";
+      } else {
+        wBtn.className = "p-5 rounded-2xl bg-amber-400 text-zinc-950 border border-amber-300 active:scale-95 transition flex flex-col items-center gap-2.5 shadow-lg shadow-amber-400/20";
+        bBtn.className = "p-5 rounded-2xl bg-black/40 border border-white/15 text-white active:scale-95 transition flex flex-col items-center gap-2.5";
+      }
+    };
 
-      if (serverUrl.endsWith('/')) serverUrl = serverUrl.slice(0, -1);
+    window.nextToStaffStep = () => {
+      renderShiftStaffList();
+      goToStep("step-staff");
+    };
 
-      if (!shopId || !secretKey) {
-        openKeysModal(true);
+    // Отрисовка списка бариста/официантов смены
+    function renderShiftStaffList() {
+      const container = document.getElementById("shift-staff-list");
+      container.innerHTML = "";
+
+      const filteredIds = Object.keys(pointStaffMap).filter(id => {
+        return pointStaffMap[id].role === selectedRole;
+      });
+
+      if (filteredIds.length === 0) {
+        container.innerHTML = `
+          <div class="text-center py-6 bg-black/30 rounded-2xl border border-white/10 p-4 space-y-2">
+            <div class="text-white/60 text-xs">На этой точке пока нет зарегистрированных ${selectedRole === 'barista' ? 'бариста' : 'официантов'}.</div>
+            <div class="text-amber-300 text-[11px] font-bold">Чаевые будут зачислены общей команде смены.</div>
+          </div>
+        `;
+        selectedStaffId = "team";
+        selectedStaffData = { name: "Команда Coffeeman", role: selectedRole };
+        document.getElementById("btn-confirm-staff").disabled = false;
         return;
       }
 
-      const btn = document.getElementById('send-bill-btn');
-      const status = document.getElementById('pos-status-text');
-      btn.disabled = true;
-      btn.innerText = '⏳ Создаем СБП QR...';
-      status.innerText = 'Связываемся с ЮKassa...';
+      filteredIds.forEach(id => {
+        const staff = pointStaffMap[id];
+        const isSelected = selectedStaffId === id;
+        const shiftTitle = staff.shift_time === "evening" 
+          ? "🌙 Вечерний бариста" 
+          : (staff.shift_time === "full" ? "☀️ На смене весь день" : "🌅 Утренний бариста");
 
-      if (activePollInterval) clearInterval(activePollInterval);
+        const row = document.createElement("div");
+        row.onclick = () => pickStaff(id);
+        row.className = `p-3.5 rounded-2xl border cursor-pointer transition flex items-center justify-between ${isSelected ? 'bg-amber-400/15 border-amber-400 shadow-md' : 'bg-black/40 border-white/10 hover:border-white/20'}`;
+        row.innerHTML = `
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl ${staff.gender === 'boy' ? 'bg-sky-500/20 text-sky-300 border-sky-400/30' : 'bg-pink-500/20 text-pink-300 border-pink-400/30'} border flex items-center justify-center font-bold text-lg">
+              ${staff.gender === 'boy' ? '👦' : '👧'}
+            </div>
+            <div>
+              <div class="text-sm font-black text-white flex items-center gap-2">
+                <span>${staff.name || id}</span>
+                ${isSelected ? '<span class="text-[9px] px-1.5 py-0.5 rounded bg-amber-400 text-black font-black uppercase">Выбран</span>' : ''}
+              </div>
+              <div class="text-[10px] text-amber-300 font-medium mt-0.5">${shiftTitle}</div>
+            </div>
+          </div>
+          <div class="w-6 h-6 rounded-full border ${isSelected ? 'border-amber-400 bg-amber-400 text-black' : 'border-white/20'} flex items-center justify-center text-xs font-bold">
+            ${isSelected ? '✓' : ''}
+          </div>
+        `;
+        container.appendChild(row);
+      });
 
-      const authHeader = 'Basic ' + btoa(`${shopId}:${secretKey}`);
-      const idempotenceKey = generateUUID();
-
-      try {
-        const response = await fetch(`${serverUrl}/payments`, {
-          method: 'POST',
-          headers: {
-            'Authorization': authHeader,
-            'Idempotence-Key': idempotenceKey,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            amount: { value: amount.toFixed(2), currency: 'RUB' },
-            payment_method_data: { type: 'sbp' },
-            confirmation: { type: 'qr' },
-            capture: true,
-            description: `Заказ на кассе (${amount} ₽)`
-          })
-        });
-
-        const payment = await response.json();
-
-        if (!response.ok || !payment.id) {
-          throw new Error(payment.description || payment.code || 'Ошибка создания платежа');
-        }
-
-        const sbpQrData = payment.confirmation?.confirmation_data || payment.confirmation?.confirmation_url || '';
-
-        // Отрисовка QR
-        renderQRCodeSafe(sbpQrData);
-        document.getElementById('qr-direct-link').href = sbpQrData;
-
-        // Показ QR, скрытие кнопок
-        document.getElementById('keypad-container').classList.add('hidden');
-        document.getElementById('qr-container').classList.remove('hidden');
-        document.getElementById('qr-container').classList.add('flex');
-
-        if (window.firebaseDB) {
-          await window.dbSet(window.dbRef(window.firebaseDB, `terminals/${terminalId}/current_order`), {
-            status: 'WAITING_FOR_PAYMENT',
-            method: 'sbp',
-            amount: amount,
-            paymentId: payment.id,
-            qrUrl: sbpQrData,
-            timestamp: Date.now()
-          });
-        }
-
-        status.innerHTML = `<span class="text-sticker font-bold">Счет выставлен! Ожидание оплаты...</span>`;
-        startDirectPaymentPolling(serverUrl, authHeader, payment.id, amount);
-
-      } catch (err) {
-        status.innerHTML = `<span class="text-rose-400 font-bold">Ошибка: ${err.message}</span>`;
-      } finally {
-        btn.disabled = false;
-        btn.innerText = '⚡ Выставить СБП QR';
+      // Если никто не выбран, выбираем первого
+      if (!selectedStaffId && filteredIds.length > 0) {
+        pickStaff(filteredIds[0]);
       }
     }
 
-    function startDirectPaymentPolling(serverUrl, authHeader, paymentId, amount) {
-      activePollInterval = setInterval(async () => {
+    window.pickStaff = (id) => {
+      selectedStaffId = id;
+      selectedStaffData = pointStaffMap[id];
+      renderShiftStaffList();
+      document.getElementById("btn-confirm-staff").disabled = false;
+    };
+
+    // Переход к оплате
+    window.proceedToPayment = async () => {
+      document.getElementById("pay-amount-label").textContent = `${selectedAmount} ₽`;
+      const staffName = selectedStaffData?.name || "Команда заведения";
+      const roleName = selectedRole === "barista" ? "Бариста" : "Официант";
+      document.getElementById("pay-target-staff-label").textContent = `В пользу: ${staffName} (${roleName})`;
+
+      // 1. Если у сотрудника есть персональная ссылка, используем её
+      let directUrl = selectedStaffData?.payment_url;
+
+      // 2. Иначе формируем через Cloudflare Worker ЮKassa
+      if (!directUrl || directUrl.trim().length === 0) {
+        const corsBase = (globalYooKassaSettings?.cors_url || "https://green-glade-501c.dalordjot.workers.dev/").replace(/\/+$/, "");
+        const shopId = globalYooKassaSettings?.shop_id || "1350725";
+        const secretKey = globalYooKassaSettings?.secret_key || "";
+
         try {
-          const res = await fetch(`${serverUrl}/payments/${paymentId}`, {
-            method: 'GET',
+          const res = await fetch(`${corsBase}/kassa/create-bill`, {
+            method: "POST",
             headers: {
-              'Authorization': authHeader,
-              'Content-Type': 'application/json'
-            }
+              "Content-Type": "application/json",
+              ...(secretKey ? { "Authorization": `Bearer ${secretKey}` } : {})
+            },
+            body: JSON.stringify({
+              amount: selectedAmount,
+              terminal_id: shopId,
+              secret_key: secretKey,
+              role: selectedRole,
+              staff_id: selectedStaffId
+            })
           });
 
-          const data = await res.json();
-
-          if (data && (data.status === 'succeeded' || data.paid === true)) {
-            clearInterval(activePollInterval);
-            
-            if (window.firebaseDB) {
-              await window.dbSet(window.dbRef(window.firebaseDB, `terminals/${terminalId}/current_order`), {
-                status: 'PAID', amount: amount, timestamp: Date.now()
-              });
-            }
-
-            document.getElementById('qr-container').classList.add('hidden');
-            document.getElementById('qr-container').classList.remove('flex');
-            document.getElementById('keypad-container').classList.remove('hidden');
-
-            currentInput = "0";
-            updateDisplay();
-            document.getElementById('pos-status-text').innerHTML = '<span class="text-emerald-400 font-bold text-sm">✅ Оплата прошла успешно!</span>';
+          const data = await res.json().catch(() => ({}));
+          if (data.payment_url) {
+            directUrl = data.payment_url;
           }
-        } catch (e) { console.error("Polling error:", e); }
-      }, 2000);
-    }
-
-    async function resetTerminal() {
-      if (activePollInterval) clearInterval(activePollInterval);
-      if (window.firebaseDB) {
-        await window.dbSet(window.dbRef(window.firebaseDB, `terminals/${terminalId}/current_order`), { status: 'IDLE' });
+        } catch (_) {}
       }
 
-      document.getElementById('qr-container').classList.add('hidden');
-      document.getElementById('qr-container').classList.remove('flex');
-      document.getElementById('keypad-container').classList.remove('hidden');
+      if (!directUrl) {
+        directUrl = `https://qr.nspk.ru/proxy-pay?amount=${selectedAmount}&point=${pointId}&staff=${selectedStaffId}`;
+      }
 
-      currentInput = "0";
-      updateDisplay();
-      document.getElementById('pos-status-text').innerText = 'Готов к выставлению СБП QR';
-    }
+      // Привязываем ссылку на кнопку приложения банка
+      const bankBtn = document.getElementById("bank-app-link");
+      bankBtn.href = directUrl;
 
-    window.addEventListener('keydown', (e) => {
-      if (['INPUT', 'TEXTAREA'].includes(document.activeElement?.tagName)) return;
-      if (e.key >= '0' && e.key <= '9') pressKey(e.key);
-      else if (e.key === 'Backspace') backspace();
-      else if (e.key === 'Enter') createDirectSbpPayment();
-      else if (e.key === 'Escape') resetTerminal();
-    });
+      // Отрисовка QR
+      const qrBox = document.getElementById("pay-qrcode");
+      qrBox.innerHTML = "";
+      new QRCode(qrBox, {
+        text: directUrl,
+        width: 180,
+        height: 180,
+        colorDark: "#080f0b",
+        colorLight: "#ffffff",
+        correctLevel: QRCode.CorrectLevel.M
+      });
+
+      goToStep("step-pay");
+    };
+
+    // Симуляция успешной оплаты (начисление на баланс сотрудника в Firebase)
+    window.simulatePaymentSuccess = async () => {
+      if (selectedStaffId && selectedStaffId !== "team" && pointStaffMap[selectedStaffId]) {
+        const curBal = Number(pointStaffMap[selectedStaffId].balance || 0);
+        const curEarned = Number(pointStaffMap[selectedStaffId].total_earned || 0);
+        const curTips = Number(pointStaffMap[selectedStaffId].tips_count || 0);
+
+        await update(ref(db, `staff/${selectedStaffId}`), {
+          balance: curBal + selectedAmount,
+          total_earned: curEarned + selectedAmount,
+          tips_count: curTips + 1
+        });
+      }
+
+      const staffName = selectedStaffData?.name || "Команда";
+      document.getElementById("success-thanks-text").textContent = `Ваши чаевые ${selectedAmount} ₽ успешно зачислены для ${staffName}. Ждём вас снова в Coffeeman!`;
+
+      goToStep("step-success");
+      confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+    };
   </script>
 </body>
 </html>
