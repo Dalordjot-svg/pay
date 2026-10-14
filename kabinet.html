@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Coffeeman — Мой Кабинет</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600;700&family=Playfair+Display:ital,wght@1,700&display=swap" rel="stylesheet">
+
+  <style>
+    * {
+      -webkit-tap-highlight-color: transparent;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+    .font-mono-code {
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .font-heritage {
+      font-family: 'Playfair Display', serif;
+    }
+    .bg-editorial-dark {
+      background: radial-gradient(130% 100% at 85% 15%, #182a20 0%, #0f1c14 45%, #080f0b 100%);
+    }
+    .shadow-capsule {
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.45), 0 1px 0 rgba(255, 255, 255, 0.1) inset;
+    }
+    .custom-scroll::-webkit-scrollbar {
+      width: 5px;
+    }
+    .custom-scroll::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.16);
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body class="bg-editorial-dark text-white min-h-screen flex flex-col justify-between p-4 sm:p-6 antialiased selection:bg-amber-400 selection:text-black">
+
+  <!-- ==================== ВСПЛЫВАЮЩИЕ УВЕДОМЛЕНИЯ ==================== -->
+  <div id="toast-container" class="fixed top-4 left-4 right-4 z-50 flex flex-col gap-2 pointer-events-none max-w-sm mx-auto"></div>
+
+  <!-- ==================== ЭКРАН ВХОДА СОТРУДНИКА ==================== -->
+  <div id="auth-screen" class="fixed inset-0 z-50 bg-[#080f0b]/95 backdrop-blur-2xl flex items-center justify-center p-4">
+    <div class="w-full max-w-sm bg-black/50 border border-white/15 p-6 sm:p-8 rounded-3xl shadow-capsule text-center space-y-6">
+      <div class="space-y-2">
+        <div class="w-16 h-16 rounded-3xl bg-gradient-to-tr from-amber-400 to-amber-600 text-zinc-950 mx-auto flex items-center justify-center text-3xl font-black shadow-lg shadow-amber-500/25">
+          ☕
+        </div>
+        <h1 class="text-2xl font-black tracking-tight text-white uppercase">Coffeeman Crew</h1>
+        <p class="text-xs text-white/60">Личный кабинет бариста & официанта</p>
+      </div>
+
+      <div class="space-y-3">
+        <input id="auth-staff-id" type="text" placeholder="Логин (например, artem)" class="w-full p-3.5 bg-black/60 border border-white/20 rounded-2xl text-xs font-mono-code text-white placeholder:text-white/40 focus:border-amber-400 outline-none transition">
+        
+        <input id="auth-staff-pin" type="password" maxlength="4" placeholder="ПИН-код (••••)" class="w-full py-3.5 text-center text-2xl tracking-[0.3em] font-mono-code bg-black/60 border border-white/20 rounded-2xl text-amber-300 focus:border-amber-400 outline-none transition">
+
+        <button onclick="loginStaff()" class="w-full py-4 rounded-2xl bg-amber-400 hover:bg-amber-300 active:scale-95 text-zinc-950 font-black text-xs uppercase tracking-wider transition shadow-lg shadow-amber-400/20">
+          Войти в смену →
+        </button>
+      </div>
+
+      <p class="text-[11px] text-white/40">Логин и PIN выдаются шефом заведения</p>
+    </div>
+  </div>
+
+  <!-- ==================== ШАПКА КАБИНЕТА ==================== -->
+  <header class="relative z-10 w-full max-w-2xl mx-auto flex items-center justify-between gap-3 border-b border-white/10 pb-4">
+    <div class="flex items-center gap-3">
+      <div id="header-avatar" class="w-11 h-11 rounded-2xl bg-amber-400/20 border border-amber-400/40 text-amber-300 flex items-center justify-center text-xl font-black">
+        ☕
+      </div>
+      <div>
+        <div class="flex items-center gap-2">
+          <span id="user-display-name" class="text-base font-black text-white">Загрузка...</span>
+          <span id="user-role-badge" class="text-[9px] uppercase font-bold px-2 py-0.5 rounded-full bg-white/10 text-white/80">Бариста</span>
+        </div>
+        <div class="flex items-center gap-1.5 text-[11px] text-white/50">
+          <span id="user-point-badge">📍 Локация</span>
+          <span>•</span>
+          <span id="user-gender-badge">Парни 👦</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="flex items-center gap-2">
+      <button onclick="openBadgeModal()" title="Мой QR-бейдж" class="p-2.5 rounded-xl bg-amber-400/15 hover:bg-amber-400/25 border border-amber-400/30 text-amber-300 text-xs font-bold transition flex items-center gap-1.5">
+        <span>🏷️</span> <span class="hidden sm:inline">Мой QR</span>
+      </button>
+
+      <button onclick="logoutStaff()" title="Выйти" class="w-9 h-9 rounded-xl bg-white/5 hover:bg-white/10 border border-white/15 flex items-center justify-center text-white/70 hover:text-white transition">
+        🚪
+      </button>
+    </div>
+  </header>
+
+  <!-- ==================== ОСНОВНАЯ КАРТОЧКА БАЛАНСА И СТАТИСТИКИ ==================== -->
+  <main class="relative z-10 w-full max-w-2xl mx-auto my-4 space-y-5">
+    
+    <!-- Карточка баланса с кнопкой вывода -->
+    <div class="bg-gradient-to-br from-[#1b2f23] to-[#0d1811] border border-amber-400/30 p-6 rounded-3xl shadow-capsule space-y-5 relative overflow-hidden">
+      <div class="flex items-center justify-between">
+        <span class="text-xs font-bold uppercase tracking-wider text-amber-300/80">Доступно к выводу</span>
+        <span class="text-[10px] font-mono-code px-2 py-0.5 rounded-md bg-white/10 text-white/70">Мин. вывод 500 ₽</span>
+      </div>
+
+      <div>
+        <div class="flex items-baseline gap-2">
+          <span id="balance-amount" class="text-5xl font-black text-white tracking-tight">0</span>
+          <span class="text-2xl font-black text-amber-400">₽</span>
+        </div>
+        <div class="flex items-center gap-2 text-xs text-white/60 mt-1">
+          <span>В обработке (заморожено):</span>
+          <span id="frozen-amount" class="font-bold text-amber-300">0 ₽</span>
+        </div>
+      </div>
+
+      <div class="pt-1 flex flex-col sm:flex-row gap-2.5">
+        <button onclick="openWithdrawModal()" class="w-full sm:w-2/3 py-3.5 rounded-2xl bg-amber-400 hover:bg-amber-300 active:scale-95 text-zinc-950 font-black text-xs uppercase tracking-wider transition shadow-lg shadow-amber-400/20 flex items-center justify-center gap-2">
+          <span>💸</span> Вывести чаевые
+        </button>
+
+        <button onclick="toggleShiftStatus()" id="shift-toggle-btn" class="w-full sm:w-1/3 py-3.5 rounded-2xl bg-white/10 hover:bg-white/15 border border-white/15 text-white text-xs font-bold transition flex items-center justify-center gap-1.5">
+          <span>⚡</span> Я на смене
+        </button>
+      </div>
+    </div>
+
+    <!-- 3 Карточки общей статистики -->
+    <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+      <div class="bg-black/35 border border-white/10 p-4 rounded-2xl backdrop-blur-xl text-center space-y-1">
+        <span class="text-[10px] font-bold uppercase tracking-wider text-white/50 block">Всего заработано</span>
+        <span id="stat-total-earned" class="text-2xl font-black text-emerald-300">0 ₽</span>
+      </div>
+
+      <div class="bg-black/35 border border-white/10 p-4 rounded-2xl backdrop-blur-xl text-center space-y-1">
+        <span class="text-[10px] font-bold uppercase tracking-wider text-white/50 block">Получено чаевых</span>
+        <span id="stat-tips-count" class="text-2xl font-black text-amber-300">0</span>
+      </div>
+
+      <div class="col-span-2 sm:col-span-1 bg-black/35 border border-white/10 p-4 rounded-2xl backdrop-blur-xl text-center space-y-1">
+        <span class="text-[10px] font-bold uppercase tracking-wider text-white/50 block">Команда смены</span>
+        <span id="stat-team-name" class="text-2xl font-black text-sky-300">Парни</span>
+      </div>
+    </div>
+
+    <!-- Раздел истории операций (выплаты и чаевые) -->
+    <div class="bg-black/35 border border-white/15 p-5 sm:p-6 rounded-3xl backdrop-blur-xl shadow-capsule space-y-4">
+      <div class="flex items-center justify-between border-b border-white/10 pb-3">
+        <div class="flex items-center gap-2">
+          <span class="text-amber-400 text-sm">📋</span>
+          <h2 class="text-xs font-extrabold uppercase tracking-wider text-white">Мои заявки на вывод средств</h2>
+        </div>
+        <span class="text-[10px] font-mono-code text-white/40">СБП Выплаты</span>
+      </div>
+
+      <div id="payout-history-list" class="space-y-2.5 max-h-64 overflow-y-auto custom-scroll pr-1">
+        <div class="text-center py-8 text-white/40 text-xs">Заявок на вывод пока не было</div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- ==================== МОДАЛЬНОЕ ОКНО: ВЫВОД СРЕДСТВ ==================== -->
+  <div id="withdraw-modal" class="hidden fixed inset-0 z-50 bg-black/90 backdrop-blur-xl flex items-center justify-center p-4">
+    <div class="bg-[#121f17] border border-amber-400/30 rounded-3xl p-6 max-w-sm w-full space-y-4 shadow-2xl">
+      <div class="flex items-center justify-between border-b border-white/10 pb-3">
+        <div class="flex items-center gap-2">
+          <span class="text-amber-400 text-lg">💸</span>
+          <h3 class="text-sm font-black text-white uppercase tracking-wider">Вывод чаевых</h3>
+        </div>
+        <button onclick="closeWithdrawModal()" class="w-8 h-8 rounded-full bg-white/10 text-white flex items-center justify-center text-sm">✕</button>
+      </div>
+
+      <div class="space-y-3">
+        <div>
+          <label class="text-[10px] uppercase font-bold text-white/60 block mb-1">Сумма вывода (мин. 500 ₽):</label>
+          <div class="relative">
+            <input id="input-withdraw-amount" type="number" placeholder="500" class="w-full p-3 bg-black/50 border border-white/20 rounded-xl text-base font-black text-amber-300 outline-none focus:border-amber-400">
+            <span class="absolute right-3 top-3.5 text-xs text-white/50 font-bold">₽</span>
+          </div>
+          <div class="flex justify-between text-[10px] text-white/50 mt-1">
+            <span>Доступно: <b id="modal-available-hint" class="text-white">0 ₽</b></span>
+            <button onclick="fillMaxWithdraw()" class="text-amber-300 underline font-bold">Вся сумма</button>
+          </div>
+        </div>
+
+        <div>
+          <label class="text-[10px] uppercase font-bold text-white/60 block mb-1">Номер телефона (СБП) или карты:</label>
+          <input id="input-withdraw-phone" type="text" placeholder="+7 999 123-45-67" class="w-full p-3 bg-black/50 border border-white/20 rounded-xl text-xs font-mono-code text-white outline-none focus:border-amber-400">
+        </div>
+
+        <div>
+          <label class="text-[10px] uppercase font-bold text-white/60 block mb-1">Название банка:</label>
+          <input id="input-withdraw-bank" type="text" placeholder="Т-Банк / Сбер / Альфа" class="w-full p-3 bg-black/50 border border-white/20 rounded-xl text-xs font-bold text-white outline-none focus:border-amber-400">
+        </div>
+      </div>
+
+      <div class="p-3 rounded-xl bg-amber-400/10 border border-amber-400/20 text-[11px] text-amber-200/90 leading-relaxed">
+        ⚠️ Запрошенная сумма замораживается на время обработки шефом. Новые чаевые с экрана будут беспрепятственно поступать на ваш баланс.
+      </div>
+
+      <div class="flex gap-2 pt-1">
+        <button onclick="closeWithdrawModal()" class="w-1/3 py-3 rounded-xl bg-white/10 hover:bg-white/15 text-white text-xs font-bold transition">
+          Отмена
+        </button>
+        <button onclick="submitWithdrawRequest()" class="w-2/3 py-3 rounded-xl bg-amber-400 hover:bg-amber-300 text-zinc-950 font-black text-xs uppercase tracking-wider transition shadow-md">
+          Подать заявку →
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== МОДАЛЬНОЕ ОКНО: БРЕНДИРОВАННЫЙ QR-БЕЙДЖ ==================== -->
+  <div id="badge-modal" class="hidden fixed inset-0 z-50 bg-black/95 backdrop-blur-xl flex items-center justify-center p-4">
+    <div class="bg-[#101b14] border border-amber-400/30 rounded-3xl p-5 max-w-sm w-full space-y-4 shadow-2xl relative text-center">
+      <div class="flex items-center justify-between border-b border-white/10 pb-3">
+        <span class="text-xs font-bold uppercase text-amber-300">COFFEEMAN SINCE 2008</span>
+        <button onclick="closeBadgeModal()" class="w-8 h-8 rounded-full bg-white/10 text-white flex items-center justify-center text-sm">✕</button>
+      </div>
+
+      <div class="flex items-center justify-center p-2 bg-black/50 rounded-2xl border border-white/10">
+        <canvas id="staff-badge-canvas" class="max-h-[55vh] w-auto rounded-xl shadow-2xl border border-amber-400/20"></canvas>
+      </div>
+
+      <div class="flex gap-2">
+        <button onclick="closeBadgeModal()" class="w-1/3 py-2.5 rounded-xl bg-white/10 text-white text-xs font-bold">
+          Закрыть
+        </button>
+        <button onclick="downloadMyBadge()" class="w-2/3 py-2.5 rounded-xl bg-amber-400 text-zinc-950 text-xs font-black uppercase tracking-wider shadow">
+          ⬇️ Скачать бейдж
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div id="hidden-qr-render" class="hidden"></div>
+
+  <!-- Футер -->
+  <footer class="relative z-10 w-full max-w-2xl mx-auto text-center py-2 border-t border-white/10">
+    <p class="text-[10px] text-white/40 font-mono-code">
+      COFFEEMAN CREW PORTAL • SINCE 2008
+    </p>
+  </footer>
+
+  <!-- Firebase и логика кабинета -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
+    import { getDatabase, ref, onValue, set, update } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCT2aJ8rF5KRCIFS3W6r4wbQeyBzkhmqnc",
+      authDomain: "lte-bank.firebaseapp.com",
+      databaseURL: "https://lte-bank-default-rtdb.firebaseio.com",
+      projectId: "lte-bank",
+      storageBucket: "lte-bank.firebasestorage.app",
+      messagingSenderId: "286397543738",
+      appId: "1:286397543738:web:c3ef297e6b6666620c4c03",
+      measurementId: "G-Q9BM100F5P"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    let currentStaffId = localStorage.getItem("coffeeman_current_staff_id") || null;
+    let staffData = null;
+    let pointsCache = {};
+    let generatedCanvas = null;
+
+    // Toast-уведомления
+    window.showToast = (message, type = "info") => {
+      const container = document.getElementById("toast-container");
+      const toast = document.createElement("div");
+      
+      let borderCol = "border-white/20 bg-zinc-900/95 text-white";
+      let icon = "ℹ️";
+      if (type === "success") {
+        borderCol = "border-emerald-500/40 bg-[#0f2418]/95 text-emerald-200";
+        icon = "✓";
+      } else if (type === "error") {
+        borderCol = "border-rose-500/40 bg-[#291014]/95 text-rose-200";
+        icon = "✕";
+      } else if (type === "warn") {
+        borderCol = "border-amber-500/40 bg-[#2b1f0c]/95 text-amber-200";
+        icon = "⚠️";
+      }
+
+      toast.className = `p-3.5 rounded-2xl border ${borderCol} shadow-2xl backdrop-blur-xl flex items-center gap-3 text-xs font-semibold transform transition-all duration-300 pointer-events-auto`;
+      toast.innerHTML = `
+        <span class="w-6 h-6 rounded-full bg-white/10 flex items-center justify-center font-bold text-xs shrink-0">${icon}</span>
+        <span class="flex-1">${message}</span>
+      `;
+
+      container.appendChild(toast);
+      setTimeout(() => {
+        toast.style.opacity = "0";
+        toast.style.transform = "translateY(-8px)";
+        setTimeout(() => toast.remove(), 300);
+      }, 3500);
+    };
+
+    // Слушатель точек для отображения названия
+    onValue(ref(db, "points"), (snap) => {
+      pointsCache = snap.val() || {};
+      if (staffData) updateStaffUI(staffData);
+    });
+
+    // Авторизация
+    window.loginStaff = () => {
+      const id = document.getElementById("auth-staff-id").value.trim().toLowerCase().replace(/[^a-z0-9_]/g, "");
+      const pin = document.getElementById("auth-staff-pin").value.trim();
+
+      if (!id || !pin) {
+        return window.showToast("Введите логин и 4-значный PIN!", "warn");
+      }
+
+      onValue(ref(db, `staff/${id}`), (snap) => {
+        const data = snap.val();
+        if (!data) {
+          return window.showToast("Сотрудник не найден в базе!", "error");
+        }
+        if (data.pin !== pin) {
+          return window.showToast("Неверный PIN-код!", "error");
+        }
+
+        currentStaffId = id;
+        localStorage.setItem("coffeeman_current_staff_id", id);
+        document.getElementById("auth-screen").classList.add("hidden");
+        window.showToast(`Добро пожаловать, ${data.name}!`, "success");
+        initStaffListener(id);
+      }, { onlyOnce: true });
+    };
+
+    window.logoutStaff = () => {
+      localStorage.removeItem("coffeeman_current_staff_id");
+      location.reload();
+    };
+
+    if (currentStaffId) {
+      document.getElementById("auth-screen").classList.add("hidden");
+      initStaffListener(currentStaffId);
+    }
+
+    function initStaffListener(id) {
+      onValue(ref(db, `staff/${id}`), (snap) => {
+        const data = snap.val();
+        if (!data) {
+          localStorage.removeItem("coffeeman_current_staff_id");
+          location.reload();
+          return;
+        }
+        staffData = data;
+        updateStaffUI(data);
+      });
+
+      // Слушатель истории выплат сотрудника
+      onValue(ref(db, "payout_requests"), (snap) => {
+        const allRequests = snap.val() || {};
+        renderMyPayoutRequests(allRequests);
+      });
+    }
+
+    function updateStaffUI(data) {
+      document.getElementById("user-display-name").textContent = data.name || currentStaffId;
+      document.getElementById("user-role-badge").textContent = data.role === "barista" ? "☕ Бариста" : "🍽️ Официант";
+      
+      const pointName = pointsCache[data.point_id]?.name || data.point_id || "Главная";
+      document.getElementById("user-point-badge").textContent = `📍 ${pointName}`;
+
+      const isBoy = data.gender === "boy";
+      document.getElementById("user-gender-badge").textContent = isBoy ? "Парни 👦" : "Девушки 👧";
+      document.getElementById("stat-team-name").textContent = isBoy ? "Парни 👦" : "Девушки 👧";
+      document.getElementById("stat-team-name").className = `text-2xl font-black ${isBoy ? 'text-sky-300' : 'text-pink-300'}`;
+
+      const avatar = document.getElementById("header-avatar");
+      avatar.textContent = isBoy ? "👦" : "👧";
+      avatar.className = `w-11 h-11 rounded-2xl ${isBoy ? 'bg-sky-500/20 text-sky-300 border-sky-400/40' : 'bg-pink-500/20 text-pink-300 border-pink-400/40'} border flex items-center justify-center text-xl font-black`;
+
+      // Финансы
+      const available = data.balance || 0;
+      const frozen = data.frozen_balance || 0;
+      const total = data.total_earned || (available + frozen);
+      const count = data.tips_count || 0;
+
+      document.getElementById("balance-amount").textContent = available;
+      document.getElementById("frozen-amount").textContent = `${frozen} ₽`;
+      document.getElementById("stat-total-earned").textContent = `${total} ₽`;
+      document.getElementById("stat-tips-count").textContent = count;
+      document.getElementById("modal-available-hint").textContent = `${available} ₽`;
+    }
+
+    // История заявок
+    function renderMyPayoutRequests(all) {
+      const container = document.getElementById("payout-history-list");
+      container.innerHTML = "";
+
+      const myReqIds = Object.keys(all).filter((id) => all[id].staff_id === currentStaffId).reverse();
+
+      if (myReqIds.length === 0) {
+        container.innerHTML = `<div class="text-center py-8 text-white/40 text-xs">Заявок на вывод пока не было</div>`;
+        return;
+      }
+
+      myReqIds.forEach((id) => {
+        const req = all[id];
+        const dateStr = new Date(req.created_at || Date.now()).toLocaleString("ru-RU", {
+          day: "2-digit",
+          month: "2-digit",
+          hour: "2-digit",
+          minute: "2-digit"
+        });
+
+        let statusText = "В обработке";
+        let statusStyle = "bg-amber-400/20 text-amber-300 border-amber-400/30";
+        if (req.status === "approved") {
+          statusText = "Выплачено";
+          statusStyle = "bg-emerald-500/20 text-emerald-300 border-emerald-400/30";
+        } else if (req.status === "rejected") {
+          statusText = "Отклонено";
+          statusStyle = "bg-rose-500/20 text-rose-300 border-rose-400/30";
+        }
+
+        const row = document.createElement("div");
+        row.className = "p-3 bg-black/40 border border-white/10 rounded-xl flex items-center justify-between text-xs";
+        row.innerHTML = `
+          <div>
+            <div class="font-extrabold text-white flex items-center gap-2">
+              <span>${req.amount} ₽</span>
+              <span class="text-[9px] uppercase font-bold px-2 py-0.5 rounded-full border ${statusStyle}">${statusText}</span>
+            </div>
+            <div class="text-[10px] text-white/50 font-mono-code mt-0.5">${req.bank_name || 'Банк'} • ${req.phone} • ${dateStr}</div>
+          </div>
+        `;
+        container.appendChild(row);
+      });
+    }
+
+    // Модалка вывода
+    window.openWithdrawModal = () => {
+      document.getElementById("withdraw-modal").classList.remove("hidden");
+    };
+
+    window.closeWithdrawModal = () => {
+      document.getElementById("withdraw-modal").classList.add("hidden");
+    };
+
+    window.fillMaxWithdraw = () => {
+      const avail = staffData?.balance || 0;
+      document.getElementById("input-withdraw-amount").value = avail;
+    };
+
+    window.submitWithdrawRequest = async () => {
+      const amount = parseInt(document.getElementById("input-withdraw-amount").value);
+      const phone = document.getElementById("input-withdraw-phone").value.trim();
+      const bank = document.getElementById("input-withdraw-bank").value.trim();
+      const available = staffData?.balance || 0;
+
+      if (!amount || isNaN(amount)) {
+        return window.showToast("Введите сумму для вывода!", "warn");
+      }
+      if (amount < 500) {
+        return window.showToast("Минимальная сумма вывода составляет 500 ₽!", "warn");
+      }
+      if (amount > available) {
+        return window.showToast(`Недостаточно средств! Доступно: ${available} ₽`, "error");
+      }
+      if (!phone || phone.length < 6) {
+        return window.showToast("Укажите номер телефона (СБП) или карту!", "warn");
+      }
+      if (!bank) {
+        return window.showToast("Укажите название вашего банка!", "warn");
+      }
+
+      const reqId = "payout_" + Date.now();
+      const newBalance = available - amount;
+      const currentFrozen = staffData?.frozen_balance || 0;
+      const newFrozen = currentFrozen + amount;
+
+      // 1. Создаем заявку на вывод в payout_requests
+      await set(ref(db, `payout_requests/${reqId}`), {
+        id: reqId,
+        staff_id: currentStaffId,
+        staff_name: staffData.name || currentStaffId,
+        amount: amount,
+        phone: phone,
+        bank_name: bank,
+        status: "pending",
+        created_at: Date.now()
+      });
+
+      // 2. Замораживаем средства у сотрудника (доступный баланс уменьшается, замороженный растет)
+      await update(ref(db, `staff/${currentStaffId}`), {
+        balance: newBalance,
+        frozen_balance: newFrozen
+      });
+
+      closeWithdrawModal();
+      document.getElementById("input-withdraw-amount").value = "";
+      window.showToast(`Заявка на ${amount} ₽ отправлена шефу! Сумма заморожена.`, "success");
+    };
+
+    // Выход на смену (подстановка в active_shift)
+    window.toggleShiftStatus = async () => {
+      if (!staffData) return;
+      const isBoy = staffData.gender === "boy";
+      const updateData = {};
+      if (isBoy) {
+        updateData.guy_name = staffData.name || currentStaffId;
+        updateData.guy_id = currentStaffId;
+      } else {
+        updateData.girl_name = staffData.name || currentStaffId;
+        updateData.girl_id = currentStaffId;
+      }
+      await update(ref(db, "active_shift"), updateData);
+      window.showToast("Вы успешно вышли на смену на экране кофейни!", "success");
+    };
+
+    // ==============================================================
+    // БРЕНДИРОВАННЫЙ QR-БЕЙДЖ ДЛЯ СОТРУДНИКА
+    // ==============================================================
+    window.openBadgeModal = async () => {
+      if (!staffData) return;
+      window.showToast("Отрисовка бейджа...", "info");
+
+      const qrPayload = staffData.payment_url || `https://coffeeman.bar/crew/${currentStaffId}`;
+      const hiddenRender = document.getElementById("hidden-qr-render");
+      hiddenRender.innerHTML = "";
+
+      new QRCode(hiddenRender, {
+        text: qrPayload,
+        width: 380,
+        height: 380,
+        colorDark: "#0a110d",
+        colorLight: "#ffffff",
+        correctLevel: QRCode.CorrectLevel.H
+      });
+
+      await new Promise(r => setTimeout(r, 150));
+
+      const sourceQr = hiddenRender.querySelector("canvas") || hiddenRender.querySelector("img");
+      if (!sourceQr) return window.showToast("Ошибка QR", "error");
+
+      const canvas = document.getElementById("staff-badge-canvas");
+      const ctx = canvas.getContext("2d");
+
+      canvas.width = 800;
+      canvas.height = 1180;
+
+      // Фон
+      const grad = ctx.createLinearGradient(0, 0, 800, 1180);
+      grad.addColorStop(0, "#1c2e23");
+      grad.addColorStop(0.5, "#0f1c14");
+      grad.addColorStop(1, "#080f0b");
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, 800, 1180);
+
+      // Рамки
+      ctx.strokeStyle = "rgba(234, 179, 8, 0.4)";
+      ctx.lineWidth = 4;
+      ctx.strokeRect(30, 30, 740, 1120);
+
+      ctx.strokeStyle = "rgba(234, 179, 8, 0.15)";
+      ctx.lineWidth = 1.5;
+      ctx.strokeRect(42, 42, 716, 1096);
+
+      // Эмблема
+      ctx.font = "52px sans-serif";
+      ctx.textAlign = "center";
+      ctx.fillText("☕", 400, 110);
+
+      // COFFEEMAN
+      ctx.fillStyle = "#ffffff";
+      ctx.font = "900 46px 'Plus Jakarta Sans', sans-serif";
+      ctx.letterSpacing = "6px";
+      ctx.fillText("COFFEEMAN", 400, 180);
+
+      // SINCE 2008
+      ctx.fillStyle = "#eab308";
+      ctx.font = "italic 700 24px 'Playfair Display', serif";
+      ctx.letterSpacing = "4px";
+      ctx.fillText("SINCE 2008", 400, 222);
+
+      ctx.strokeStyle = "#eab308";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(280, 246);
+      ctx.lineTo(520, 246);
+      ctx.stroke();
+
+      ctx.fillStyle = "rgba(255, 255, 255, 0.65)";
+      ctx.font = "600 15px 'Plus Jakarta Sans', sans-serif";
+      ctx.letterSpacing = "2px";
+      ctx.fillText("SPECIALTY COFFEE & GUEST SERVICE", 400, 276);
+
+      // QR подложка
+      ctx.fillStyle = "#ffffff";
+      roundRect(ctx, 160, 320, 480, 480, 32);
+      ctx.fill();
+
+      ctx.drawImage(sourceQr, 210, 370, 380, 380);
+
+      // Имя
+      ctx.fillStyle = "#ffffff";
+      ctx.font = "900 42px 'Plus Jakarta Sans', sans-serif";
+      ctx.letterSpacing = "1px";
+      ctx.fillText((staffData.name || currentStaffId).toUpperCase(), 400, 875);
+
+      // Роль и точка
+      const roleStr = staffData.role === "barista" ? "БАРИСТА" : "ОФИЦИАНТ";
+      const pointStr = (pointsCache[staffData.point_id]?.name || "ЦЕНТР").toUpperCase();
+      ctx.fillStyle = "#eab308";
+      ctx.font = "800 18px 'Plus Jakarta Sans', sans-serif";
+      ctx.letterSpacing = "3px";
+      ctx.fillText(`${roleStr} • ${pointStr}`, 400, 918);
+
+      ctx.fillStyle = "rgba(255, 255, 255, 0.4)";
+      ctx.font = "600 16px 'JetBrains Mono', monospace";
+      ctx.fillText(`ID: @${currentStaffId}`, 400, 955);
+
+      ctx.fillStyle = "rgba(255, 255, 255, 0.85)";
+      ctx.font = "600 18px 'Plus Jakarta Sans', sans-serif";
+      ctx.fillText("Наведи камеру телефона, чтобы оставить на чай", 400, 1030);
+
+      ctx.fillStyle = "rgba(234, 179, 8, 0.9)";
+      ctx.font = "bold 14px 'Plus Jakarta Sans', sans-serif";
+      ctx.letterSpacing = "1px";
+      ctx.fillText("БЫСТРАЯ ОПЛАТА СБП 0% КОМИССИИ", 400, 1065);
+
+      generatedCanvas = canvas;
+      document.getElementById("badge-modal").classList.remove("hidden");
+    };
+
+    window.closeBadgeModal = () => {
+      document.getElementById("badge-modal").classList.add("hidden");
+    };
+
+    window.downloadMyBadge = () => {
+      if (!generatedCanvas) return;
+      const link = document.createElement("a");
+      const cleanName = (staffData?.name || currentStaffId).replace(/\s+/g, "_");
+      link.download = `coffeeman-qr-${cleanName}.png`;
+      link.href = generatedCanvas.toDataURL("image/png");
+      link.click();
+      window.showToast("Бейдж скачан на устройство!", "success");
+    };
+
+    function roundRect(ctx, x, y, width, height, radius) {
+      ctx.beginPath();
+      ctx.moveTo(x + radius, y);
+      ctx.lineTo(x + width - radius, y);
+      ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+      ctx.lineTo(x + width, y + height - radius);
+      ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+      ctx.lineTo(x + radius, y + height);
+      ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+      ctx.lineTo(x, y + radius);
+      ctx.quadraticCurveTo(x, y, x + radius, y);
+      ctx.closePath();
+    }
+  </script>
+</body>
+</html>
