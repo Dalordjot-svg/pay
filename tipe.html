@@ -91,6 +91,21 @@
       100% { transform: scale(1); opacity: 1; }
     }
 
+    @keyframes goalSurgeShimmer {
+      0% { background-position: -200% 0; }
+      100% { background-position: 200% 0; }
+    }
+    @keyframes floatGoalBadge {
+      0%, 100% { transform: translateY(0px) rotate(0deg); }
+      50% { transform: translateY(-4px) rotate(-1deg); }
+    }
+
+    .anim-goal-surge {
+      background: linear-gradient(90deg, #f59e0b, #ec4899, #38bdf8, #f59e0b);
+      background-size: 250% 100%;
+      animation: goalSurgeShimmer 2s linear infinite;
+    }
+
     .anim-pulse-glow { animation: pulseGlow 2.4s ease-in-out infinite; }
     .anim-float-cup { animation: floatCup 4.5s ease-in-out infinite; }
     .anim-badge-bounce { animation: badgeBounce 3s ease-in-out infinite; }
@@ -251,6 +266,63 @@
 
       </div>
 
+    </div>
+
+    <!-- ВИДЖЕТ «ЦЕЛЬ СМЕНЫ / НА ЧТО КОПИМ»: Периодически всплывает с анимацией всплеска -->
+    <div id="idle-goal-banner" class="w-full max-w-6xl mx-auto my-2 hidden transition-all duration-700 transform scale-95 opacity-0">
+      <div class="glass-card border-2 border-amber-400/50 p-4 sm:p-5 rounded-3xl shadow-2xl relative overflow-hidden bg-gradient-to-r from-amber-950/40 via-zinc-900/80 to-purple-950/40">
+        
+        <div class="absolute -right-6 -bottom-6 w-36 h-36 bg-amber-400/10 rounded-full blur-2xl pointer-events-none"></div>
+
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-2.5">
+          <div class="flex items-center gap-3">
+            <div id="goal-icon" class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-amber-400 to-orange-500 flex items-center justify-center text-xl shadow-lg shrink-0" style="animation: floatGoalBadge 3s ease-in-out infinite;">
+              🚀
+            </div>
+            <div>
+              <div class="flex items-center gap-2">
+                <span class="text-[10px] uppercase font-black tracking-widest text-amber-300 bg-amber-400/20 px-2.5 py-0.5 rounded-full border border-amber-300/30">
+                  Мечта смены
+                </span>
+                <span id="goal-flash-badge" class="text-[10px] font-bold text-white/70 animate-pulse">
+                  ⚡ Каждый рубль приближает цель
+                </span>
+              </div>
+              <h3 id="goal-title" class="text-base sm:text-lg font-black text-white tracking-tight mt-0.5">
+                Копим на кофемолку мечты Mahlkönig EK43
+              </h3>
+            </div>
+          </div>
+
+          <!-- Счётчики суммы -->
+          <div class="flex items-baseline gap-2 text-right self-end sm:self-auto shrink-0">
+            <span id="goal-current-amount" class="text-2xl sm:text-3xl font-black text-amber-300 tracking-tight transition-all duration-300">
+              12 400 ₽
+            </span>
+            <span class="text-xs font-bold text-white/50">
+              из <span id="goal-target-amount" class="text-white font-extrabold">25 000 ₽</span>
+            </span>
+          </div>
+        </div>
+
+        <!-- Полоса заполнения цели -->
+        <div class="relative w-full h-4 sm:h-5 rounded-2xl bg-black/70 overflow-hidden p-1 border border-white/20 shadow-inner">
+          <div id="goal-progress-bar" class="h-full rounded-xl anim-goal-surge transition-all duration-1000 relative shadow-lg" style="width: 49%;">
+            <div class="absolute right-0 top-0 bottom-0 w-3 bg-white rounded-full shadow-white shadow-md"></div>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-between text-[11px] font-bold text-white/60 mt-2 px-1">
+          <span id="goal-status-text" class="text-amber-200">
+            Собрано <span id="goal-pct-label" class="text-white font-black">49%</span> от суммы
+          </span>
+          <span class="text-emerald-300 font-extrabold flex items-center gap-1">
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span>
+            Твой вклад сразу изменит полосу!
+          </span>
+        </div>
+
+      </div>
     </div>
 
     <!-- НИЖНИЙ БАР: Живая шкала битвы полов -->
@@ -1509,6 +1581,144 @@
         btn.innerHTML = `<span>🔬</span> Проверить ЮKassa`;
       }
     };
+
+    // ==============================================================
+    // ЦЕЛЬ СМЕНЫ / НА ЧТО КОПИМ: РАНДОМНОЕ ПОЯВЛЕНИЕ И АНИМАЦИЯ
+    // ==============================================================
+    const shiftGoals = [
+      {
+        icon: "⚡",
+        title: "Копим на профессиональный питчер с тефлоновым покрытием",
+        current: 3800,
+        target: 6500
+      },
+      {
+        icon: "☕",
+        title: "Копим на кофемолку мечты Mahlkönig EK43",
+        current: 14200,
+        target: 30000
+      },
+      {
+        icon: "🍕",
+        title: "Копим смене на праздничную пиццу после мощного дня!",
+        current: 2450,
+        target: 3500
+      },
+      {
+        icon: "🎸",
+        title: "Копим на виниловый проигрыватель для кофейного зала",
+        current: 9800,
+        target: 18000
+      }
+    ];
+
+    let currentGoalIdx = 0;
+    let goalAnimationTimeout = null;
+    let goalSchedulerTimeout = null;
+
+    function formatRub(val) {
+      return val.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ") + " ₽";
+    }
+
+    function showGoalSurgeAnimation() {
+      const banner = document.getElementById("idle-goal-banner");
+      const isIdle = !document.getElementById("screen-idle").classList.contains("hidden");
+      if (!banner || !isIdle) {
+        // Если экран не в idle, пробуем снова чуть позже
+        scheduleNextGoalAppearance();
+        return;
+      }
+
+      currentGoalIdx = (currentGoalIdx + 1) % shiftGoals.length;
+      const g = shiftGoals[currentGoalIdx];
+
+      const realPct = Math.min(100, Math.round((g.current / g.target) * 100));
+
+      const titleEl = document.getElementById("goal-title");
+      const iconEl = document.getElementById("goal-icon");
+      const curAmountEl = document.getElementById("goal-current-amount");
+      const targetAmountEl = document.getElementById("goal-target-amount");
+      const barEl = document.getElementById("goal-progress-bar");
+      const pctEl = document.getElementById("goal-pct-label");
+      const statusEl = document.getElementById("goal-status-text");
+      const flashBadge = document.getElementById("goal-flash-badge");
+
+      titleEl.textContent = g.title;
+      iconEl.textContent = g.icon;
+      targetAmountEl.textContent = formatRub(g.target);
+
+      // Стартовая точка — реальная собранная сумма
+      curAmountEl.textContent = formatRub(g.current);
+      barEl.style.transitionDuration = "700ms";
+      barEl.style.width = `${realPct}%`;
+      pctEl.textContent = `${realPct}%`;
+      statusEl.innerHTML = `Собрано <span class="text-white font-black">${realPct}%</span> от цели`;
+      flashBadge.textContent = "⚡ Мечта команды в процессе";
+
+      // 1. Плавное появление плашки
+      banner.classList.remove("hidden");
+      requestAnimationFrame(() => {
+        banner.classList.remove("scale-95", "opacity-0");
+        banner.classList.add("scale-100", "opacity-100");
+      });
+
+      // 2. Через 1.8с запускаем анимацию ВЗЛЕТА (будто шкала заполняется на 100%)
+      goalAnimationTimeout = setTimeout(() => {
+        flashBadge.textContent = "🔥 ПРЕДСТАВЬ, ЧТО ЦЕЛЬ ДОСТИГНУТА!";
+        flashBadge.className = "text-[10px] font-black text-amber-300 animate-bounce";
+        
+        // Быстрый взлёт полоски до 100%
+        barEl.style.transitionDuration = "1100ms";
+        barEl.style.width = "100%";
+        curAmountEl.textContent = formatRub(g.target);
+        pctEl.textContent = "100%";
+        curAmountEl.classList.add("text-emerald-300", "scale-110");
+        curAmountEl.classList.remove("text-amber-300");
+
+        // 3. Через 1.6 секунды — эффект отката назад к РЕАЛЬНОЙ сумме
+        setTimeout(() => {
+          flashBadge.textContent = "⏳ А пока мы здесь: помоги закрыть цель!";
+          flashBadge.className = "text-[10px] font-bold text-white/70 animate-pulse";
+
+          barEl.style.transitionDuration = "1400ms";
+          barEl.style.width = `${realPct}%`;
+          curAmountEl.classList.remove("text-emerald-300", "scale-110");
+          curAmountEl.classList.add("text-amber-300");
+          curAmountEl.textContent = formatRub(g.current);
+          pctEl.textContent = `${realPct}%`;
+          statusEl.innerHTML = `Реальный прогресс: <span class="text-white font-black">${realPct}%</span>`;
+
+          // 4. Через 3.5 секунды после возврата плавно скрываем плашку
+          setTimeout(() => {
+            banner.classList.remove("scale-100", "opacity-100");
+            banner.classList.add("scale-95", "opacity-0");
+
+            setTimeout(() => {
+              banner.classList.add("hidden");
+              // Планируем следующий рандомный показ через 12-24 секунды
+              scheduleNextGoalAppearance();
+            }, 700);
+
+          }, 3600);
+
+        }, 1600);
+
+      }, 1900);
+    }
+
+    function scheduleNextGoalAppearance() {
+      if (goalSchedulerTimeout) clearTimeout(goalSchedulerTimeout);
+      // Рандомный интервал от 12 до 25 секунд
+      const delay = Math.floor(Math.random() * (25000 - 12000 + 1)) + 12000;
+      goalSchedulerTimeout = setTimeout(() => {
+        showGoalSurgeAnimation();
+      }, delay);
+    }
+
+    // Первый запуск через 5 секунд после старта экрана
+    setTimeout(() => {
+      showGoalSurgeAnimation();
+    }, 4500);
 
     updateBattleStatsUI();
   </script>
